@@ -7,13 +7,13 @@ with open('README.txt') as file:
 
 setup(name='MinimalModbus',
     version='0.1',
-    description='Simple Modbus RTU implementation',
-    long_description = long_description
+    description='Simple Modbus RTU implementation for Python',
+    long_description = long_description,
     author='Jonas Berg',
-    author_email='pyhys@ ???++',
+    author_email='pyhys@users.sourceforge.net',
     url='http://sourceforge.net/projects/minimalmodbus/',
-    modules=['minimalmodbus', 'eurotherm3504'],
-    licence = 'Apache License, Version 2.0',
+    py_modules=['minimalmodbus', 'eurotherm3500'],
+    license = 'Apache License, Version 2.0',
     classifiers=[ 
         'Intended Audience :: Developers',
         'Intended Audience :: Information Technology',
