@@ -1,3 +1,4 @@
+#!/usr/bin/python
 #
 #   Copyright 2011 Jonas Berg
 #
@@ -16,71 +17,71 @@
 
 import minimalmodbus
 
-class eurotherm3500( minimalmodbus.minimalmodbus ):
-    """Driver for talking to Eurotherm 35xx heater controller via Modbus protocol via RS485.
+class eurotherm3500( minimalmodbus.Instrument ):
+    """Driver for talking to Eurotherm 35xx heater controller via Modbus RTU protocol via RS485.
     """
     
     def __init__(self, port, slaveaddress):
-        minimalmodbus.minimalmodbus.__init__(self, port, slaveaddress)
+        minimalmodbus.Instrument.__init__(self, port, slaveaddress)
     
     ## Process value
     
     def getPvLoop1(self):
         """Returns the PV for loop1."""
-        return self.readRegister(289, 1)
+        return self.read_register(289, 1)
     
     def getPvLoop2(self):
         """Returns the PV for loop2."""
-        return self.readRegister(1313, 1)
+        return self.read_register(1313, 1)
     
     ## Auto/manual mode
     
     def isManLoop1(self):
         """Returns the True if loop1 is in man mode."""
-        return self.readRegister(273, 1) > 0
+        return self.read_register(273, 1) > 0
     
     ## Setpoint
     
     def getSpTargetLoop1(self):
         """Returns the SP target for loop1."""
-        return self.readRegister(2, 1)
+        return self.read_register(2, 1)
     
     def getSpLoop1(self):
         """Returns the (working) SP for loop1."""
-        return self.readRegister(5, 1)
+        return self.read_register(5, 1)
     
     def setSpLoop1(self, value):
         """Sets the SP1 for loop1.
         
         Note that this not necessarily is the working setpoint.
         """
-        a.writeRegister(24, value, 1)
+        self.write_register(24, value, 1)
     
     def getSpLoop2(self):
         """Returns the (working) SP for loop2."""
-        return self.readRegister(1029, 1)
+        return self.read_register(1029, 1)
     
     ## Setpoint rate
     
     def getSpRateLoop1(self):
         """Returns the SP change rate for loop1."""
-        return self.readRegister(35, 1)   
+        return self.read_register(35, 1)   
     
     def setSpRateLoop1(self, value):
         """Set the SP change rate for loop1.
         
         'value' is most often in degrees/minute.
         """
-        self.writeRegister(35, value, 1)  
+        self.write_register(35, value, 1)  
     
     def isSpRateLoop1Disabled(self):
         """Returns True if Loop1 SP rate is disabled."""
-        return self.readRegister(78, 1) > 0
+        return self.read_register(78, 1) > 0
 
     def disableSpRateLoop1(self):
         """Disable the SP change rate for loop1. """
         VALUE = 1
-        self.writeRegister(78, VALUE, 0) 
+        self.write_register(78, VALUE, 0) 
         
     def enableSpRateLoop1(self):
         """Set disable=false for the SP change rate for loop1.
@@ -88,31 +89,31 @@ class eurotherm3500( minimalmodbus.minimalmodbus ):
         Note that also the SP rate value must be properly set for the SP rate to work.
         """
         VALUE = 0
-        self.writeRegister(78, VALUE, 0) 
+        self.write_register(78, VALUE, 0) 
     
     ## Output signal
     
     def getOpLoop1(self):
         """Returns the OP for loop1 (in %)."""
-        return self.readRegister(85, 1)
+        return self.read_register(85, 1)
    
     def isLoop1Inhibited(self):
         """Returns True if Loop1 is inhibited."""
-        return self.readRegister(268, 1) > 0
+        return self.read_register(268, 1) > 0
 
     def getOpLoop2(self):
         """Returns the OP for loop2 (in %)."""
-        return self.readRegister(1109, 1)
+        return self.read_register(1109, 1)
     
     ## Alarms
 
     def getAlarm1Threshold(self):
         """Returns the threshold for Alarm1."""
-        return self.readRegister(10241, 1)
+        return self.read_register(10241, 1)
     
     def isAlarmSummarySet(self):
         """Returns the True if there is some alarm triggered."""
-        return self.readRegister(10213, 1) > 0
+        return self.read_register(10213, 1) > 0
     
 
 ########################

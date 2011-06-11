@@ -1,3 +1,4 @@
+#!/usr/bin/python
 #
 #   Copyright 2011 Jonas Berg
 #
@@ -16,7 +17,7 @@
 
 import serial
 
-class minimalmodbus():
+class Instrument():
     """Driver for talking to instruments via Modbus protocol (via RS485 or RS232).
 
     port is the serial port name, for example '???' or '???'
@@ -42,7 +43,7 @@ class minimalmodbus():
     ## Functions for talking to the slave ##
     ########################################
     
-    def readRegister(self, registeraddress, numberOfDecimals=0):
+    def read_register(self, registeraddress, numberOfDecimals=0):
         """Read one register.
         
         Converts the data to a numerical value?
@@ -52,7 +53,7 @@ class minimalmodbus():
         NUMBER_OF_REGISTERS_TO_READ = 1
         
         # Build data for reading one register
-        payloadToSlave =  numToTwoByteString(registeraddress) + numToTwoByteString(NUMBER_OF_REGISTERS_TO_READ)
+        payloadToSlave =  _numToTwoByteString(registeraddress) + _numToTwoByteString(NUMBER_OF_REGISTERS_TO_READ)
         
         # Communicate
         payloadFromSlave= self._performCommand( FUNCTIONCODE_READ_REGISTERS, payloadToSlave)
@@ -73,10 +74,10 @@ class minimalmodbus():
         # Calculate value 
         # (Up to here the code is pretty general, but from here we assume that only one register is read)
         assert len(registerdata) == 2
-        registervalue = twoByteStringToNum(registerdata, numberOfDecimals)
+        registervalue = _twoByteStringToNum(registerdata, numberOfDecimals)
         return registervalue
         
-    def writeRegister(self, registeraddress, value, numberOfDecimals=0):
+    def write_register(self, registeraddress, value, numberOfDecimals=0):
         """Write to one register.
         
         To store for example value=77.0, use numberOfDecimals=1 if the register will hold it as 770 internally.
@@ -93,8 +94,8 @@ class minimalmodbus():
         ## Build data for reading one register
         numberOfRegisterBytes = NUMBER_OF_REGISTERS_TO_WRITE * NUMBER_OF_BYTES_PER_REGISTER
         
-        payloadToSlave =  numToTwoByteString(registeraddress) + numToTwoByteString(NUMBER_OF_REGISTERS_TO_WRITE) + \
-                        numToOneByteString(numberOfRegisterBytes) + numToTwoByteString(value, numberOfDecimals)
+        payloadToSlave =  _numToTwoByteString(registeraddress) + _numToTwoByteString(NUMBER_OF_REGISTERS_TO_WRITE) + \
+                        _numToOneByteString(numberOfRegisterBytes) + _numToTwoByteString(value, numberOfDecimals)
         
         # Communicate
         payloadFromSlave = self._performCommand( FUNCTIONCODE_WRITE_REGISTERS, payloadToSlave)
@@ -103,14 +104,14 @@ class minimalmodbus():
         ## Check start wright register
         STARTBYTENUMBER_FOR_STARTADDRESS = 0
         bytesForStartAddress = payloadFromSlave[STARTBYTENUMBER_FOR_STARTADDRESS : STARTBYTENUMBER_FOR_STARTADDRESS+NUMBER_OF_BYTES_PER_REGISTER]
-        receivedStartAddress =  twoByteStringToNum( bytesForStartAddress )
+        receivedStartAddress =  _twoByteStringToNum( bytesForStartAddress )
         if receivedStartAddress != registeraddress:
             raise ValueError( 'Wrong given write start adress: {0}, but commanded is {1}'.format( receivedStartAddress, registeraddress) )
         
         ## Check number of registers written
         STARTBYTENUMBER_FOR_NUMBEROFREGISTERS = 2
         bytesForNumberOfRegisters = payloadFromSlave[STARTBYTENUMBER_FOR_NUMBEROFREGISTERS : STARTBYTENUMBER_FOR_NUMBEROFREGISTERS+NUMBER_OF_BYTES_PER_REGISTER]
-        receivedNumberOfWrittenReisters =  twoByteStringToNum( bytesForNumberOfRegisters )
+        receivedNumberOfWrittenReisters =  _twoByteStringToNum( bytesForNumberOfRegisters )
         if receivedNumberOfWrittenReisters != NUMBER_OF_REGISTERS_TO_WRITE:
             raise ValueError( 'Wrong given number of registers to write: {0}, but commanded is {1}'.format( \
                 receivedNumberOfWrittenReisters, NUMBER_OF_REGISTERS_TO_WRITE) )
@@ -125,9 +126,9 @@ class minimalmodbus():
         'payloadToSlave' is transmitted (embedded in address, crc etc)
         The return value is the extracted data payload from the slave.
         """
-        message             = embedPayload(self.address, functioncode, payloadToSlave)
+        message             = _embedPayload(self.address, functioncode, payloadToSlave)
         response            = self._communicate(message)
-        payloadFromSlave    = extractPayload(response, self.address, functioncode)
+        payloadFromSlave    = _extractPayload(response, self.address, functioncode)
 
         return payloadFromSlave
         
@@ -156,7 +157,7 @@ class minimalmodbus():
 ## Helper functions ##
 ######################
 
-def embedPayload(slaveaddress, functioncode, payloaddata):
+def _embedPayload(slaveaddress, functioncode, payloaddata):
     """Build a message from the slaveaddress, the function code and the payload data.
     
     'slaveaddress' is an integer.
@@ -164,11 +165,11 @@ def embedPayload(slaveaddress, functioncode, payloaddata):
     'payloaddata' is a string of hex integers
     The resulting message has the format: slaveaddress byte + functioncode + payloaddata + crc
     """
-    firstPart = numToOneByteString(slaveaddress) + numToOneByteString(functioncode) + payloaddata
-    message = firstPart + calculateCrcString(firstPart)       
+    firstPart = _numToOneByteString(slaveaddress) + _numToOneByteString(functioncode) + payloaddata
+    message = firstPart + _calculateCrcString(firstPart)       
     return message
 
-def extractPayload(response, slaveaddress, functioncode):
+def _extractPayload(response, slaveaddress, functioncode):
     """Extract the payload data from the slave's response.
     
     'response' is a hex string.
@@ -189,9 +190,9 @@ def extractPayload(response, slaveaddress, functioncode):
     # Check CRC
     receivedCRC = response[-NUMBER_OF_CRC_BYTES:]
     responseWithoutCRC = response[0 : len(response) - NUMBER_OF_CRC_BYTES ]
-    calculatedCRC = calculateCrcString( responseWithoutCRC )
+    calculatedCRC = _calculateCrcString( responseWithoutCRC )
     if receivedCRC != calculatedCRC:
-        raise ValueError( 'CRC error: {0} instead of {1}'.format( twoByteStringToNum(receivedCRC), twoByteStringToNum(calculatedCRC)) )
+        raise ValueError( 'CRC error: {0} instead of {1}'.format( _twoByteStringToNum(receivedCRC), _twoByteStringToNum(calculatedCRC)) )
 
     # Check Address
     responseaddress = ord( response[BYTEPOSITION_FOR_ADDRESS] )
@@ -200,7 +201,7 @@ def extractPayload(response, slaveaddress, functioncode):
     
     # Check function code
     receivedFunctioncode = ord( response[BYTEPOSITION_FOR_FUNCTIONCODE ] )
-    if receivedFunctioncode == setBitOn(functioncode, BITNUMBER_FUNCTIONCODE_ERRORINDICATION):
+    if receivedFunctioncode == _setBitOn(functioncode, BITNUMBER_FUNCTIONCODE_ERRORINDICATION):
         raise ValueError( 'The slave is indicating an error.' )
     elif receivedFunctioncode != functioncode:
         raise ValueError( 'Wrong functioncode: {0} instead of {1}'.format(receivedFunctioncode, functioncode) )
@@ -212,7 +213,7 @@ def extractPayload(response, slaveaddress, functioncode):
     
     return payload
 
-def twoByteStringToNum(bytestring, numberOfDecimals = 0):
+def _twoByteStringToNum(bytestring, numberOfDecimals = 0):
     """Convert a two-byte string to a numerical value.
     
     A bug was found on 2011-05-16: The most significant byte was 
@@ -234,14 +235,14 @@ def twoByteStringToNum(bytestring, numberOfDecimals = 0):
     divisor = 10 ** numberOfDecimals
     return fullregister / float(divisor)
    
-def numToOneByteString(integer):
+def _numToOneByteString(integer):
     if integer > 0xFF:
         raise ValueError( 'The input value is too large.')
     if integer < 0:
         raise ValueError( 'The input value is negative.')
     return chr(integer)
 
-def numToTwoByteString(value, numberOfDecimals = 0, LsbFirst = False):
+def _numToTwoByteString(value, numberOfDecimals = 0, LsbFirst = False):
     if numberOfDecimals <0 :
         raise ValueError( 'The number of decimals must not be less than 0.' )
 
@@ -261,7 +262,7 @@ def numToTwoByteString(value, numberOfDecimals = 0, LsbFirst = False):
         outstring = chr(mostSignificantByte) + chr(leastSignificantByte)
     return outstring
 
-def calculateCrcString( inputstring ):
+def _calculateCrcString( inputstring ):
     """Calculate CRC-16 for Modbus.
     
     Inputstring is the message (without the CRC).
@@ -279,31 +280,31 @@ def calculateCrcString( inputstring ):
     for character in inputstring:
         
         # XOR with each character
-        register = XOR(register, ord(character))
+        register = _XOR(register, ord(character))
 
         # Rightshift 8 times, and XOR with polynom if carry overflows
         for i in range(8):
-            register, carrybit = rightshift(register)
+            register, carrybit = _rightshift(register)
             if carrybit == 1:
-                register = XOR(register, POLY)
+                register = _XOR(register, POLY)
     
-    return numToTwoByteString(register, LsbFirst = True)
+    return _numToTwoByteString(register, LsbFirst = True)
 
-def XOR(integer1, integer2):
+def _XOR(integer1, integer2):
     """An alias for the bitwise XOR command."""
     return integer1 ^ integer2
 
-def setBitOn( x, bitNum ):
+def _setBitOn( x, bitNum ):
     """Set bit 'bitNum' to True."""
     return x | (1<<bitNum)
 
-def rightshift(inputInteger):
+def _rightshift(inputInteger):
     """Rightshift an integer one step, and also calculate the carry bit."""
     shifted = inputInteger >> 1
     carrybit = inputInteger & 1
     return shifted, carrybit
 
-def toPrintableString( inputstring ):
+def _toPrintableString( inputstring ):
     """Make a descriptive string, showing the ord() numbers for the characters in the inputstring.
     
     Use it for diagnostic printing of strings representing byte values (might have non-printing characters).
@@ -327,13 +328,13 @@ def toPrintableString( inputstring ):
 if __name__ == '__main__':
     print 'TESTING MODBUS MODULE'
     
-    a = minimalmodbus('/dev/cvdHeatercontroller', 1)
+    a = Instrument('/dev/cvdHeatercontroller', 1)
     
-    print a.readRegister(1, 1)
-    #print a.readRegister(273, 1)
-    #print a.readRegister(289, 10)
-    #print a.readRegister(1313, 10)
-    print a.readRegister(10241, 1)
+    print a.read_register(1, 1)
+    #print a.read_register(273, 1)
+    #print a.read_register(289, 10)
+    #print a.read_register(1313, 10)
+    print a.read_register(10241, 1)
  
     print 'DONE!'
     
