@@ -8,3 +8,8 @@ svn commit -m 'Write yout log message here'
 
 pychecker eurotherm3500.py 
 pychecker minimalmodbus.py 
+
+
+pydoc -w minimalmodbus
+pydoc -w eurotherm3500
+
