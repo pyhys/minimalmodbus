@@ -2,6 +2,8 @@ svn update
 svn status 
 svn status -v
 svn add FILENAME
+svn commit -m 'Write yout log message here'
+
 
 
 pychecker eurotherm3500.py 
