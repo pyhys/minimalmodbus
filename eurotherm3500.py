@@ -17,7 +17,7 @@
 
 import minimalmodbus
 
-class eurotherm3500( minimalmodbus.Instrument ):
+class Eurotherm3500( minimalmodbus.Instrument ):
     """Driver for talking to Eurotherm 35xx heater controller via Modbus RTU protocol via RS485.
     """
     
@@ -26,64 +26,64 @@ class eurotherm3500( minimalmodbus.Instrument ):
     
     ## Process value
     
-    def getPvLoop1(self):
+    def get_pv_loop1(self):
         """Returns the PV for loop1."""
         return self.read_register(289, 1)
     
-    def getPvLoop2(self):
+    def get_pv_loop2(self):
         """Returns the PV for loop2."""
         return self.read_register(1313, 1)
     
     ## Auto/manual mode
     
-    def isManLoop1(self):
+    def is_manual_loop1(self):
         """Returns the True if loop1 is in man mode."""
         return self.read_register(273, 1) > 0
     
     ## Setpoint
     
-    def getSpTargetLoop1(self):
+    def get_sptarget_loop1(self):
         """Returns the SP target for loop1."""
         return self.read_register(2, 1)
     
-    def getSpLoop1(self):
+    def get_sp_loop1(self):
         """Returns the (working) SP for loop1."""
         return self.read_register(5, 1)
     
-    def setSpLoop1(self, value):
+    def set_sp_loop1(self, value):
         """Sets the SP1 for loop1.
         
         Note that this not necessarily is the working setpoint.
         """
         self.write_register(24, value, 1)
     
-    def getSpLoop2(self):
+    def get_sp_loop2(self):
         """Returns the (working) SP for loop2."""
         return self.read_register(1029, 1)
     
     ## Setpoint rate
     
-    def getSpRateLoop1(self):
+    def get_sprate_loop1(self):
         """Returns the SP change rate for loop1."""
         return self.read_register(35, 1)   
     
-    def setSpRateLoop1(self, value):
+    def set_sprate_loop1(self, value):
         """Set the SP change rate for loop1.
         
         'value' is most often in degrees/minute.
         """
         self.write_register(35, value, 1)  
     
-    def isSpRateLoop1Disabled(self):
+    def is_sprate_disabled_loop1(self):
         """Returns True if Loop1 SP rate is disabled."""
         return self.read_register(78, 1) > 0
 
-    def disableSpRateLoop1(self):
+    def disable_sprate_loop1(self):
         """Disable the SP change rate for loop1. """
         VALUE = 1
         self.write_register(78, VALUE, 0) 
         
-    def enableSpRateLoop1(self):
+    def enable_sprate_loop1(self):
         """Set disable=false for the SP change rate for loop1.
         
         Note that also the SP rate value must be properly set for the SP rate to work.
@@ -93,25 +93,25 @@ class eurotherm3500( minimalmodbus.Instrument ):
     
     ## Output signal
     
-    def getOpLoop1(self):
+    def get_op_loop1(self):
         """Returns the OP for loop1 (in %)."""
         return self.read_register(85, 1)
    
-    def isLoop1Inhibited(self):
+    def is_inhibited_loop1(self):
         """Returns True if Loop1 is inhibited."""
         return self.read_register(268, 1) > 0
 
-    def getOpLoop2(self):
+    def get_op_loop2(self):
         """Returns the OP for loop2 (in %)."""
         return self.read_register(1109, 1)
     
     ## Alarms
 
-    def getAlarm1Threshold(self):
+    def get_threshold_alarm1(self):
         """Returns the threshold for Alarm1."""
         return self.read_register(10241, 1)
     
-    def isAlarmSummarySet(self):
+    def is_set_alarmsummary(self):
         """Returns the True if there is some alarm triggered."""
         return self.read_register(10213, 1) > 0
     
@@ -123,30 +123,30 @@ class eurotherm3500( minimalmodbus.Instrument ):
 if __name__ == '__main__':
     print 'TESTING EUROTHERM 3500 MODBUS MODULE'
 
-    a = eurotherm3500('/dev/cvdHeatercontroller', 1)
+    a = Eurotherm3500('/dev/cvdHeatercontroller', 1)
     
-    print a.getSpLoop1(), 'SP 1'
-    print a.getSpTargetLoop1(), 'SP 1 target'
-    print a.getSpLoop2(), 'SP 2'
+    print a.get_sp_loop1(), 'SP 1'
+    print a.get_sptarget_loop1(), 'SP 1 target'
+    print a.get_sp_loop2(), 'SP 2'
     
-    print a.isSpRateLoop1Disabled(), 'SP rate Loop1 disabled'
-    print a.getSpRateLoop1(), 'SP 1 rate'
+    print a.is_sprate_disabled_loop1(), 'SP rate Loop1 disabled'
+    print a.get_sprate_loop1(), 'SP 1 rate'
     
-    print a.getOpLoop1(), '% OP 1'
-    print a.getOpLoop2(), '% OP 2'
-    print a.getAlarm1Threshold(), 'Al 1 thr'
-    print a.isAlarmSummarySet(), 'Al summ'
-    print a.isManLoop1(), 'Man Loop1'
-    print a.isLoop1Inhibited(), 'Inhibit Loop1'
+    print a.get_op_loop1(), '% OP 1'
+    print a.get_op_loop2(), '% OP 2'
+    print a.get_threshold_alarm1(), 'Al 1 thr'
+    print a.is_set_alarmsummary(), 'Al summ'
+    print a.is_manual_loop1(), 'Man Loop1'
+    print a.is_inhibited_loop1(), 'Inhibit Loop1'
    
-    print a.getPvLoop1(), 'PV 1'
-    print a.getPvLoop2(), 'PV 2'
+    print a.get_pv_loop1(), 'PV 1'
+    print a.get_pv_loop2(), 'PV 2'
 
-    #a.setSpLoop1(0)
+    #a.set_sp_loop1(0)
     
-    #a.setSpRateLoop1(20)
-    #a.enableSpRateLoop1() 
-    #a.disableSpRateLoop1() 
+    #a.set_sprate_loop1(20)
+    #a.enable_sprate_loop1() 
+    #a.disable_sprate_loop1() 
     
 
 pass    
