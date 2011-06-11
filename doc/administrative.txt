@@ -1,0 +1,8 @@
+svn update
+svn status 
+svn status -v
+svn add FILENAME
+
+
+pychecker eurotherm3500.py 
+pychecker minimalmodbus.py 
