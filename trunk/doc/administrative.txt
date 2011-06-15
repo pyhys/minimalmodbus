@@ -13,3 +13,47 @@ pychecker minimalmodbus.py
 pydoc -w minimalmodbus
 pydoc -w eurotherm3500
 
+
+
+
+
+
+Generate distributions:
+Creates a subfolder **dist** with zipped or gztared source folders.
+
+<code>
+python setup.py sdist
+python setup.py sdist --formats=gztar,zip
+</code>
+
+
+Creates a subfolder **build** and **dist** ?
+
+<code>
+python setup.py bdist
+</code>
+
+Creates a subfolder **dist** with a windows installer.
+<code>
+python setup.py bdist --formats=wininst
+</code>
+
+
+
+Test distribution: Creates a subfolder **build**.
+
+<code>
+python setup.py build
+</code>
+
+<code>
+python setup.py install
+</code>
+
+copying build\lib\packagetestfibo.py -> C:\python27\Lib\site-packages
+
+
+The Windows installer also creates a .pyo file (and also the .pyc file).
+
+
+
