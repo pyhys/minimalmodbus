@@ -21,7 +21,9 @@ pydoc -w eurotherm3500
 
 
 
-python setup.py register sdist --formats=gztar,zip bdist_wininst upload
+  * On Windows machine python setup.py bdist_wininst
+
+python setup.py register sdist --formats=gztar,zip upload
 
 Generate distributions:
 Creates a subfolder **dist** with zipped or gztared source folders.
