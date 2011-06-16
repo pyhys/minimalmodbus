@@ -9,12 +9,11 @@ There are several types of modbus protocols:
 
 Typical usage::
 
- #!/usr/bin/env python
+    #!/usr/bin/env python
+    import minimalmodbus
 
- import minimalmodbus
-
- instrument = minimalmodbus.Instrument(56) # Slave address
- temperature = instrument.read_register( 23541, 1 ) # Registernumber, number of decimals
+    instrument = minimalmodbus.Instrument('/dev/ttyUSB1', 1) # port name, slave address
+    temperature = instrument.read_register( 23541, 1 ) # Registernumber, number of decimals
 
 
 
