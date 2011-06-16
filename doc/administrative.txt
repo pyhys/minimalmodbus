@@ -47,8 +47,12 @@ python setup.py build
 </code>
 
 <code>
-python setup.py install
+sudo python setup.py install
 </code>
+
+target:
+
+/usr/local/lib/python2.6/dist-packages
 
 copying build\lib\packagetestfibo.py -> C:\python27\Lib\site-packages
 
