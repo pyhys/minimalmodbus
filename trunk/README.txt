@@ -4,6 +4,8 @@ MinimalModbus
 
 There are several types of modbus protocols:
 
+  * Modbus RTU
+  * Modbus ??
 
 Typical usage::
 
@@ -11,8 +13,8 @@ Typical usage::
 
  import minimalmodbus
 
- instrument = minimalmodbus.minimalmodbus(56) # Slave address
- temperature = instrument.readRegister( 23541, 1 ) # Registernumber, number of decimals
+ instrument = minimalmodbus.Instrument(56) # Slave address
+ temperature = instrument.read_register( 23541, 1 ) # Registernumber, number of decimals
 
 
 
