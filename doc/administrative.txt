@@ -15,6 +15,10 @@ pydoc -w eurotherm3500
 
 
 
+  * python setup.py sdist --formats=gztar,zip
+  * remove MANIFEST and folder 'dist'
+
+
 
 
 
