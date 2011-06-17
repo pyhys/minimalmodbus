@@ -1,3 +1,5 @@
+
+=== Some SVN commands ===
 svn update
 svn status 
 svn status -v
@@ -5,23 +7,28 @@ svn add FILENAME
 svn commit -m 'Write yout log message here'
 
 
+=== Checking in ===
+remove .pyc /dist MANIFEST etc
 
+=== Preparing for release ===
 pychecker eurotherm3500.py 
 pychecker minimalmodbus.py 
-
 
 pydoc -w minimalmodbus
 pydoc -w eurotherm3500
 
 
-
   * python setup.py sdist --formats=gztar,zip
   * remove MANIFEST and folder 'dist'
   * On PYPI page upload .gzip.tar .zip and windows installer files.
+  * Also on sourceforge upload the files
+
+  * On Windows machine: python setup.py bdist_wininst
 
 
 
-  * On Windows machine python setup.py bdist_wininst
+
+=== Notes on distribution ===
 
 python setup.py register sdist --formats=gztar,zip upload
 
@@ -67,4 +74,14 @@ copying build\lib\packagetestfibo.py -> C:\python27\Lib\site-packages
 The Windows installer also creates a .pyo file (and also the .pyc file).
 
 
+
+
+=== TODO ===
+Write a proper README.txt (describe modbus types, home page, other libraries)
+Homepage with pydoc etc
+Mailing list
+Unittests
+Include pydoc pages etc in source distributions
+__version__ etc in source files
+SVN setting to ignore generated files
 
