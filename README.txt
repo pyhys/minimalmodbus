@@ -18,17 +18,33 @@ Typical usage::
 
 
 
+
 Installation
 ============
 
+From command line:
+   pip install minimalmodbus
+
+or
+
+download the compressed source file (.zip or .tar.gz), uncompress it and run:
+   python setup.py install
+
+There is also a Windows installer.
+   
 
 Home page
 =========
+http://minimalmodbus.sourceforge.net/
+
+SoourceForge project page: http://sourceforge.net/projects/minimalmodbus/
+
+Python package index: http://pypi.python.org/pypi/MinimalModbus/
 
 
 Author
 ======
-
+Jonas Berg
 
    
 
