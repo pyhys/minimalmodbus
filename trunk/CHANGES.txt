@@ -1,1 +1,4 @@
+
+v0.2 2011-07-?? -- Updated documentation.
+
 v0.1 2011-06-16 -- Initial release.
