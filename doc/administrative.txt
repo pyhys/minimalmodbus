@@ -1,16 +1,36 @@
+=======================
+Developer documentation
+=======================
 
-=== Some SVN commands ===
+
+
+Shortlist of most used SVN commands
+-----------------------------------
+
 svn update
+
 svn status 
 svn status -v
+svn status -v --no-ignore
+
 svn add FILENAME
 svn commit -m 'Write yout log message here'
 
+In the 'trunk' directory:
+svn propset svn:ignore html .
+or if ignoring multiple items, edit the list using: 
+svn propedit svn:ignore .
 
-=== Checking in ===
-remove .pyc /dist MANIFEST etc
 
-=== Preparing for release ===
+svn proplist
+svn propget svn:ignore
+
+
+
+
+Preparation for release
+-----------------------
+
 pychecker eurotherm3500.py 
 pychecker minimalmodbus.py 
 
@@ -28,7 +48,8 @@ pydoc -w eurotherm3500
 
 
 
-=== Notes on distribution ===
+Notes on distribution
+---------------------
 
 python setup.py register sdist --formats=gztar,zip upload
 
@@ -83,5 +104,5 @@ Mailing list
 Unittests
 Include pydoc pages etc in source distributions
 __version__ etc in source files
-SVN setting to ignore generated files
+epydoc 
 
