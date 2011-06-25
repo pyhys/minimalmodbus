@@ -32,24 +32,59 @@ RS485
 USB-to-RS485 converter
 
 
+several instruments (slaves) on a bus, and the slaves have addresses 1 to 247 ???.
+
+
+
 USB-to-RS232 converter and an industrial RS232-to-RS485 converter. This has the advantage that the latter is galvanically isolated using opto-couplers,and has transient supression. This software has been tested using a Westermo MDW-45 RS232-to-RS485 converter.
-
-
-
 
 
 Typical usage
 -------------
 
-Using a serial port 
-http://pyserial.sourceforge.net/
+The instrument is typically connected via a serial port, and a USB-to-serial adaptor should be used on most modern PCs. How to configure such a port is described on the pySerial page: http://pyserial.sourceforge.net/
+
+For example, consider an instrument(slave) with address number 1 to which we are to communicate via port /dev/ttyUSB1 . The instrument stores the measured temperature in register 289. For this instrument a temperature of 77.2 C is stored as 772, why we use 1 decimal. To read this data from the instrument:
 
     #!/usr/bin/env python
     import minimalmodbus
 
     instrument = minimalmodbus.Instrument('/dev/ttyUSB1', 1) # port name, slave address
-    temperature = instrument.read_register( 23541, 1 ) # Registernumber, number of decimals
 
+    ## Read temperature (PV) ##
+    temperature = instrument.read_register( 289, 1 ) # Registernumber, number of decimals
+    print temperature
+
+    ## Change temperature setpoint (SP) ##
+    NEW_TEMPERATURE = 95.0
+    instrument.write_register(24, NEW_TEMPERATURE, 1) # Registernumber, value, number of decimals
+
+
+It is better to put this in a driver for the specific instrument. An example driver for Eurotherm3500 is included in this library. To get the process value (PV, from loop1):
+
+    #!/usr/bin/env python
+    import eurotherm3500
+
+    heatercontroller = eurotherm3500.Eurotherm3500('/dev/ttyUSB1', 1)  # port name, slave address
+
+    ## Read temperature (PV) ##
+    temperature = heatercontroller.get_pv_loop1()
+    print temperature
+
+    ## Change temperature setpoint (SP) ##
+    NEW_TEMPERATURE = 95.0
+    heatercontroller.set_sp_loop1(NEW_TEMPERATURE)
+
+
+Serial port parameters
+
+instrument.baudrate
+instrument.timeout
+instrument.parity
+instrument.bytesize = 8
+instrument.stopbits = 1
+instrument.address
+instrument.portname !!!! was .port
 
 
 Dependencies

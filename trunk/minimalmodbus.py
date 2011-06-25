@@ -15,6 +15,8 @@
 #   limitations under the License.
 #
 
+__docformat__ = "restructuredtext en"
+
 import serial
 
 class Instrument():
