@@ -14,6 +14,7 @@ setup(name='MinimalModbus',
     url='http://sourceforge.net/projects/minimalmodbus/',
     py_modules=['minimalmodbus', 'eurotherm3500'],
     license = 'Apache License, Version 2.0',
+    requires = ['pySerial'],
     classifiers=[ 
         'Intended Audience :: Developers',
         'Intended Audience :: Information Technology',

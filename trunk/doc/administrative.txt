@@ -26,6 +26,10 @@ svn proplist
 svn propget svn:ignore
 
 
+Documentation generators
+------------------------
+pydoc -w modulename # Writes a HTML page in current directory
+
 
 
 Preparation for release
@@ -105,4 +109,6 @@ Unittests
 Include pydoc pages etc in source distributions
 __version__ etc in source files
 epydoc 
+in setup.py, indicate the dependency of pySerial
+
 
