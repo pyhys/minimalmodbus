@@ -60,7 +60,7 @@ For example, consider an instrument(slave) with address number 1 to which we are
     instrument.write_register(24, NEW_TEMPERATURE, 1) # Registernumber, value, number of decimals
 
 
-It is better to put this in a driver for the specific instrument. An example driver for Eurotherm3500 is included in this library. To get the process value (PV, from loop1):
+It is better to put this in a driver for the specific instrument. An example driver for Eurotherm3500 is included in this library. To get the process value (PV from loop1):
 
     #!/usr/bin/env python
     import eurotherm3500
@@ -76,20 +76,24 @@ It is better to put this in a driver for the specific instrument. An example dri
     heatercontroller.set_sp_loop1(NEW_TEMPERATURE)
 
 
-Serial port parameters
+Serial port parameters default values
 
-instrument.baudrate
-instrument.timeout
-instrument.parity
+instrument.baudrate = 19200 # Baud
+instrument.timeout = 0.05 # seconds
+instrument.parity = serial.PARITY_NONE
 instrument.bytesize = 8
 instrument.stopbits = 1
-instrument.address
-instrument.portname !!!! was .port
+instrument.address # this is the slave address number
+instrument.portname # this is the port name
+
+CHANGE THIS
+NOTE:    instrument.portname was .port
+
 
 
 Dependencies
 ------------
-This module relies on pySerial to do the heavy lifting, and it is the only dependency. You can find is at the Python package index: http://pypi.python.org/pypi/pyserial
+This module relies on pySerial to do the heavy lifting, and it is the only dependency. You can find it at the Python package index: http://pypi.python.org/pypi/pyserial
 
 Download
 --------

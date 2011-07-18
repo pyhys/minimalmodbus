@@ -29,7 +29,7 @@ svn propget svn:ignore
 Documentation generators
 ------------------------
 pydoc -w modulename # Writes a HTML page in current directory
-
+epydoc minimalmodbus # Writes HTML pages and javascript in the html subfolder
 
 
 Preparation for release
@@ -111,4 +111,5 @@ __version__ etc in source files
 epydoc 
 in setup.py, indicate the dependency of pySerial
 
+CHANGE THIS: instrument.portname instead of  .port
 
