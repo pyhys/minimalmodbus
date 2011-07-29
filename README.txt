@@ -1,4 +1,3 @@
-=============
 MinimalModbus
 =============
 
@@ -44,7 +43,7 @@ Typical usage
 
 The instrument is typically connected via a serial port, and a USB-to-serial adaptor should be used on most modern PCs. How to configure such a port is described on the pySerial page: http://pyserial.sourceforge.net/
 
-For example, consider an instrument(slave) with address number 1 to which we are to communicate via port /dev/ttyUSB1 . The instrument stores the measured temperature in register 289. For this instrument a temperature of 77.2 C is stored as 772, why we use 1 decimal. To read this data from the instrument:
+For example, consider an instrument(slave) with address number 1 to which we are to communicate via port /dev/ttyUSB1 . The instrument stores the measured temperature in register 289. For this instrument a temperature of 77.2 C is stored as 772, why we use 1 decimal. To read this data from the instrument::
 
     #!/usr/bin/env python
     import minimalmodbus
@@ -59,8 +58,9 @@ For example, consider an instrument(slave) with address number 1 to which we are
     NEW_TEMPERATURE = 95.0
     instrument.write_register(24, NEW_TEMPERATURE, 1) # Registernumber, value, number of decimals
 
+The full API for minimalmodbus is available on INSERT!!!
 
-It is better to put this in a driver for the specific instrument. An example driver for Eurotherm3500 is included in this library. To get the process value (PV from loop1):
+It is better to put this in a driver for the specific instrument. An example driver for Eurotherm3500 is included in this library. To get the process value (PV from loop1)::
 
     #!/usr/bin/env python
     import eurotherm3500
@@ -95,19 +95,14 @@ Dependencies
 ------------
 This module relies on pySerial to do the heavy lifting, and it is the only dependency. You can find it at the Python package index: http://pypi.python.org/pypi/pyserial
 
-Download
---------
-Download the software here: http://pypi.python.org/pypi/MinimalModbus/
+Download and installation
+-------------------------
+From command line (if you have the *pip installer*, available at http://pypi.python.org/pypi/pip)::
 
-There are compressed source files for Unix/Linux (.tar.gz) and Windows (.zip), and also a Windows installer (.win32.exe).
-
-Installation
-------------
-
-From command line:
    pip install minimalmodbus
 
-or download the compressed source file, de-compress it and run:
+or manually download the compressed source file from http://pypi.python.org/pypi/MinimalModbus/ . There are compressed source files for Unix/Linux (.tar.gz) and Windows (.zip). De-compress it and run::
+
    python setup.py install
 
 There is also a Windows installer (.win32.exe) available. Just start it and follow the instructions.
@@ -120,11 +115,12 @@ Apache License, Version 2.0
 
 Home page
 ---------
-http://minimalmodbus.sourceforge.net/
+Home page with full API documentation http://minimalmodbus.sourceforge.net/ (this page if viewed on sourceforge.net).
 
-The SourceForge project page: http://sourceforge.net/projects/minimalmodbus/
+Python package index: http://pypi.python.org/pypi/MinimalModbus/ (this page if viewed on python.org. Note that no API is available).
 
-Python package index: http://pypi.python.org/pypi/MinimalModbus/
+The SourceForge project page: http://sourceforge.net/projects/minimalmodbus/ with Subversion repository, bug tracker and mailing list.
+
 
 Author
 ------
@@ -132,7 +128,7 @@ Jonas Berg, pyhys@users.sourceforge.net
 
 Related software
 ----------------
-The minimalmodbus module is intended for easy-to-use communication with instruments using the Modbus (RTU) protocol. There are a few other Python modules for Modbus protocol implementation. For more advanced use, you should consider one of these:
+The minimalmodbus module is intended for easy-to-use communication with instruments using the Modbus (RTU) protocol. There are a few other Python modules for Modbus protocol implementation. For more advanced use, you should consider using one of these:
 
  - **pyModbus** From the page http://code.google.com/p/pymodbus/ : 'Pymodbus is a full Modbus protocol implementation using twisted for its asynchronous communications core.'
  - **modbus-tk** From the page http://code.google.com/p/modbus-tk/ : 'Make possible to write modbus TCP and RTU master and slave mainly for testing purpose. It is shipped with slave simulator and a master with a web-based hmi. It is a full-stack implementation and as a consequence could also be used on real-world project. '
