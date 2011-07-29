@@ -1,7 +1,5 @@
-=======================
 Developer documentation
 =======================
-
 
 
 Shortlist of most used SVN commands
@@ -13,7 +11,7 @@ svn status
 svn status -v
 svn status -v --no-ignore
 
-svn add FILENAME
+svn add FILENAME or DIRECTORYNAME
 svn commit -m 'Write yout log message here'
 
 In the 'trunk' directory:
@@ -29,7 +27,10 @@ svn propget svn:ignore
 Documentation generators
 ------------------------
 pydoc -w modulename # Writes a HTML page in current directory
-epydoc minimalmodbus # Writes HTML pages and javascript in the html subfolder
+epydoc minimalmodbus eurotherm3500 # Writes HTML pages and javascript in the html subfolder
+
+export PYTHONPATH=$PYTHONPATH:/home/jonas/pythonprogrammering/minimalmodbus/trunk
+make html
 
 
 Preparation for release
@@ -100,8 +101,27 @@ The Windows installer also creates a .pyo file (and also the .pyc file).
 
 
 
+Sphinx usage
+------------
 
-=== TODO ===
+http://packages.python.org/an_example_pypi_project/sphinx.html
+http://docs.geoserver.org/trunk/en/docguide/sphinx.html
+
+
+
+echo $PYTHONPATH
+export PYTHONPATH='/home/jonas/pythonprogrammering/minimalmodbus/trunk'
+
+in the trunc/doc directory:
+sphinx-build -a  . build
+
+Top level heading: ==
+Next lower level: --
+
+
+
+TODO
+----
 Write a proper README.txt (describe modbus types, home page, other libraries)
 Homepage with pydoc etc
 Mailing list
