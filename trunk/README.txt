@@ -101,7 +101,7 @@ From command line (if you have the *pip installer*, available at http://pypi.pyt
 
    pip install minimalmodbus
 
-or manually download the compressed source file from http://pypi.python.org/pypi/MinimalModbus/ . There are compressed source files for Unix/Linux (.tar.gz) and Windows (.zip). De-compress it and run::
+or manually download the compressed source file from http://pypi.python.org/pypi/MinimalModbus/ . There are compressed source files for Unix/Linux (.tar.gz) and Windows (.zip). Uncompress it and run::
 
    python setup.py install
 
