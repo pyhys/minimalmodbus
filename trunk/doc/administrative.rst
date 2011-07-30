@@ -62,9 +62,10 @@ Build the source distribution::
 
     python setup.py sdist --formats=gztar,zip
 
-Build the documentation (after making sure that PYTHONPATH is correct)::
+Build the documentation ( in /doc after making sure that PYTHONPATH is correct)::
 
-    sphinx-build -a  . build
+    make html
+    make latexpdf
 
 Upload the .gzip.tar and .zip files to PYPI (use web form?). What about README.txt?
 
@@ -154,7 +155,7 @@ To set the path::
 
 In the trunc/doc directory::
 
-    sphinx-build -b html -d build/doctrees . build/html
+    sphinx-build -b html -d build/doctrees  -a . build/html
 
 or use the makefile::
 
