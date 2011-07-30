@@ -154,7 +154,7 @@ To set the path::
 
 In the trunc/doc directory::
 
-    sphinx-build -a  . build
+    sphinx-build -b html -d build/doctrees . build/html
 
 TODO
 ----
