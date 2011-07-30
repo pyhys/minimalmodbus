@@ -15,17 +15,22 @@
 #   limitations under the License.
 #
 
-__docformat__ = "restructuredtext en"
+"""
+
+
+.. moduleauthor:: Jonas Berg <pyhys@users.sourceforge.net>
+
+
+"""
 
 import serial
 
 class Instrument():
-    """Driver for talking to instruments via Modbus protocol (via RS485 or RS232).
+    """Driver for talking to instruments via the Modbus RTU protocol (via RS485 or RS232).
 
-    port is the serial port name, for example '???' or '???'
-    slaveaddress is an integer in the range 0-???. 
-
-    Note that slaveaddress=0 is used for ??
+    Args:
+        port (str): The serial port name, for example '???' or '???'
+        slaveaddress (int): in the range 0-???. Note that slaveaddress=0 is used for ??
 
     """
     
@@ -49,6 +54,14 @@ class Instrument():
         """Read one register.
         
         Converts the data to a numerical value?
+
+        Args:
+            registeraddress (int): The register address     
+            numberOfDecimals (int): The number of decimals that should be used when converting the register content to numerical value.
+
+        Returns:
+            The register data in numerical value.
+
         """
 
         FUNCTIONCODE_READ_REGISTERS = 3
@@ -87,7 +100,13 @@ class Instrument():
         The payload to the slave is: Startaddress, number of registers, number of bytes, registerdata
         The payload from the slave is: Startaddress, number of registers.
         
-        No return value.
+        Args:
+            registeraddress: 
+            value: 
+            numberOfDecimals: 
+
+        Returns:
+            None
         """
         FUNCTIONCODE_WRITE_REGISTERS = 16
         NUMBER_OF_REGISTERS_TO_WRITE = 1
