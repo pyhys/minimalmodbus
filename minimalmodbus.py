@@ -20,13 +20,15 @@
 
 .. moduleauthor:: Jonas Berg <pyhys@users.sourceforge.net>
 
+Text describing the minimalmodbus module.
+
 
 """
 
 import serial
 
 class Instrument():
-    """Driver for talking to instruments via the Modbus RTU protocol (via RS485 or RS232).
+    """Driver for talking to instruments (slaves) via the Modbus RTU protocol (via RS485 or RS232).
 
     Args:
         port (str): The serial port name, for example '???' or '???'
@@ -51,13 +53,13 @@ class Instrument():
     ########################################
     
     def read_register(self, registeraddress, numberOfDecimals=0):
-        """Read one register.
-        
-        Converts the data to a numerical value?
+        """Read one register from the slave.
 
         Args:
-            registeraddress (int): The register address     
-            numberOfDecimals (int): The number of decimals that should be used when converting the register content to numerical value.
+            registeraddress (int): The register address   
+            numberOfDecimals (int): The number of decimals for content conversion
+
+        If a value of 77.0 is stored internally in the slave register as 770, then use numberOfDecimals=1
 
         Returns:
             The register data in numerical value.
@@ -93,20 +95,21 @@ class Instrument():
         return registervalue
         
     def write_register(self, registeraddress, value, numberOfDecimals=0):
-        """Write to one register.
-        
-        To store for example value=77.0, use numberOfDecimals=1 if the register will hold it as 770 internally.
-        
+        """Write to one register in the slave.
+             
         The payload to the slave is: Startaddress, number of registers, number of bytes, registerdata
         The payload from the slave is: Startaddress, number of registers.
         
-        Args:
-            registeraddress: 
-            value: 
-            numberOfDecimals: 
+        | Args:
+        |    registeraddress (int): The register address 
+        |    value (float): The value to store in the register 
+        |    numberOfDecimals (int): The number of decimals for content conversion.
+
+        To store for example value=77.0, use numberOfDecimals=1 if the register will hold it as 770 internally.
 
         Returns:
             None
+
         """
         FUNCTIONCODE_WRITE_REGISTERS = 16
         NUMBER_OF_REGISTERS_TO_WRITE = 1
@@ -257,6 +260,7 @@ def _twoByteStringToNum(bytestring, numberOfDecimals = 0):
     return fullregister / float(divisor)
    
 def _numToOneByteString(integer):
+    """Convert a numerical value to a one-byte string."""
     if integer > 0xFF:
         raise ValueError( 'The input value is too large.')
     if integer < 0:
@@ -264,6 +268,7 @@ def _numToOneByteString(integer):
     return chr(integer)
 
 def _numToTwoByteString(value, numberOfDecimals = 0, LsbFirst = False):
+    """Convert a numerical value to a two-byte string."""
     if numberOfDecimals <0 :
         raise ValueError( 'The number of decimals must not be less than 0.' )
 

@@ -15,12 +15,27 @@
 #   limitations under the License.
 #
 
-__docformat__ = "restructuredtext en"
+"""
+
+
+.. moduleauthor:: Jonas Berg <pyhys@users.sourceforge.net>
+
+Text describing the Eurotherm3500 module.
+
+
+"""
 
 import minimalmodbus
 
 class Eurotherm3500( minimalmodbus.Instrument ):
-    """Driver for talking to Eurotherm 35xx heater controller via Modbus RTU protocol via RS485.
+    """Driver for talking to Eurotherm 35xx process controller via Modbus RTU protocol via RS232 or RS485.
+
+    Uses the *minimalmodbus* module for communication.    
+
+    Args:
+        port (str): port name
+        slaveaddress (int): slave address in the range ??-??
+
     """
     
     def __init__(self, port, slaveaddress):
@@ -29,64 +44,69 @@ class Eurotherm3500( minimalmodbus.Instrument ):
     ## Process value
     
     def get_pv_loop1(self):
-        """Returns the PV for loop1."""
+        """Return the process value (PV) for loop1."""
         return self.read_register(289, 1)
     
     def get_pv_loop2(self):
-        """Returns the PV for loop2."""
+        """Return the process value (PV) for loop2."""
         return self.read_register(1313, 1)
     
     ## Auto/manual mode
     
     def is_manual_loop1(self):
-        """Returns the True if loop1 is in man mode."""
+        """Return the True if loop1 is in man mode."""
         return self.read_register(273, 1) > 0
     
     ## Setpoint
     
     def get_sptarget_loop1(self):
-        """Returns the SP target for loop1."""
+        """Return the setpoint (SP) target for loop1."""
         return self.read_register(2, 1)
     
     def get_sp_loop1(self):
-        """Returns the (working) SP for loop1."""
+        """Return the (working) setpoint (SP) for loop1."""
         return self.read_register(5, 1)
     
     def set_sp_loop1(self, value):
-        """Sets the SP1 for loop1.
+        """Set the SP1 for loop1.
         
         Note that this not necessarily is the working setpoint.
+
+        Args:
+            value (float): Setpoint (most often in degrees)
         """
         self.write_register(24, value, 1)
     
     def get_sp_loop2(self):
-        """Returns the (working) SP for loop2."""
+        """Return the (working) setpoint (SP) for loop2."""
         return self.read_register(1029, 1)
     
     ## Setpoint rate
     
     def get_sprate_loop1(self):
-        """Returns the SP change rate for loop1."""
+        """Return the setpoint (SP) change rate for loop1."""
         return self.read_register(35, 1)   
     
     def set_sprate_loop1(self, value):
-        """Set the SP change rate for loop1.
+        """Set the setpoint (SP) change rate for loop1.
         
-        'value' is most often in degrees/minute.
+        Args:
+            value (float): Setpoint change rate (most often in degrees/minute)
+
         """
         self.write_register(35, value, 1)  
     
     def is_sprate_disabled_loop1(self):
-        """Returns True if Loop1 SP rate is disabled."""
+        """Return True if Loop1 setpoint (SP) rate is disabled."""
         return self.read_register(78, 1) > 0
 
     def disable_sprate_loop1(self):
-        """Disable the SP change rate for loop1. """
+        """Disable the setpoint (SP) change rate for loop1. """
         VALUE = 1
         self.write_register(78, VALUE, 0) 
         
     def enable_sprate_loop1(self):
-        """Set disable=false for the SP change rate for loop1.
+        """Set disable=false for the setpoint (SP) change rate for loop1.
         
         Note that also the SP rate value must be properly set for the SP rate to work.
         """
@@ -96,28 +116,27 @@ class Eurotherm3500( minimalmodbus.Instrument ):
     ## Output signal
     
     def get_op_loop1(self):
-        """Returns the OP for loop1 (in %)."""
+        """Return the output value (OP) for loop1 (in %)."""
         return self.read_register(85, 1)
    
     def is_inhibited_loop1(self):
-        """Returns True if Loop1 is inhibited."""
+        """Return True if Loop1 is inhibited."""
         return self.read_register(268, 1) > 0
 
     def get_op_loop2(self):
-        """Returns the OP for loop2 (in %)."""
+        """Return the output value (OP) for loop2 (in %)."""
         return self.read_register(1109, 1)
     
     ## Alarms
 
     def get_threshold_alarm1(self):
-        """Returns the threshold for Alarm1."""
+        """Return the threshold for Alarm1."""
         return self.read_register(10241, 1)
     
     def is_set_alarmsummary(self):
-        """Returns the True if there is some alarm triggered."""
+        """Return True if some alarm is triggered."""
         return self.read_register(10213, 1) > 0
     
-
 ########################
 ## Testing the module ##
 ########################
