@@ -11,7 +11,7 @@ These are the most used commands::
     svn status -v
     svn status -v --no-ignore
     svn add FILENAME or DIRECTORYNAME
-    svn commit -m 'Write yout log message here'
+    svn commit -m 'Write your log message here'
 
 In the 'trunk' directory::
 
@@ -155,6 +155,14 @@ To set the path::
 In the trunc/doc directory::
 
     sphinx-build -b html -d build/doctrees . build/html
+
+or use the makefile::
+
+    make html
+    make latexpdf
+    
+If the python source files not are updated in the html output, then remove the contents of *trunk/doc/build/html/* and rebuild the documentation.
+
 
 TODO
 ----
