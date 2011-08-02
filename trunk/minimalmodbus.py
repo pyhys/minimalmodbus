@@ -162,7 +162,7 @@ class Instrument():
     ##########################################
     
     def _performCommand(self, functioncode, payloadToSlave):
-        """Performs the command having the 'functioncode'.
+        """Performs the command having the *functioncode*.
         
         Args:
             * functioncode (int): The function code for the command to be performed. Can for example be 'Write register'.
