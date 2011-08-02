@@ -162,7 +162,7 @@ or use the makefile::
     make html
     make latexpdf
     
-If the python source files not are updated in the html output, then remove the contents of *trunk/doc/build/html/* and rebuild the documentation.
+If the python source files not are updated in the html output, then remove the contents of *trunk/doc/build/doctrees* and rebuild the documentation. 
 
 
 TODO
