@@ -31,8 +31,8 @@ class Instrument():
     """Driver for talking to instruments (slaves) via the Modbus RTU protocol (via RS485 or RS232).
 
     Args:
-        port (str): The serial port name, for example '???' or '???'
-        slaveaddress (int): in the range 0-???. Note that slaveaddress=0 is used for ??
+        * port (str): The serial port name, for example '???' or '???'
+        * slaveaddress (int): in the range 0-???. Note that slaveaddress=0 is used for ??
 
     """
     
@@ -56,13 +56,23 @@ class Instrument():
         """Read one register from the slave.
 
         Args:
-            registeraddress (int): The register address   
-            numberOfDecimals (int): The number of decimals for content conversion
+            * registeraddress (int): The register address   
+            * numberOfDecimals (int): The number of decimals for content conversion
 
         If a value of 77.0 is stored internally in the slave register as 770, then use numberOfDecimals=1
 
         Returns:
             The register data in numerical value.
+
+        Raises:
+            ValueError
+
+        .. note::
+            Some implementation details:
+
+            The payload to the slave is: Startaddress, number of registers
+
+            The payload from the slave is: ?????
 
         """
 
@@ -96,19 +106,26 @@ class Instrument():
         
     def write_register(self, registeraddress, value, numberOfDecimals=0):
         """Write to one register in the slave.
-             
-        The payload to the slave is: Startaddress, number of registers, number of bytes, registerdata
-        The payload from the slave is: Startaddress, number of registers.
         
-        | Args:
-        |    registeraddress (int): The register address 
-        |    value (float): The value to store in the register 
-        |    numberOfDecimals (int): The number of decimals for content conversion.
+        Args:
+            * registeraddress (int): The register address 
+            * value (float): The value to store in the register 
+            * numberOfDecimals (int): The number of decimals for content conversion.
 
         To store for example value=77.0, use numberOfDecimals=1 if the register will hold it as 770 internally.
 
         Returns:
             None
+
+        Raises:
+            ValueError
+        
+        .. note::
+            Some implementation details:
+
+            The payload to the slave is: Startaddress, number of registers, number of bytes, registerdata
+            
+            The payload from the slave is: Startaddress, number of registers.
 
         """
         FUNCTIONCODE_WRITE_REGISTERS = 16
@@ -125,7 +142,7 @@ class Instrument():
         payloadFromSlave = self._performCommand( FUNCTIONCODE_WRITE_REGISTERS, payloadToSlave)
         assert len(payloadFromSlave) == 4
         
-        ## Check start wright register
+        ## Check start write register
         STARTBYTENUMBER_FOR_STARTADDRESS = 0
         bytesForStartAddress = payloadFromSlave[STARTBYTENUMBER_FOR_STARTADDRESS : STARTBYTENUMBER_FOR_STARTADDRESS+NUMBER_OF_BYTES_PER_REGISTER]
         receivedStartAddress =  _twoByteStringToNum( bytesForStartAddress )
@@ -147,8 +164,15 @@ class Instrument():
     def _performCommand(self, functioncode, payloadToSlave):
         """Performs the command having the 'functioncode'.
         
-        'payloadToSlave' is transmitted (embedded in address, crc etc)
-        The return value is the extracted data payload from the slave.
+        Args:
+            * functioncode (int): The function code for the command to be performed. Can for example be 'Write register'.
+            * payloadToSlave (str): Data to be transmitted to the slave (will be embedded in address, crc etc)
+    
+        Returns:
+            The extracted data payload from the slave (a string). It is stripped of CRC etc.
+
+        Makes use of the Instrument._communicate method.
+
         """
         message             = _embedPayload(self.address, functioncode, payloadToSlave)
         response            = self._communicate(message)
@@ -157,8 +181,17 @@ class Instrument():
         return payloadFromSlave
         
     def _communicate(self, message):
-        """Talk to the slave.
+        """Talk to the slave via a serial port.
         
+        Args:
+            message (str): The raw message that is to be sent to the slave.
+
+        Returns:
+            The raw data (string) returned from the slave.
+
+        Raises:
+            ValueError
+
         Note that the answer might have strange ASCII control signs, which
         makes it difficult to print it in the promt (messes up a bit).
         
@@ -184,9 +217,14 @@ class Instrument():
 def _embedPayload(slaveaddress, functioncode, payloaddata):
     """Build a message from the slaveaddress, the function code and the payload data.
     
-    'slaveaddress' is an integer.
-    'functioncode' is an integer.
-    'payloaddata' is a string of hex integers
+    Args:
+        * slaveaddress (int): The address of the slave
+        * functioncode (int): 
+        * payloaddata (str): The hex integer string to be sent to the slave
+
+    Returns:
+        The built (raw) message string for sending to the slave.    
+
     The resulting message has the format: slaveaddress byte + functioncode + payloaddata + crc
     """
     firstPart = _numToOneByteString(slaveaddress) + _numToOneByteString(functioncode) + payloaddata
@@ -194,14 +232,21 @@ def _embedPayload(slaveaddress, functioncode, payloaddata):
     return message
 
 def _extractPayload(response, slaveaddress, functioncode):
-    """Extract the payload data from the slave's response.
+    """Extract the payload data part from the slave's response.
     
-    'response' is a hex string.
-    'slaveaddress' is an integer. It is for error checking only.
-    'functioncode' is an integer. It is for error checking only.
+    Args:
+        * response (str): The raw response hex string from the slave.
+        * slaveaddress (int): The adress of the slave. Used here for error checking only.
+        * functioncode (int): Used here for error checking only.
     
+    Returns:
+        The payload part of the *response* string.
+
+    Raises:
+        ValueError. Raises an exception if there is any problem with the received address, the functioncode or the crc.
+
     The received message should have the format: address byte + functioncode + payloaddata + crc
-    Raises an exception if there is any problem with the received address, the functioncode or the crc.
+
     """
     
     # Constants
@@ -260,7 +305,17 @@ def _twoByteStringToNum(bytestring, numberOfDecimals = 0):
     return fullregister / float(divisor)
    
 def _numToOneByteString(integer):
-    """Convert a numerical value to a one-byte string."""
+    """Convert a numerical value to a one-byte string.
+
+    Args:
+        integer (int): The value to be converted. Should be >=0 and <=255.
+
+    Returns:
+        A one-byte string created by chr(integer).
+
+    Raises:
+        ValueError
+    """
     if integer > 0xFF:
         raise ValueError( 'The input value is too large.')
     if integer < 0:
@@ -268,7 +323,22 @@ def _numToOneByteString(integer):
     return chr(integer)
 
 def _numToTwoByteString(value, numberOfDecimals = 0, LsbFirst = False):
-    """Convert a numerical value to a two-byte string."""
+    """Convert a numerical value to a two-byte string.
+
+    Args:
+        value (float or int): The numerical value to be converted
+        numberOfDecimals (int): 
+        LsbFirst (bol): 
+
+    Returns:
+        A two-byte string.
+
+    Raises:
+        ValueError
+
+    Example ???????????
+
+    """
     if numberOfDecimals <0 :
         raise ValueError( 'The number of decimals must not be less than 0.' )
 
@@ -291,8 +361,11 @@ def _numToTwoByteString(value, numberOfDecimals = 0, LsbFirst = False):
 def _calculateCrcString( inputstring ):
     """Calculate CRC-16 for Modbus.
     
-    Inputstring is the message (without the CRC).
-    Returns a two-byte CRC string.
+    Args:
+        inputstring (str): The message (without the CRC).
+
+    Returns:
+        A two-byte CRC string.
     
     Algorithm from the document 'MODBUS over serial line specification and implementation guide V1.02'.
     """
@@ -321,7 +394,15 @@ def _XOR(integer1, integer2):
     return integer1 ^ integer2
 
 def _setBitOn( x, bitNum ):
-    """Set bit 'bitNum' to True."""
+    """Set bit 'bitNum' to True.
+ 
+    Args:
+        * x (int): The value before.
+        * bitNum (int): The bit number that should be set to True.
+
+    Returns:
+        The value after setting the bit. This is an integer.
+    """
     return x | (1<<bitNum)
 
 def _rightshift(inputInteger):
@@ -333,6 +414,12 @@ def _rightshift(inputInteger):
 def _toPrintableString( inputstring ):
     """Make a descriptive string, showing the ord() numbers for the characters in the inputstring.
     
+    Args:
+        inputstring (str): The string that should be converted to something printable.
+
+    Returns:
+        A descriptive string.
+
     Use it for diagnostic printing of strings representing byte values (might have non-printing characters).
     With an input string of '\x12\x02\x74ABC', it will return the string:
     'String length: 6 bytes. Values: 18, 2, 116, 65, 66, 67'

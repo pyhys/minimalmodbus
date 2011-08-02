@@ -33,8 +33,8 @@ class Eurotherm3500( minimalmodbus.Instrument ):
     Uses the *minimalmodbus* module for communication.    
 
     Args:
-        port (str): port name
-        slaveaddress (int): slave address in the range ??-??
+        * port (str): port name
+        * slaveaddress (int): slave address in the range ??-??
 
     """
     
