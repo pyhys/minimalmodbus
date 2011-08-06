@@ -4,7 +4,7 @@
 Documentation for Minimalmodbus
 ===============================
 
-Documentation built |today|, for software verion |version|.
+Documentation built using Sphinx |today|, for MinimalModbus verion |version|.
 
 .. include:: ../README.txt
 
