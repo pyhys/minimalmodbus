@@ -1,4 +1,4 @@
-API for Minimalmodbus
+API for MinimalModbus
 =====================
 
 .. automodule:: minimalmodbus

@@ -1,4 +1,4 @@
-Licence for Minimalmodbus
+Licence for MinimalModbus
 =========================
 
 .. include:: ../LICENCE.txt
