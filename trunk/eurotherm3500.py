@@ -130,7 +130,7 @@ class Eurotherm3500( minimalmodbus.Instrument ):
     ## Alarms
 
     def get_threshold_alarm1(self):
-        """Return the threshold for Alarm1."""
+        """Return the threshold value for Alarm1."""
         return self.read_register(10241, 1)
     
     def is_set_alarmsummary(self):
@@ -146,28 +146,28 @@ if __name__ == '__main__':
 
     a = Eurotherm3500('/dev/cvdHeatercontroller', 1)
     
-    print a.get_sp_loop1(), 'SP 1'
-    print a.get_sptarget_loop1(), 'SP 1 target'
-    print a.get_sp_loop2(), 'SP 2'
+    #print a.get_sp_loop1(), 'SP 1'
+    #print a.get_sptarget_loop1(), 'SP 1 target'
+    #print a.get_sp_loop2(), 'SP 2'
     
-    print a.is_sprate_disabled_loop1(), 'SP rate Loop1 disabled'
-    print a.get_sprate_loop1(), 'SP 1 rate'
+    #print a.is_sprate_disabled_loop1(), 'SP rate Loop1 disabled'
+    #print a.get_sprate_loop1(), 'SP 1 rate'
     
-    print a.get_op_loop1(), '% OP 1'
-    print a.get_op_loop2(), '% OP 2'
-    print a.get_threshold_alarm1(), 'Al 1 thr'
-    print a.is_set_alarmsummary(), 'Al summ'
-    print a.is_manual_loop1(), 'Man Loop1'
-    print a.is_inhibited_loop1(), 'Inhibit Loop1'
+    #print a.get_op_loop1(), '% OP 1'
+    #print a.get_op_loop2(), '% OP 2'
+    #print a.get_threshold_alarm1(), 'Al 1 thr'
+    #print a.is_set_alarmsummary(), 'Al summ'
+    #print a.is_manual_loop1(), 'Man Loop1'
+    #print a.is_inhibited_loop1(), 'Inhibit Loop1'
    
-    print a.get_pv_loop1(), 'PV 1'
-    print a.get_pv_loop2(), 'PV 2'
+    print( str(a.get_pv_loop1()) + 'PV 1' )
+    #print a.get_pv_loop2(), 'PV 2'
 
-    #a.set_sp_loop1(0)
+    # a.set_sp_loop1(0)
     
-    #a.set_sprate_loop1(20)
-    #a.enable_sprate_loop1() 
-    #a.disable_sprate_loop1() 
+    # a.set_sprate_loop1(20)
+    # a.enable_sprate_loop1() 
+    # a.disable_sprate_loop1() 
     
 
 pass    
