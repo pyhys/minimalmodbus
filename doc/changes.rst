@@ -1,6 +1,6 @@
 .. _changes:
 
-Changes in Minimalmodbus
+Changes in MinimalModbus
 ========================
 
 .. include:: ../CHANGES.txt

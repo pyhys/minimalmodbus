@@ -4,6 +4,7 @@
 Documentation for Minimalmodbus
 ===============================
 
+Documentation built |today|, for software verion |version|.
 
 .. include:: ../README.txt
 
