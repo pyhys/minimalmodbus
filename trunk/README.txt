@@ -1,6 +1,8 @@
 MinimalModbus
 =============
 
+MinimalModbus repository $Revision$, $Date$,  
+
 Introduction
 ------------
 An easy-to-use Python module for talking to instruments (slaves) from a computer (master) using the Modbus protocol. Example code includes drivers for Eurotherm process controllers. The only dependence is the pySerial module. This software supports the 'Modbus RTU' serial communication version of the protocol.

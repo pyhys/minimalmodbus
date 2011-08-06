@@ -175,10 +175,14 @@ TODO
 ----
 * In README.txt: Describe modbus types
 * Homepage with Sphinx-based API documentation etc
-* Mailing list
-* Unittests
 * Include pydoc pages etc in source distributions
 * __version__ etc in source files
+
+* Change svn date format
+
+* Mailing list
+* Unittests
+
 * epydoc 
 * in setup.py, indicate the dependency of pySerial
 
