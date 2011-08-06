@@ -68,7 +68,7 @@ class Instrument():
             ValueError
 
         .. note::
-            Some implementation details:
+            Some implementation details for 'Read register' functioncode:
 
             The payload to the slave is: Startaddress, number of registers
 
@@ -121,7 +121,7 @@ class Instrument():
             ValueError
         
         .. note::
-            Some implementation details:
+            Some implementation details for 'Write register' functioncode:
 
             The payload to the slave is: Startaddress, number of registers, number of bytes, registerdata
             
@@ -196,6 +196,12 @@ class Instrument():
         makes it difficult to print it in the promt (messes up a bit).
         
         Will block until timeout (or reaching a large number of bytes).
+
+        .. note::
+            Some implementation details:
+
+            The data is stored as hex strings internally. For example a byte 
+
         """
         MAX_NUMBER_OF_BYTES = 1000
         
@@ -225,7 +231,7 @@ def _embedPayload(slaveaddress, functioncode, payloaddata):
     Returns:
         The built (raw) message string for sending to the slave.    
 
-    The resulting message has the format: slaveaddress byte + functioncode + payloaddata + crc
+    The resulting message has the format: slaveaddress byte + functioncode byte + payloaddata + crc (which is two bytes)
     """
     firstPart = _numToOneByteString(slaveaddress) + _numToOneByteString(functioncode) + payloaddata
     message = firstPart + _calculateCrcString(firstPart)       
@@ -245,7 +251,7 @@ def _extractPayload(response, slaveaddress, functioncode):
     Raises:
         ValueError. Raises an exception if there is any problem with the received address, the functioncode or the crc.
 
-    The received message should have the format: address byte + functioncode + payloaddata + crc
+    The received message should have the format: address byte + functioncode byte + payloaddata + crc (which is two bytes)
 
     """
     
@@ -327,7 +333,7 @@ def _numToTwoByteString(value, numberOfDecimals = 0, LsbFirst = False):
 
     Args:
         value (float or int): The numerical value to be converted
-        numberOfDecimals (int): 
+        numberOfDecimals (int): Number of decimals, 0 or more
         LsbFirst (bol): 
 
     Returns:
@@ -362,7 +368,7 @@ def _calculateCrcString( inputstring ):
     """Calculate CRC-16 for Modbus.
     
     Args:
-        inputstring (str): The message (without the CRC).
+        inputstring (str): An arbitrary-length message (without the CRC).
 
     Returns:
         A two-byte CRC string.
@@ -412,7 +418,7 @@ def _rightshift(inputInteger):
     return shifted, carrybit
 
 def _toPrintableString( inputstring ):
-    """Make a descriptive string, showing the ord() numbers for the characters in the inputstring.
+    """Make a descriptive string, showing the ord() numbers (in decimal) for the characters in the inputstring.
     
     Args:
         inputstring (str): The string that should be converted to something printable.
@@ -423,6 +429,11 @@ def _toPrintableString( inputstring ):
     Use it for diagnostic printing of strings representing byte values (might have non-printing characters).
     With an input string of '\x12\x02\x74ABC', it will return the string:
     'String length: 6 bytes. Values: 18, 2, 116, 65, 66, 67'
+
+    ``\``x12``\``x02``\``x7    
+
+    'BACKSLASHx12'
+4
     """
     
     firstpart = 'String length: {0} bytes. Values: '.format( len(inputstring) )
