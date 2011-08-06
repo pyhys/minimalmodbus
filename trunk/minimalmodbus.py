@@ -24,6 +24,12 @@ Text describing the minimalmodbus module.
 
 
 """
+$Date$
+$Revision$
+
+
+__version__ = "$Revision$"
+# $Source$
 
 import serial
 
