@@ -54,7 +54,7 @@ make html
 
 Preparation for release
 -----------------------
-
+Manually change version in the setup.py file.
 Manually change the __version__ and __status__ fields in the .py source files.
 
 
@@ -67,7 +67,9 @@ Run tests::
 
     ??
 
-Make sure the Subversion is updated.
+Make sure the Subversion is updated::
+
+    svn status -v --no-ignore
 
 Make a tag in Subversion::
  
@@ -168,6 +170,8 @@ To set the path::
     echo $PYTHONPATH
     export PYTHONPATH='/home/jonas/pythonprogrammering/minimalmodbus/trunk'
 
+It is better to set the path in the *.basrc* file.
+
 In the trunc/doc directory::
 
     sphinx-build -b html -d build/doctrees  -a . build/html
@@ -177,7 +181,9 @@ or use the makefile::
     make html
     make latexpdf
     
-If the python source files not are updated in the html output, then remove the contents of *trunk/doc/build/doctrees* and rebuild the documentation. 
+If the python source files not are updated in the html output, then remove the contents of *trunk/doc/build/doctrees* and rebuild the documentation. (This has now been included in the Makefile).
+
+Remember that the Makefile uses tabs for indentation, and not spaces.
 
 
 TODO
@@ -185,15 +191,11 @@ TODO
 * In README.txt: Describe modbus types
 * Homepage with Sphinx-based API documentation etc
 * Include pydoc pages etc in source distributions
-* __version__ etc in source files
-
-* Change svn date format
+* Change print commands to work with Python 2 and 3.
+* Test the dependency of pySerial in setup.py
 
 * Mailing list
 * Unittests
-
-* epydoc 
-* in setup.py, indicate the dependency of pySerial
 
 CHANGE THIS: instrument.portname instead of  .port
 

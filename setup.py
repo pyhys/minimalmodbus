@@ -6,7 +6,7 @@ with open('README.txt') as file:
     long_description = file.read()
 
 setup(name='MinimalModbus',
-    version='0.1',
+    version='0.2',
     description='Simple Modbus RTU implementation for Python',
     long_description = long_description,
     author='Jonas Berg',
@@ -31,10 +31,6 @@ setup(name='MinimalModbus',
         ],
     )
 
-
-
-
-
-
+# Note that additional files for inclusion are included in MANIFEST.in
 
 
