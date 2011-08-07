@@ -191,6 +191,9 @@ Remember that the Makefile uses tabs for indentation, not spaces.
 
 TODO
 ----
+* HTML theme
+* Update docstrings in .py files
+
 * Change print commands to work with Python 2 and 3.
 * Test the dependency of pySerial in setup.py
 * in CHANGES mention .portname ( CHANGE THIS: instrument.portname instead of .port )
