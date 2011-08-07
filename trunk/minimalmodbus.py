@@ -22,8 +22,7 @@
 
 Text describing the minimalmodbus module.
 
-$Date$
-$Revision$
+This file was changed (committed) at $Date$, which was $Revision$.
 
 """
 
