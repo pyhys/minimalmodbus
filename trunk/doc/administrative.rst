@@ -190,12 +190,11 @@ TODO
 ----
 * In README.txt: Describe modbus types
 * Homepage with Sphinx-based API documentation etc
-* Include pydoc pages etc in source distributions
 * Change print commands to work with Python 2 and 3.
 * Test the dependency of pySerial in setup.py
 
 * Mailing list
-* Unittests
+* Unittests in folder test/test*.py
 
 CHANGE THIS: instrument.portname instead of  .port
 
