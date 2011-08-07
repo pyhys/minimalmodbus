@@ -24,7 +24,7 @@ Text describing the Eurotherm3500 module.
 
 
 
-This file was committed at $Date$, which was $Revision$.
+This file was changed (committed) at $Date$, which was $Revision$.
 
 
 """
