@@ -24,10 +24,18 @@ or if ignoring multiple items, edit the list using::
     svn propedit svn:ignore .
 
 Automatic substitution::
+
     svn propset svn:keywords "Date Revision" minimalmodbus.py
     svn propset svn:keywords "Date Revision" eurotherm3500.py
     svn propset svn:keywords "Date Revision" README.txt
     svn propget svn:keywords minimalmodbus.py
+
+
+Language settings::
+
+    locale      # Shows present locale settings
+    locale -a   # Shows available locales
+    export LC_ALL="en_US.utf8"
 
 
 Documentation generators
