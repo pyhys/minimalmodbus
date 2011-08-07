@@ -1,0 +1,3 @@
+include *.txt
+include doc/Makefile
+recursive-include doc *.rst *.py

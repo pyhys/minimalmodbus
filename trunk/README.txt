@@ -103,7 +103,7 @@ Dependencies
 ------------
 This module relies on pySerial to do the heavy lifting, and it is the only dependency. You can find it at the Python package index: http://pypi.python.org/pypi/pyserial
 
-Further, this module can be used under both Python 2 and Python 3 ????????????
+TODO: Python 2 and 3 !!!!!!!!!!
 
 Download and installation
 -------------------------

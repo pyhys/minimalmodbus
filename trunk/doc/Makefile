@@ -6,9 +6,9 @@ SPHINXOPTS    = -a       # Was ' '
 SPHINXBUILD   = sphinx-build
 PAPER         =
 BUILDDIR      = build
-SOURCEDIR     = .   # Was 'source' instead of '.'
 
 # Internal variables.
+SOURCEDIR       = .   # Was 'source' instead of '.'
 PAPEROPT_a4     = -D latex_paper_size=a4
 PAPEROPT_letter = -D latex_paper_size=letter
 ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) $(SOURCEDIR)     # Was 'source' instead of '$(SOURCEDIR)'
@@ -41,7 +41,7 @@ clean:
 	@echo
 
 html:
-	-rm -rf $(BUILDDIR)/doctrees/*     # Trick for forcing build of new viewsorce HTML pages
+	-rm -rf $(BUILDDIR)/doctrees/*     # Trick for forcing rebuild of viewsorce HTML pages
 	@echo
 	@echo "Cleaned up doctrees."
 	@echo

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #
 #   Copyright 2011 Jonas Berg
 #
@@ -17,12 +17,12 @@
 
 """
 
-
 .. moduleauthor:: Jonas Berg <pyhys@users.sourceforge.net>
 
 Text describing the minimalmodbus module.
 
-This Python file was changed (committed) at $Date$, which was $Revision$.
+This Python file was changed (committed) at $Date$, 
+which was $Revision$.
 
 """
 

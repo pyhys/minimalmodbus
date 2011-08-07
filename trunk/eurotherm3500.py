@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #
 #   Copyright 2011 Jonas Berg
 #
@@ -22,9 +22,9 @@
 
 Text describing the Eurotherm3500 module.
 
-
-
-This Python file was changed (committed) at $Date$, which was $Revision$.
+This Python file was changed (committed) at 
+$Date$, 
+which was $Revision$.
 
 """
 
@@ -40,7 +40,7 @@ __date__      = "$Date$"
 import minimalmodbus
 
 class Eurotherm3500( minimalmodbus.Instrument ):
-    """Driver for talking to Eurotherm 35xx process controller via Modbus RTU protocol via RS232 or RS485.
+    """Driver for Eurotherm 35xx process controller via Modbus RTU protocol via RS232 or RS485.
 
     Uses the *minimalmodbus* module for communication.    
 
