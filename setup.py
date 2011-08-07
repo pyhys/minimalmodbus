@@ -31,6 +31,6 @@ setup(name='MinimalModbus',
         ],
     )
 
-# Note that additional files for inclusion are included in MANIFEST.in
+# Note that additional files for inclusion are defined in MANIFEST.in
 
 
