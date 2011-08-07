@@ -1,11 +1,9 @@
 MinimalModbus
 =============
 
-This README file was changed (committed) at $Date$, which was $Revision$.
-
 Introduction
 ------------
-An easy-to-use Python module for talking to instruments (slaves) from a computer (master) using the Modbus protocol. Example code includes drivers for Eurotherm process controllers. The only dependence is the pySerial module. This software supports the 'Modbus RTU' serial communication version of the protocol.
+MinimalModbus is an easy-to-use Python module for talking to instruments (slaves) from a computer (master) using the Modbus protocol. Example code includes drivers for Eurotherm process controllers. The only dependence is the pySerial module. This software supports the 'Modbus RTU' serial communication version of the protocol.
 
 General on Modbus protocol
 --------------------------
@@ -27,29 +25,19 @@ For full documentation on the Modbus protocol, see http://www.modbus.com/. One i
 
 Typical hardware
 ----------------
-The application for which I wrote this software is to read and write data from Eurotherm process controllers. These come with different types of communication protocols, but the ones I prefer use Modbus RTU protocol. Minimalmodbus is intended for communication using the Modbus RTU protocol (using a serial link), so there should be lots of applications.
+The application for which I wrote this software is to read and write data from Eurotherm process controllers. These come with different types of communication protocols, but the controllers I prefer use the Modbus RTU protocol. MinimalModbus is intended for general communication using the Modbus RTU protocol (using a serial link), so there should be lots of applications.
 
-As an example on the usage of MinimialModbus, the driver I use for an Eurotherm 3504 process controller is included. It uses the minimalmodbus Python module for its communication.
+As an example on the usage of MinimialModbus, the driver I use for an Eurotherm 3504 process controller is included. It uses the MinimalModbus Python module for its communication.
 
-http://en.wikipedia.org/wiki/Rs485
+There can be several instruments (slaves) on a single bus, and the slaves have addresses in the range 1 to 247. In the Modbus RTU protocol, only the master can initiate communication. The physical layer is most often the serial bus RS485, which is described at http://en.wikipedia.org/wiki/Rs485.
 
-RS232
-RS485
-
-USB-to-RS485 converter
-
-
-There can be several instruments (slaves) on a single bus, and the slaves have addresses in the range 1 to 247. In the Modbus RTU protocol, only the master can initiate communication.
-
-
-
-USB-to-RS232 converter and an industrial RS232-to-RS485 converter. This has the advantage that the latter is galvanically isolated using opto-couplers,and has transient supression. This software has been tested using a Westermo MDW-45 RS232-to-RS485 converter.
+To connect your computer to the RS485 bus, a serial port is required. There are direct USB-to-RS485 converters, but I use a USB-to-RS232 converter together with an industrial RS232-to-RS485 converter. This has the advantage that the latter is galvanically isolated using opto-couplers, and has transient supression. This software has been tested using a Westermo MDW-45 RS232-to-RS485 converter.
 
 
 Typical usage
 -------------
 
-The instrument is typically connected via a serial port, and a USB-to-serial adaptor should be used on most modern computers. How to configure such a port is described on the pySerial page: http://pyserial.sourceforge.net/
+The instrument is typically connected via a serial port, and a USB-to-serial adaptor should be used on most modern computers. How to configure such a serial port is described on the pySerial page: http://pyserial.sourceforge.net/
 
 For example, consider an instrument(slave) with address number 1 to which we are to communicate via port */dev/ttyUSB1*. The instrument stores the measured temperature in register 289. For this instrument a temperature of 77.2 C is stored as 772, why we use 1 decimal. To read this data from the instrument::
 
@@ -66,9 +54,12 @@ For example, consider an instrument(slave) with address number 1 to which we are
     NEW_TEMPERATURE = 95.0
     instrument.write_register(24, NEW_TEMPERATURE, 1) # Registernumber, value, number of decimals
 
-The full API for minimalmodbus is available on http://minimalmodbus.sourceforge.net/apiminimalmodbus.html
+The full API for minimalmodbus is available on http://minimalmodbus.sourceforge.net/apiminimalmodbus.html, and the documentation in PDF format is found on http://minimalmodbus.sourceforge.net/minimalmodbus.pdf
 
-It is better to put this in a driver for the specific instrument. An example driver for Eurotherm3500 is included in this library. To get the process value (PV from loop1)::
+Subclassing
+-----------
+
+It is better to put the details in a driver for the specific instrument. An example driver for Eurotherm3500 is included in this library, and it is recommended to have a look at its source code. To get the process value (PV from loop1)::
 
     #!/usr/bin/env python
     import eurotherm3500
@@ -141,7 +132,7 @@ Jonas Berg, pyhys@users.sourceforge.net
 
 Related software
 ----------------
-The minimalmodbus module is intended for easy-to-use communication with instruments using the Modbus (RTU) protocol. There are a few other Python modules for Modbus protocol implementation. For more advanced use, you should consider using one of these:
+The MinimalModbus module is intended for easy-to-use communication with instruments using the Modbus (RTU) protocol. There are a few other Python modules for Modbus protocol implementation. For more advanced use, you should consider using one of these:
 
 pyModbus 
     From http://code.google.com/p/pymodbus/: 'Pymodbus is a full Modbus protocol implementation using twisted for its asynchronous communications core.'
@@ -154,4 +145,8 @@ References
 ----------
 * Python: http://www.python.org/
 
+
+Text revision
+-------------
+This README file was changed (committed) at $Date$, which was $Revision$.
 

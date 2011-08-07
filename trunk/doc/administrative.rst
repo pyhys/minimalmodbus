@@ -54,8 +54,8 @@ make html
 
 Preparation for release
 -----------------------
-Manually change version in the setup.py file.
-Manually change the __version__ and __status__ fields in the .py source files.
+Manually change *version* in the setup.py file.
+Manually change the *__version__* and *__status__* fields in the .py source files.
 
 
 Check the code::
@@ -79,7 +79,7 @@ Build the source distribution::
 
     python setup.py sdist --formats=gztar,zip
 
-Build the documentation ( in /doc after making sure that PYTHONPATH is correct)::
+Build the HTML and PDF documentation  ( in /doc after making sure that PYTHONPATH is correct)::
 
     make html
     make latexpdf
@@ -91,6 +91,8 @@ Upload the .gzip.tar and .zip files to Sourceforge (use web form?), and upload t
 On a Windows machine, build the windows installer:: 
 
     python setup.py bdist_wininst
+
+Upload the documentation PDF and HTML files to Sourceforge.
 
 
 Notes on distribution
@@ -142,6 +144,7 @@ On Linux machines, for example::
     /usr/local/lib/python2.6/dist-packages
 
 On Windows machines, for example::
+
     C:\python27\Lib\site-packages
 
 The Windows installer also creates a .pyo file (and also the .pyc file).
@@ -183,18 +186,23 @@ or use the makefile::
     
 If the python source files not are updated in the html output, then remove the contents of *trunk/doc/build/doctrees* and rebuild the documentation. (This has now been included in the Makefile).
 
-Remember that the Makefile uses tabs for indentation, and not spaces.
+Remember that the Makefile uses tabs for indentation, not spaces.
 
 
 TODO
 ----
 * In README.txt: Describe modbus types
-* Homepage with Sphinx-based API documentation etc
+
 * Change print commands to work with Python 2 and 3.
 * Test the dependency of pySerial in setup.py
+* in CHANGES mention .portname ( CHANGE THIS: instrument.portname instead of  .port )
+
+* Backup routine 
 
 * Mailing list
 * Unittests in folder test/test*.py
 
-CHANGE THIS: instrument.portname instead of  .port
+
+
+
 
