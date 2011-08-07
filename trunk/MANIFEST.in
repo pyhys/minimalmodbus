@@ -1,3 +1,5 @@
 include *.txt
 include doc/Makefile
 recursive-include doc *.rst *.py
+recursive-include doc/_static *
+recursive-include doc/_templates *
