@@ -36,8 +36,15 @@ help:
 
 clean:
 	-rm -rf $(BUILDDIR)/*
+	@echo
+	@echo "Cleaned up."
+	@echo
 
 html:
+	-rm -rf $(BUILDDIR)/doctrees/*     # Trick for forcing build of new viewsorce HTML pages
+	@echo
+	@echo "Cleaned up doctrees."
+	@echo
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
