@@ -191,13 +191,12 @@ Remember that the Makefile uses tabs for indentation, not spaces.
 
 TODO
 ----
-* In README.txt: Describe modbus types
-
 * Change print commands to work with Python 2 and 3.
 * Test the dependency of pySerial in setup.py
-* in CHANGES mention .portname ( CHANGE THIS: instrument.portname instead of  .port )
+* in CHANGES mention .portname ( CHANGE THIS: instrument.portname instead of .port )
+* Test it 
 
-* Backup routine 
+* Backup routine from Sourceforge using rsync
 
 * Mailing list
 * Unittests in folder test/test*.py
