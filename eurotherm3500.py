@@ -24,8 +24,7 @@ Text describing the Eurotherm3500 module.
 
 
 
-This file was changed (committed) at $Date$, which was $Revision$.
-
+This Python file was changed (committed) at $Date$, which was $Revision$.
 
 """
 
@@ -37,7 +36,6 @@ __version__   = "0.20"
 __status__    = "Alpha"
 __revision__  = "$Rev$"
 __date__      = "$Date$"
-
 
 import minimalmodbus
 

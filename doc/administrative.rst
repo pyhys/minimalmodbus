@@ -55,6 +55,7 @@ make html
 Preparation for release
 -----------------------
 
+Manually change the __version__ and __status__ fields in the .py source files.
 
 
 Check the code::

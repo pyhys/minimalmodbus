@@ -22,7 +22,7 @@
 
 Text describing the minimalmodbus module.
 
-This file was changed (committed) at $Date$, which was $Revision$.
+This Python file was changed (committed) at $Date$, which was $Revision$.
 
 """
 
@@ -210,6 +210,7 @@ class Instrument():
         .. note::
             Some implementation details:
 
+            A serial protocol that uses binary representation of the data.
             The data is stored as hex strings internally. For example a byte 
 
         """
@@ -440,10 +441,10 @@ def _toPrintableString( inputstring ):
     With an input string of '\x12\x02\x74ABC', it will return the string:
     'String length: 6 bytes. Values: 18, 2, 116, 65, 66, 67'
 
-    ``\``x12``\``x02``\``x7    
+    Note that this not is rendered properly in the HTML documentation. Please see the source code directly.   
 
     'BACKSLASHx12'
-4
+    
     """
     
     firstpart = 'String length: {0} bytes. Values: '.format( len(inputstring) )

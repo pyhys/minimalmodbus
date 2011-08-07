@@ -1,7 +1,7 @@
 MinimalModbus
 =============
 
-This README file was changeds (committed) at $Date$, which was $Revision$.
+This README file was changed (committed) at $Date$, which was $Revision$.
 
 Introduction
 ------------
