@@ -38,25 +38,38 @@ __date__      = "$Date$"
 import serial
 
 class Instrument():
-    """Driver for talking to instruments (slaves) via the Modbus RTU protocol (via RS485 or RS232).
+    """Instrument class for talking to instruments (slaves) via the Modbus RTU protocol (via RS485 or RS232).
 
     Args:
-        * port (str): The serial port name, for example '???' or '???'
-        * slaveaddress (int): in the range 0-???. Note that slaveaddress=0 is used for ??
+        * portname (str): The serial port name, for example ``/dev/ttyS1`` or ``COM1``.
+        * slaveaddress (int): Slave address in the range 1 to 247
 
     """
     
-    def __init__(self, port, slaveaddress):
-        self.port     = port
-        self.baudrate = 19200    # Baud
+    def __init__(self, portname, slaveaddress):
+        self.portname = portname
+        """The serial port name (str). Most often set by the constructor (see the class documentation). """
+
+        self.baudrate = 19200    
+        """The baudrate in Baud (int). Defaults to 19200 Baud."""
+
         self.timeout  = 0.05     # seconds
+        """The timeout value in seconds (float). Defaults to 0.05 s."""
+
         self.parity   = serial.PARITY_NONE
+        """The parity. See the pySerial module for documentation. Defaults to serial.PARITY_NONE"""
+
         self.bytesize = 8
+        """The bytesize (int). Defaults to 8. """
+
         self.stopbits = 1
-        self.serial   = serial.Serial(self.port, self.baudrate, parity=self.parity, bytesize=self.bytesize, \
+        """The number of stopbits (int). Defaults to 1. """
+
+        self._serial   = serial.Serial(self.portname, self.baudrate, parity=self.parity, bytesize=self.bytesize, \
                         stopbits=self.stopbits, timeout = self.timeout )
         
         self.address = slaveaddress
+        """The slave address (int). Most often set by the constructor (see the class documentation). """
     
     ########################################
     ## Functions for talking to the slave ##
@@ -219,8 +232,8 @@ class Instrument():
         if len(message) == 0:
             raise ValueError('The message length must not be zero')
             
-        self.serial.write(message)
-        answer =  self.serial.read(MAX_NUMBER_OF_BYTES)
+        self._serial.write(message)
+        answer =  self._serial.read(MAX_NUMBER_OF_BYTES)
         
         if len(answer) == 0:
             raise ValueError('No communication with the instrument (no answer)')
