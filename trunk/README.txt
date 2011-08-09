@@ -76,18 +76,22 @@ It is better to put the details in a driver for the specific instrument. An exam
 
 Default values
 --------------
-Serial port parameters default values::
+Most of the serial port parameters have the default values which are defined in the Modbus standard::
 
-    instrument.baudrate = 19200 # Baud
-    instrument.timeout = 0.05 # seconds
-    instrument.parity = serial.PARITY_NONE
+    instrument.baudrate = 19200   # Baud
+    instrument.parity   = serial.PARITY_NONE
     instrument.bytesize = 8
     instrument.stopbits = 1
-    instrument.address # this is the slave address number
-    instrument.portname # this is the port name
+    instrument.address     # this is the slave address number
 
-CHANGE THIS
-NOTE:    instrument.portname was .port
+    instrument.portname    # this is the port name
+    instrument.timeout  = 0.05   # seconds
+
+These can be overridden::
+    
+    instrument.timeout = 0.2
+
+For details on the allowed parity values, see http://pyserial.sourceforge.net/pyserial_api.html#serial.PARITY_NONE.
 
 
 Dependencies

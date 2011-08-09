@@ -10,6 +10,7 @@ These are the most used commands::
     svn status 
     svn status -v
     svn status -v --no-ignore
+    svn diff
     svn add FILENAME or DIRECTORYNAME
     svn commit -m 'Write your log message here'
 
@@ -23,7 +24,7 @@ or if ignoring multiple items, edit the list using::
 
     svn propedit svn:ignore .
 
-Automatic substitution::
+Automatic keyword substitution::
 
     svn propset svn:keywords "Date Revision" minimalmodbus.py
     svn propset svn:keywords "Date Revision" eurotherm3500.py
@@ -31,31 +32,21 @@ Automatic substitution::
     svn propget svn:keywords minimalmodbus.py
 
 
+SVN settings
+------------
+
+SVN uses the computer ``locale`` settings for selecting the language (including keyword substitution). 
+
 Language settings::
 
     locale      # Shows present locale settings
     locale -a   # Shows available locales
     export LC_ALL="en_US.utf8"
 
-
-Documentation generators
-------------------------
-pydoc -w modulename # Writes a HTML page in current directory
-
-pydoc -w minimalmodbus
-
-pydoc -w eurotherm3500
-
-epydoc minimalmodbus eurotherm3500 # Writes HTML pages and javascript in the html subfolder
-
-export PYTHONPATH=$PYTHONPATH:/home/jonas/pythonprogrammering/minimalmodbus/trunk
-make html
-
-
 Preparation for release
 -----------------------
-Manually change *version* in the setup.py file.
-Manually change the *__version__* and *__status__* fields in the .py source files.
+* Manually change ``version`` in the :file:`setup.py` file.
+* Manually change the ``__version__`` and ``__status__`` fields in the :file:`.py` source files.
 
 
 Check the code::
@@ -79,21 +70,22 @@ Build the source distribution::
 
     python setup.py sdist --formats=gztar,zip
 
-Build the HTML and PDF documentation  ( in /doc after making sure that PYTHONPATH is correct)::
+Build the HTML and PDF documentation  ( in :file:`/doc` after making sure that ``PYTHONPATH`` is correct)::
 
     make html
     make latexpdf
 
-Upload the .gzip.tar and .zip files to PYPI (use web form?). What about README.txt?
+Upload the :file:`.gzip.tar` and :file:`.zip` files to PYPI (use web form?). What about README.txt?
 
-Upload the .gzip.tar and .zip files to Sourceforge (use web form?), and upload the generated documentation.
+Upload the :file:`.gzip.tar` and :file:`.zip` files to Sourceforge (use web form?), and upload the generated documentation.
+
+Upload the documentation PDF and HTML files to Sourceforge.
 
 On a Windows machine, build the windows installer:: 
 
     python setup.py bdist_wininst
 
-Upload the documentation PDF and HTML files to Sourceforge.
-
+Upload the windows installer to PYPI and Sourceforge.
 
 Notes on distribution
 ---------------------
@@ -113,11 +105,11 @@ Create a subfolder **dist** with zipped or gztared source folders::
 Notes on generating binary distributions
 ----------------------------------------
 
-Create subfolders **build** and **dist**::
+Create subfolders ``build`` and ``dist``::
 
     python setup.py bdist
 
-Create a subfolder **dist** with a Windows installer::
+Create a subfolder ``dist`` with a Windows installer::
 
     python setup.py bdist --formats=wininst
 
@@ -125,7 +117,7 @@ Create a subfolder **dist** with a Windows installer::
 Test distributions
 ------------------
 
-Create a subfolder **build**::
+Create a subfolder ``build``::
 
     python setup.py build
 
@@ -147,59 +139,87 @@ On Windows machines, for example::
 
     C:\python27\Lib\site-packages
 
-The Windows installer also creates a .pyo file (and also the .pyc file).
+The Windows installer also creates a :file:`.pyo` file (and also the :file:`.pyc` file).
 
 
 Sphinx usage
 ------------
-| Sphinx reStructuredText Primer: http://sphinx.pocoo.org/rest.html
-| Example usage for API documentation: http://packages.python.org/an_example_pypi_project/sphinx.html
-| Sphinx syntax shortlist http://docs.geoserver.org/trunk/en/docguide/sphinx.html
-| reStructuredText Markup Specification http://docutils.sourceforge.net/docs/ref/rst/restructuredtext.html
+The documentation is generated with the Sphinx tool: http://sphinx.pocoo.org/
+
+Sphinx reStructuredText Primer
+    http://sphinx.pocoo.org/rest.html
+
+Example usage for API documentation
+    http://packages.python.org/an_example_pypi_project/sphinx.html
+
+Sphinx syntax shortlist
+    http://docs.geoserver.org/trunk/en/docguide/sphinx.html
+
+reStructuredText Markup Specification 
+    http://docutils.sourceforge.net/docs/ref/rst/restructuredtext.html
 
 
 Spinx formatting conventions
 ----------------------------
 
-Top level heading: ==
+Top level heading underlining symbol: = (equals)
 
-Next lower level: --
+Next lower level: - (minus)
+
+A third level if necessary (avoid this): ` (backquote)
+
 
 Sphinx build commands
 ---------------------
+Note that the PYTHONPATH must be set properly, so that Sphinx can import the modules to document. See below.
+
+In the :file:`trunc/doc` directory::
+
+    sphinx-build -b html -d build/doctrees  -a . build/html
+
+or use the :file:`Makefile`::
+
+    make html
+    make latexpdf
+    
+If the python source files not are updated in the html output, then remove the contents of :file:`trunk/doc/build/doctrees` and rebuild the documentation. (This has now been included in the :file:`Makefile`).
+
+Remember that the :file:`Makefile` uses tabs for indentation, not spaces.
+
+Setting the PYTHONPATH
+----------------------
 
 To set the path::
     
     echo $PYTHONPATH
     export PYTHONPATH='/home/jonas/pythonprogrammering/minimalmodbus/trunk'
 
-It is better to set the path in the *.basrc* file.
+or::
 
-In the trunc/doc directory::
+    export PYTHONPATH=$PYTHONPATH:/home/jonas/pythonprogrammering/minimalmodbus/trunk
 
-    sphinx-build -b html -d build/doctrees  -a . build/html
+It is better to set the path in the :file:`.basrc` file.
 
-or use the makefile::
+Downloading backups from the Sourceforge server
+-----------------------------------------------
+To download the svn repository in archive format, type this in the destination directory on your computer::
 
-    make html
-    make latexpdf
-    
-If the python source files not are updated in the html output, then remove the contents of *trunk/doc/build/doctrees* and rebuild the documentation. (This has now been included in the Makefile).
-
-Remember that the Makefile uses tabs for indentation, not spaces.
+    rsync -av minimalmodbus.svn.sourceforge.net::svn/minimalmodbus/* .
 
 
 TODO
 ----
-* HTML theme
-* Update docstrings in .py files
+* Update docstrings in minimalmodbus.py file
 
+At test equipment:
+* Test changing the baudrate etc with ``instrument.baudrate = 19600``
+* Make sure that .portname works fine instead of .port 
 * Change print commands to work with Python 2 and 3.
 * Test the dependency of pySerial in setup.py
-* in CHANGES mention .portname ( CHANGE THIS: instrument.portname instead of .port )
-* Test it 
+* Test it in general
 
-* Backup routine from Sourceforge using rsync
+
+For next release:
 
 * Mailing list
 * Unittests in folder test/test*.py

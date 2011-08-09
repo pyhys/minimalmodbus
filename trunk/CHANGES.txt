@@ -1,12 +1,10 @@
 
 Release 0.2 (2011-?-?)
 ----------------------
-
+* minimalmodbus.Instrument.port is renamed minimalmodbus.Instrument.portname
 * Updated documentation.
-
 
 
 Release 0.1 (2011-06-16)
 ------------------------
-
 * First public release.

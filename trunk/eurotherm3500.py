@@ -17,10 +17,9 @@
 
 """
 
-
 .. moduleauthor:: Jonas Berg <pyhys@users.sourceforge.net>
 
-Text describing the Eurotherm3500 module.
+Driver for the Eurotherm3500 module, for communication via the Modbus RTU protocol.
 
 This Python file was changed (committed) at 
 $Date$, 
@@ -40,18 +39,18 @@ __date__      = "$Date$"
 import minimalmodbus
 
 class Eurotherm3500( minimalmodbus.Instrument ):
-    """Driver for Eurotherm 35xx process controller via Modbus RTU protocol via RS232 or RS485.
-
-    Uses the *minimalmodbus* module for communication.    
+    """Instrument class for Eurotherm 35xx process controller. 
+    
+    Communicates via Modbus RTU protocol (via RS232 or RS485), using the *MinimalModbus* Python module.    
 
     Args:
-        * port (str): port name
-        * slaveaddress (int): slave address in the range ??-??
+        * portname (str): port name
+        * slaveaddress (int): slave address in the range 1 to 247
 
     """
     
-    def __init__(self, port, slaveaddress):
-        minimalmodbus.Instrument.__init__(self, port, slaveaddress)
+    def __init__(self, portname, slaveaddress):
+        minimalmodbus.Instrument.__init__(self, portname, slaveaddress)
     
     ## Process value
     
