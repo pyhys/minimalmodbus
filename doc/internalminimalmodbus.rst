@@ -6,6 +6,8 @@ Internal documentation for Minimalmodbus
    :members: read_register, write_register, _performCommand, _communicate
 
 
+
+
 Helper functions
 ----------------
 .. automodule:: minimalmodbus
