@@ -185,7 +185,7 @@ class Instrument():
     ##########################################
     
     def _performCommand(self, functioncode, payloadToSlave):
-        """Performs the command having the *functioncode*.
+        """Performs the command having the ``functioncode``.
         
         Args:
             * functioncode (int): The function code for the command to be performed. Can for example be 'Write register'.
@@ -315,6 +315,13 @@ def _extractPayload(response, slaveaddress, functioncode):
 def _twoByteStringToNum(bytestring, numberOfDecimals = 0):
     """Convert a two-byte string to a numerical value.
     
+    Args:    
+        * bytestring (str): A string of length 2.
+        * numberOfDecimals (int): The number of decimal. Defaults to 0.
+
+    Returns:
+        The numerical value (int or float) calculated from the ``bytestring``.        
+        
     A bug was found on 2011-05-16: The most significant byte was 
     multiplied by 255 instead of the correct value 256.
     
@@ -420,7 +427,15 @@ def _calculateCrcString( inputstring ):
     return _numToTwoByteString(register, LsbFirst = True)
 
 def _XOR(integer1, integer2):
-    """An alias for the bitwise XOR command."""
+    """An alias for the bitwise XOR command.
+
+    Args:
+        * integer1 (int): Input integer
+        * integer2 (int): Input integer
+
+    Returns:
+        The XOR:ed value of the two input integers. This is an integer.
+"""
     return integer1 ^ integer2
 
 def _setBitOn( x, bitNum ):
@@ -436,7 +451,12 @@ def _setBitOn( x, bitNum ):
     return x | (1<<bitNum)
 
 def _rightshift(inputInteger):
-    """Rightshift an integer one step, and also calculate the carry bit."""
+    """Rightshift an integer one step, and also calculate the carry bit.
+
+    Args:
+
+    Returns:
+    """
     shifted = inputInteger >> 1
     carrybit = inputInteger & 1
     return shifted, carrybit
