@@ -209,7 +209,6 @@ To download the svn repository in archive format, type this in the destination d
 
 TODO
 ----
-* Update docstrings in minimalmodbus.py file
 
 At test equipment:
 
