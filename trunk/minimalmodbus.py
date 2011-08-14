@@ -19,7 +19,7 @@
 
 .. moduleauthor:: Jonas Berg <pyhys@users.sourceforge.net>
 
-Text describing the minimalmodbus module.
+MinimalModbus: A Python driver for the Modbus RTU protocol via serial port (via RS485 or RS232).
 
 This Python file was changed (committed) at $Date$, 
 which was $Revision$.
@@ -76,7 +76,7 @@ class Instrument():
     ########################################
     
     def read_register(self, registeraddress, numberOfDecimals=0):
-        """Read one register from the slave.
+        """Read one register from the slave. Implemented with Modbus functioncode 3.
 
         Args:
             * registeraddress (int): The register address   
@@ -85,17 +85,17 @@ class Instrument():
         If a value of 77.0 is stored internally in the slave register as 770, then use numberOfDecimals=1
 
         Returns:
-            The register data in numerical value.
+            The register data in numerical value (int or float).
 
         Raises:
             ValueError
 
         .. note::
-            Some implementation details for 'Read register' functioncode:
+            Some implementation details for 'Read register' functioncode (3):
 
-            The payload to the slave is: Startaddress, number of registers
+            The payload to the slave is: Register startaddress, number of registers
 
-            The payload from the slave is: ?????
+            The payload from the slave is: Number of bytes, registerdata
 
         """
 
@@ -128,7 +128,7 @@ class Instrument():
         return registervalue
         
     def write_register(self, registeraddress, value, numberOfDecimals=0):
-        """Write to one register in the slave.
+        """Write to one register in the slave. Implemented with Modbus functioncode 16.
         
         Args:
             * registeraddress (int): The register address 
@@ -144,18 +144,18 @@ class Instrument():
             ValueError
         
         .. note::
-            Some implementation details for 'Write register' functioncode:
+            Some implementation details for 'Write register' functioncode (16):
 
-            The payload to the slave is: Startaddress, number of registers, number of bytes, registerdata
+            The payload to the slave is: Register startaddress, number of registers, number of bytes, registerdata
             
-            The payload from the slave is: Startaddress, number of registers.
+            The payload from the slave is: Register startaddress, number of registers.
 
         """
         FUNCTIONCODE_WRITE_REGISTERS = 16
         NUMBER_OF_REGISTERS_TO_WRITE = 1
         NUMBER_OF_BYTES_PER_REGISTER = 2
         
-        ## Build data for reading one register
+        ## Build data for writing one register
         numberOfRegisterBytes = NUMBER_OF_REGISTERS_TO_WRITE * NUMBER_OF_BYTES_PER_REGISTER
         
         payloadToSlave =  _numToTwoByteString(registeraddress) + _numToTwoByteString(NUMBER_OF_REGISTERS_TO_WRITE) + \
@@ -189,10 +189,10 @@ class Instrument():
         
         Args:
             * functioncode (int): The function code for the command to be performed. Can for example be 'Write register'.
-            * payloadToSlave (str): Data to be transmitted to the slave (will be embedded in address, crc etc)
+            * payloadToSlave (str): Data to be transmitted to the slave (will be embedded in slaveaddress, CRC etc)
     
         Returns:
-            The extracted data payload from the slave (a string). It is stripped of CRC etc.
+            The extracted data payload from the slave (a string). It has been stripped of CRC etc.
 
         Makes use of the Instrument._communicate method.
 
@@ -223,10 +223,26 @@ class Instrument():
         .. note::
             Some implementation details:
 
-            A serial protocol that uses binary representation of the data.
-            The data is stored as hex strings internally. For example a byte 
+            Modbus RTU is a serial protocol that uses binary representation of the data.
 
+            Error checking is done using CRC (cyclic redundancy check), and the result is two bytes.
+
+            The data is stored internally in this driver as byte strings (representing byte values). 
+            For example a byte with value 18 (dec) = 12 (hex) = 00010010 (bin) is stored in a string of length one.
+            This can be done using the function chr(18) or typing the string 'BACKSLASHx12', where BACKSLASH 
+            should be replaced with the actual backslash sign. 
+
+            Note that these strings can look pretty strange when printed, as values 0 to 31 (dec) are
+            ASCII control signs. For example 'vertical tab' and 'line feed' are among those.
+
+            The **raw message** to the slave has the frame format: slaveaddress byte + functioncode byte +
+            data payload + CRC code (two bytes).
+
+            The **received message** should have the format: slaveaddress byte + functioncode byte + 
+            data payload + CRC code (two bytes)
+            
         """
+
         MAX_NUMBER_OF_BYTES = 1000
         
         if len(message) == 0:
@@ -249,13 +265,13 @@ def _embedPayload(slaveaddress, functioncode, payloaddata):
     
     Args:
         * slaveaddress (int): The address of the slave
-        * functioncode (int): 
-        * payloaddata (str): The hex integer string to be sent to the slave
+        * functioncode (int): The function code for the command to be performed. Can for example be 'Write register'.
+        * payloaddata (str): The byte integer string to be sent to the slave
 
     Returns:
-        The built (raw) message string for sending to the slave.    
+        The built (raw) message string for sending to the slave (including CRC etc).    
 
-    The resulting message has the format: slaveaddress byte + functioncode byte + payloaddata + crc (which is two bytes)
+    The resulting message has the format: slaveaddress byte + functioncode byte + payloaddata + CRC (which is two bytes)
     """
     firstPart = _numToOneByteString(slaveaddress) + _numToOneByteString(functioncode) + payloaddata
     message = firstPart + _calculateCrcString(firstPart)       
@@ -265,7 +281,7 @@ def _extractPayload(response, slaveaddress, functioncode):
     """Extract the payload data part from the slave's response.
     
     Args:
-        * response (str): The raw response hex string from the slave.
+        * response (str): The raw response byte string from the slave.
         * slaveaddress (int): The adress of the slave. Used here for error checking only.
         * functioncode (int): Used here for error checking only.
     
@@ -273,9 +289,9 @@ def _extractPayload(response, slaveaddress, functioncode):
         The payload part of the *response* string.
 
     Raises:
-        ValueError. Raises an exception if there is any problem with the received address, the functioncode or the crc.
+        ValueError. Raises an exception if there is any problem with the received address, the functioncode or the CRC.
 
-    The received message should have the format: address byte + functioncode byte + payloaddata + crc (which is two bytes)
+    The received message should have the format: slaveaddress byte + functioncode byte + payloaddata + CRC (which is two bytes)
 
     """
     
@@ -322,6 +338,13 @@ def _twoByteStringToNum(bytestring, numberOfDecimals = 0):
     Returns:
         The numerical value (int or float) calculated from the ``bytestring``.        
         
+    Raises:
+        ValueError. Raises an exception if the bytestring has wrong length or the numberOfDecimals is wrong.
+
+    For example:
+        A string 'BACKSLASHx03BACKSLASHx02' (which has the length 2) corresponds to 0302 (hex) = 770 (dec). If
+        numberOfDecimals=1, then this is converted to 77.0 (float). 
+
     A bug was found on 2011-05-16: The most significant byte was 
     multiplied by 255 instead of the correct value 256.
     
@@ -351,7 +374,7 @@ def _numToOneByteString(integer):
         A one-byte string created by chr(integer).
 
     Raises:
-        ValueError
+        ValueError. Raises an exception if the integer is out of range.
     """
     if integer > 0xFF:
         raise ValueError( 'The input value is too large.')
@@ -363,17 +386,21 @@ def _numToTwoByteString(value, numberOfDecimals = 0, LsbFirst = False):
     """Convert a numerical value to a two-byte string.
 
     Args:
-        value (float or int): The numerical value to be converted
-        numberOfDecimals (int): Number of decimals, 0 or more
-        LsbFirst (bol): 
+        * value (float or int): The numerical value to be converted
+        * numberOfDecimals (int): Number of decimals, 0 or more
+        * LsbFirst (bol): Whether the least significant byte should be first in the resulting string.
 
     Returns:
         A two-byte string.
 
     Raises:
-        ValueError
+        ValueError Raises an exception if the numberOfDecimals or the value is out of range.
 
-    Example ???????????
+    For example:
+        To store for example value=77.0, use numberOfDecimals=1 if the register will hold it as 770 internally.
+        The value 770 (dec) is 0302 (hex), where the most significant byte is 03 (hex) and the
+        least significant byte is 02 (hex). With LsbFirst = False, the most significant byte is given first
+        why the resulting string is 'BACKSLASHx03BACKSLASHx02', which has the length 2.
 
     """
     if numberOfDecimals <0 :
@@ -402,7 +429,7 @@ def _calculateCrcString( inputstring ):
         inputstring (str): An arbitrary-length message (without the CRC).
 
     Returns:
-        A two-byte CRC string.
+        A two-byte CRC string, where the least significant byte is first.
     
     Algorithm from the document 'MODBUS over serial line specification and implementation guide V1.02'.
     """
@@ -454,8 +481,11 @@ def _rightshift(inputInteger):
     """Rightshift an integer one step, and also calculate the carry bit.
 
     Args:
+        inputInteger (int): The value to be rightshifted
 
     Returns:
+        The tuple (shifted, carrybit) where ``shifted`` is the rightshifted integer and ``carrybit`` is the
+        resulting carry bit.
     """
     shifted = inputInteger >> 1
     carrybit = inputInteger & 1
@@ -471,12 +501,8 @@ def _toPrintableString( inputstring ):
         A descriptive string.
 
     Use it for diagnostic printing of strings representing byte values (might have non-printing characters).
-    With an input string of '\x12\x02\x74ABC', it will return the string:
+    With an input string of 'BACKSLASHx12BACKSLASHx02BACKSLASHx74ABC' (which is length 6), it will return the string:
     'String length: 6 bytes. Values: 18, 2, 116, 65, 66, 67'
-
-    Note that this not is rendered properly in the HTML documentation. Please see the source code directly.   
-
-    'BACKSLASHx12'
     
     """
     
