@@ -212,6 +212,7 @@ TODO
 * Update docstrings in minimalmodbus.py file
 
 At test equipment:
+
 * Test changing the baudrate etc with ``instrument.baudrate = 19600``
 * Make sure that .portname works fine instead of .port 
 * Change print commands to work with Python 2 and 3.
