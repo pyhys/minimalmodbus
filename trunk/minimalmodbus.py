@@ -37,40 +37,44 @@ __date__      = "$Date$"
 
 import serial
 
+BAUDRATE = 19200 
+"""Default value for the baudrate in Baud (int)"""
+PARITY   = serial.PARITY_NONE 
+"""Default value for the  parity (probably int). See the pySerial module for documentation. Defaults to serial.PARITY_NONE"""
+BYTESIZE = 8 
+"""Default value for the bytesize (int). """
+STOPBITS = 1
+"""Default value for the number of stopbits (int)."""
+TIMEOUT  = 0.05 
+"""Default value for the timeout value in seconds (float).""" 
+
 class Instrument():
     """Instrument class for talking to instruments (slaves) via the Modbus RTU protocol (via RS485 or RS232).
 
     Args:
-        * portname (str): The serial port name, for example ``/dev/ttyS1`` or ``COM1``.
+        * port (str): The serial port name, for example ``/dev/ttyS1`` or ``COM1``.
         * slaveaddress (int): Slave address in the range 1 to 247
 
     """
     
-    def __init__(self, portname, slaveaddress):
-        self.portname = portname
-        """The serial port name (str). Most often set by the constructor (see the class documentation). """
-
-        self.baudrate = 19200    
-        """The baudrate in Baud (int). Defaults to 19200 Baud."""
-
-        self.timeout  = 0.05     # seconds
-        """The timeout value in seconds (float). Defaults to 0.05 s."""
-
-        self.parity   = serial.PARITY_NONE
-        """The parity. See the pySerial module for documentation. Defaults to serial.PARITY_NONE"""
-
-        self.bytesize = 8
-        """The bytesize (int). Defaults to 8. """
-
-        self.stopbits = 1
-        """The number of stopbits (int). Defaults to 1. """
-
-        self._serial   = serial.Serial(self.portname, self.baudrate, parity=self.parity, bytesize=self.bytesize, \
-                        stopbits=self.stopbits, timeout = self.timeout )
+    def __init__(self, port, slaveaddress):
+        
+        self.serial = serial.Serial(port=port, baudrate=BAUDRATE, parity=PARITY, bytesize=BYTESIZE, \
+            stopbits=STOPBITS, timeout = TIMEOUT )
+        """The serial port object as defined by the pySerial module.
+        
+        Attributes:
+            * port (str):      Serial port name. Most often set by the constructor (see the class documentation).
+            * baudrate (int):  Baudrate in Baud. Defaults to BAUDRATE
+            * parity (int):    Parity. See the pySerial module for documentation. Defaults to PARITY.
+            * bytesize (int):  Bytesize in bits. Defaults to BYTESIZE.
+            * stopbits (int):  The number of stopbits. Defaults to STOPBITS.
+            * timeout (float): Timeout value in seconds. Defaults to TIMEOUT.
+        """
         
         self.address = slaveaddress
-        """The slave address (int). Most often set by the constructor (see the class documentation). """
-    
+        """Slave address (int). Most often set by the constructor (see the class documentation). """
+
     ########################################
     ## Functions for talking to the slave ##
     ########################################
@@ -248,8 +252,8 @@ class Instrument():
         if len(message) == 0:
             raise ValueError('The message length must not be zero')
             
-        self._serial.write(message)
-        answer =  self._serial.read(MAX_NUMBER_OF_BYTES)
+        self.serial.write(message)
+        answer =  self.serial.read(MAX_NUMBER_OF_BYTES)
         
         if len(answer) == 0:
             raise ValueError('No communication with the instrument (no answer)')
@@ -520,16 +524,21 @@ def _toPrintableString( inputstring ):
 ########################
 
 if __name__ == '__main__':
-    print 'TESTING MODBUS MODULE'
-    
-    a = Instrument('/dev/cvdHeatercontroller', 1)
-    
-    print a.read_register(1, 1)
-    #print a.read_register(273, 1)
-    #print a.read_register(289, 10)
-    #print a.read_register(1313, 10)
-    print a.read_register(10241, 1)
+    import sys
+
+    def print_out( inputstring ):
+        """Print the inputstring. To make it compatible with Python2 and Python3."""
+        sys.stdout.write(inputstring + '\n')     
+
+    print_out( 'TESTING MODBUS MODULE' )
+    instrument = Instrument('/dev/cvdHeatercontroller', 1)
+
+    print_out(str(  instrument.read_register(1, 1)     ))
+    print_out(str(  instrument.read_register(273, 1)   ))
+    print_out(str(  instrument.read_register(289, 10)  ))
+    print_out(str(  instrument.read_register(1313, 10) ))
+    print_out(str(  instrument.read_register(10241, 1) ))
  
-    print 'DONE!'
+    print_out( 'DONE!' )
     
 pass    

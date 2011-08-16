@@ -212,16 +212,15 @@ TODO
 
 At test equipment:
 
-* Test changing the baudrate etc with ``instrument.baudrate = 19600``
-* Make sure that .portname works fine instead of .port 
-* Change print commands to work with Python 2 and 3.
-* Test the dependency of pySerial in setup.py
 * Test it in general
 
+* Test with Python3
+* Test the dependency of pySerial in setup.py
+* Mailing list
 
 For next release:
 
-* Mailing list
+
 * Unittests in folder test/test*.py
 
 
