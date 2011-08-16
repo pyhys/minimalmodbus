@@ -153,32 +153,34 @@ class Eurotherm3500( minimalmodbus.Instrument ):
 ########################
 
 if __name__ == '__main__':
-    print 'TESTING EUROTHERM 3500 MODBUS MODULE'
+    import sys
+    def print_out( inputstring ):
+        """Print the inputstring. To make it compatible with Python2 and Python3."""
+        sys.stdout.write(inputstring + '\n') 
+
+    print_out( 'TESTING EUROTHERM 3500 MODBUS MODULE')
 
     a = Eurotherm3500('/dev/cvdHeatercontroller', 1)
     
-    #print a.get_sp_loop1(), 'SP 1'
-    #print a.get_sptarget_loop1(), 'SP 1 target'
-    #print a.get_sp_loop2(), 'SP 2'
-    
-    #print a.is_sprate_disabled_loop1(), 'SP rate Loop1 disabled'
-    #print a.get_sprate_loop1(), 'SP 1 rate'
-    
-    #print a.get_op_loop1(), '% OP 1'
-    #print a.get_op_loop2(), '% OP 2'
-    #print a.get_threshold_alarm1(), 'Al 1 thr'
-    #print a.is_set_alarmsummary(), 'Al summ'
-    #print a.is_manual_loop1(), 'Man Loop1'
-    #print a.is_inhibited_loop1(), 'Inhibit Loop1'
-   
-    print( str(a.get_pv_loop1()) + 'PV 1' )
-    #print a.get_pv_loop2(), 'PV 2'
+    print_out( 'SP1:                    {0}'.format(  a.get_sp_loop1()             ))
+    print_out( 'SP1 target:             {0}'.format(  a.get_sptarget_loop1()       ))
+    print_out( 'SP2:                    {0}'.format(  a.get_sp_loop2()             ))
+    print_out( 'SP-rate Loop1 disabled: {0}'.format(  a.is_sprate_disabled_loop1() ))
+    print_out( 'SP1 rate:               {0}'.format(  a.get_sprate_loop1()         ))
+    print_out( 'OP1:                    {0}%'.format( a.get_op_loop1()             ))
+    print_out( 'OP2:                    {0}%'.format( a.get_op_loop2()             ))
+    print_out( 'Alarm1 threshold:       {0}'.format(  a.get_threshold_alarm1()     ))
+    print_out( 'Alarm summary:          {0}'.format(  a.is_set_alarmsummary()      ))
+    print_out( 'Manual mode Loop1:      {0}'.format(  a.is_manual_loop1()          ))
+    print_out( 'Inhibit Loop1:          {0}'.format(  a.is_inhibited_loop1()       ))
+    print_out( 'PV1:                    {0}'.format(  a.get_pv_loop1()             ))
+    print_out( 'PV2:                    {0}'.format(  a.get_pv_loop2()             ))
 
-    # a.set_sp_loop1(0)
+    #a.set_sp_loop1(5)
+    #a.set_sprate_loop1(20)
+    #a.enable_sprate_loop1() 
+    #a.disable_sprate_loop1() 
     
-    # a.set_sprate_loop1(20)
-    # a.enable_sprate_loop1() 
-    # a.disable_sprate_loop1() 
-    
+    print_out( 'DONE!' )
 
 pass    

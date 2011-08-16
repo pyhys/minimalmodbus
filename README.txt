@@ -78,18 +78,18 @@ Default values
 --------------
 Most of the serial port parameters have the default values which are defined in the Modbus standard::
 
-    instrument.baudrate = 19200   # Baud
-    instrument.parity   = serial.PARITY_NONE
-    instrument.bytesize = 8
-    instrument.stopbits = 1
-    instrument.address     # this is the slave address number
+    instrument.serial.port          # this is the serial port name
+    instrument.serial.baudrate = 19200   # Baud
+    instrument.serial.parity   = serial.PARITY_NONE
+    instrument.serial.bytesize = 8
+    instrument.serial.stopbits = 1
+    instrument.serial.timeout  = 0.05   # seconds
 
-    instrument.portname    # this is the port name
-    instrument.timeout  = 0.05   # seconds
+    instrument.address     # this is the slave address number
 
 These can be overridden::
     
-    instrument.timeout = 0.2
+    instrument.serial.timeout = 0.2
 
 For details on the allowed parity values, see http://pyserial.sourceforge.net/pyserial_api.html#serial.PARITY_NONE.
 
