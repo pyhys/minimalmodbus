@@ -209,18 +209,14 @@ To download the svn repository in archive format, type this in the destination d
 
 TODO
 ----
-
-At test equipment:
-
-* Test it in general
+* Test documentation
+* Release
 
 * Test with Python3
 * Test the dependency of pySerial in setup.py
 * Mailing list
 
 For next release:
-
-
 * Unittests in folder test/test*.py
 
 
