@@ -64,7 +64,7 @@ Make sure the Subversion is updated::
 
 Make a tag in Subversion::
  
-  ??
+    svn copy https://minimalmodbus.svn.sourceforge.net/svnroot/minimalmodbus/trunk https://minimalmodbus.svn.sourceforge.net/svnroot/minimalmodbus/tags/0.20 -m "Release 0.20"
 
 Build the source distribution::
 
