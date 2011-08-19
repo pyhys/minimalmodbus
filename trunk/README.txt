@@ -3,7 +3,7 @@ MinimalModbus
 
 Introduction
 ------------
-MinimalModbus is an easy-to-use Python module for talking to instruments (slaves) from a computer (master) using the Modbus protocol. Example code includes drivers for Eurotherm process controllers. The only dependence is the pySerial module. This software supports the 'Modbus RTU' serial communication version of the protocol.
+MinimalModbus is an easy-to-use Python module for talking to instruments (slaves) from a computer (master) using the Modbus protocol. Example code includes drivers for Eurotherm process controllers. The only dependence is the pySerial module. This software supports the 'Modbus RTU' serial communication version of the protocol, and is intended for use on Linux and Windows platforms.
 
 General on Modbus protocol
 --------------------------
@@ -39,20 +39,20 @@ Typical usage
 
 The instrument is typically connected via a serial port, and a USB-to-serial adaptor should be used on most modern computers. How to configure such a serial port is described on the pySerial page: http://pyserial.sourceforge.net/
 
-For example, consider an instrument(slave) with address number 1 to which we are to communicate via port */dev/ttyUSB1*. The instrument stores the measured temperature in register 289. For this instrument a temperature of 77.2 C is stored as 772, why we use 1 decimal. To read this data from the instrument::
+For example, consider an instrument(slave) with address number 1 to which we are to communicate via a serial port with the name ``/dev/ttyUSB1``. The instrument stores the measured temperature in register 289. For this instrument a temperature of 77.2 C is stored as 772, why we use 1 decimal. To read this data from the instrument::
 
     #!/usr/bin/env python
     import minimalmodbus
 
     instrument = minimalmodbus.Instrument('/dev/ttyUSB1', 1) # port name, slave address
 
-    ## Read temperature (PV) ##
+    ## Read temperature (PV = ProcessValue) ##
     temperature = instrument.read_register( 289, 1 ) # Registernumber, number of decimals
     print temperature
 
     ## Change temperature setpoint (SP) ##
-    NEW_TEMPERATURE = 95.0
-    instrument.write_register(24, NEW_TEMPERATURE, 1) # Registernumber, value, number of decimals
+    NEW_TEMPERATURE = 95
+    instrument.write_register(24, NEW_TEMPERATURE, 1) # Registernumber, value, number of decimals for storage
 
 The full API for minimalmodbus is available on http://minimalmodbus.sourceforge.net/apiminimalmodbus.html, and the documentation in PDF format is found on http://minimalmodbus.sourceforge.net/minimalmodbus.pdf
 
@@ -98,7 +98,7 @@ Dependencies
 ------------
 This module relies on pySerial to do the heavy lifting, and it is the only dependency. You can find it at the Python package index: http://pypi.python.org/pypi/pyserial
 
-TODO: Python 2 and 3 !!!!!!!!!!
+Python version 2.6 and 2.7 have been used to develop this software, but it is **probably** compatible with Python 3 (according to the 2to3 tool).
 
 Download and installation
 -------------------------
