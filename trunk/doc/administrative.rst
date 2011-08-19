@@ -66,26 +66,43 @@ Make a tag in Subversion::
  
     svn copy https://minimalmodbus.svn.sourceforge.net/svnroot/minimalmodbus/trunk https://minimalmodbus.svn.sourceforge.net/svnroot/minimalmodbus/tags/0.20 -m "Release 0.20"
 
-Build the source distribution::
+Build the source distribution (as :file:`.gzip.tar` and :file:`.zip`) , and upload it to PYPI (will use the README.txt etc)::
 
-    python setup.py sdist --formats=gztar,zip
+    python setup.py register
+    python setup.py sdist --formats=gztar,zip upload
 
 Build the HTML and PDF documentation  ( in :file:`/doc` after making sure that ``PYTHONPATH`` is correct)::
 
     make html
     make latexpdf
 
-Upload the :file:`.gzip.tar` and :file:`.zip` files to PYPI (use web form?). What about README.txt?
+Upload the :file:`.gzip.tar` and :file:`.zip` files to Sourceforge by logging in and manually using the web form.
 
-Upload the :file:`.gzip.tar` and :file:`.zip` files to Sourceforge (use web form?), and upload the generated documentation.
+Upload the generated documentation to Sourceforge. In directory trunk/doc/build/html::
 
-Upload the documentation PDF and HTML files to Sourceforge.
+    sftp pyhys@web.sourceforge.net
+    cd /home/project-web/minimalmodbus/htdocs
+    put *.*     
+
+    mkdir _modules
+    cd _modules/
+    lcd _modules/
+    lls
+    put *.*
+
+    etc
+
+Upload the documentation PDF by (in proper directory)::
+
+    put *.pdf
 
 On a Windows machine, build the windows installer:: 
 
     python setup.py bdist_wininst
 
-Upload the windows installer to PYPI and Sourceforge.
+Upload the windows installer to PYPI by logging in, and uploading it manually.
+
+Upload the windows installer to Sourceforge.
 
 Notes on distribution
 ---------------------
