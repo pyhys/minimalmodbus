@@ -1,7 +1,7 @@
 
-Release 0.2 (2011-?-?)
+Release 0.2 (2011-08-19)
 ----------------------
-* minimalmodbus.Instrument.port is renamed minimalmodbus.Instrument.portname
+* Changes in how to reference the serial port. 
 * Updated documentation.
 
 

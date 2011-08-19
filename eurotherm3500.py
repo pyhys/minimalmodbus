@@ -19,7 +19,7 @@
 
 .. moduleauthor:: Jonas Berg <pyhys@users.sourceforge.net>
 
-Driver for the Eurotherm3500 module, for communication via the Modbus RTU protocol.
+Driver for the Eurotherm3500 process controller, for communication via the Modbus RTU protocol.
 
 This Python file was changed (committed) at 
 $Date$, 
@@ -39,7 +39,7 @@ __date__      = "$Date$"
 import minimalmodbus
 
 class Eurotherm3500( minimalmodbus.Instrument ):
-    """Instrument class for Eurotherm 35xx process controller. 
+    """Instrument class for Eurotherm 3500 process controller. 
     
     Communicates via Modbus RTU protocol (via RS232 or RS485), using the *MinimalModbus* Python module.    
 
@@ -81,7 +81,7 @@ class Eurotherm3500( minimalmodbus.Instrument ):
     def set_sp_loop1(self, value):
         """Set the SP1 for loop1.
         
-        Note that this not necessarily is the working setpoint.
+        Note that this is not necessarily the working setpoint.
 
         Args:
             value (float): Setpoint (most often in degrees)

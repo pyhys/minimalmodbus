@@ -38,15 +38,19 @@ __date__      = "$Date$"
 import serial
 
 BAUDRATE = 19200 
-"""Default value for the baudrate in Baud (int)"""
+"""Default value for the baudrate in Baud (int). Defaults to 19200."""
+
 PARITY   = serial.PARITY_NONE 
 """Default value for the  parity (probably int). See the pySerial module for documentation. Defaults to serial.PARITY_NONE"""
+
 BYTESIZE = 8 
-"""Default value for the bytesize (int). """
+"""Default value for the bytesize (int). Defaults to 8. """
+
 STOPBITS = 1
-"""Default value for the number of stopbits (int)."""
+"""Default value for the number of stopbits (int). Defaults to 1."""
+
 TIMEOUT  = 0.05 
-"""Default value for the timeout value in seconds (float).""" 
+"""Default value for the timeout value in seconds (float). Defaults to 0.05.""" 
 
 class Instrument():
     """Instrument class for talking to instruments (slaves) via the Modbus RTU protocol (via RS485 or RS232).
@@ -61,15 +65,21 @@ class Instrument():
         
         self.serial = serial.Serial(port=port, baudrate=BAUDRATE, parity=PARITY, bytesize=BYTESIZE, \
             stopbits=STOPBITS, timeout = TIMEOUT )
-        """The serial port object as defined by the pySerial module.
+        """The serial port object as defined by the pySerial module. Created by the constructor.
         
         Attributes:
-            * port (str):      Serial port name. Most often set by the constructor (see the class documentation).
-            * baudrate (int):  Baudrate in Baud. Defaults to BAUDRATE
-            * parity (int):    Parity. See the pySerial module for documentation. Defaults to PARITY.
-            * bytesize (int):  Bytesize in bits. Defaults to BYTESIZE.
-            * stopbits (int):  The number of stopbits. Defaults to STOPBITS.
-            * timeout (float): Timeout value in seconds. Defaults to TIMEOUT.
+            - port (str):      Serial port name. 
+                - Most often set by the constructor (see the class documentation).
+            - baudrate (int):  Baudrate in Baud. 
+                - Defaults to minimalmodbus.BAUDRATE
+            - parity (int):    Parity. See the pySerial module for documentation. 
+                - Defaults to minimalmodbus.PARITY.
+            - bytesize (int):  Bytesize in bits. 
+                - Defaults to minimalmodbus.BYTESIZE.
+            - stopbits (int):  The number of stopbits. 
+                - Defaults to minimalmodbus.STOPBITS.
+            - timeout (float): Timeout value in seconds. 
+                - Defaults to minimalmodbus.TIMEOUT.
         """
         
         self.address = slaveaddress
@@ -189,10 +199,10 @@ class Instrument():
     ##########################################
     
     def _performCommand(self, functioncode, payloadToSlave):
-        """Performs the command having the ``functioncode``.
+        """Performs the command having the *functioncode*.
         
         Args:
-            * functioncode (int): The function code for the command to be performed. Can for example be 'Write register'.
+            * functioncode (int): The function code for the command to be performed. Can for example be 'Write register' = 16.
             * payloadToSlave (str): Data to be transmitted to the slave (will be embedded in slaveaddress, CRC etc)
     
         Returns:
@@ -233,7 +243,7 @@ class Instrument():
 
             The data is stored internally in this driver as byte strings (representing byte values). 
             For example a byte with value 18 (dec) = 12 (hex) = 00010010 (bin) is stored in a string of length one.
-            This can be done using the function chr(18) or typing the string 'BACKSLASHx12', where BACKSLASH 
+            This can be done using the function chr(18) or typing the string ``BACKSLASHx12``, where ``BACKSLASH`` 
             should be replaced with the actual backslash sign. 
 
             Note that these strings can look pretty strange when printed, as values 0 to 31 (dec) are
@@ -346,7 +356,7 @@ def _twoByteStringToNum(bytestring, numberOfDecimals = 0):
         ValueError. Raises an exception if the bytestring has wrong length or the numberOfDecimals is wrong.
 
     For example:
-        A string 'BACKSLASHx03BACKSLASHx02' (which has the length 2) corresponds to 0302 (hex) = 770 (dec). If
+        A string ``BACKSLASHx03BACKSLASHx02`` (which has the length 2) corresponds to 0302 (hex) = 770 (dec). If
         numberOfDecimals=1, then this is converted to 77.0 (float). 
 
     A bug was found on 2011-05-16: The most significant byte was 
@@ -404,7 +414,7 @@ def _numToTwoByteString(value, numberOfDecimals = 0, LsbFirst = False):
         To store for example value=77.0, use numberOfDecimals=1 if the register will hold it as 770 internally.
         The value 770 (dec) is 0302 (hex), where the most significant byte is 03 (hex) and the
         least significant byte is 02 (hex). With LsbFirst = False, the most significant byte is given first
-        why the resulting string is 'BACKSLASHx03BACKSLASHx02', which has the length 2.
+        why the resulting string is ``BACKSLASHx03BACKSLASHx02``, which has the length 2.
 
     """
     if numberOfDecimals <0 :
@@ -478,6 +488,10 @@ def _setBitOn( x, bitNum ):
 
     Returns:
         The value after setting the bit. This is an integer.
+
+    For example:
+        For x = 4 (dec) = 0100 (bin), setting bit number 0 results in 0101 (bin) = 5 (dec).
+
     """
     return x | (1<<bitNum)
 
@@ -490,6 +504,10 @@ def _rightshift(inputInteger):
     Returns:
         The tuple (shifted, carrybit) where ``shifted`` is the rightshifted integer and ``carrybit`` is the
         resulting carry bit.
+
+    For example:
+        An inputInteger = 9 (dec) = 1001 (bin) will after a rightshift be 0100 (bin) = 4 and the carry bit is 1.
+        The return value will then be the tuple (4, 1). 
     """
     shifted = inputInteger >> 1
     carrybit = inputInteger & 1
@@ -505,8 +523,9 @@ def _toPrintableString( inputstring ):
         A descriptive string.
 
     Use it for diagnostic printing of strings representing byte values (might have non-printing characters).
-    With an input string of 'BACKSLASHx12BACKSLASHx02BACKSLASHx74ABC' (which is length 6), it will return the string:
-    'String length: 6 bytes. Values: 18, 2, 116, 65, 66, 67'
+    With an input string of ``BACKSLASHx12BACKSLASHx02BACKSLASHx74ABC`` (which is length 6), it will return the string:: 
+
+        'String length: 6 bytes. Values: 18, 2, 116, 65, 66, 67'
     
     """
     
