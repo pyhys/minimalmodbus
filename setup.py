@@ -1,14 +1,16 @@
 #!/usr/bin/env python
 
 from distutils.core import setup
+import minimalmodbus
 
 with open('README.txt') as file:
     long_description = file.read()
 
 setup(name='MinimalModbus',
-    version='0.2',
-    description='Simple Modbus RTU implementation for Python',
+    version = minimalmodbus.__version__,
+    description = 'Simple Modbus RTU implementation for Python',
     long_description = long_description,
+    keywords = 'modbus serial RTU',
     author='Jonas Berg',
     author_email='pyhys@users.sourceforge.net',
     url='http://minimalmodbus.sourceforge.net/',
