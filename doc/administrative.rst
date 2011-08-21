@@ -45,7 +45,6 @@ Language settings::
 
 Preparation for release
 -----------------------
-* Manually change ``version`` in the :file:`setup.py` file.
 * Manually change the ``__version__`` and ``__status__`` fields in the :file:`.py` source files.
 * Manually change the release date in CHANGES.txt
 
@@ -57,6 +56,10 @@ Check the code::
 Run tests::
 
     (not yet implemented)
+
+Test the source distribution build (look in the PKG-INFO file)::
+
+    python setup.py sdist
 
 Make sure the Subversion is updated::
 
