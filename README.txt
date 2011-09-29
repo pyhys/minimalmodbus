@@ -127,7 +127,7 @@ Python package index
     http://pypi.python.org/pypi/MinimalModbus/ (this page if viewed on python.org. Note that no API is available).
 
 The SourceForge project page
-    http://sourceforge.net/projects/minimalmodbus/ with Subversion repository, bug tracker and mailing list.
+    http://sourceforge.net/projects/minimalmodbus/ with bug tracker, mailing list and subversion repository ( http://minimalmodbus.svn.sourceforge.net/viewvc/minimalmodbus/trunk/ ).
 
 
 Author
