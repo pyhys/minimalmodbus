@@ -62,6 +62,18 @@ class Eurotherm3500( minimalmodbus.Instrument ):
         """Return the process value (PV) for loop2."""
         return self.read_register(1313, 1)
     
+    def get_pv_module3(self):
+        """Return the process value (PV) for extension module 3 (A)."""
+        return self.read_register(370, 1)
+
+    def get_pv_module4(self):
+        """Return the process value (PV) for extension module 4 (A)."""
+        return self.read_register(373, 1)
+
+    def get_pv_module6(self):
+        """Return the process value (PV) for extension module 6 (A)."""
+        return self.read_register(379, 1)
+
     ## Auto/manual mode
     
     def is_manual_loop1(self):
