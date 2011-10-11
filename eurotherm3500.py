@@ -187,7 +187,9 @@ if __name__ == '__main__':
     print_out( 'Inhibit Loop1:          {0}'.format(  a.is_inhibited_loop1()       ))
     print_out( 'PV1:                    {0}'.format(  a.get_pv_loop1()             ))
     print_out( 'PV2:                    {0}'.format(  a.get_pv_loop2()             ))
-
+    print_out( 'PV module 3:            {0}'.format(  a.get_pv_module3()           ))
+    print_out( 'PV module 4:            {0}'.format(  a.get_pv_module4()           ))
+    print_out( 'PV module 6:            {0}'.format(  a.get_pv_module6()           ))
     #a.set_sp_loop1(5)
     #a.set_sprate_loop1(20)
     #a.enable_sprate_loop1() 
