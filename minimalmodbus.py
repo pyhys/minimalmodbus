@@ -30,24 +30,26 @@ __author__  = "Jonas Berg"
 __email__   = "pyhys@users.sourceforge.net"
 __license__ = "Apache License, Version 2.0"
 
-__version__   = "0.20"
+__version__   = "0.21"
 __status__    = "Alpha"
 __revision__  = "$Rev$"
 __date__      = "$Date$"
 
+import os
 import serial
+import sys
 
 BAUDRATE = 19200 
-"""Default value for the baudrate in Baud (int). Defaults to 19200."""
+"""Default value for the baudrate in Baud (int)."""
 
 PARITY   = serial.PARITY_NONE 
 """Default value for the  parity (probably int). See the pySerial module for documentation. Defaults to serial.PARITY_NONE"""
 
 BYTESIZE = 8 
-"""Default value for the bytesize (int). Defaults to 8. """
+"""Default value for the bytesize (int)."""
 
 STOPBITS = 1
-"""Default value for the number of stopbits (int). Defaults to 1."""
+"""Default value for the number of stopbits (int)."""
 
 TIMEOUT  = 0.05 
 """Default value for the timeout value in seconds (float). Defaults to 0.05.""" 
@@ -57,7 +59,7 @@ class Instrument():
 
     Args:
         * port (str): The serial port name, for example ``/dev/ttyS1`` or ``COM1``.
-        * slaveaddress (int): Slave address in the range 1 to 247
+        * slaveaddress (int): Slave address in the range 1 to 247.
 
     """
     
@@ -71,15 +73,15 @@ class Instrument():
             - port (str):      Serial port name. 
                 - Most often set by the constructor (see the class documentation).
             - baudrate (int):  Baudrate in Baud. 
-                - Defaults to minimalmodbus.BAUDRATE
+                - Defaults to :data:`BAUDRATE`.
             - parity (int):    Parity. See the pySerial module for documentation. 
-                - Defaults to minimalmodbus.PARITY.
+                - Defaults to :data:`PARITY`.
             - bytesize (int):  Bytesize in bits. 
-                - Defaults to minimalmodbus.BYTESIZE.
+                - Defaults to :data:`BYTESIZE`.
             - stopbits (int):  The number of stopbits. 
-                - Defaults to minimalmodbus.STOPBITS.
+                - Defaults to :data:`STOPBITS`.
             - timeout (float): Timeout value in seconds. 
-                - Defaults to minimalmodbus.TIMEOUT.
+                - Defaults to :data:`TIMEOUT`.
         """
         
         self.address = slaveaddress
@@ -149,7 +151,7 @@ class Instrument():
             * value (float): The value to store in the register 
             * numberOfDecimals (int): The number of decimals for content conversion.
 
-        To store for example value=77.0, use numberOfDecimals=1 if the register will hold it as 770 internally.
+        To store for example `value`=77.0, use `numberOfDecimals`=1 if the register will hold it as 770 internally.
 
         Returns:
             None
@@ -168,6 +170,8 @@ class Instrument():
         FUNCTIONCODE_WRITE_REGISTERS = 16
         NUMBER_OF_REGISTERS_TO_WRITE = 1
         NUMBER_OF_BYTES_PER_REGISTER = 2
+        STARTBYTENUMBER_FOR_STARTADDRESS = 0
+        STARTBYTENUMBER_FOR_NUMBEROFREGISTERS = 2
         
         ## Build data for writing one register
         numberOfRegisterBytes = NUMBER_OF_REGISTERS_TO_WRITE * NUMBER_OF_BYTES_PER_REGISTER
@@ -179,15 +183,13 @@ class Instrument():
         payloadFromSlave = self._performCommand( FUNCTIONCODE_WRITE_REGISTERS, payloadToSlave)
         assert len(payloadFromSlave) == 4
         
-        ## Check start write register
-        STARTBYTENUMBER_FOR_STARTADDRESS = 0
+        ## Check start write register        
         bytesForStartAddress = payloadFromSlave[STARTBYTENUMBER_FOR_STARTADDRESS : STARTBYTENUMBER_FOR_STARTADDRESS+NUMBER_OF_BYTES_PER_REGISTER]
         receivedStartAddress =  _twoByteStringToNum( bytesForStartAddress )
         if receivedStartAddress != registeraddress:
             raise ValueError( 'Wrong given write start adress: {0}, but commanded is {1}'.format( receivedStartAddress, registeraddress) )
         
         ## Check number of registers written
-        STARTBYTENUMBER_FOR_NUMBEROFREGISTERS = 2
         bytesForNumberOfRegisters = payloadFromSlave[STARTBYTENUMBER_FOR_NUMBEROFREGISTERS : STARTBYTENUMBER_FOR_NUMBEROFREGISTERS+NUMBER_OF_BYTES_PER_REGISTER]
         receivedNumberOfWrittenReisters =  _twoByteStringToNum( bytesForNumberOfRegisters )
         if receivedNumberOfWrittenReisters != NUMBER_OF_REGISTERS_TO_WRITE:
@@ -208,7 +210,7 @@ class Instrument():
         Returns:
             The extracted data payload from the slave (a string). It has been stripped of CRC etc.
 
-        Makes use of the Instrument._communicate method.
+        Makes use of the Instrument._communicate method. The message is generated with the :func:`_embedPayload` function, and the parsing of the response is done with the :func:`_extractPayload` function.
 
         """
         message             = _embedPayload(self.address, functioncode, payloadToSlave)
@@ -279,7 +281,7 @@ def _embedPayload(slaveaddress, functioncode, payloaddata):
     
     Args:
         * slaveaddress (int): The address of the slave
-        * functioncode (int): The function code for the command to be performed. Can for example be 'Write register'.
+        * functioncode (int): The function code for the command to be performed. Can for example be 16 (Write register).
         * payloaddata (str): The byte integer string to be sent to the slave
 
     Returns:
@@ -538,19 +540,50 @@ def _toPrintableString( inputstring ):
 
     return firstpart + valuepart
 
+def _getDiagnosticString():
+    """Generate a diagnostic string, showing the module version, the platform, current directory etc.
+
+    Returns:
+        A descriptive string.
+    
+    """
+    text = '\n## Diagnostic output from minimalmodbus ## \n'
+    text += 'Version: ' + __version__ + '\n'
+    text += 'Revision: ' + __revision__ + '\n'
+    text += 'Release date: ' + __date__ + '\n'
+    text += 'Platform: ' + sys.platform + '\n'
+    text += 'Current directory: ' + os.getcwd() + '\n'
+    text += 'File name (with relative path): ' + __file__ + '\n'
+    text += 'Full file path: ' + os.path.abspath(__file__) + '\n'
+    text += 'Variable __name__: ' + __name__ + '\n'
+    text += 'Python version: ' + sys.version + '\n'
+    text += 'Python path: \n' 
+    text += '\n'.join( sys.path ) + '\n'
+    return text
+
 ########################
 ## Testing the module ##
 ########################
 
 if __name__ == '__main__':
-    import sys
 
     def print_out( inputstring ):
         """Print the inputstring. To make it compatible with Python2 and Python3."""
         sys.stdout.write(inputstring + '\n')     
 
+    #import a_module
+
+    #print dir()
+    print __file__ 
+    print os.path.dirname( __file__ )
+
     print_out( 'TESTING MODBUS MODULE' )
-    instrument = Instrument('/dev/cvdHeatercontroller', 1)
+
+    #quit()
+    print _getDiagnosticString()
+
+    quit()
+    #instrument = Instrument('/dev/cvdHeatercontroller', 1)
 
     print_out(str(  instrument.read_register(1, 1)     ))
     print_out(str(  instrument.read_register(273, 1)   ))
