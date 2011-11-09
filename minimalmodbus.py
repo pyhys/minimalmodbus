@@ -547,16 +547,18 @@ def _getDiagnosticString():
         A descriptive string.
     
     """
-    text = '\n## Diagnostic output from minimalmodbus ## \n'
-    text += 'Version: ' + __version__ + '\n'
+    text = '\n## Diagnostic output from minimalmodbus ## \n\n'
+    text += 'Minimalmodbus version: ' + __version__ + '\n'
     text += 'Revision: ' + __revision__ + '\n'
     text += 'Release date: ' + __date__ + '\n'
-    text += 'Platform: ' + sys.platform + '\n'
-    text += 'Current directory: ' + os.getcwd() + '\n'
     text += 'File name (with relative path): ' + __file__ + '\n'
-    text += 'Full file path: ' + os.path.abspath(__file__) + '\n'
-    text += 'Variable __name__: ' + __name__ + '\n'
+    text += 'Full file path: ' + os.path.abspath(__file__) + '\n\n'
+    text += 'pySerial version: ' + serial.VERSION + '\n'
+    text += 'pySerial full file path: ' + os.path.abspath(serial.__file__) + '\n\n'
+    text += 'Current directory: ' + os.getcwd() + '\n'
     text += 'Python version: ' + sys.version + '\n'
+    text += 'Variable __name__: ' + __name__ + '\n'
+    text += 'Current directory: ' + os.getcwd() + '\n'
     text += 'Python path: \n' 
     text += '\n'.join( sys.path ) + '\n'
     return text
@@ -573,11 +575,15 @@ if __name__ == '__main__':
 
     #import a_module
 
-    #print dir()
-    print __file__ 
-    print os.path.dirname( __file__ )
+    #
+    #print __file__ 
+    #print os.path.dirname( __file__ )
 
     print_out( 'TESTING MODBUS MODULE' )
+
+    #print dir(serial)
+
+    #print serial.VERSION
 
     #quit()
     print _getDiagnosticString()
