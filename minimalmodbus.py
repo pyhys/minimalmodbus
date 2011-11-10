@@ -59,7 +59,7 @@ class Instrument():
 
     Args:
         * port (str): The serial port name, for example ``/dev/ttyS1`` or ``COM1``.
-        * slaveaddress (int): Slave address in the range 1 to 247.
+        * slaveaddress (int): Slave address in the range 1 to 247 (use decimal numbers, not hex).
 
     """
     
@@ -95,7 +95,7 @@ class Instrument():
         """Read one register from the slave. Implemented with Modbus functioncode 3.
 
         Args:
-            * registeraddress (int): The register address   
+            * registeraddress (int): The register address (use decimal numbers, not hex).  
             * numberOfDecimals (int): The number of decimals for content conversion
 
         If a value of 77.0 is stored internally in the slave register as 770, then use numberOfDecimals=1
@@ -105,13 +105,6 @@ class Instrument():
 
         Raises:
             ValueError
-
-        .. note::
-            Some implementation details for 'Read register' functioncode (3):
-
-            The payload to the slave is: Register startaddress, number of registers
-
-            The payload from the slave is: Number of bytes, registerdata
 
         """
 
@@ -143,11 +136,52 @@ class Instrument():
         registervalue = _twoByteStringToNum(registerdata, numberOfDecimals)
         return registervalue
         
+    def read_bit(self, registeraddress):
+        """Read one bit from the slave. Implemented with Modbus functioncode 2.
+
+        Args:
+            * registeraddress (int): The register address (use decimal numbers, not hex).  
+
+        Returns:
+            The register data in numerical value (boolean)?? Not yet decided!!
+
+        Raises:
+            ValueError
+
+        """
+
+        FUNCTIONCODE_READ_REGISTERS = 2
+        NUMBER_OF_REGISTERS_TO_READ = 1
+        
+        # Build data for reading one register
+        payloadToSlave =  _numToTwoByteString(registeraddress) + _numToTwoByteString(NUMBER_OF_REGISTERS_TO_READ)
+        
+        # Communicate
+        payloadFromSlave= self._performCommand( FUNCTIONCODE_READ_REGISTERS, payloadToSlave)
+        
+        # Check number of bytes
+        # These constants are for dealing with the frame payload data
+        BYTEPOSITION_FOR_NUMBEROFBYTES = 0
+        NUMBER_OF_BYTES_BEFORE_REGISTERDATA = 1
+        givenNumberOfDatabytes = ord( payloadFromSlave[BYTEPOSITION_FOR_NUMBEROFBYTES ] )
+        countedNumberOfDatabytes = len(payloadFromSlave) - NUMBER_OF_BYTES_BEFORE_REGISTERDATA
+        if givenNumberOfDatabytes != countedNumberOfDatabytes:
+            raise ValueError( 'Wrong given number of bytes: {0}, but counted is {1} as data payload length is {2}'.format( \
+                givenNumberOfDatabytes, countedNumberOfDatabytes, len(payloadFromSlave)) )
+ 
+        # Extract register data
+        registerdata = payloadFromSlave[NUMBER_OF_BYTES_BEFORE_REGISTERDATA:]
+        
+        # Calculate value 
+        # TO BE DONE!!
+
+        return registerdata
+
     def write_register(self, registeraddress, value, numberOfDecimals=0):
         """Write to one register in the slave. Implemented with Modbus functioncode 16.
         
         Args:
-            * registeraddress (int): The register address 
+            * registeraddress (int): The register address  (use decimal numbers, not hex).
             * value (float): The value to store in the register 
             * numberOfDecimals (int): The number of decimals for content conversion.
 
@@ -158,13 +192,6 @@ class Instrument():
 
         Raises:
             ValueError
-        
-        .. note::
-            Some implementation details for 'Write register' functioncode (16):
-
-            The payload to the slave is: Register startaddress, number of registers, number of bytes, registerdata
-            
-            The payload from the slave is: Register startaddress, number of registers.
 
         """
         FUNCTIONCODE_WRITE_REGISTERS = 16
