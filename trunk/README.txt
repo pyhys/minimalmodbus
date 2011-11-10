@@ -5,6 +5,7 @@ Introduction
 ------------
 MinimalModbus is an easy-to-use Python module for talking to instruments (slaves) from a computer (master) using the Modbus protocol. Example code includes drivers for Eurotherm process controllers. The only dependence is the pySerial module. This software supports the 'Modbus RTU' serial communication version of the protocol, and is intended for use on Linux and Windows platforms.
 
+
 General on Modbus protocol
 --------------------------
 Modbus is a serial communications protocol published by Modicon in 1979, according to http://en.wikipedia.org/wiki/Modbus. It is often used to communicate with industrial electronic devices. 
@@ -24,6 +25,7 @@ For full documentation on the Modbus protocol, see http://www.modbus.com/. Two i
   * `Modbus application protocol V1.1b <http://www.modbus.com/docs/Modbus_Application_Protocol_V1_1b.pdf>`_ 
   * `Modbus over serial line specification and implementation guide V1.02 <http://www.modbus.com/docs/Modbus_over_serial_line_V1_02.pdf>`_ 
 
+
 Typical hardware
 ----------------
 The application for which I wrote this software is to read and write data from Eurotherm process controllers. These come with different types of communication protocols, but the controllers I prefer use the Modbus RTU protocol. MinimalModbus is intended for general communication using the Modbus RTU protocol (using a serial link), so there should be lots of applications.
@@ -37,7 +39,6 @@ To connect your computer to the RS485 bus, a serial port is required. There are 
 
 Typical usage
 -------------
-
 The instrument is typically connected via a serial port, and a USB-to-serial adaptor should be used on most modern computers. How to configure such a serial port is described on the pySerial page: http://pyserial.sourceforge.net/
 
 For example, consider an instrument(slave) with address number 1 to which we are to communicate via a serial port with the name ``/dev/ttyUSB1``. The instrument stores the measured temperature in register 289. For this instrument a temperature of 77.2 C is stored as 772, why we use 1 decimal. To read this data from the instrument::
@@ -45,7 +46,7 @@ For example, consider an instrument(slave) with address number 1 to which we are
     #!/usr/bin/env python
     import minimalmodbus
 
-    instrument = minimalmodbus.Instrument('/dev/ttyUSB1', 1) # port name, slave address
+    instrument = minimalmodbus.Instrument('/dev/ttyUSB1', 1) # port name, slave address (in decimal)
 
     ## Read temperature (PV = ProcessValue) ##
     temperature = instrument.read_register( 289, 1 ) # Registernumber, number of decimals
@@ -57,9 +58,9 @@ For example, consider an instrument(slave) with address number 1 to which we are
 
 The full API for minimalmodbus is available on http://minimalmodbus.sourceforge.net/apiminimalmodbus.html, and the documentation in PDF format is found on http://minimalmodbus.sourceforge.net/minimalmodbus.pdf
 
+
 Subclassing
 -----------
-
 It is better to put the details in a driver for the specific instrument. An example driver for Eurotherm3500 is included in this library, and it is recommended to have a look at its source code. To get the process value (PV from loop1)::
 
     #!/usr/bin/env python
@@ -74,6 +75,7 @@ It is better to put the details in a driver for the specific instrument. An exam
     ## Change temperature setpoint (SP) ##
     NEW_TEMPERATURE = 95.0
     heatercontroller.set_sp_loop1(NEW_TEMPERATURE)
+
 
 Default values
 --------------
@@ -101,6 +103,7 @@ This module relies on pySerial to do the heavy lifting, and it is the only depen
 
 Python version 2.6 and 2.7 have been used to develop this software, but it is **probably** compatible with Python 3 (according to the 2to3 tool).
 
+
 Download and installation
 -------------------------
 From command line (if you have the *pip installer*, available at http://pypi.python.org/pypi/pip)::
@@ -124,9 +127,9 @@ In Modbus RTU, the request message is sent from the master in this format::
 
 The CRC is a cyclic redundacy check code, for error checking of the message. The response from the client is similar, but with another payload data.
 
-============================== ============================================================================================== =================================================== 
+============================== ============================================================================================== ======================================================
 Function code (in decimal)     Payload data to slave (Request)                                                                Payload data from slave (Response)                  
-============================== ============================================================================================== =================================================== 
+============================== ============================================================================================== ====================================================== 
 1 Read bits (coils)            Start address [2 Bytes], Number of coils [2 Bytes]                                             Byte count [1 Byte], Value [k Bytes] 
 2 Read discrete inputs         Start address [2 Bytes], Number of inputs [2 Bytes]                                            Byte count [1 Byte], Value [k Bytes]         
 3 Read holding registers       Start address [2 Bytes], Number of registers [2 Bytes]                                         Byte count [1 Byte], Value [n*2 Bytes]
@@ -134,8 +137,8 @@ Function code (in decimal)     Payload data to slave (Request)                  
 5 Write single bit (coil)      Output address [2 Bytes], Value [2 Bytes]                                                      Output address [2 Bytes], Value [2 Bytes]           
 6 Write single register        Register address [2 Bytes], Value [2 Bytes]                                                    Register address [2 Bytes], Value [2 Bytes] 
 15 Write multiple bits (coils) Start address [2 Bytes], Number of outputs [2 Bytes], Byte count [1 Byte], Value [k Bytes]     Start address [2 Bytes], Number of outputs [2 Bytes]
-16 Write multiple registers    Start address [2 Bytes], Number of registers [2 Bytes], Byte count [1 Byte], Value [n*2 Bytes] Start address [2 Bytes], Number of outputs [2 Bytes]
-============================== ============================================================================================== =================================================== 
+16 Write multiple registers    Start address [2 Bytes], Number of registers [2 Bytes], Byte count [1 Byte], Value [n*2 Bytes] Start address [2 Bytes], Number of registers [2 Bytes]
+============================== ============================================================================================== ====================================================== 
 
 For function code 5, the only valid values are 0000 (hex) or FF00 (hex), representing OFF and ON respectively.
 
@@ -169,6 +172,7 @@ Jonas Berg, pyhys@users.sourceforge.net
 Feedback
 --------
 If you find this software useful, then please leave a review on the SourceForge project page (Log-in is required).
+
 
 Related software
 ----------------
