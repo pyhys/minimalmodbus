@@ -16,6 +16,7 @@ Additional resources available on home page
    
    apiminimalmodbus
    apieurotherm3500
+   apiomegacn7500
    licence
    changes
    administrative

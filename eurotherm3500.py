@@ -27,16 +27,16 @@ which was $Revision$.
 
 """
 
+import minimalmodbus
+
 __author__  = "Jonas Berg"
 __email__   = "pyhys@users.sourceforge.net"
 __license__ = "Apache License, Version 2.0"
 
-__version__   = "0.20"
-__status__    = "Alpha"
+__version__   = minimalmodbus.__version__
+__status__    = minimalmodbus.__status__
 __revision__  = "$Rev$"
 __date__      = "$Date$"
-
-import minimalmodbus
 
 class Eurotherm3500( minimalmodbus.Instrument ):
     """Instrument class for Eurotherm 3500 process controller. 
