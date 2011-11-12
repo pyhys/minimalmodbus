@@ -169,6 +169,12 @@ The documentation is generated with the Sphinx tool: http://sphinx.pocoo.org/
 Sphinx reStructuredText Primer
     http://sphinx.pocoo.org/rest.html
 
+Spinx autodoc features
+    http://sphinx.pocoo.org/ext/autodoc.html
+
+Sphinx cross-referencing Python objects
+    http://sphinx.pocoo.org/domains.html#python-roles
+
 Example usage for API documentation
     http://packages.python.org/an_example_pypi_project/sphinx.html
 

@@ -22,8 +22,8 @@
 Driver for the Omega CN7500 process controller, for communication using the Modbus RTU protocol.
 
 This Python file was changed (committed) at 
-$Date: 2011-10-11 14:57:10 +0200 (Tue, 11 Oct 2011) $, 
-which was $Revision: 64 $.
+$Date$, 
+which was $Revision$.
 
 """
 
@@ -35,8 +35,8 @@ __license__ = "Apache License, Version 2.0"
 
 __version__   = minimalmodbus.__version__
 __status__    = minimalmodbus.__status__
-__revision__  = "$Rev: 64 $"
-__date__      = "$Date: 2011-10-11 14:57:10 +0200 (Tue, 11 Oct 2011) $"
+__revision__  = "$Rev$"
+__date__      = "$Date$"
 
 class OmegaCN7500( minimalmodbus.Instrument ):
     """Instrument class for Omega CN7500 process controller. 
@@ -100,36 +100,20 @@ class OmegaCN7500( minimalmodbus.Instrument ):
 ########################
 
 if __name__ == '__main__':
+
     import sys
+
     def print_out( inputstring ):
         """Print the inputstring. To make it compatible with Python2 and Python3."""
         sys.stdout.write(inputstring + '\n') 
 
-    print_out( 'TESTING EUROTHERM 3500 MODBUS MODULE')
+    print_out( 'TESTING OMEGA CN7500 MODBUS MODULE')
 
-    a = Eurotherm3500('/dev/cvdHeatercontroller', 1)
+    a = OmegaCN7500('/dev/cvdHeatercontroller', 1)
     
-    print_out( 'SP1:                    {0}'.format(  a.get_sp_loop1()             ))
-    print_out( 'SP1 target:             {0}'.format(  a.get_sptarget_loop1()       ))
-    print_out( 'SP2:                    {0}'.format(  a.get_sp_loop2()             ))
-    print_out( 'SP-rate Loop1 disabled: {0}'.format(  a.is_sprate_disabled_loop1() ))
-    print_out( 'SP1 rate:               {0}'.format(  a.get_sprate_loop1()         ))
-    print_out( 'OP1:                    {0}%'.format( a.get_op_loop1()             ))
-    print_out( 'OP2:                    {0}%'.format( a.get_op_loop2()             ))
-    print_out( 'Alarm1 threshold:       {0}'.format(  a.get_threshold_alarm1()     ))
-    print_out( 'Alarm summary:          {0}'.format(  a.is_set_alarmsummary()      ))
-    print_out( 'Manual mode Loop1:      {0}'.format(  a.is_manual_loop1()          ))
-    print_out( 'Inhibit Loop1:          {0}'.format(  a.is_inhibited_loop1()       ))
-    print_out( 'PV1:                    {0}'.format(  a.get_pv_loop1()             ))
-    print_out( 'PV2:                    {0}'.format(  a.get_pv_loop2()             ))
-    print_out( 'PV module 3:            {0}'.format(  a.get_pv_module3()           ))
-    print_out( 'PV module 4:            {0}'.format(  a.get_pv_module4()           ))
-    print_out( 'PV module 6:            {0}'.format(  a.get_pv_module6()           ))
-    #a.set_sp_loop1(5)
-    #a.set_sprate_loop1(20)
-    #a.enable_sprate_loop1() 
-    #a.disable_sprate_loop1() 
-    
+    print_out( 'SP :                    {0}'.format(  a.get_setpoint() ))
+    print_out( 'PV:                     {0}'.format(  a.get_pv()       ))
+
     print_out( 'DONE!' )
 
 pass    

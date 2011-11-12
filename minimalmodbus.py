@@ -30,7 +30,7 @@ __author__  = "Jonas Berg"
 __email__   = "pyhys@users.sourceforge.net"
 __license__ = "Apache License, Version 2.0"
 
-__version__   = "0.21"
+__version__   = "0.22"
 __status__    = "Alpha"
 __revision__  = "$Rev$"
 __date__      = "$Date$"
@@ -172,10 +172,13 @@ class Instrument():
         # Extract register data
         registerdata = payloadFromSlave[NUMBER_OF_BYTES_BEFORE_REGISTERDATA:]
         
-        # Calculate value 
-        # TO BE DONE!!
+        # Calculate value HACK!!
+        if registerdata == '\x01':       
+            outputvalue = 1
+        else:
+            outputvalue = 0
 
-        return registerdata
+        return outputvalue
 
     def write_register(self, registeraddress, value, numberOfDecimals=0):
         """Write to one register in the slave. Implemented with Modbus functioncode 16.
@@ -582,12 +585,14 @@ def _getDiagnosticString():
     text += 'Full file path: ' + os.path.abspath(__file__) + '\n\n'
     text += 'pySerial version: ' + serial.VERSION + '\n'
     text += 'pySerial full file path: ' + os.path.abspath(serial.__file__) + '\n\n'
-    text += 'Current directory: ' + os.getcwd() + '\n'
+    text += 'Platform: ' + sys.platform + '\n'
     text += 'Python version: ' + sys.version + '\n'
+    text += 'Python flags: ' + repr(sys.flags) + '\n'
     text += 'Variable __name__: ' + __name__ + '\n'
-    text += 'Current directory: ' + os.getcwd() + '\n'
+    text += 'Current directory: ' + os.getcwd() + '\n\n'
     text += 'Python path: \n' 
     text += '\n'.join( sys.path ) + '\n'
+    text += '\n## End of diagnostic output ## \n'
     return text
 
 ########################
