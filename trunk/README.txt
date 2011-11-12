@@ -147,6 +147,19 @@ can be said about function code 5 and 6, and also about 15 and 16.
 
 For finding how the k Bytes for the value relates to the number of registers etc (n), see the Modbus documents referred to above.
 
+Implemented functions
+---------------------
+These are the functions to use for reading and writing registers and bits of your instrument. Study the 
+documentation for your instrument to find which function code to use.
+
++--------------+-----------------------------------------------------------------------+-------------------------------------------------------------------------+
+| Item         | Read                                                                  | Write                                                                   |
++==============+=======================================================================+=========================================================================+
+| **Bit**      | :meth:`minimalmodbus.Instrument.read_bit` Function code 2 [or 1]      | :meth:`minimalmodbus.Instrument.write_bit`  Function code 5 [or 15]     |
++--------------+-----------------------------------------------------------------------+-------------------------------------------------------------------------+
+| **Register** | :meth:`minimalmodbus.Instrument.read_register` Function code 3 [or 4] | :meth:`minimalmodbus.Instrument.write_register` Function code 16 [or 6] |
++--------------+-----------------------------------------------------------------------+-------------------------------------------------------------------------+
+
 Licence
 -------
 Apache License, Version 2.0.
