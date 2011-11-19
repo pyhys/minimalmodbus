@@ -33,8 +33,6 @@ __author__  = "Jonas Berg"
 __email__   = "pyhys@users.sourceforge.net"
 __license__ = "Apache License, Version 2.0"
 
-__version__   = minimalmodbus.__version__
-__status__    = minimalmodbus.__status__
 __revision__  = "$Rev$"
 __date__      = "$Date$"
 
@@ -48,8 +46,6 @@ class OmegaCN7500( minimalmodbus.Instrument ):
         * slaveaddress (int): slave address in the range 1 to 247 (use decimal numbers)
 
     """
-
-    # Note: To convert the hex number 0814 (often written as 0x0814), use int('0814', 16) to have the decimal number.
     
     def __init__(self, portname, slaveaddress):
         minimalmodbus.Instrument.__init__(self, portname, slaveaddress)
@@ -58,27 +54,27 @@ class OmegaCN7500( minimalmodbus.Instrument ):
     
     def get_pv(self):
         """Return the process value (PV)."""
-        return self.read_register( int('1000',16), 1)
+        return self.read_register( 0x1000, 1) 
    
     ## Run and stop the controller
     
     def run(self):
         """Put the process controller in run mode."""
-        self.write_bit( int('0814',16), 1)
+        self.write_bit( 0x0814, 1)
 
     def stop(self):
         """Stop the process controller."""
-        self.write_bit( int('0814',16), 0)
+        self.write_bit( 0x0814, 0)
 
     def is_running(self):
         """Return True if the controller is running."""
-        return self.read_bit( int('0814',16) ) == 1
+        return self.read_bit( 0x0814 ) == 1   
 
     ## Setpoint
     
     def get_setpoint(self):
         """Return the setpoint (SV)."""
-        return self.read_register( int('1001',16), 1)
+        return self.read_register( 0x1001, 1) 
     
     def set_setpoint(self, value):
         """Set the setpoint (SV).
@@ -86,13 +82,13 @@ class OmegaCN7500( minimalmodbus.Instrument ):
         Args:
             value (float): Setpoint [most often in degrees]
         """
-        self.write_register( int('1001',16), value, 1)
+        self.write_register( 0x1001, value, 1)
     
     ## Output signal
     
     def get_output1(self):
         """Return the output value (OP) for output1 [in %]."""
-        return elf.read_register( int('1012',16), 1)
+        return elf.read_register( 0x1012, 1)
    
     
 ########################
@@ -101,8 +97,8 @@ class OmegaCN7500( minimalmodbus.Instrument ):
 
 if __name__ == '__main__':
 
-    import sys
-
+    import sys       
+    
     def print_out( inputstring ):
         """Print the inputstring. To make it compatible with Python2 and Python3."""
         sys.stdout.write(inputstring + '\n') 
