@@ -1,10 +1,9 @@
 import unittest
 import minimalmodbus
 
-
 print 'Testing'
 
-class TestEmbedPayload(unittest.TestCase):
+class TestExtractPayload(unittest.TestCase):
 
     knownValues=[
     (1, 16, 'ABC', '\x01\x10ABC<E'),
@@ -13,10 +12,34 @@ class TestEmbedPayload(unittest.TestCase):
     ]
 
     def testKnownValues(self):
+        for address, functioncode, knownresult, inputstring in self.knownValues:
+            result = minimalmodbus._extractPayload(inputstring, address, functioncode )
+            self.assertEqual(result, knownresult)
+            
+    def testWrongCrc(self):
+        pass ##TODO        
+            
+    def testWrongAdress(self):
+        pass ##TODO
+        
+    def testWrongFunctionCode(self):
+        pass ##TODO
+
+class TestEmbedPayload(unittest.TestCase):
+
+    knownValues=TestExtractPayload.knownValues
+
+    def testKnownValues(self):
         for address, functioncode, inputstring, knownresult in self.knownValues:
             result = minimalmodbus._embedPayload(address, functioncode, inputstring)
             self.assertEqual(result, knownresult)
 
+    def testToLargeAdressValue(self):
+        pass ##TODO
+        
+    def testToLargeFunctionCodeValue(self):
+        pass ##TODO
+    
 class TestSetBitOn(unittest.TestCase):
 
     knownValues=[
@@ -76,10 +99,74 @@ class TestGetDiagnosticString(unittest.TestCase):
 
     def testReturnsString(self):
         resultstring = minimalmodbus._getDiagnosticString()
-        print len(resultstring)
         ## Should be at least 100 characters
 
+class TestCalculateCrcString(unittest.TestCase):
 
+    knownValues=[
+    ('\x02\x07','\x41\x12'), # Example from MODBUS over Serial Line Specification and Implementation Guide V1.02 
+    ('ABCDE', '\x0fP'),
+    ]
+
+    def testKnownValues(self):
+        for inputstring, knowncrc in self.knownValues:
+            resultcrc = minimalmodbus._calculateCrcString(inputstring)
+            self.assertEqual(resultcrc, knowncrc)       
+
+class TestTwoByteStringToNum(unittest.TestCase):
+
+    knownValues=[
+    ('\x03\x02', 1, 77.0), 
+    ('\x03\x02', 0, 770 ), 
+    ]
+
+    def testKnownValues(self):
+        for inputstring, numberOfDecimals, knownvalue in self.knownValues:
+            resultvalue = minimalmodbus._twoByteStringToNum(inputstring, numberOfDecimals)
+            self.assertEqual(resultvalue, knownvalue)      
+
+class TestNumToTwoByteString(unittest.TestCase):
+
+    knownValues=[
+    (77.0, 1, False, '\x03\x02' ), 
+    (77.0, 1, True, '\x02\x03' ), 
+    (770, 0, False, '\x03\x02' ), 
+    ]
+
+    def testKnownValues(self):
+        for inputvalue, numberOfDecimals, LsbFirst, knownstring in self.knownValues:
+            resultstring = minimalmodbus._numToTwoByteString(inputvalue, numberOfDecimals, LsbFirst)
+            self.assertEqual(resultstring, knownstring)      
+
+class TestSanityTwoByteString(unittest.TestCase):
+
+    def testKnownValuesLoop(self):
+        for x in range(0x10000):
+            resultvalue = minimalmodbus._twoByteStringToNum( minimalmodbus._numToTwoByteString(x) )
+            self.assertEqual(resultvalue, x)       
+
+class TestNumToOneByteString(unittest.TestCase):
+
+    knownValues=[
+    (7, '\x07' ), 
+    ]
+
+    def testKnownValues(self):
+        for inputvalue, knownstring in self.knownValues:
+            resultstring = minimalmodbus._numToOneByteString( inputvalue )
+            self.assertEqual(resultstring, knownstring)     
+
+    def testKnownLoop(self):
+        for x in range(256):
+            knownstring = chr(x)
+            resultstring = minimalmodbus._numToOneByteString( x )
+            self.assertEqual(resultstring, knownstring)       
+
+    def testNegativeInput(self):
+        pass ##TODO 
+
+    def testTooLargeInput(self):
+        pass ##TODO
 
 if __name__ == '__main__':
     unittest.main()
