@@ -147,6 +147,7 @@ can be said about function code 5 and 6, and also about 15 and 16.
 
 For finding how the k Bytes for the value relates to the number of registers etc (n), see the Modbus documents referred to above.
 
+
 Implemented functions
 ---------------------
 These are the functions to use for reading and writing registers and bits of your instrument. Study the 
@@ -159,6 +160,7 @@ documentation for your instrument to find which function code to use.
 +--------------+-----------------------------------------------------------------------+-------------------------------------------------------------------------+
 | **Register** | :meth:`minimalmodbus.Instrument.read_register` Function code 3 [or 4] | :meth:`minimalmodbus.Instrument.write_register` Function code 16 [or 6] |
 +--------------+-----------------------------------------------------------------------+-------------------------------------------------------------------------+
+
 
 Licence
 -------
@@ -177,9 +179,23 @@ The SourceForge project page
     http://sourceforge.net/projects/minimalmodbus/ with bug tracker, mailing list and subversion repository ( http://minimalmodbus.svn.sourceforge.net/viewvc/minimalmodbus/trunk/ ).
 
 
+Support
+-------
+Send a mail to minimalmodbus-list@lists.sourceforge.net
+
+Describe the problem in detail. Please include the output after running::
+
+  >>> import minimalmodbus 
+  >>> print minimalmodbus._getDiagnosticString()
+
+
 Author
 ------
 Jonas Berg, pyhys@users.sourceforge.net
+
+
+Credits
+-------
 
 
 Feedback
