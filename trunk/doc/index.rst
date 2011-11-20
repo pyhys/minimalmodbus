@@ -21,6 +21,7 @@ Additional resources available on home page
    changes
    administrative
    internalminimalmodbus
+   internaltestminimalmodbus
 
 
 Indices and tables

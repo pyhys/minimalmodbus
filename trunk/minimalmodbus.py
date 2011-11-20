@@ -30,7 +30,7 @@ __author__  = "Jonas Berg"
 __email__   = "pyhys@users.sourceforge.net"
 __license__ = "Apache License, Version 2.0"
 
-__version__   = "0.22"
+__version__   = "0.23"
 __status__    = "Alpha"
 __revision__  = "$Rev$"
 __date__      = "$Date$"
@@ -209,7 +209,7 @@ class Instrument():
             * numberOfDecimals (int): The number of decimals for content conversion.
             * functioncode (int): Modbus functions code. Can be 6 or 16.
 
-        To store for example `value`=77.0, use `numberOfDecimals`=1 if the register will hold it as 770 internally.
+        To store for example value=77.0, use numberOfDecimals=1 if the register will hold it as 770 internally.
 
         Returns:
             None

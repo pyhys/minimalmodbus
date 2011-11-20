@@ -43,8 +43,19 @@ class OmegaCN7500( minimalmodbus.Instrument ):
 
     Args:
         * portname (str): port name
-        * slaveaddress (int): slave address in the range 1 to 247 (use decimal numbers)
+        * slaveaddress (int): slave address in the range 1 to 247 (in decimal)
 
+    Implemented with these function codes (in decimal):
+        
+    ==================  ====================
+    Description         Modbus function code
+    ==================  ====================
+    Read registers      3
+    Write one register  6
+    Read bits           2
+    Write one bit       5
+    ==================  ====================
+    
     """
     
     def __init__(self, portname, slaveaddress):
@@ -88,9 +99,8 @@ class OmegaCN7500( minimalmodbus.Instrument ):
     
     def get_output1(self):
         """Return the output value (OP) for output1 [in %]."""
-        return elf.read_register( 0x1012, 1)
+        return self.read_register( 0x1012, 1)
    
-    
 ########################
 ## Testing the module ##
 ########################
@@ -105,10 +115,17 @@ if __name__ == '__main__':
 
     print_out( 'TESTING OMEGA CN7500 MODBUS MODULE')
 
-    a = OmegaCN7500('/dev/cvdHeatercontroller', 1)
+    PORTNAME = '?'
+    ADDRESS = 1
     
-    print_out( 'SP :                    {0}'.format(  a.get_setpoint() ))
-    print_out( 'PV:                     {0}'.format(  a.get_pv()       ))
+    print_out( 'Port: ' +  str(PORTNAME) + ' Address: ' + str(ADDRESS) )
+    
+    instr = OmegaCN7500(PORTNAME, ADDRESS)
+    
+    print_out( 'SP:                     {0}'.format(  instr.get_setpoint() ))
+    print_out( 'PV:                     {0}'.format(  instr.get_pv()       ))
+    print_out( 'OP1:                    {0}'.format(  instr.get_output1()  ))   
+    print_out( 'Is running:             {0}'.format(  instr.is_running()   ))
 
     print_out( 'DONE!' )
 
