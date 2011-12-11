@@ -235,7 +235,7 @@ To download the svn repository in archive format, type this in the destination d
 
 TODO
 ----
-
+* Make sure that the entire response is printed in case of error
 * Test with Python3
 * Test the dependency of pySerial in setup.py
 * Mailing list

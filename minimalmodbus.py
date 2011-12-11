@@ -87,6 +87,9 @@ class Instrument():
         self.address = slaveaddress
         """Slave address (int). Most often set by the constructor (see the class documentation). """
 
+        self._debug = False
+        """Set this to True to print the communication details."""
+
     ########################################
     ## Functions for talking to the slave ##
     ########################################
@@ -105,35 +108,10 @@ class Instrument():
             ValueError
 
         """
+        _checkFunctioncode(functioncode, [1, 2])
 
-        NUMBER_OF_REGISTERS_TO_READ = 1
-        
-        # Build data for reading one register
-        payloadToSlave =  _numToTwoByteString(registeraddress) + _numToTwoByteString(NUMBER_OF_REGISTERS_TO_READ)
-        
-        # Communicate
-        payloadFromSlave= self._performCommand( functioncode, payloadToSlave)
-        
-        # Check number of bytes
-        # These constants are for dealing with the frame payload data
-        BYTEPOSITION_FOR_NUMBEROFBYTES = 0
-        NUMBER_OF_BYTES_BEFORE_REGISTERDATA = 1
-        givenNumberOfDatabytes = ord( payloadFromSlave[BYTEPOSITION_FOR_NUMBEROFBYTES ] )
-        countedNumberOfDatabytes = len(payloadFromSlave) - NUMBER_OF_BYTES_BEFORE_REGISTERDATA
-        if givenNumberOfDatabytes != countedNumberOfDatabytes:
-            raise ValueError( 'Wrong given number of bytes: {0}, but counted is {1} as data payload length is {2}'.format( \
-                givenNumberOfDatabytes, countedNumberOfDatabytes, len(payloadFromSlave)) )
- 
-        # Extract register data
-        registerdata = payloadFromSlave[NUMBER_OF_BYTES_BEFORE_REGISTERDATA:]
-        
-        # Calculate value HACK!!
-        if registerdata == '\x01':       
-            outputvalue = 1
-        else:
-            outputvalue = 0
+        return self._genericCommand(functioncode, registeraddress)
 
-        return outputvalue
 
     def write_bit(self, registeraddress, value, functioncode=5):
         """Write one bit in the slave.
@@ -150,8 +128,10 @@ class Instrument():
             ValueError
 
         """
-        pass    
-
+        _checkFunctioncode(functioncode, [5, 15])     
+        
+        self._genericCommand(functioncode, registeraddress, value)
+        
 
     def read_register(self, registeraddress, numberOfDecimals=0, functioncode=3):
         """Read one register from the slave.
@@ -170,35 +150,10 @@ class Instrument():
             ValueError
 
         """
+        _checkFunctioncode(functioncode, [3, 4])   
+        
+        return self._genericCommand(functioncode, registeraddress, numberOfDecimals=numberOfDecimals)
 
-        NUMBER_OF_REGISTERS_TO_READ = 1
-        
-        # Build data for reading one register
-        payloadToSlave =  _numToTwoByteString(registeraddress) + _numToTwoByteString(NUMBER_OF_REGISTERS_TO_READ)
-        
-        # Communicate
-        payloadFromSlave= self._performCommand( functioncode, payloadToSlave)
-        
-        # Check number of bytes
-        # These constants are for dealing with the frame payload data
-        BYTEPOSITION_FOR_NUMBEROFBYTES = 0
-        NUMBER_OF_BYTES_BEFORE_REGISTERDATA = 1
-        givenNumberOfDatabytes = ord( payloadFromSlave[BYTEPOSITION_FOR_NUMBEROFBYTES ] )
-        countedNumberOfDatabytes = len(payloadFromSlave) - NUMBER_OF_BYTES_BEFORE_REGISTERDATA
-        if givenNumberOfDatabytes != countedNumberOfDatabytes:
-            raise ValueError( 'Wrong given number of bytes: {0}, but counted is {1} as data payload length is {2}'.format( \
-                givenNumberOfDatabytes, countedNumberOfDatabytes, len(payloadFromSlave)) )
- 
-        # Extract register data
-        registerdata = payloadFromSlave[NUMBER_OF_BYTES_BEFORE_REGISTERDATA:]
-        
-        # Calculate value 
-        # (Up to here the code is pretty general, but from here we assume that only one register is read)
-        assert len(registerdata) == 2
-        registervalue = _twoByteStringToNum(registerdata, numberOfDecimals)
-        return registervalue
-        
-    
 
     def write_register(self, registeraddress, value, numberOfDecimals=0, functioncode=16):
         """Write to one register in the slave.
@@ -218,37 +173,96 @@ class Instrument():
             ValueError
 
         """
-        NUMBER_OF_REGISTERS_TO_WRITE = 1
-        NUMBER_OF_BYTES_PER_REGISTER = 2
-        STARTBYTENUMBER_FOR_STARTADDRESS = 0
-        STARTBYTENUMBER_FOR_NUMBEROFREGISTERS = 2
+        _checkFunctioncode(functioncode, [6, 16])
         
-        ## Build data for writing one register
-        numberOfRegisterBytes = NUMBER_OF_REGISTERS_TO_WRITE * NUMBER_OF_BYTES_PER_REGISTER
-        
-        payloadToSlave =  _numToTwoByteString(registeraddress) + _numToTwoByteString(NUMBER_OF_REGISTERS_TO_WRITE) + \
-                        _numToOneByteString(numberOfRegisterBytes) + _numToTwoByteString(value, numberOfDecimals)
-        
-        # Communicate
-        payloadFromSlave = self._performCommand( functioncode, payloadToSlave)
-        assert len(payloadFromSlave) == 4
-        
-        ## Check start write register        
-        bytesForStartAddress = payloadFromSlave[STARTBYTENUMBER_FOR_STARTADDRESS : STARTBYTENUMBER_FOR_STARTADDRESS+NUMBER_OF_BYTES_PER_REGISTER]
-        receivedStartAddress =  _twoByteStringToNum( bytesForStartAddress )
-        if receivedStartAddress != registeraddress:
-            raise ValueError( 'Wrong given write start adress: {0}, but commanded is {1}'.format( receivedStartAddress, registeraddress) )
-        
-        ## Check number of registers written
-        bytesForNumberOfRegisters = payloadFromSlave[STARTBYTENUMBER_FOR_NUMBEROFREGISTERS : STARTBYTENUMBER_FOR_NUMBEROFREGISTERS+NUMBER_OF_BYTES_PER_REGISTER]
-        receivedNumberOfWrittenReisters =  _twoByteStringToNum( bytesForNumberOfRegisters )
-        if receivedNumberOfWrittenReisters != NUMBER_OF_REGISTERS_TO_WRITE:
-            raise ValueError( 'Wrong given number of registers to write: {0}, but commanded is {1}'.format( \
-                receivedNumberOfWrittenReisters, NUMBER_OF_REGISTERS_TO_WRITE) )
+        self._genericCommand(functioncode, registeraddress, value, numberOfDecimals)
     
     ##########################################
     ## Communication implementation details ##
     ##########################################
+    
+    def _genericCommand(self, functioncode, registeraddress, value=None, numberOfDecimals=0):
+        """Generic command for reading and writing registers and bits.
+        
+        Args:
+            * functioncode (int): Modbus functions code. 
+            * registeraddress (int): The register address  (use decimal numbers, not hex).
+            * value (numerical): The value to store in the register 
+            * numberOfDecimals (int): The number of decimals for content conversion.
+        
+        
+        """
+        
+        NUMBER_OF_REGISTERS = 1
+        NUMBER_OF_BYTES_PER_REGISTER = 2
+        
+        numberOfRegisterBytes = NUMBER_OF_REGISTERS * NUMBER_OF_BYTES_PER_REGISTER
+        
+        STARTBYTENUMBER_FOR_STARTADDRESS = 0
+        STARTBYTENUMBER_FOR_NUMBEROFREGISTERS = 2
+                
+        BYTEPOSITION_FOR_RESPONSE_NUMBEROFBYTES = 0
+        NUMBER_OF_BYTES_BEFORE_REGISTERDATA = 1
+        
+        BITPATTERN_ON =  0x0000
+        BITPATTERN_OFF = 0xFF00
+                
+        _checkFunctioncode(functioncode, None )
+        
+        ## Adjust value if writing a single bit
+        if functioncode in [5, 15]:  # IS THIS CORRECT???
+            if value == 0:
+                writevalue = 0 #??
+            elif value == 1:
+                writevalue = 1 #??
+            else:
+                raise ValueError('Wrong')
+        else:
+            writevalue = value
+        
+        ## Build payload to slave
+        if functioncode in [15, 16]:
+            payloadToSlave =_numToTwoByteString(registeraddress) + \
+                            _numToTwoByteString(NUMBER_OF_REGISTERS) + \
+                            _numToOneByteString(numberOfRegisterBytes) + \
+                            _numToTwoByteString(writevalue, numberOfDecimals)
+                            
+        elif functioncode in [5, 6]:
+            payloadToSlave =_numToTwoByteString(registeraddress) + \
+                            _numToTwoByteString(writevalue, numberOfDecimals)
+            
+        elif functioncode in [1, 2, 3, 4]:
+            payloadToSlave =_numToTwoByteString(registeraddress) + \
+                            _numToTwoByteString(NUMBER_OF_REGISTERS)
+            
+        ## Communicate
+        payloadFromSlave = self._performCommand( functioncode, payloadToSlave)
+
+        ## Check the contents in the response payload  
+        if functioncode in [1, 2, 3, 4]:
+            _checkByteCount(payloadFromSlave)   # given byte count
+    
+        if functioncode in [5, 6, 15, 16]:
+            _checkResponseAddress(payloadFromSlave, registeraddress)    # given register address        
+            
+        if functioncode in [15, 16]:
+            _checkResponseNumberOfRegisters(payloadFromSlave, NUMBER_OF_REGISTERS) # given number of registers
+            
+        if functioncode in [5, 6]:
+            _checkResponseWriteData(payloadFromSlave, _numToTwoByteString(writevalue, numberOfDecimals)) # given write data
+            
+        ## Extract register data
+        if functioncode in [1, 2, 3, 4]:
+            registerdata = payloadFromSlave[NUMBER_OF_BYTES_BEFORE_REGISTERDATA:]
+            assert len(registerdata) == numberOfRegisterBytes
+            
+        ## Calculate response value
+        if functioncode in [3, 4]:
+            return _twoByteStringToNum(registerdata, numberOfDecimals)
+        
+        if functioncode in [1, 2]:   
+            return _bitResponseToValue(registerdata)   
+    
     
     def _performCommand(self, functioncode, payloadToSlave):
         """Performs the command having the *functioncode*.
@@ -268,6 +282,7 @@ class Instrument():
         payloadFromSlave    = _extractPayload(response, self.address, functioncode)
 
         return payloadFromSlave
+
         
     def _communicate(self, message):
         """Talk to the slave via a serial port.
@@ -285,6 +300,8 @@ class Instrument():
         makes it difficult to print it in the promt (messes up a bit).
         
         Will block until timeout (or reaching a large number of bytes).
+
+        If the attribute ._debug is True, the communication details are printed.
 
         .. note::
             Some implementation details:
@@ -313,18 +330,25 @@ class Instrument():
         
         if len(message) == 0:
             raise ValueError('The message length must not be zero')
+        
+        if self._debug:
+            print 'MinimalModbus debug mode. Writing to instrument: ' + repr(message)    
             
         self.serial.write(message)
         answer =  self.serial.read(MAX_NUMBER_OF_BYTES)
+        
+        if self._debug:
+            print 'MinimalModbus debug mode. Response from instrument: ' + repr(answer)   
         
         if len(answer) == 0:
             raise ValueError('No communication with the instrument (no answer)')
         
         return answer
 
-######################
-## Helper functions ##
-######################
+
+####################
+# Payload handling #
+####################
 
 def _embedPayload(slaveaddress, functioncode, payloaddata):
     """Build a message from the slaveaddress, the function code and the payload data.
@@ -339,9 +363,23 @@ def _embedPayload(slaveaddress, functioncode, payloaddata):
 
     The resulting message has the format: slaveaddress byte + functioncode byte + payloaddata + CRC (which is two bytes)
     """
+    
+    SLAVEADDRESS_MAX = 247
+    SLAVEADDRESS_MIN = 0
+    
+    _checkFunctioncode(functioncode, None)
+    
+    if not isinstance( payloaddata, ( str) ):
+        raise TypeError( 'The input payload must be a string. Given: {0}'.format(repr(payloaddata)) )
+    
+    if slaveaddress < SLAVEADDRESS_MIN or slaveaddress > SLAVEADDRESS_MAX:
+        raise ValueError( 'The slave address is out of range. Given value: {0} Allowed range: {1} to {2}'.format( \
+            slaveaddress, SLAVEADDRESS_MIN, SLAVEADDRESS_MAX ) )
+    
     firstPart = _numToOneByteString(slaveaddress) + _numToOneByteString(functioncode) + payloaddata
     message = firstPart + _calculateCrcString(firstPart)       
     return message
+
 
 def _extractPayload(response, slaveaddress, functioncode):
     """Extract the payload data part from the slave's response.
@@ -361,39 +399,137 @@ def _extractPayload(response, slaveaddress, functioncode):
 
     """
     
-    # Constants
-    BYTEPOSITION_FOR_ADDRESS               = 0 # Zero-based counting
+    BYTEPOSITION_FOR_SLAVEADDRESS          = 0 # Zero-based counting
     BYTEPOSITION_FOR_FUNCTIONCODE          = 1
+    
     NUMBER_OF_RESPONSE_STARTBYTES          = 2
     NUMBER_OF_CRC_BYTES                    = 2
+    
     BITNUMBER_FUNCTIONCODE_ERRORINDICATION = 7
 
     # Check CRC
     receivedCRC = response[-NUMBER_OF_CRC_BYTES:]
     responseWithoutCRC = response[0 : len(response) - NUMBER_OF_CRC_BYTES ]
     calculatedCRC = _calculateCrcString( responseWithoutCRC )
+    
     if receivedCRC != calculatedCRC:
-        raise ValueError( 'CRC error: {0} instead of {1}'.format( _twoByteStringToNum(receivedCRC), _twoByteStringToNum(calculatedCRC)) )
+        raise ValueError( 'CRC error: {0} ({1}) instead of {2} ({3}). The response is: {4}'.format( \
+            _twoByteStringToNum(receivedCRC), 
+            repr(receivedCRC),
+            _twoByteStringToNum(calculatedCRC),
+            repr(calculatedCRC),
+            repr(response)    ))
 
-    # Check Address
-    responseaddress = ord( response[BYTEPOSITION_FOR_ADDRESS] )
+    # Check address
+    responseaddress = ord( response[BYTEPOSITION_FOR_SLAVEADDRESS] )
+    
     if responseaddress != slaveaddress:
-        raise ValueError( 'Wrong return address: {0} instead of {1}'.format(responseaddress, slaveaddress) )
+        raise ValueError( 'Wrong return slave address: {0} instead of {1}. The response is: {2}'.format( \
+            responseaddress, slaveaddress, repr(response) ))
     
     # Check function code
     receivedFunctioncode = ord( response[BYTEPOSITION_FOR_FUNCTIONCODE ] )
+    
     if receivedFunctioncode == _setBitOn(functioncode, BITNUMBER_FUNCTIONCODE_ERRORINDICATION):
-        raise ValueError( 'The slave is indicating an error.' )
+        raise ValueError( 'The slave is indicating an error. The response is: {0}'.format( repr(response) ))
+    
     elif receivedFunctioncode != functioncode:
-        raise ValueError( 'Wrong functioncode: {0} instead of {1}'.format(receivedFunctioncode, functioncode) )
+        raise ValueError( 'Wrong functioncode: {0} instead of {1}. The response is: {2}'.format( \
+            receivedFunctioncode, functioncode, repr(response) ))
      
     # Read data payload
     firstDatabyteNumber = NUMBER_OF_RESPONSE_STARTBYTES
     lastDatabyteNumber  = len(response) - NUMBER_OF_CRC_BYTES
+    
     payload = response[ firstDatabyteNumber:lastDatabyteNumber ]
     
     return payload
 
+
+##############################
+# String and num conversions #
+##############################
+
+def _numToOneByteString(inputvalue):
+    """Convert a numerical value to a one-byte string.
+
+    Args:
+        inputvalue (int): The value to be converted. Should be >=0 and <=255.
+
+    Returns:
+        A one-byte string created by chr(inputvalue).
+
+    Raises:
+        * ValueError
+        * TypeError
+    """
+    
+    if not isinstance( inputvalue, ( int, long ) ):
+        raise TypeError( 'The input must be an integer. Given input: {0}'.format(inputvalue) )
+    
+    if inputvalue > 0xFF:
+        raise ValueError( 'The input value is too large. Given input: {0}'.format(inputvalue) )
+    
+    if inputvalue < 0:
+        raise ValueError( 'The input value is negative. Given input: {0}'.format(inputvalue) )
+    
+    return chr(inputvalue)
+
+
+def _numToTwoByteString(value, numberOfDecimals = 0, LsbFirst = False):
+    """Convert a numerical value to a two-byte string.
+
+    Args:
+        * value (float or int): The numerical value to be converted.
+        * numberOfDecimals (int): Number of decimals, 0 or more.
+        * LsbFirst (bol): Whether the least significant byte should be first in the resulting string.
+
+    Returns:
+        A two-byte string.
+
+    Raises:
+        * ValueError
+        * TypeError
+
+    For example:
+        To store for example value=77.0, use numberOfDecimals=1 if the register will hold it as 770 internally.
+        The value 770 (dec) is 0302 (hex), where the most significant byte is 03 (hex) and the
+        least significant byte is 02 (hex). With LsbFirst = False, the most significant byte is given first
+        why the resulting string is ``BACKSLASHx03BACKSLASHx02``, which has the length 2.
+
+    """
+    
+    if not isinstance( numberOfDecimals, ( int, long ) ):
+        raise TypeError( 'The numberOfDecimals must be an integer. Given: {0}'.format(numberOfDecimals) )
+    
+    if not isinstance( LsbFirst, bool ):
+        raise TypeError( 'The LsbFirst must be a boolean. Given: {0}'.format(LsbFirst) )
+    
+    if numberOfDecimals <0 :
+        raise ValueError( 'The number of decimals must not be less than 0. Given: {0}'.format(numberOfDecimals) )
+
+    if value < 0:
+        raise ValueError( 'The input value must not be negative. Given: {0}'.format(value) )
+
+    multiplier = 10 ** numberOfDecimals
+    integer = int( float(value) * multiplier )
+
+    if integer > 0xFFFF:
+        raise ValueError( 'The resulting integer is too large: {0} Given value: {1} and numberOfDecimals {2}'.format( \
+            integer, value, numberOfDecimals))
+    
+    mostSignificantByte =  integer >> 8
+    leastSignificantByte = integer & 0xFF
+    if LsbFirst: 
+        outstring = chr(leastSignificantByte) + chr(mostSignificantByte)
+    else:
+        outstring = chr(mostSignificantByte) + chr(leastSignificantByte)
+        
+    assert len(outstring) == 2
+        
+    return outstring
+    
+    
 def _twoByteStringToNum(bytestring, numberOfDecimals = 0):
     """Convert a two-byte string to a numerical value.
     
@@ -405,8 +541,9 @@ def _twoByteStringToNum(bytestring, numberOfDecimals = 0):
         The numerical value (int or float) calculated from the ``bytestring``.        
         
     Raises:
-        ValueError. Raises an exception if the bytestring has wrong length or the numberOfDecimals is wrong.
-
+        * ValueError
+        * TypeError
+        
     For example:
         A string ``BACKSLASHx03BACKSLASHx02`` (which has the length 2) corresponds to 0302 (hex) = 770 (dec). If
         numberOfDecimals=1, then this is converted to 77.0 (float). 
@@ -415,11 +552,17 @@ def _twoByteStringToNum(bytestring, numberOfDecimals = 0):
     multiplied by 255 instead of the correct value 256.
     
     """
+    if not isinstance( bytestring, ( str) ):
+        raise TypeError( 'The input must be a string. Given: {0}'.format(repr(bytestring)) )
+
     if len(bytestring) != 2:
         raise ValueError( 'The input string length is {0}. It should be 2.'.format(len(bytestring)) )
+
+    if not isinstance( numberOfDecimals, ( int, long ) ):
+        raise TypeError( 'The number of decimals must be integer. Given: {0}'.format(numberOfDecimals) )
         
     if numberOfDecimals <0 :
-        raise ValueError( 'The number of decimals must not be less than 0.' )
+        raise ValueError( 'The number of decimals must not be less than 0. Given: {0}'.format(numberOfDecimals) )
         
     leastSignificantByte = ord(bytestring[1])
     mostSignificantByte  = ord(bytestring[0])
@@ -429,64 +572,100 @@ def _twoByteStringToNum(bytestring, numberOfDecimals = 0):
         return fullregister
     divisor = 10 ** numberOfDecimals
     return fullregister / float(divisor)
-   
-def _numToOneByteString(integer):
-    """Convert a numerical value to a one-byte string.
 
-    Args:
-        integer (int): The value to be converted. Should be >=0 and <=255.
 
-    Returns:
-        A one-byte string created by chr(integer).
-
-    Raises:
-        ValueError. Raises an exception if the integer is out of range.
+def _bitResponseToValue(bytestring):
+    """Convert a response string to a numerical value.
+    
+    Args:    
+        * bytestring (str): A string of leng
     """
-    if integer > 0xFF:
-        raise ValueError( 'The input value is too large.')
-    if integer < 0:
-        raise ValueError( 'The input value is negative.')
-    return chr(integer)
+    ##TODO Check types
+    
+    RESPONSE_ON  = '\x01'
+    RESPONSE_OFF = '\x00'
+    
+    if bytestring == RESPONSE_ON:
+                return 1
+    elif bytestring == RESPONSE_OFF:
+                return 0
+    else:
+       raise ValueError( 'Could not convert bit response to a value. Input: {0}'.format(repr(bytestring)) )
 
-def _numToTwoByteString(value, numberOfDecimals = 0, LsbFirst = False):
-    """Convert a numerical value to a two-byte string.
+
+####################    
+# Bit manipulation #
+####################
+
+def _XOR(integer1, integer2):
+    """An alias for the bitwise XOR command.
 
     Args:
-        * value (float or int): The numerical value to be converted
-        * numberOfDecimals (int): Number of decimals, 0 or more
-        * LsbFirst (bol): Whether the least significant byte should be first in the resulting string.
+        * integer1 (int): Input integer
+        * integer2 (int): Input integer
 
     Returns:
-        A two-byte string.
+        The XOR:ed value of the two input integers. This is an integer.
+"""
+    if integer1 < 0 or integer2 < 0:
+        raise ValueError( 'The inputs must not be less than 0. Given: {0} and {1}'.format(integer1, integer2) )
+    
+    return integer1 ^ integer2
 
-    Raises:
-        ValueError Raises an exception if the numberOfDecimals or the value is out of range.
+
+def _setBitOn( x, bitNum ):
+    """Set bit 'bitNum' to True.
+ 
+    Args:
+        * x (int): The value before.
+        * bitNum (int): The bit number that should be set to True.
+
+    Returns:
+        The value after setting the bit. This is an integer.
 
     For example:
-        To store for example value=77.0, use numberOfDecimals=1 if the register will hold it as 770 internally.
-        The value 770 (dec) is 0302 (hex), where the most significant byte is 03 (hex) and the
-        least significant byte is 02 (hex). With LsbFirst = False, the most significant byte is given first
-        why the resulting string is ``BACKSLASHx03BACKSLASHx02``, which has the length 2.
+        For x = 4 (dec) = 0100 (bin), setting bit number 0 results in 0101 (bin) = 5 (dec).
 
     """
-    if numberOfDecimals <0 :
-        raise ValueError( 'The number of decimals must not be less than 0.' )
-
-    multiplier = 10 ** numberOfDecimals
-    integer = int( float(value) * multiplier )
-
-    if integer > 0xFFFF:
-        raise ValueError( 'The input value is too large.')
-    if integer < 0:
-        raise ValueError( 'The input value is negative.')
     
-    mostSignificantByte =  integer >> 8
-    leastSignificantByte = integer & 0xFF
-    if LsbFirst: 
-        outstring = chr(leastSignificantByte) + chr(mostSignificantByte)
-    else:
-        outstring = chr(mostSignificantByte) + chr(leastSignificantByte)
-    return outstring
+    if x <0 :
+        raise ValueError( 'The input must not be less than 0. Given: {0}'.format(x) )
+    
+    if bitNum <0 :
+        raise ValueError( 'The bitnumber must not be less than 0. Given: {0}'.format(bitNum) )
+    
+    return x | (1<<bitNum)
+
+
+def _rightshift(inputInteger):
+    """Rightshift an integer one step, and also calculate the carry bit.
+
+    Args:
+        inputInteger (int): The value to be rightshifted. Should be positive.
+
+    Returns:
+        The tuple (shifted, carrybit) where ``shifted`` is the rightshifted integer and ``carrybit`` is the
+        resulting carry bit.
+
+    For example:
+        An inputInteger = 9 (dec) = 1001 (bin) will after a rightshift be 0100 (bin) = 4 and the carry bit is 1.
+        The return value will then be the tuple (4, 1). 
+    """
+    
+    if not isinstance( inputInteger, ( int, long ) ):
+        raise TypeError( 'The input must be an integer. Given: {0}'.format(inputInteger) )
+    
+    if inputInteger <0 :
+        raise ValueError( 'The input must not be less than 0. Given: {0}'.format(inputInteger) )
+    
+    shifted = inputInteger >> 1
+    carrybit = inputInteger & 1
+    return shifted, carrybit
+
+
+############################    
+# Error checking functions #    
+############################
 
 def _calculateCrcString( inputstring ):
     """Calculate CRC-16 for Modbus.
@@ -499,6 +678,9 @@ def _calculateCrcString( inputstring ):
     
     Algorithm from the document 'MODBUS over serial line specification and implementation guide V1.02'.
     """
+    
+    if not isinstance( inputstring, ( str) ):
+        raise TypeError( 'The input must be a string. Given: {0}'.format(repr(inputstring)) )
     
     # Constant for MODBUS CRC-16
     POLY = 0xA001
@@ -519,52 +701,154 @@ def _calculateCrcString( inputstring ):
     
     return _numToTwoByteString(register, LsbFirst = True)
 
-def _XOR(integer1, integer2):
-    """An alias for the bitwise XOR command.
+
+def _checkFunctioncode( functioncode, listOfAllowedValues ):
+    """Check that the given functioncode is in the listOfAllowedValues.
+
+    Also verifies that 0 <= function code <= 127.
 
     Args:
-        * integer1 (int): Input integer
-        * integer2 (int): Input integer
+        functioncode (int): The function code
+        listOfAllowedValues (list of int): Allowed values. Use None to ypass this part of
+    
+    Raises:
+        TypeError, ValueError
 
-    Returns:
-        The XOR:ed value of the two input integers. This is an integer.
-"""
-    return integer1 ^ integer2
+    """
+    FUNCTIONCODE_MIN = 0
+    FUNCTIONCODE_MAX = 127
+    
+    if not isinstance( functioncode, ( int, long ) ):
+        raise TypeError( 'The function code must be an integer. Given function code: {0}'.format(functioncode) )
 
-def _setBitOn( x, bitNum ):
-    """Set bit 'bitNum' to True.
+    if functioncode < FUNCTIONCODE_MIN or functioncode > FUNCTIONCODE_MAX:
+        raise ValueError( 'Wrong function code: {0}, allowed values are {1} to {2}'.format( \
+            functioncode, FUNCTIONCODE_MIN, FUNCTIONCODE_MAX) )
+    
+    if listOfAllowedValues == None:
+        return
+
+    if functioncode not in listOfAllowedValues:
+        raise ValueError( 'Wrong function code: {0}, allowed values are {1}'.format(functioncode, repr(listOfAllowedValues)) )
+
+
+def _checkByteCount(payload):
+    """Check that the number of bytes as given in the response is correct.
+    
+    The first byte in the payload indicates the length of the payload (first byte not counted).
+    
+    Args:
+        payload (string): The payload
+    
+    Raises:
+        * ValueError
+        * TypeError
+    
+    """ 
+    
+    POSITION = 0
+    NUMBER_OF_BYTES_TO_SKIP = 1
+    
+    if not isinstance( payload, ( str) ):
+        raise TypeError( 'The input must be a string. Given: {0}'.format(repr(payload)) )
  
+    givenNumberOfDatabytes = ord( payload[POSITION] )
+    countedNumberOfDatabytes = len(payload) - NUMBER_OF_BYTES_TO_SKIP
+
+    if givenNumberOfDatabytes != countedNumberOfDatabytes:
+        errortemplate = 'Wrong given number of bytes in the response: {0}, but counted is {1} as data payload length is {2}.' + \
+            ' The data payload is: {3}'
+        errortext = errortemplate.format(givenNumberOfDatabytes, countedNumberOfDatabytes, len(payload), repr(payload))
+        raise ValueError(errortext)    
+
+
+def _checkResponseAddress(payload, registeraddress):
+    """Check that the start adress as given in the response is correct.
+    
+    The first two bytes in the payload holds the address value.
+    
     Args:
-        * x (int): The value before.
-        * bitNum (int): The bit number that should be set to True.
+        payload (string): The payload
+        registeraddress (int): The register address (use decimal numbers, not hex). 
+    
+    Raises:
+        * ValueError
+        * TypeError
+    
+    """ 
+    ##TODO Check length
+    
+    ##TODO Check types
+ 
+    BYTERANGE_FOR_STARTADDRESS = slice(0, 2)
 
-    Returns:
-        The value after setting the bit. This is an integer.
+    bytesForStartAddress = payload[BYTERANGE_FOR_STARTADDRESS]
+    receivedStartAddress = _twoByteStringToNum( bytesForStartAddress )
+    
+    if receivedStartAddress != registeraddress:
+        raise ValueError( 'Wrong given write start adress: {0}, but commanded is {1}'.format( \
+            receivedStartAddress, registeraddress))        
 
-    For example:
-        For x = 4 (dec) = 0100 (bin), setting bit number 0 results in 0101 (bin) = 5 (dec).
-
-    """
-    return x | (1<<bitNum)
-
-def _rightshift(inputInteger):
-    """Rightshift an integer one step, and also calculate the carry bit.
-
+def _checkResponseNumberOfRegisters(payload, numberOfRegisters):
+    """Check that the number of written registers as given in the response is correct.
+    
+    The bytes 2 and 3 (zero based counting) in the payload holds the value.
+    
     Args:
-        inputInteger (int): The value to be rightshifted
+        payload (string): The payload
+        numberOfRegisters (int): Number of registers that have been written
+    
+    Raises:
+        * ValueError
+        * TypeError
+    
+    """ 
+    ##TODO Check length
+    
+    ##TODO Check types
+    
+    BYTERANGE_FOR_NUMBER_OF_REGISTERS = slice(2, 4)
+    
+    bytesForNumberOfRegisters = payload[BYTERANGE_FOR_NUMBER_OF_REGISTERS]
+    receivedNumberOfWrittenReisters = _twoByteStringToNum( bytesForNumberOfRegisters )
+    
+    if receivedNumberOfWrittenReisters != numberOfRegisters:
+        raise ValueError( 'Wrong number of registers to write in the response: {0}, but commanded is {1}'.format( \
+            receivedNumberOfWrittenReisters, numberOfRegisters) )
 
-    Returns:
-        The tuple (shifted, carrybit) where ``shifted`` is the rightshifted integer and ``carrybit`` is the
-        resulting carry bit.
 
-    For example:
-        An inputInteger = 9 (dec) = 1001 (bin) will after a rightshift be 0100 (bin) = 4 and the carry bit is 1.
-        The return value will then be the tuple (4, 1). 
-    """
-    shifted = inputInteger >> 1
-    carrybit = inputInteger & 1
-    return shifted, carrybit
+def _checkResponseWriteData(payload, writedata):
+    """Check that the write data as given in the response is correct.
+    
+    The bytes 2 and 3 (zero based counting) in the payload holds the write data.
+    
+    Args:
+        payload (string): The payload
+        writedata (string): The data to write
+    
+    Raises:
+        * ValueError
+        * TypeError
+    
+    """ 
+    
+    ##TODO Check length
+    
+    ##TODO Check types
+    
+    BYTERANGE_FOR_WRITEDATA = slice(2, 4)
+    
+    receivedWritedata = payload[BYTERANGE_FOR_WRITEDATA]
+    
+    if receivedWritedata != writedata:
+        raise ValueError( 'Wrong write data in the response: {0}, but commanded is {1}'.format( \
+            receivedWritedata, writedata) )
 
+
+#####################
+# Development tools #
+#####################
+        
 def _toPrintableString( inputstring ):
     """Make a descriptive string, showing the ord() numbers (in decimal) for the characters in the inputstring.
     
@@ -590,6 +874,7 @@ def _toPrintableString( inputstring ):
 
     return firstpart + valuepart
 
+
 def _getDiagnosticString():
     """Generate a diagnostic string, showing the module version, the platform, current directory etc.
 
@@ -614,6 +899,7 @@ def _getDiagnosticString():
     text += '\n'.join( sys.path ) + '\n'
     text += '\n## End of diagnostic output ## \n'
     return text
+
 
 ########################
 ## Testing the module ##
@@ -652,3 +938,87 @@ if __name__ == '__main__':
     print_out( 'DONE!' )
     
 pass    
+
+#        # Constants
+#        NUMBER_OF_REGISTERS_TO_WRITE = 1
+#        NUMBER_OF_BYTES_PER_REGISTER = 2
+#        STARTBYTENUMBER_FOR_STARTADDRESS = 0
+#        STARTBYTENUMBER_FOR_NUMBEROFREGISTERS = 2
+#        
+
+#        
+#        numberOfRegisterBytes = NUMBER_OF_REGISTERS_TO_WRITE * NUMBER_OF_BYTES_PER_REGISTER
+#        
+#        ## Build data for writing one register
+#        if functioncode == 16:
+#            payloadToSlave =_numToTwoByteString(registeraddress) + \
+#                            _numToTwoByteString(NUMBER_OF_REGISTERS_TO_WRITE) + \
+#                            _numToOneByteString(numberOfRegisterBytes) + \
+#                            _numToTwoByteString(value, numberOfDecimals)
+#        else:
+#            payloadToSlave =_numToTwoByteString(registeraddress) + \
+#                            _numToTwoByteString(value, numberOfDecimals)
+#            
+#        # Communicate
+#        payloadFromSlave = self._performCommand( functioncode, payloadToSlave)
+#        
+#        assert len(payloadFromSlave) == 4
+#        
+#        ## Check start write register        
+#        ## TODO Both for function code 6 and 16
+#        bytesForStartAddress = payloadFromSlave[STARTBYTENUMBER_FOR_STARTADDRESS : STARTBYTENUMBER_FOR_STARTADDRESS+NUMBER_OF_BYTES_PER_REGISTER]
+#        receivedStartAddress =  _twoByteStringToNum( bytesForStartAddress )
+#        if receivedStartAddress != registeraddress:
+#            raise ValueError( 'Wrong given write start adress: {0}, but commanded is {1}'.format( receivedStartAddress, registeraddress) )
+#        
+#        ## Check number of registers written
+#        ## TODO Only for functioncode 16
+#        bytesForNumberOfRegisters = payloadFromSlave[STARTBYTENUMBER_FOR_NUMBEROFREGISTERS : STARTBYTENUMBER_FOR_NUMBEROFREGISTERS+NUMBER_OF_BYTES_PER_REGISTER]
+#        receivedNumberOfWrittenReisters =  _twoByteStringToNum( bytesForNumberOfRegisters )
+#        if receivedNumberOfWrittenReisters != NUMBER_OF_REGISTERS_TO_WRITE:
+#            raise ValueError( 'Wrong given number of registers to write: {0}, but commanded is {1}'.format( \
+#                receivedNumberOfWrittenReisters, NUMBER_OF_REGISTERS_TO_WRITE) )
+#    
+#        ## Check data written
+#        ## TODO Only for functioncode 6
+    
+#        NUMBER_OF_REGISTERS_TO_READ = 1
+#        
+#        # Build data for reading one register
+#        payloadToSlave =    _numToTwoByteString(registeraddress) + \
+#                            _numToTwoByteString(NUMBER_OF_REGISTERS_TO_READ)
+#        
+#        # Communicate
+#        payloadFromSlave= self._performCommand( functioncode, payloadToSlave)
+#        
+#        # Check number of bytes
+#        # These constants are for dealing with the frame payload data
+#        BYTEPOSITION_FOR_NUMBEROFBYTES = 0
+#        NUMBER_OF_BYTES_BEFORE_REGISTERDATA = 1
+#        givenNumberOfDatabytes = ord( payloadFromSlave[BYTEPOSITION_FOR_NUMBEROFBYTES ] )
+#        countedNumberOfDatabytes = len(payloadFromSlave) - NUMBER_OF_BYTES_BEFORE_REGISTERDATA
+#        if givenNumberOfDatabytes != countedNumberOfDatabytes:
+#            raise ValueError( 'Wrong given number of bytes: {0}, but counted is {1} as data payload length is {2}'.format( \
+#                givenNumberOfDatabytes, countedNumberOfDatabytes, len(payloadFromSlave)) )
+# 
+#        # Extract register data
+#        registerdata = payloadFromSlave[NUMBER_OF_BYTES_BEFORE_REGISTERDATA:]
+#        
+#        # Calculate value HACK!!
+#        if registerdata == '\x01':       
+#            outputvalue = 1
+#        else:
+#            outputvalue = 0
+
+#        return outputvalue
+
+
+#        # Build data for reading one register
+#        payloadToSlave =    _numToTwoByteString(registeraddress) + \
+#                            _numToTwoByteString(NUMBER_OF_REGISTERS_TO_READ)
+#        
+#        # Communicate
+#        payloadFromSlave= self._performCommand( functioncode, payloadToSlave)
+#        
+#        pass    
+
