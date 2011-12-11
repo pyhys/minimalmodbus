@@ -117,6 +117,20 @@ or manually download the compressed source files from http://pypi.python.org/pyp
 There is also a Windows installer (.win32.exe) available. Just start it and follow the instructions.
 
 
+Implemented functions
+---------------------
+These are the functions to use for reading and writing registers and bits of your instrument. Study the 
+documentation of your instrument to find which function code to use.
+
++--------------+-----------------------------------------------------------------------+-------------------------------------------------------------------------+
+| Item         | Read                                                                  | Write                                                                   |
++==============+=======================================================================+=========================================================================+
+| **Bit**      | :meth:`minimalmodbus.Instrument.read_bit` Function code 2 [or 1]      | :meth:`minimalmodbus.Instrument.write_bit`  Function code 5 [or 15]     |
++--------------+-----------------------------------------------------------------------+-------------------------------------------------------------------------+
+| **Register** | :meth:`minimalmodbus.Instrument.read_register` Function code 3 [or 4] | :meth:`minimalmodbus.Instrument.write_register` Function code 16 [or 6] |
++--------------+-----------------------------------------------------------------------+-------------------------------------------------------------------------+
+
+
 Modbus implementation details
 -----------------------------
 Note that the computer (master) actually is a client, and the slaves (instruments) are servers.
@@ -124,6 +138,8 @@ Note that the computer (master) actually is a client, and the slaves (instrument
 In Modbus RTU, the request message is sent from the master in this format::
     
     Slave address [1 Byte], Function code [1 Byte], Payload data [0 to 252 Bytes], CRC [2 Bytes].
+
+For the function code, the allowed range is 1 to 127 (in decimal). 
 
 The CRC is a cyclic redundacy check code, for error checking of the message. The response from the client is similar, but with another payload data.
 
@@ -148,18 +164,25 @@ can be said about function code 5 and 6, and also about 15 and 16.
 For finding how the k Bytes for the value relates to the number of registers etc (n), see the Modbus documents referred to above.
 
 
-Implemented functions
----------------------
-These are the functions to use for reading and writing registers and bits of your instrument. Study the 
-documentation for your instrument to find which function code to use.
+Develop
+-------
 
-+--------------+-----------------------------------------------------------------------+-------------------------------------------------------------------------+
-| Item         | Read                                                                  | Write                                                                   |
-+==============+=======================================================================+=========================================================================+
-| **Bit**      | :meth:`minimalmodbus.Instrument.read_bit` Function code 2 [or 1]      | :meth:`minimalmodbus.Instrument.write_bit`  Function code 5 [or 15]     |
-+--------------+-----------------------------------------------------------------------+-------------------------------------------------------------------------+
-| **Register** | :meth:`minimalmodbus.Instrument.read_register` Function code 3 [or 4] | :meth:`minimalmodbus.Instrument.write_register` Function code 16 [or 6] |
-+--------------+-----------------------------------------------------------------------+-------------------------------------------------------------------------+
+To switch on the debug mode, where the communication details are printed::
+
+    #!/usr/bin/env python
+    import minimalmodbus
+
+    instrument = minimalmodbus.Instrument('/dev/ttyUSB1', 1) # port name, slave address (in decimal)
+    instrument._debug = True
+
+
+Testing
+-------
+A few unit tests are provided. To run them::
+
+    python test_minimalmodbus.py
+    
+Also a dummy/mock/stub for the serial port is provided for test purposes.
 
 
 Licence
@@ -188,6 +211,8 @@ Describe the problem in detail. Please include the output after running::
   >>> import minimalmodbus 
   >>> print minimalmodbus._getDiagnosticString()
 
+Note that it can be very helpful to switch on the debug mode, where the communication 
+details are printed. See the 'Develop' section above.
 
 Author
 ------
@@ -196,7 +221,7 @@ Jonas Berg, pyhys@users.sourceforge.net
 
 Credits
 -------
-
+Significant contributions by Aaron Lalonde (spelling?).
 
 Feedback
 --------

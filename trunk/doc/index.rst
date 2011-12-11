@@ -22,6 +22,8 @@ Additional resources available on home page
    administrative
    internalminimalmodbus
    internaltestminimalmodbus
+   internaldummyserial
+   internaldummyresponseseurotherm3500
 
 
 Indices and tables

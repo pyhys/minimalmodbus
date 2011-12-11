@@ -47,6 +47,15 @@ class Eurotherm3500( minimalmodbus.Instrument ):
         * portname (str): port name
         * slaveaddress (int): slave address in the range 1 to 247
 
+    Implemented with these function codes (in decimal):
+        
+    ==================  ====================
+    Description         Modbus function code
+    ==================  ====================
+    Read registers      3
+    Write registers     16
+    ==================  ====================
+
     """
     
     def __init__(self, portname, slaveaddress):
