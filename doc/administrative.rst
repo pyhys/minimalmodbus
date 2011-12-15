@@ -52,10 +52,13 @@ Check the code::
 
     pychecker eurotherm3500.py 
     pychecker minimalmodbus.py 
+    pychecker omegacn7500.py
 
-Run tests::
-
-    (not yet implemented)
+Run unit tests (in the :file:`trunc/test` directory)::
+    
+    python test_minimalmodbus.py
+    python test_eurotherm3500.py
+    python test_omegacn7500.py
 
 Test the source distribution build (look in the PKG-INFO file)::
 

@@ -23,8 +23,8 @@ Additional resources available on home page
    internalminimalmodbus
    internaltestminimalmodbus
    internaldummyserial
-   internaldummyresponseseurotherm3500
-
+   internaltesteurotherm3500
+   internaltestomegacn7500
 
 Indices and tables
 ==================
