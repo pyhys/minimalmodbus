@@ -440,7 +440,7 @@ class TestDummyCommunication(unittest.TestCase):
 
 
 RESPONSES = {}
-"""A dictionary of respones from a dummy Eurotherm 3500 instrument. 
+"""A dictionary of respones from a dummy instrument. 
 
 The key is the message (string) sent to the serial port, and the item is the response (string) 
 from the dummy serial port.
@@ -455,6 +455,7 @@ from the dummy serial port.
 # Message:  slave address 1, function code 3, register address 289, 1 register, CRC. 
 # Response: slave address 1, function code 3, 2 bytes, value=770, CRC=14709
 RESPONSES['\x01\x03' + '\x01!\x00\x01' + '\xd5\xfc'] = '\x01\x03' + '\x02\x03\x02' + '\x39\x75'
+
 
 
 
