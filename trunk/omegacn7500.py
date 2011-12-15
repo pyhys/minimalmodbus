@@ -1,4 +1,4 @@
-http://minimalmodbus.sourceforge.net/administrative.html#!/usr/bin/env python
+#!/usr/bin/env python
 #
 #   Copyright 2011 Aaron LaLonde 
 #

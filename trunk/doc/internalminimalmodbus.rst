@@ -1,4 +1,4 @@
-Internal documentation for Minimalmodbus
+Internal documentation for MinimalModbus
 ========================================
 
 .. automodule:: minimalmodbus
