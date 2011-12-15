@@ -182,6 +182,7 @@ if __name__ == '__main__':
     print_out( 'TESTING EUROTHERM 3500 MODBUS MODULE')
 
     a = Eurotherm3500('/dev/cvdHeatercontroller', 1)
+    a._debug = True
     
     print_out( 'SP1:                    {0}'.format(  a.get_sp_loop1()             ))
     print_out( 'SP1 target:             {0}'.format(  a.get_sptarget_loop1()       ))
