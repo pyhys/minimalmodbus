@@ -21,8 +21,8 @@
 
 test_minimalmodbus: Unittests for minimalmodbus
 
-This Python file was changed (committed) at $Date: 2011-11-20 09:50:35 +0100 (Sun, 20 Nov 2011) $, 
-which was $Revision: 72 $.
+This Python file was changed (committed) at $Date$, 
+which was $Revision$.
 
 """
 
@@ -30,8 +30,8 @@ __author__  = "Jonas Berg"
 __email__   = "pyhys@users.sourceforge.net"
 __license__ = "Apache License, Version 2.0"
 
-__revision__  = "$Rev: 72 $"
-__date__      = "$Date: 2011-11-20 09:50:35 +0100 (Sun, 20 Nov 2011) $"
+__revision__  = "$Rev$"
+__date__      = "$Date$"
 
 import unittest
 import minimalmodbus
@@ -398,41 +398,73 @@ class TestDummyCommunication(unittest.TestCase):
         import dummy_serial
         dummy_serial.VERBOSE = False
         dummy_serial.RESPONSES = RESPONSES
+        dummy_serial.DEFAULT_RESPONSE = 'NotFoundInDictionary'
 
         # Monkey-patch a dummy serial port for testing purpose
         minimalmodbus.serial.Serial = dummy_serial.Serial
 
         # Initialize a (dummy) instrument
         self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1) # port name, slave address (in decimal)
-        self.instrument._debug = False
+        self.instrument._debug = True
+
+
+    def testReadBit(self):      
+        pass ##TODO
+    
+    def testWriteBit(self):      
+        pass ##TODO     
+
 
     def testReadRegister(self):
         self.assertEqual( self.instrument.read_register(289), 770 )
         self.assertEqual( self.instrument.read_register(289, 0), 770 )
         self.assertEqual( self.instrument.read_register(289, 0, 3), 770 )
+        self.assertEqual( self.instrument.read_register(14, 0, 4), 880 )
         
     def testReadRegisterWithDecimals(self):
         self.assertAlmostEqual( self.instrument.read_register(289, 1), 77.0 )
         self.assertAlmostEqual( self.instrument.read_register(289, 2), 7.7  )
         
     def testReadRegisterWithNegativeNumberofdecimals(self):
-        pass ##TODO
+        self.assertRaises(ValueError, self.instrument.read_register, 289, -1) 
         
     def testReadRegisterWithNumberofdecimalsNotInteger(self):
         self.assertRaises(TypeError, self.instrument.read_register, 289, 4.5) 
+        self.assertRaises(TypeError, self.instrument.read_register, 289, 'ABC') 
         
     def testReadRegisterWithWrongFunctioncode(self):
         self.assertRaises(ValueError, self.instrument.read_register, 289, 0, 5 )
         self.assertRaises(ValueError, self.instrument.read_register, 289, 0, -4 )
+        self.assertRaises(TypeError, self.instrument.read_register, 289, 0, 'ABC' )
         
-    def testReadBit(self):      
-        pass ##TODO
-    
-    def testWriteBit(self):      
-        pass ##TODO     
+    def testWriteRegister(self):    
+        self.instrument.write_register(35, 20)    
+        self.instrument.write_register(45, 88, functioncode = 6)     
         
-    def testWriteRegister(self):      
-        pass ##TODO          
+    def testWriteRegisterWithDecimals(self):    
+        self.instrument.write_register(35, 2.0, 1)    
+        self.instrument.write_register(45, 8.8, 1, functioncode = 6)       
+        
+    def testWriteRegisterWithNegativeNumberofdecimals(self):
+        self.assertRaises(ValueError, self.instrument.write_register, 35, 20, -1)     
+        
+    def testWriteRegisterWithNumberofdecimalsNotInteger(self):     
+        self.assertRaises(TypeError, self.instrument.write_register, 35, 20, 1.5) 
+        self.assertRaises(TypeError, self.instrument.write_register, 35, 20, 'ABC') 
+        
+    def testWriteRegisterWithWrongFunctioncode(self):
+        self.assertRaises(ValueError, self.instrument.write_register, 35, 20, functioncode = 12 )    
+        self.assertRaises(ValueError, self.instrument.write_register, 35, 20, functioncode = -4 ) 
+        self.assertRaises(TypeError, self.instrument.write_register, 35, 20, functioncode = 'ABC' ) 
+        
+    def testWriteRegisterWithWrongCrcResponse(self):    
+        self.assertRaises(ValueError, self.instrument.write_register, 51, 99 ) # Slave gives wrong CRC
+        
+    def testWriteRegisterWithWrongRegisternumbersResponse(self):     
+        self.assertRaises(ValueError, self.instrument.write_register, 52, 99 ) # Slave gives wrong number of registers
+            
+    def testWriteRegisterWithWrongRegisteraddressResponse(self): 
+        self.assertRaises(ValueError, self.instrument.write_register, 53, 99 ) # Slave gives wrong registeraddress
         
     def tearDown(self):
         self.instrument = None
@@ -452,11 +484,47 @@ from the dummy serial port.
 
 # Read register 289 on slave 1 using function code 3 #
 # ---------------------------------------------------#
-# Message:  slave address 1, function code 3, register address 289, 1 register, CRC. 
-# Response: slave address 1, function code 3, 2 bytes, value=770, CRC=14709
+# Message:  Slave address 1, function code 3. Register address 289, 1 register. CRC. 
+# Response: Slave address 1, function code 3. 2 bytes, value=770. CRC=14709.
 RESPONSES['\x01\x03' + '\x01!\x00\x01' + '\xd5\xfc'] = '\x01\x03' + '\x02\x03\x02' + '\x39\x75'
 
 
+# Read register 14 on slave 1 using function code 4 #
+# --------------------------------------------------#
+# Message:  Slave address 1, function code 4. Register address 14, 1 register. CRC. 
+# Response: Slave address 1, function code 4. 2 bytes, value=880. CRC.
+RESPONSES['\x01\x04' + '\x00\x0e\x00\x01' + 'P\t'] = '\x01\x04' + '\x02\x03\x70' + '\xb8$'
+
+
+# Write value 20 in register 35 on slave 1 using function code 16 #
+# ----------------------------------------------------------------#
+# Message:  Slave address 1, function code 16. Register address 35, 1 register, 2 bytes, value=20. CRC. 
+# Response: Slave address 1, function code 16. Register address 35, 1 register. CRC.
+RESPONSES['\x01\x10' + '\x00#\x00\x01' + '\x02\x00\x14' + '\xa1\x0c'] = '\x01\x10' + '\x00#\x00\x01' + '\xf0\x03'
+
+# Write value 88 in register 45 on slave 1 using function code 6 #
+# ---------------------------------------------------------------#
+# Message:  Slave address 1, function code 6. Register address 45, value=88. CRC. 
+# Response: Slave address 1, function code 6. Register address 45, value=88. CRC.
+RESPONSES['\x01\x06' + '\x00\x2d\x00\x58' + '\x189'] = '\x01\x06' + '\x00\x2d\x00\x58' + '\x189'
+
+# Write value 99 in register 51 on slave 1 using function code 16, slave gives wrong CRC #
+# ---------------------------------------------------------------------------------------#
+# Message:  Slave address 1, function code 16. Register address 51, 1 register, 2 bytes, value=99. CRC. 
+# Response: Slave address 1, function code 16. Register address 51, 1 register. Wrong CRC.
+RESPONSES['\x01\x10' + '\x00\x33\x00\x01' + '\x02\x00\x63' + '\xe3\xba'] = '\x01\x10' + '\x00\x33\x00\x01' + 'AB'
+
+# Write value 99 in register 52 on slave 1 using function code 16, slave gives wrong number of registers #
+# -------------------------------------------------------------------------------------------------------#
+# Message:  Slave address 1, function code 16. Register address 52, 1 register, 2 bytes, value=99. CRC. 
+# Response: Slave address 1, function code 16. Register address 52, 2 registers (wrong). CRC.
+RESPONSES['\x01\x10' + '\x00\x34\x00\x01' + '\x02\x00\x63' + '\xe2\r'] = '\x01\x10' + '\x00\x34\x00\x02' + '\x00\x06'
+
+# Write value 99 in register 53 on slave 1 using function code 16, slave gives wrong register address #
+# ----------------------------------------------------------------------------------------------------#
+# Message:  Slave address 1, function code 16. Register address 53, 1 register, 2 bytes, value=99. CRC. 
+# Response: Slave address 1, function code 16. Register address 54 (wrong), 1 register. CRC.
+RESPONSES['\x01\x10' + '\x00\x35\x00\x01' + '\x02\x00\x63' + '\xe3\xdc'] = '\x01\x10' + '\x00\x36\x00\x01' + '\xe1\xc7'
 
 
 #################
@@ -464,6 +532,13 @@ RESPONSES['\x01\x03' + '\x01!\x00\x01' + '\xd5\xfc'] = '\x01\x03' + '\x02\x03\x0
 #################
 
 if __name__ == '__main__':
+
+
+    print repr('\x01\x06' + '\x00\x2d\x00\x58' + '\x189')
+    print hex(99)
+    print hex(51)
+    print repr( minimalmodbus._calculateCrcString( '\x01\x10' + '\x00\x36\x00\x01'  ) )
+
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestDummyCommunication)
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestCheckNumberOfBytes)
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestCheckFunctioncode)
