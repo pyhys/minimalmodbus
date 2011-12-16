@@ -21,8 +21,8 @@
 
 dummy_serial: A dummy/mock implementation of a serial port for testing purposes.
 
-This Python file was changed (committed) at $Date: 2011-11-20 09:50:35 +0100 (Sun, 20 Nov 2011) $, 
-which was $Revision: 72 $.
+This Python file was changed (committed) at $Date$, 
+which was $Revision$.
 
 """
 
@@ -30,13 +30,15 @@ __author__  = "Jonas Berg"
 __email__   = "pyhys@users.sourceforge.net"
 __license__ = "Apache License, Version 2.0"
 
-__revision__  = "$Rev: 72 $"
-__date__      = "$Date: 2011-11-20 09:50:35 +0100 (Sun, 20 Nov 2011) $"
+__revision__  = "$Rev$"
+__date__      = "$Date$"
 
 
 VERBOSE = False
 """Set this to True for printing the communication, and also details on the port initialization."""
 
+DEFAULT_RESPONSE = ''
+"""Response when no matching message (key) is found in the look-up dictionary."""
 
 RESPONSES = {}
 """A dictionary of respones from the dummy serial port. 
@@ -101,7 +103,7 @@ class Serial():
         try:
             returnvalue = RESPONSES[self.latestWrite]   
         except:
-            returnvalue = ''    
+            returnvalue = DEFAULT_RESPONSE    
 
         if VERBOSE:    
             print

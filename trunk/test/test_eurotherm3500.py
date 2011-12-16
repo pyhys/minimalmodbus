@@ -21,8 +21,8 @@
 
 test_eurotherm3500: Unittests for eurotherm3500
 
-This Python file was changed (committed) at $Date: 2011-11-20 09:50:35 +0100 (Sun, 20 Nov 2011) $, 
-which was $Revision: 72 $.
+This Python file was changed (committed) at $Date$, 
+which was $Revision$.
 
 """
 
@@ -30,8 +30,8 @@ __author__  = "Jonas Berg"
 __email__   = "pyhys@users.sourceforge.net"
 __license__ = "Apache License, Version 2.0"
 
-__revision__  = "$Rev: 72 $"
-__date__      = "$Date: 2011-11-20 09:50:35 +0100 (Sun, 20 Nov 2011) $"
+__revision__  = "$Rev$"
+__date__      = "$Date$"
 
 import eurotherm3500
 import unittest

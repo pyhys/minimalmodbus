@@ -221,20 +221,20 @@ class Instrument():
             writevalue = value
         
         ## Build payload to slave
-        if functioncode in [15, 16]:
+        if functioncode in [1, 2, 3, 4]:
+            payloadToSlave =_numToTwoByteString(registeraddress) + \
+                            _numToTwoByteString(NUMBER_OF_REGISTERS)
+
+        elif functioncode in [5, 6]:
+            payloadToSlave =_numToTwoByteString(registeraddress) + \
+                            _numToTwoByteString(writevalue, numberOfDecimals)
+        
+        elif functioncode in [15, 16]:
             payloadToSlave =_numToTwoByteString(registeraddress) + \
                             _numToTwoByteString(NUMBER_OF_REGISTERS) + \
                             _numToOneByteString(numberOfRegisterBytes) + \
                             _numToTwoByteString(writevalue, numberOfDecimals)
                             
-        elif functioncode in [5, 6]:
-            payloadToSlave =_numToTwoByteString(registeraddress) + \
-                            _numToTwoByteString(writevalue, numberOfDecimals)
-            
-        elif functioncode in [1, 2, 3, 4]:
-            payloadToSlave =_numToTwoByteString(registeraddress) + \
-                            _numToTwoByteString(NUMBER_OF_REGISTERS)
-            
         ## Communicate
         payloadFromSlave = self._performCommand( functioncode, payloadToSlave)
 
@@ -242,14 +242,14 @@ class Instrument():
         if functioncode in [1, 2, 3, 4]:
             _checkByteCount(payloadFromSlave)   # given byte count
     
+        if functioncode in [5, 6]:
+            _checkResponseWriteData(payloadFromSlave, _numToTwoByteString(writevalue, numberOfDecimals)) # given write data
+        
         if functioncode in [5, 6, 15, 16]:
             _checkResponseAddress(payloadFromSlave, registeraddress)    # given register address        
             
         if functioncode in [15, 16]:
-            _checkResponseNumberOfRegisters(payloadFromSlave, NUMBER_OF_REGISTERS) # given number of registers
-            
-        if functioncode in [5, 6]:
-            _checkResponseWriteData(payloadFromSlave, _numToTwoByteString(writevalue, numberOfDecimals)) # given write data
+            _checkResponseNumberOfRegisters(payloadFromSlave, NUMBER_OF_REGISTERS) # given number of registers    
             
         ## Extract register data
         if functioncode in [1, 2, 3, 4]:
@@ -257,11 +257,11 @@ class Instrument():
             assert len(registerdata) == numberOfRegisterBytes
             
         ## Calculate response value
+        if functioncode in [1, 2]:   
+            return _bitResponseToValue(registerdata)  
+        
         if functioncode in [3, 4]:
             return _twoByteStringToNum(registerdata, numberOfDecimals)
-        
-        if functioncode in [1, 2]:   
-            return _bitResponseToValue(registerdata)   
     
     
     def _performCommand(self, functioncode, payloadToSlave):

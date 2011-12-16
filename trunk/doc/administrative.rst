@@ -215,6 +215,22 @@ If the python source files not are updated in the html output, then remove the c
 
 Remember that the :file:`Makefile` uses tabs for indentation, not spaces.
 
+Test unittest coverage measurement
+----------------------------------
+
+Install the script coverage.py::
+
+    sudo easy_install coverage
+
+Collect test data::
+
+    coverage run test_minimalmodbus.py
+    
+Generate html report (ends up in trunk/test/htmlcov)::
+
+    coverage html
+    
+
 Setting the PYTHONPATH
 ----------------------
 
