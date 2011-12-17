@@ -294,7 +294,7 @@ class Instrument():
             The raw data (string) returned from the slave.
 
         Raises:
-            ValueError
+            TypeError, ValueError, IOError
 
         Note that the answer might have strange ASCII control signs, which
         makes it difficult to print it in the promt (messes up a bit).
@@ -328,6 +328,8 @@ class Instrument():
 
         MAX_NUMBER_OF_BYTES = 1000
         
+        #TODO Check string type
+        
         if len(message) == 0:
             raise ValueError('The message length must not be zero')
         
@@ -341,7 +343,7 @@ class Instrument():
             print 'MinimalModbus debug mode. Response from instrument: ' + repr(answer)   
         
         if len(answer) == 0:
-            raise ValueError('No communication with the instrument (no answer)')
+            raise IOError('No communication with the instrument (no answer)')
         
         return answer
 
@@ -939,86 +941,4 @@ if __name__ == '__main__':
     
 pass    
 
-#        # Constants
-#        NUMBER_OF_REGISTERS_TO_WRITE = 1
-#        NUMBER_OF_BYTES_PER_REGISTER = 2
-#        STARTBYTENUMBER_FOR_STARTADDRESS = 0
-#        STARTBYTENUMBER_FOR_NUMBEROFREGISTERS = 2
-#        
-
-#        
-#        numberOfRegisterBytes = NUMBER_OF_REGISTERS_TO_WRITE * NUMBER_OF_BYTES_PER_REGISTER
-#        
-#        ## Build data for writing one register
-#        if functioncode == 16:
-#            payloadToSlave =_numToTwoByteString(registeraddress) + \
-#                            _numToTwoByteString(NUMBER_OF_REGISTERS_TO_WRITE) + \
-#                            _numToOneByteString(numberOfRegisterBytes) + \
-#                            _numToTwoByteString(value, numberOfDecimals)
-#        else:
-#            payloadToSlave =_numToTwoByteString(registeraddress) + \
-#                            _numToTwoByteString(value, numberOfDecimals)
-#            
-#        # Communicate
-#        payloadFromSlave = self._performCommand( functioncode, payloadToSlave)
-#        
-#        assert len(payloadFromSlave) == 4
-#        
-#        ## Check start write register        
-#        ## TODO Both for function code 6 and 16
-#        bytesForStartAddress = payloadFromSlave[STARTBYTENUMBER_FOR_STARTADDRESS : STARTBYTENUMBER_FOR_STARTADDRESS+NUMBER_OF_BYTES_PER_REGISTER]
-#        receivedStartAddress =  _twoByteStringToNum( bytesForStartAddress )
-#        if receivedStartAddress != registeraddress:
-#            raise ValueError( 'Wrong given write start adress: {0}, but commanded is {1}'.format( receivedStartAddress, registeraddress) )
-#        
-#        ## Check number of registers written
-#        ## TODO Only for functioncode 16
-#        bytesForNumberOfRegisters = payloadFromSlave[STARTBYTENUMBER_FOR_NUMBEROFREGISTERS : STARTBYTENUMBER_FOR_NUMBEROFREGISTERS+NUMBER_OF_BYTES_PER_REGISTER]
-#        receivedNumberOfWrittenReisters =  _twoByteStringToNum( bytesForNumberOfRegisters )
-#        if receivedNumberOfWrittenReisters != NUMBER_OF_REGISTERS_TO_WRITE:
-#            raise ValueError( 'Wrong given number of registers to write: {0}, but commanded is {1}'.format( \
-#                receivedNumberOfWrittenReisters, NUMBER_OF_REGISTERS_TO_WRITE) )
-#    
-#        ## Check data written
-#        ## TODO Only for functioncode 6
-    
-#        NUMBER_OF_REGISTERS_TO_READ = 1
-#        
-#        # Build data for reading one register
-#        payloadToSlave =    _numToTwoByteString(registeraddress) + \
-#                            _numToTwoByteString(NUMBER_OF_REGISTERS_TO_READ)
-#        
-#        # Communicate
-#        payloadFromSlave= self._performCommand( functioncode, payloadToSlave)
-#        
-#        # Check number of bytes
-#        # These constants are for dealing with the frame payload data
-#        BYTEPOSITION_FOR_NUMBEROFBYTES = 0
-#        NUMBER_OF_BYTES_BEFORE_REGISTERDATA = 1
-#        givenNumberOfDatabytes = ord( payloadFromSlave[BYTEPOSITION_FOR_NUMBEROFBYTES ] )
-#        countedNumberOfDatabytes = len(payloadFromSlave) - NUMBER_OF_BYTES_BEFORE_REGISTERDATA
-#        if givenNumberOfDatabytes != countedNumberOfDatabytes:
-#            raise ValueError( 'Wrong given number of bytes: {0}, but counted is {1} as data payload length is {2}'.format( \
-#                givenNumberOfDatabytes, countedNumberOfDatabytes, len(payloadFromSlave)) )
-# 
-#        # Extract register data
-#        registerdata = payloadFromSlave[NUMBER_OF_BYTES_BEFORE_REGISTERDATA:]
-#        
-#        # Calculate value HACK!!
-#        if registerdata == '\x01':       
-#            outputvalue = 1
-#        else:
-#            outputvalue = 0
-
-#        return outputvalue
-
-
-#        # Build data for reading one register
-#        payloadToSlave =    _numToTwoByteString(registeraddress) + \
-#                            _numToTwoByteString(NUMBER_OF_REGISTERS_TO_READ)
-#        
-#        # Communicate
-#        payloadFromSlave= self._performCommand( functioncode, payloadToSlave)
-#        
-#        pass    
 

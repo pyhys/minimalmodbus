@@ -407,9 +407,15 @@ class TestDummyCommunication(unittest.TestCase):
         self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1) # port name, slave address (in decimal)
         self.instrument._debug = True
 
+    def testCommunicateNoMessage(self):
+        self.assertRaises(ValueError, self.instrument._communicate, '')
+
+    def testCommunicateNoResponse(self):
+        self.assertRaises(IOError, self.instrument._communicate, 'MessageForEmptyResponse')
 
     def testReadBit(self):      
         pass ##TODO
+        self.assertEqual( self.instrument.read_bit(61), 1 )
     
     def testWriteBit(self):      
         pass ##TODO     
@@ -481,20 +487,17 @@ from the dummy serial port.
 # Note that the string 'AAAAAAA' might be easier to read if grouped, 
 # like 'AA' + 'AAAA' + 'A' for the initial part (address etc) + payload + CRC.
 
-
 # Read register 289 on slave 1 using function code 3 #
 # ---------------------------------------------------#
 # Message:  Slave address 1, function code 3. Register address 289, 1 register. CRC. 
 # Response: Slave address 1, function code 3. 2 bytes, value=770. CRC=14709.
 RESPONSES['\x01\x03' + '\x01!\x00\x01' + '\xd5\xfc'] = '\x01\x03' + '\x02\x03\x02' + '\x39\x75'
 
-
 # Read register 14 on slave 1 using function code 4 #
 # --------------------------------------------------#
 # Message:  Slave address 1, function code 4. Register address 14, 1 register. CRC. 
 # Response: Slave address 1, function code 4. 2 bytes, value=880. CRC.
 RESPONSES['\x01\x04' + '\x00\x0e\x00\x01' + 'P\t'] = '\x01\x04' + '\x02\x03\x70' + '\xb8$'
-
 
 # Write value 20 in register 35 on slave 1 using function code 16 #
 # ----------------------------------------------------------------#
@@ -526,6 +529,17 @@ RESPONSES['\x01\x10' + '\x00\x34\x00\x01' + '\x02\x00\x63' + '\xe2\r'] = '\x01\x
 # Response: Slave address 1, function code 16. Register address 54 (wrong), 1 register. CRC.
 RESPONSES['\x01\x10' + '\x00\x35\x00\x01' + '\x02\x00\x63' + '\xe3\xdc'] = '\x01\x10' + '\x00\x36\x00\x01' + '\xe1\xc7'
 
+# Read bit register 61 on slave 1 using function code 2 #   #TODO Does not work!
+# ----------------------------------------------------- #
+# Message:  Slave address 1, function code 2. Register address 61, 1 coil. CRC. 
+# Response: Slave address 1, function code 2. 1 byte, value=1. CRC.
+RESPONSES['\x01\x02' + '\x00\x3d\x00\x01' + '(\x06'] = '\x01\x02' + '\x01\x01' + '`H'
+
+
+
+# Retrieve an empty response #
+# -------------------------- #
+RESPONSES['MessageForEmptyResponse'] = ''
 
 #################
 # Run the tests #
@@ -534,14 +548,14 @@ RESPONSES['\x01\x10' + '\x00\x35\x00\x01' + '\x02\x00\x63' + '\xe3\xdc'] = '\x01
 if __name__ == '__main__':
 
 
-    print repr('\x01\x06' + '\x00\x2d\x00\x58' + '\x189')
-    print hex(99)
-    print hex(51)
-    print repr( minimalmodbus._calculateCrcString( '\x01\x10' + '\x00\x36\x00\x01'  ) )
+    #print repr('\x01\x02' + '\x00\x3d\x00\x01')
+    #print hex(99)
+    print hex(61)
+    print repr( minimalmodbus._calculateCrcString( '\x01\x02' + '\x01\x01'  ) )
 
-    #suite = unittest.TestLoader().loadTestsFromTestCase(TestDummyCommunication)
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestDummyCommunication)
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestCheckNumberOfBytes)
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestCheckFunctioncode)
-    #unittest.TextTestRunner(verbosity=0).run(suite)
+    unittest.TextTestRunner(verbosity=0).run(suite)
 
-    unittest.main()
+    #unittest.main()
