@@ -38,7 +38,10 @@ VERBOSE = False
 """Set this to True for printing the communication, and also details on the port initialization."""
 
 DEFAULT_RESPONSE = ''
-"""Response when no matching message (key) is found in the look-up dictionary."""
+"""Response when no matching message (key) is found in the look-up dictionary.
+
+Might be monkey-patched in the calling test module.
+"""
 
 RESPONSES = {}
 """A dictionary of respones from the dummy serial port. 
