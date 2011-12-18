@@ -54,6 +54,9 @@ STOPBITS = 1
 TIMEOUT  = 0.05 
 """Default value for the timeout value in seconds (float). Defaults to 0.05.""" 
 
+_CLOSE_PORT_AFTER_EACH_CALL = False
+"""Default value for port closure setting.""" 
+
 class Instrument():
     """Instrument class for talking to instruments (slaves) via the Modbus RTU protocol (via RS485 or RS232).
 
@@ -89,6 +92,12 @@ class Instrument():
 
         self._debug = False
         """Set this to True to print the communication details."""
+        
+        self._close_port_after_each_call = _CLOSE_PORT_AFTER_EACH_CALL
+        """Set this to True to close the serial port after each call."""      
+        
+        if  self._close_port_after_each_call:
+            self.serial.close()
 
     ########################################
     ## Functions for talking to the slave ##
@@ -334,14 +343,20 @@ class Instrument():
             raise ValueError('The message length must not be zero')
         
         if self._debug:
-            print 'MinimalModbus debug mode. Writing to instrument: ' + repr(message)    
+            print 'MinimalModbus debug mode. Writing to instrument: ' + repr(message)            
+        
+        if self._close_port_after_each_call:
+            self.serial.open()  
             
         self.serial.write(message)
         answer =  self.serial.read(MAX_NUMBER_OF_BYTES)
         
+        if self._close_port_after_each_call:
+            self.serial.close()
+        
         if self._debug:
             print 'MinimalModbus debug mode. Response from instrument: ' + repr(answer)   
-        
+
         if len(answer) == 0:
             raise IOError('No communication with the instrument (no answer)')
         
@@ -371,7 +386,9 @@ def _embedPayload(slaveaddress, functioncode, payloaddata):
     
     _checkFunctioncode(functioncode, None)
     
-    if not isinstance( payloaddata, ( str) ):
+    #TODO check types
+    
+    if not isinstance(payloaddata, str):
         raise TypeError( 'The input payload must be a string. Given: {0}'.format(repr(payloaddata)) )
     
     if slaveaddress < SLAVEADDRESS_MIN or slaveaddress > SLAVEADDRESS_MAX:
@@ -408,6 +425,11 @@ def _extractPayload(response, slaveaddress, functioncode):
     NUMBER_OF_CRC_BYTES                    = 2
     
     BITNUMBER_FUNCTIONCODE_ERRORINDICATION = 7
+    
+    #TODO check types
+    
+    if not isinstance(response, str):
+        raise TypeError( 'The response must be a string. Given: {0}'.format(repr(response)) )
 
     # Check CRC
     receivedCRC = response[-NUMBER_OF_CRC_BYTES:]
@@ -466,7 +488,7 @@ def _numToOneByteString(inputvalue):
         * TypeError
     """
     
-    if not isinstance( inputvalue, ( int, long ) ):
+    if not isinstance( inputvalue, (int, long) ):
         raise TypeError( 'The input must be an integer. Given input: {0}'.format(inputvalue) )
     
     if inputvalue > 0xFF:
@@ -554,7 +576,7 @@ def _twoByteStringToNum(bytestring, numberOfDecimals = 0):
     multiplied by 255 instead of the correct value 256.
     
     """
-    if not isinstance( bytestring, ( str) ):
+    if not isinstance(bytestring, str):
         raise TypeError( 'The input must be a string. Given: {0}'.format(repr(bytestring)) )
 
     if len(bytestring) != 2:
@@ -582,7 +604,9 @@ def _bitResponseToValue(bytestring):
     Args:    
         * bytestring (str): A string of leng
     """
-    ##TODO Check types
+
+    if not isinstance(bytestring, str):
+        raise TypeError( 'The input must be a string. Given: {0}'.format(repr(bytestring)) ) 
     
     RESPONSE_ON  = '\x01'
     RESPONSE_OFF = '\x00'
@@ -681,7 +705,7 @@ def _calculateCrcString( inputstring ):
     Algorithm from the document 'MODBUS over serial line specification and implementation guide V1.02'.
     """
     
-    if not isinstance( inputstring, ( str) ):
+    if not isinstance(inputstring, str):
         raise TypeError( 'The input must be a string. Given: {0}'.format(repr(inputstring)) )
     
     # Constant for MODBUS CRC-16
@@ -751,7 +775,7 @@ def _checkByteCount(payload):
     POSITION = 0
     NUMBER_OF_BYTES_TO_SKIP = 1
     
-    if not isinstance( payload, ( str) ):
+    if not isinstance(payload, str):
         raise TypeError( 'The input must be a string. Given: {0}'.format(repr(payload)) )
  
     givenNumberOfDatabytes = ord( payload[POSITION] )
@@ -778,9 +802,11 @@ def _checkResponseAddress(payload, registeraddress):
         * TypeError
     
     """ 
-    ##TODO Check length
-    
     ##TODO Check types
+    if not isinstance(payload, str):
+        raise TypeError( 'The input must be a string. Given: {0}'.format(repr(payload)) )
+    
+    ##TODO Check length
  
     BYTERANGE_FOR_STARTADDRESS = slice(0, 2)
 
@@ -805,9 +831,12 @@ def _checkResponseNumberOfRegisters(payload, numberOfRegisters):
         * TypeError
     
     """ 
-    ##TODO Check length
     
     ##TODO Check types
+    if not isinstance(payload, str):
+        raise TypeError( 'The input must be a string. Given: {0}'.format(repr(payload)) )
+    
+    ##TODO Check length
     
     BYTERANGE_FOR_NUMBER_OF_REGISTERS = slice(2, 4)
     
@@ -833,10 +862,12 @@ def _checkResponseWriteData(payload, writedata):
         * TypeError
     
     """ 
+        
+    ##TODO Check types
+    if not isinstance(payload, str):
+        raise TypeError( 'The input must be a string. Given: {0}'.format(repr(payload)) )
     
     ##TODO Check length
-    
-    ##TODO Check types
     
     BYTERANGE_FOR_WRITEDATA = slice(2, 4)
     
