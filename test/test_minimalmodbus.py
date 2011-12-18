@@ -98,6 +98,8 @@ class TestExtractPayload(unittest.TestCase):
     def testErrorindicationFromSlave(self):
         self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x82123q\x02', 2, 2 ) 
 
+    #TODO Wrong types
+
 ##############################
 # String and num conversions #
 ##############################
@@ -193,19 +195,22 @@ class TestSanityTwoByteString(unittest.TestCase):
 
     def testKnownValuesLoop(self):
         for x in range(0x10000):
-
+        
             resultvalue = minimalmodbus._twoByteStringToNum( minimalmodbus._numToTwoByteString(x) )
             self.assertEqual(resultvalue, x)       
 
-class TestBitResponseToValue(unittest.TestCase): 
+class TestBitResponseToValue(unittest.TestCase):            
+
+    def testKnownValues(self):
+        self.assertEqual(minimalmodbus._bitResponseToValue('\x00'), 0) 
+        self.assertEqual(minimalmodbus._bitResponseToValue('\x01'), 1) 
+
+    def testInputWrongValues(self): 
+        self.assertRaises(ValueError, minimalmodbus._bitResponseToValue, 'ABC' )
 
     def testInputNotStringType(self):     
-        pass   
-        # TODO
-        #self.assertRaises(TypeError, minimalmodbus._twoByteStringToNum, 1, 1)
+        self.assertRaises(TypeError, minimalmodbus._bitResponseToValue, 1 )
         
-    # Good values, bad values, wrong types
-
 ####################    
 # Bit manipulation #
 ####################    
@@ -402,10 +407,10 @@ class TestDummyCommunication(unittest.TestCase):
 
         # Monkey-patch a dummy serial port for testing purpose
         minimalmodbus.serial.Serial = dummy_serial.Serial
-
+        
         # Initialize a (dummy) instrument
         self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1) # port name, slave address (in decimal)
-        self.instrument._debug = True
+        self.instrument._debug = False
 
     def testCommunicateNoMessage(self):
         self.assertRaises(ValueError, self.instrument._communicate, '')
@@ -413,9 +418,9 @@ class TestDummyCommunication(unittest.TestCase):
     def testCommunicateNoResponse(self):
         self.assertRaises(IOError, self.instrument._communicate, 'MessageForEmptyResponse')
 
-    def testReadBit(self):      
-        pass ##TODO
-        self.assertEqual( self.instrument.read_bit(61), 1 )
+    #def testReadBit(self):      
+    #    pass ##TODO
+    #    self.assertEqual( self.instrument.read_bit(61), 1 )
     
     def testWriteBit(self):      
         pass ##TODO     
@@ -477,6 +482,97 @@ class TestDummyCommunication(unittest.TestCase):
         del(self.instrument)
 
 
+class TestDummyCommunicationWithPortClosure(unittest.TestCase):
+
+    def setUp(self):   
+    
+        # Prepare a dummy serial port to have proper responses
+        import dummy_serial
+        dummy_serial.VERBOSE = False
+        dummy_serial.RESPONSES = RESPONSES
+        dummy_serial.DEFAULT_RESPONSE = 'NotFoundInDictionary'
+
+        # Monkey-patch a dummy serial port for testing purpose
+        minimalmodbus.serial.Serial = dummy_serial.Serial
+        
+        # Mimic a WindowsXP serial port
+        minimalmodbus._CLOSE_PORT_AFTER_EACH_CALL = True
+
+        # Initialize a (dummy) instrument
+        self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1) # port name, slave address (in decimal)
+        self.instrument._debug = False
+
+    def testReadRegisterSeveralTimes(self):
+        self.assertEqual( self.instrument.read_register(289), 770 )
+        self.assertEqual( self.instrument.read_register(289), 770 )
+        self.assertEqual( self.instrument.read_register(289), 770 )
+        
+    def testPortAlreadyOpen(self):
+        self.assertEqual( self.instrument.read_register(289), 770 )
+        self.instrument.serial.open()
+        self.assertRaises(IOError, self.instrument.read_register, 289) 
+   
+    def testPortAlreadyClosed(self):
+        self.assertEqual( self.instrument.read_register(289), 770 )
+        self.assertRaises(IOError, self.instrument.serial.close) 
+ 
+    def tearDown(self):
+        self.instrument = None
+        del(self.instrument)
+
+   
+class TestVerboseDummyCommunicationWithPortClosure(unittest.TestCase):
+
+    def setUp(self):   
+    
+        # Prepare a dummy serial port to have proper responses
+        import dummy_serial
+        dummy_serial.VERBOSE = True
+        dummy_serial.RESPONSES = RESPONSES
+        dummy_serial.DEFAULT_RESPONSE = 'NotFoundInDictionary'
+
+        # Monkey-patch a dummy serial port for testing purpose
+        minimalmodbus.serial.Serial = dummy_serial.Serial
+        
+        # Mimic a WindowsXP serial port
+        minimalmodbus._CLOSE_PORT_AFTER_EACH_CALL = True
+
+        # Initialize a (dummy) instrument
+        self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1) # port name, slave address (in decimal)
+        self.instrument._debug = False
+
+    def testReadRegister(self):
+        self.assertEqual( self.instrument.read_register(289), 770 )   
+
+    def tearDown(self):
+        self.instrument = None
+        del(self.instrument)
+
+
+class TestDummyCommunicationDebugmode(unittest.TestCase):
+
+    def setUp(self):   
+    
+        # Prepare a dummy serial port to have proper responses
+        import dummy_serial
+        dummy_serial.VERBOSE = False
+        dummy_serial.RESPONSES = RESPONSES
+        dummy_serial.DEFAULT_RESPONSE = 'NotFoundInDictionary'
+
+        # Monkey-patch a dummy serial port for testing purpose
+        minimalmodbus.serial.Serial = dummy_serial.Serial
+        
+        # Initialize a (dummy) instrument
+        self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1) # port name, slave address (in decimal)
+        self.instrument._debug = True
+
+    def testReadRegister(self):
+        self.assertEqual( self.instrument.read_register(289), 770 )        
+
+    def tearDown(self):
+        self.instrument = None
+        del(self.instrument)
+   
 RESPONSES = {}
 """A dictionary of respones from a dummy instrument. 
 
@@ -550,12 +646,14 @@ if __name__ == '__main__':
 
     #print repr('\x01\x02' + '\x00\x3d\x00\x01')
     #print hex(99)
-    print hex(61)
-    print repr( minimalmodbus._calculateCrcString( '\x01\x02' + '\x01\x01'  ) )
+    #print hex(61)
+    #print repr( minimalmodbus._calculateCrcString( '\x01\x02' + '\x01\x01'  ) )
 
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestDummyCommunication)
+    #suite = unittest.TestLoader().loadTestsFromTestCase(TestDummyCommunication)
+    #suite = unittest.TestLoader().loadTestsFromTestCase(TestVerboseDummyCommunicationWithPortClosure)
+    #suite = unittest.TestLoader().loadTestsFromTestCase(TestDummyCommunicationDebugmode)
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestCheckNumberOfBytes)
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestCheckFunctioncode)
-    unittest.TextTestRunner(verbosity=0).run(suite)
+    #unittest.TextTestRunner(verbosity=0).run(suite)
 
-    #unittest.main()
+    unittest.main()

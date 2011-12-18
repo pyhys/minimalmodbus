@@ -67,6 +67,7 @@ class Serial():
     
     def __init__(self, *args, **kwargs):
         self.latestWrite = ''
+        self.is_open = True
         
         if VERBOSE:
             print
@@ -77,9 +78,25 @@ class Serial():
             print kwargs        
             print
    
+    def open(self):
+        if VERBOSE:
+            print 'Opening port dummy_serial'
+        
+        if self.is_open:
+            raise IOError('Port dummy_serial is already open')
+        self.is_open = True
+
+    def close(self):
+        if VERBOSE:
+            print 'Closing port dummy_serial'
+            
+        if not self.is_open:
+            raise IOError('Port dummy_serial is already closed')
+        self.is_open = False
+
    
     def write(self, inputstring):
-        """Write to the dummy serial port.
+        """Write to the dummy_serial port.
         
         Args:
             inputstring (int): String for sending to the dummy serial port. Will affect the response.
