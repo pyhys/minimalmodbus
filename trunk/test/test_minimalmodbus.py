@@ -388,8 +388,19 @@ class TestGetDiagnosticString(unittest.TestCase):
     def testReturnsString(self):
 
         resultstring = minimalmodbus._getDiagnosticString()
-        self.assertGreater( len(resultstring), 100)
+        self.assertTrue( len(resultstring) > 100) # For Python 2.6 compatibility
 
+
+class TestToPrintableStrin(unittest.TestCase):
+
+    def testReturnsPrintable(self):
+        allASCII = ''.join( [chr(x) for x in range(256)] )
+        
+        response = minimalmodbus._toPrintableString(allASCII)
+        
+        responseCharacterValues = [ord(x) for x in response]
+        self.assertTrue( min(responseCharacterValues) > 31 )
+        self.assertTrue( max(responseCharacterValues) < 128 )
 
 ###########################################
 # Communication using a dummy serial port #
@@ -418,9 +429,9 @@ class TestDummyCommunication(unittest.TestCase):
     def testCommunicateNoResponse(self):
         self.assertRaises(IOError, self.instrument._communicate, 'MessageForEmptyResponse')
 
-    #def testReadBit(self):      
-    #    pass ##TODO
-    #    self.assertEqual( self.instrument.read_bit(61), 1 )
+    def testReadBit(self):      
+        pass ##TODO
+        self.assertEqual( self.instrument.read_bit(61), 1 )
     
     def testWriteBit(self):      
         pass ##TODO     
@@ -428,6 +439,7 @@ class TestDummyCommunication(unittest.TestCase):
 
     def testReadRegister(self):
         self.assertEqual( self.instrument.read_register(289), 770 )
+        self.assertEqual( self.instrument.read_register(5), 184 )
         self.assertEqual( self.instrument.read_register(289, 0), 770 )
         self.assertEqual( self.instrument.read_register(289, 0, 3), 770 )
         self.assertEqual( self.instrument.read_register(14, 0, 4), 880 )
@@ -450,6 +462,7 @@ class TestDummyCommunication(unittest.TestCase):
         
     def testWriteRegister(self):    
         self.instrument.write_register(35, 20)    
+        self.instrument.write_register(24, 50)    
         self.instrument.write_register(45, 88, functioncode = 6)     
         
     def testWriteRegisterWithDecimals(self):    
@@ -573,6 +586,7 @@ class TestDummyCommunicationDebugmode(unittest.TestCase):
         self.instrument = None
         del(self.instrument)
    
+   
 RESPONSES = {}
 """A dictionary of respones from a dummy instrument. 
 
@@ -589,11 +603,23 @@ from the dummy serial port.
 # Response: Slave address 1, function code 3. 2 bytes, value=770. CRC=14709.
 RESPONSES['\x01\x03' + '\x01!\x00\x01' + '\xd5\xfc'] = '\x01\x03' + '\x02\x03\x02' + '\x39\x75'
 
+# Read register 5 on slave 1 using function code 3 #
+# ---------------------------------------------------#
+# Message: Slave address 1, function code 3. Register address 289, 1 register. CRC.
+# Response: Slave address 1, function code 3. 2 bytes, value=184. CRC
+RESPONSES['\x01\x03' + '\x00\x05\x00\x01' + '\x94\x0b'] = '\x01\x03' + '\x02\x00\xb8' + '\xb86'
+
 # Read register 14 on slave 1 using function code 4 #
 # --------------------------------------------------#
 # Message:  Slave address 1, function code 4. Register address 14, 1 register. CRC. 
 # Response: Slave address 1, function code 4. 2 bytes, value=880. CRC.
 RESPONSES['\x01\x04' + '\x00\x0e\x00\x01' + 'P\t'] = '\x01\x04' + '\x02\x03\x70' + '\xb8$'
+
+# Write value 50 in register 24 on slave 1 using function code 16 #
+# ----------------------------------------------------------------#
+# Message:  Slave address 1, function code 16. Register address 24, 1 register, 2 bytes, value=50. CRC. 
+# Response: Slave address 1, function code 16. Register address 24, 1 register. CRC.
+RESPONSES['\x01\x10' + '\x00\x18\x00\x01\x02\x002' + '$]']       = '\x01\x10' + '\x00\x18\x00\x01' + '\x81\xce'
 
 # Write value 20 in register 35 on slave 1 using function code 16 #
 # ----------------------------------------------------------------#
@@ -642,7 +668,6 @@ RESPONSES['MessageForEmptyResponse'] = ''
 #################
 
 if __name__ == '__main__':
-
 
     #print repr('\x01\x02' + '\x00\x3d\x00\x01')
     #print hex(99)
