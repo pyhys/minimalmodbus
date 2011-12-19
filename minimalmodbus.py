@@ -30,7 +30,7 @@ __author__  = "Jonas Berg"
 __email__   = "pyhys@users.sourceforge.net"
 __license__ = "Apache License, Version 2.0"
 
-__version__   = "0.23"
+__version__   = "0.24"
 __status__    = "Alpha"
 __revision__  = "$Rev$"
 __date__      = "$Date$"
@@ -117,6 +117,7 @@ class Instrument():
             ValueError
 
         """
+        print 'READING BIT'
         _checkFunctioncode(functioncode, [1, 2])
 
         return self._genericCommand(functioncode, registeraddress)
@@ -260,6 +261,8 @@ class Instrument():
         if functioncode in [15, 16]:
             _checkResponseNumberOfRegisters(payloadFromSlave, NUMBER_OF_REGISTERS) # given number of registers    
             
+        print 'PAYLOAD, len', len(payloadFromSlave), 'bytes ', repr(payloadFromSlave)    
+        
         ## Extract register data
         if functioncode in [1, 2, 3, 4]:
             registerdata = payloadFromSlave[NUMBER_OF_BYTES_BEFORE_REGISTERDATA:]
@@ -343,7 +346,7 @@ class Instrument():
             raise ValueError('The message length must not be zero')
         
         if self._debug:
-            print 'MinimalModbus debug mode. Writing to instrument: ' + repr(message)            
+            _print_out( 'MinimalModbus debug mode. Writing to instrument: ' + repr(message) )           
         
         if self._close_port_after_each_call:
             self.serial.open()  
@@ -355,7 +358,7 @@ class Instrument():
             self.serial.close()
         
         if self._debug:
-            print 'MinimalModbus debug mode. Response from instrument: ' + repr(answer)   
+            _print_out( 'MinimalModbus debug mode. Response from instrument: ' + repr(answer) )  
 
         if len(answer) == 0:
             raise IOError('No communication with the instrument (no answer)')
@@ -882,6 +885,10 @@ def _checkResponseWriteData(payload, writedata):
 # Development tools #
 #####################
         
+def _print_out( inputstring ):
+    """Print the inputstring. To make it compatible with Python2 and Python3."""
+    sys.stdout.write(inputstring + '\n')           
+        
 def _toPrintableString( inputstring ):
     """Make a descriptive string, showing the ord() numbers (in decimal) for the characters in the inputstring.
     
@@ -906,7 +913,6 @@ def _toPrintableString( inputstring ):
     valuepart = ', '.join( valuestrings )
 
     return firstpart + valuepart
-
 
 def _getDiagnosticString():
     """Generate a diagnostic string, showing the module version, the platform, current directory etc.
@@ -940,35 +946,16 @@ def _getDiagnosticString():
 
 if __name__ == '__main__':
 
-    def print_out( inputstring ):
-        """Print the inputstring. To make it compatible with Python2 and Python3."""
-        sys.stdout.write(inputstring + '\n')     
+    _print_out( 'TESTING MODBUS MODULE' )
 
-    #import a_module
+    _CLOSE_PORT_AFTER_EACH_CALL = False
+    instrument = Instrument('/dev/cvdHeatercontroller', 1)
+    instrument._debug = True
+    
+    
+    _print_out( str(instrument.read_register(273, 1)) )
 
-    #
-    #print __file__ 
-    #print os.path.dirname( __file__ )
-
-    print_out( 'TESTING MODBUS MODULE' )
-
-    #print dir(serial)
-
-    #print serial.VERSION
-
-    #quit()
-    print _getDiagnosticString()
-
-    quit()
-    #instrument = Instrument('/dev/cvdHeatercontroller', 1)
-
-    print_out(str(  instrument.read_register(1, 1)     ))
-    print_out(str(  instrument.read_register(273, 1)   ))
-    print_out(str(  instrument.read_register(289, 10)  ))
-    print_out(str(  instrument.read_register(1313, 10) ))
-    print_out(str(  instrument.read_register(10241, 1) ))
- 
-    print_out( 'DONE!' )
+    _print_out( 'DONE!' )
     
 pass    
 
