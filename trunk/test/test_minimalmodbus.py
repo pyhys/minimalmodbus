@@ -430,12 +430,15 @@ class TestDummyCommunication(unittest.TestCase):
         self.assertRaises(IOError, self.instrument._communicate, 'MessageForEmptyResponse')
 
     def testReadBit(self):      
-        pass ##TODO
         self.assertEqual( self.instrument.read_bit(61), 1 )
+        self.assertEqual( self.instrument.read_bit(62, functioncode=1), 0 )
     
-    def testWriteBit(self):      
-        pass ##TODO     
+    def testWriteBit(self):        
+        self.instrument.write_bit(71, 1)
+        self.instrument.write_bit(72, 1, functioncode=15)
 
+
+    #TODO Test Write wrong value with functioncode 5
 
     def testReadRegister(self):
         self.assertEqual( self.instrument.read_register(289), 770 )
@@ -651,13 +654,29 @@ RESPONSES['\x01\x10' + '\x00\x34\x00\x01' + '\x02\x00\x63' + '\xe2\r'] = '\x01\x
 # Response: Slave address 1, function code 16. Register address 54 (wrong), 1 register. CRC.
 RESPONSES['\x01\x10' + '\x00\x35\x00\x01' + '\x02\x00\x63' + '\xe3\xdc'] = '\x01\x10' + '\x00\x36\x00\x01' + '\xe1\xc7'
 
-# Read bit register 61 on slave 1 using function code 2 #   #TODO Does not work!
+# Read bit register 61 on slave 1 using function code 2 #   
 # ----------------------------------------------------- #
 # Message:  Slave address 1, function code 2. Register address 61, 1 coil. CRC. 
 # Response: Slave address 1, function code 2. 1 byte, value=1. CRC.
 RESPONSES['\x01\x02' + '\x00\x3d\x00\x01' + '(\x06'] = '\x01\x02' + '\x01\x01' + '`H'
 
+# Read bit register 62 on slave 1 using function code 1 #   
+# ----------------------------------------------------- #
+# Message:  Slave address 1, function code 1. Register address 62, 1 coil. CRC. 
+# Response: Slave address 1, function code 1. 1 byte, value=0. CRC.
+RESPONSES['\x01\x01' + '\x00\x3e\x00\x01' + '\x9c\x06'] = '\x01\x01' + '\x01\x00' + 'Q\x88'
 
+# Write bit register 71 on slave 1 using function code 5 #   
+# ------------------------------------------------------ #
+# Message:  Slave address 1, function code 5. Register address 71, value 1 (FF00). CRC. 
+# Response: Slave address 1, function code 5. 1 byte, value=1. CRC.
+RESPONSES['\x01\x05' + '\x00\x47\xff\x00' + '</'] = '\x01\x05' + '\x00\x47\xff\x00' + '</'
+
+# Write bit register 72 on slave 1 using function code 15 #   
+# ------------------------------------------------------ #
+# Message:  Slave address 1, function code 15. Register address 72, 1 bit, 1 byte, value 1 (0100). CRC. 
+# Response: Slave address 1, function code 15. Register address 72, 1 bit. CRC.
+RESPONSES['\x01\x0f' + '\x00\x48\x00\x01\x01\x01' + '\x0fY'] = '\x01\x0f' + '\x00\x48\x00\x01' + '\x14\x1d'
 
 # Retrieve an empty response #
 # -------------------------- #
@@ -670,9 +689,10 @@ RESPONSES['MessageForEmptyResponse'] = ''
 if __name__ == '__main__':
 
     #print repr('\x01\x02' + '\x00\x3d\x00\x01')
-    #print hex(99)
+    #print hex(71)
+    #print '\x48'
     #print hex(61)
-    #print repr( minimalmodbus._calculateCrcString( '\x01\x02' + '\x01\x01'  ) )
+    #print repr( minimalmodbus._calculateCrcString( '\x01\x0f' + '\x00\x48\x00\x01' ) )
 
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestDummyCommunication)
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestVerboseDummyCommunicationWithPortClosure)

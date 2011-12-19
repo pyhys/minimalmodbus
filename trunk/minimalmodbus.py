@@ -117,9 +117,7 @@ class Instrument():
             ValueError
 
         """
-        print 'READING BIT'
         _checkFunctioncode(functioncode, [1, 2])
-
         return self._genericCommand(functioncode, registeraddress)
 
 
@@ -139,7 +137,6 @@ class Instrument():
 
         """
         _checkFunctioncode(functioncode, [5, 15])     
-        
         self._genericCommand(functioncode, registeraddress, value)
         
 
@@ -161,7 +158,6 @@ class Instrument():
 
         """
         _checkFunctioncode(functioncode, [3, 4])   
-        
         return self._genericCommand(functioncode, registeraddress, numberOfDecimals=numberOfDecimals)
 
 
@@ -184,7 +180,6 @@ class Instrument():
 
         """
         _checkFunctioncode(functioncode, [6, 16])
-        
         self._genericCommand(functioncode, registeraddress, value, numberOfDecimals)
     
     ##########################################
@@ -204,7 +199,9 @@ class Instrument():
         """
         
         NUMBER_OF_REGISTERS = 1
+        NUMBER_OF_BITS = 1
         NUMBER_OF_BYTES_PER_REGISTER = 2
+        NUMBER_OF_BYTES_FOR_ONE_BIT = 1
         
         numberOfRegisterBytes = NUMBER_OF_REGISTERS * NUMBER_OF_BYTES_PER_REGISTER
         
@@ -213,37 +210,38 @@ class Instrument():
                 
         BYTEPOSITION_FOR_RESPONSE_NUMBEROFBYTES = 0
         NUMBER_OF_BYTES_BEFORE_REGISTERDATA = 1
-        
-        BITPATTERN_ON =  0x0000
-        BITPATTERN_OFF = 0xFF00
-                
+                        
         _checkFunctioncode(functioncode, None )
-        
-        ## Adjust value if writing a single bit
-        if functioncode in [5, 15]:  # IS THIS CORRECT???
-            if value == 0:
-                writevalue = 0 #??
-            elif value == 1:
-                writevalue = 1 #??
-            else:
-                raise ValueError('Wrong')
-        else:
-            writevalue = value
-        
+                   
         ## Build payload to slave
-        if functioncode in [1, 2, 3, 4]:
+        
+        if functioncode in [1, 2]:
+            payloadToSlave =_numToTwoByteString(registeraddress) + \
+                            _numToTwoByteString(NUMBER_OF_BITS)
+                            
+        elif functioncode in [3, 4]:
             payloadToSlave =_numToTwoByteString(registeraddress) + \
                             _numToTwoByteString(NUMBER_OF_REGISTERS)
 
-        elif functioncode in [5, 6]:
+        elif functioncode == 5:
             payloadToSlave =_numToTwoByteString(registeraddress) + \
-                            _numToTwoByteString(writevalue, numberOfDecimals)
+                            _createBitpattern(functioncode, value)
         
-        elif functioncode in [15, 16]:
+        elif functioncode == 6:
+            payloadToSlave =_numToTwoByteString(registeraddress) + \
+                            _numToTwoByteString(value, numberOfDecimals)
+        
+        elif functioncode == 15:
+            payloadToSlave =_numToTwoByteString(registeraddress) + \
+                            _numToTwoByteString(NUMBER_OF_BITS) + \
+                            _numToOneByteString(NUMBER_OF_BYTES_FOR_ONE_BIT) + \
+                            _createBitpattern(functioncode, value)               
+        
+        elif functioncode ==16:
             payloadToSlave =_numToTwoByteString(registeraddress) + \
                             _numToTwoByteString(NUMBER_OF_REGISTERS) + \
                             _numToOneByteString(numberOfRegisterBytes) + \
-                            _numToTwoByteString(writevalue, numberOfDecimals)
+                            _numToTwoByteString(value, numberOfDecimals)
                             
         ## Communicate
         payloadFromSlave = self._performCommand( functioncode, payloadToSlave)
@@ -252,27 +250,30 @@ class Instrument():
         if functioncode in [1, 2, 3, 4]:
             _checkByteCount(payloadFromSlave)   # given byte count
     
-        if functioncode in [5, 6]:
-            _checkResponseWriteData(payloadFromSlave, _numToTwoByteString(writevalue, numberOfDecimals)) # given write data
+        if functioncode == 5:
+            _checkResponseWriteData(payloadFromSlave, _createBitpattern(functioncode, value)) # given write data
+    
+        if functioncode == 6:
+            _checkResponseWriteData(payloadFromSlave, _numToTwoByteString(value, numberOfDecimals)) # given write data
         
         if functioncode in [5, 6, 15, 16]:
-            _checkResponseAddress(payloadFromSlave, registeraddress)    # given register address        
+            _checkResponseAddress(payloadFromSlave, registeraddress)  # given register address        
             
-        if functioncode in [15, 16]:
-            _checkResponseNumberOfRegisters(payloadFromSlave, NUMBER_OF_REGISTERS) # given number of registers    
-            
-        print 'PAYLOAD, len', len(payloadFromSlave), 'bytes ', repr(payloadFromSlave)    
+        if functioncode == 15:
+            _checkResponseNumberOfRegisters(payloadFromSlave, NUMBER_OF_BITS) # given number of bits    
         
-        ## Extract register data
-        if functioncode in [1, 2, 3, 4]:
-            registerdata = payloadFromSlave[NUMBER_OF_BYTES_BEFORE_REGISTERDATA:]
-            assert len(registerdata) == numberOfRegisterBytes
-            
+        if functioncode == 16:
+            _checkResponseNumberOfRegisters(payloadFromSlave, NUMBER_OF_REGISTERS) # given number of registers    
+        
         ## Calculate response value
         if functioncode in [1, 2]:   
+            registerdata = payloadFromSlave[NUMBER_OF_BYTES_BEFORE_REGISTERDATA:]
+            assert len(registerdata) == NUMBER_OF_BYTES_FOR_ONE_BIT
             return _bitResponseToValue(registerdata)  
         
         if functioncode in [3, 4]:
+            registerdata = payloadFromSlave[NUMBER_OF_BYTES_BEFORE_REGISTERDATA:]
+            assert len(registerdata) == numberOfRegisterBytes
             return _twoByteStringToNum(registerdata, numberOfDecimals)
     
     
@@ -622,6 +623,36 @@ def _bitResponseToValue(bytestring):
        raise ValueError( 'Could not convert bit response to a value. Input: {0}'.format(repr(bytestring)) )
 
 
+def _createBitpattern(functioncode, value):
+    """Create the bit pattern that is used for writing single bits.
+    
+    This is basically a storage for numerical constants.
+
+    Args:    
+        * functioncode (int): can be 5 or 15
+        * value (int): can be 0 or 1
+
+    """
+    
+    if value not in [0, 1]:
+        raise ValueError('Wrong value for functioncode {0}. Given value: {1}'.format(functioncode, repr(value)) )
+
+    if functioncode == 5:
+        if value == 0:
+            return '\x00\x00'
+        else:
+            return '\xff\x00'
+
+    elif functioncode == 15:
+        if value == 0:
+            return '\x00'
+        else:
+            return '\x01' # Is this correct??
+    
+    else:
+        raise ValueError( 'Wrong functioncode for createBitPattern. Given value: {1}'.format(functioncode) )
+
+
 ####################    
 # Bit manipulation #
 ####################
@@ -734,7 +765,7 @@ def _calculateCrcString( inputstring ):
 def _checkFunctioncode( functioncode, listOfAllowedValues ):
     """Check that the given functioncode is in the listOfAllowedValues.
 
-    Also verifies that 0 <= function code <= 127.
+    Also verifies that 1 <= function code <= 127.
 
     Args:
         functioncode (int): The function code
@@ -744,7 +775,7 @@ def _checkFunctioncode( functioncode, listOfAllowedValues ):
         TypeError, ValueError
 
     """
-    FUNCTIONCODE_MIN = 0
+    FUNCTIONCODE_MIN = 1
     FUNCTIONCODE_MAX = 127
     
     if not isinstance( functioncode, ( int, long ) ):
@@ -849,7 +880,6 @@ def _checkResponseNumberOfRegisters(payload, numberOfRegisters):
     if receivedNumberOfWrittenReisters != numberOfRegisters:
         raise ValueError( 'Wrong number of registers to write in the response: {0}, but commanded is {1}'.format( \
             receivedNumberOfWrittenReisters, numberOfRegisters) )
-
 
 def _checkResponseWriteData(payload, writedata):
     """Check that the write data as given in the response is correct.
