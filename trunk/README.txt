@@ -174,17 +174,37 @@ To switch on the debug mode, where the communication details are printed::
 
     instrument = minimalmodbus.Instrument('/dev/ttyUSB1', 1) # port name, slave address (in decimal)
     instrument._debug = True
+	print instrument.read_register( 289, 1 ) 
 
+	
+Issues when running under Windows
+---------------------------------
+When running under Windows, the underlying pySerial may complain that the serial port is already open. This seems to occur especially 
+when communicating to more than one instrument. It is possible to make MinimalModbus close the serial port after each call. Use it like::
 
+    #!/usr/bin/env python
+    import minimalmodbus
+	minimalmodbus._CLOSE_PORT_AFTER_EACH_CALL = True
+	
+    instrument = minimalmodbus.Instrument('/dev/ttyUSB1', 1) # port name, slave address (in decimal)
+	print instrument.read_register( 289, 1 ) 
+
+	
 Testing
 -------
-A few unit tests are provided. To run them::
+Unit tests are provided in the /test subfolder. To run them::
 
     python test_minimalmodbus.py
     
 Also a dummy/mock/stub for the serial port is provided for test purposes.
 
+The test coverage analysis is found on ::
 
+	http://minimalmodbus.sourceforge.net/htmlcov/index.html 
+
+To see which parts of the code that have been teste, click the file name.	
+	
+	
 Licence
 -------
 Apache License, Version 2.0.
