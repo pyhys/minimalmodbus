@@ -171,10 +171,10 @@ when communicating with more than one instrument. It is possible to make Minimal
 
     #!/usr/bin/env python
     import minimalmodbus
-	minimalmodbus._CLOSE_PORT_AFTER_EACH_CALL = True
+    minimalmodbus._CLOSE_PORT_AFTER_EACH_CALL = True
 	
     instrument = minimalmodbus.Instrument('/dev/ttyUSB1', 1) # port name, slave address (in decimal)
-	print instrument.read_register( 289, 1 ) 
+    print instrument.read_register( 289, 1 ) 
 
 	
 Unit testing
@@ -219,7 +219,7 @@ To switch on the debug mode, where the communication details are printed::
 
     instrument = minimalmodbus.Instrument('/dev/ttyUSB1', 1) # port name, slave address (in decimal)
     instrument._debug = True
-	print instrument.read_register( 289, 1 ) 
+    print instrument.read_register( 289, 1 ) 
 
 The data is stored internally in this driver as byte strings (representing byte values). 
 For example a byte with value 18 (dec) = 12 (hex) = 00010010 (bin) is stored in a string of length one.
