@@ -320,17 +320,7 @@ class TestCalculateCrcString(unittest.TestCase):
     def testNotStringInput(self):
         self.assertRaises(TypeError, minimalmodbus._calculateCrcString, 123)
 
-class TestCheckNumberOfBytes(unittest.TestCase):    
-    
-    def testCorrectNumberOfBytes(self):
-        minimalmodbus._checkByteCount('\x02\x03\x02')
         
-    def testWrongNumberOfBytes(self):
-        self.assertRaises(ValueError, minimalmodbus._checkByteCount, '\x03\x03\x02')
-
-    def testNotStringInput(self):
-        self.assertRaises(TypeError, minimalmodbus._checkByteCount, 123)
-
 class TestCheckFunctioncode(unittest.TestCase):    
     
     def testCorrectFunctioncode(self):
@@ -356,13 +346,32 @@ class TestCheckFunctioncode(unittest.TestCase):
         self.assertRaises(ValueError, minimalmodbus._checkFunctioncode, -1, [-1, 8])
         self.assertRaises(ValueError, minimalmodbus._checkFunctioncode, 128, [7, 128])
 
+
+class TestCheckSlaveaddress(unittest.TestCase):  
+    ##TODO Add!
+    pass
+
+class TestCheckRegisteraddress(unittest.TestCase):  
+    ##TODO Add!
+    pass
+    
+class TestCheckResponseNumberOfBytes(unittest.TestCase):    
+    
+    def testCorrectNumberOfBytes(self):
+        minimalmodbus._checkResponseByteCount('\x02\x03\x02')
+        
+    def testWrongNumberOfBytes(self):
+        self.assertRaises(ValueError, minimalmodbus._checkResponseByteCount, '\x03\x03\x02')
+
+    def testNotStringInput(self):
+        self.assertRaises(TypeError, minimalmodbus._checkResponseByteCount, 123)
+        
 class TestCheckResponseAddress(unittest.TestCase):    
     
     ##TODO Add!
     
     def testCorrectResponseAddress(self):
         minimalmodbus._checkFunctioncode( 7, [7, 8] )
-
 
 class TestCheckResponseNumberOfRegisters(unittest.TestCase):    
     
@@ -378,7 +387,14 @@ class TestCheckResponseWriteData(unittest.TestCase):
     def testCorrectResponseNumberOfRegisters(self):
         minimalmodbus._checkFunctioncode( 7, [7, 8] )
 
+class TestCheckString(unittest.TestCase):  
+    ##TODO Add!
+    pass
 
+class TestCheckInt(unittest.TestCase):  
+    ##TODO Add!
+    pass
+        
 #####################
 # Development tools #
 #####################

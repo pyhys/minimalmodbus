@@ -163,24 +163,11 @@ can be said about function code 5 and 6, and also about 15 and 16.
 
 For finding how the k Bytes for the value relates to the number of registers etc (n), see the Modbus documents referred to above.
 
-
-Develop
--------
-
-To switch on the debug mode, where the communication details are printed::
-
-    #!/usr/bin/env python
-    import minimalmodbus
-
-    instrument = minimalmodbus.Instrument('/dev/ttyUSB1', 1) # port name, slave address (in decimal)
-    instrument._debug = True
-	print instrument.read_register( 289, 1 ) 
-
 	
 Issues when running under Windows
 ---------------------------------
 When running under Windows, the underlying pySerial may complain that the serial port is already open. This seems to occur especially 
-when communicating to more than one instrument. It is possible to make MinimalModbus close the serial port after each call. Use it like::
+when communicating with more than one instrument. It is possible to make MinimalModbus close the serial port after each call. Use it like::
 
     #!/usr/bin/env python
     import minimalmodbus
@@ -190,8 +177,8 @@ when communicating to more than one instrument. It is possible to make MinimalMo
 	print instrument.read_register( 289, 1 ) 
 
 	
-Testing
--------
+Unit testing
+------------
 Unit tests are provided in the /test subfolder. To run them::
 
     python test_minimalmodbus.py
@@ -221,18 +208,43 @@ Python package index
 The SourceForge project page
     http://sourceforge.net/projects/minimalmodbus/ with bug tracker, mailing list and subversion repository ( http://minimalmodbus.svn.sourceforge.net/viewvc/minimalmodbus/trunk/ ).
 
+	
+Develop
+-------
 
+To switch on the debug mode, where the communication details are printed::
+
+    #!/usr/bin/env python
+    import minimalmodbus
+
+    instrument = minimalmodbus.Instrument('/dev/ttyUSB1', 1) # port name, slave address (in decimal)
+    instrument._debug = True
+	print instrument.read_register( 289, 1 ) 
+
+The data is stored internally in this driver as byte strings (representing byte values). 
+For example a byte with value 18 (dec) = 12 (hex) = 00010010 (bin) is stored in a string of length one.
+This can be done using the function chr(18) or typing the string ``BACKSLASHx12``, where ``BACKSLASH`` 
+should be replaced with the actual backslash sign. 
+
+Note that these strings can look pretty strange when printed, as values 0 to 31 (dec) are
+ASCII control signs. For example 'vertical tab' and 'line feed' are among those. To make the output easier to understand, use::
+
+	print repr(bytestringname)
+	
+The details printed in debug mode (messages and responses) are very useful for using the dummy_serial port for unit testing purposes. For examples, see the file /test/test_minimalmodbus.py
+	
 Support
 -------
 Send a mail to minimalmodbus-list@lists.sourceforge.net
 
-Describe the problem in detail. Please include the output after running::
+Describe the problem in detail, and include any error messsages. Please also include the output after running::
 
   >>> import minimalmodbus 
   >>> print minimalmodbus._getDiagnosticString()
 
 Note that it can be very helpful to switch on the debug mode, where the communication 
 details are printed. See the 'Develop' section above.
+
 
 Author
 ------
@@ -241,7 +253,8 @@ Jonas Berg, pyhys@users.sourceforge.net
 
 Credits
 -------
-Significant contributions by Aaron Lalonde (spelling?).
+Significant contributions by Aaron LaLonde.
+
 
 Feedback
 --------
