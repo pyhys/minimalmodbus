@@ -43,7 +43,7 @@ BAUDRATE = 19200
 """Default value for the baudrate in Baud (int)."""
 
 PARITY   = serial.PARITY_NONE 
-"""Default value for the  parity (probably int). See the pySerial module for documentation. Defaults to serial.PARITY_NONE"""
+"""Default value for the  parity. See the pySerial module for documentation. Defaults to serial.PARITY_NONE"""
 
 BYTESIZE = 8 
 """Default value for the bytesize (int)."""
@@ -52,7 +52,7 @@ STOPBITS = 1
 """Default value for the number of stopbits (int)."""
 
 TIMEOUT  = 0.05 
-"""Default value for the timeout value in seconds (float). Defaults to 0.05.""" 
+"""Default value for the timeout value in seconds (float).""" 
 
 _CLOSE_PORT_AFTER_EACH_CALL = False
 """Default value for port closure setting.""" 
