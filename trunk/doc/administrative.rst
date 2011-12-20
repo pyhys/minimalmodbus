@@ -4,18 +4,20 @@ Developer documentation
 Useful development tools
 ------------------------
 
+
 SVN
-   Version control software. See http://subversion.apache.org/   
+   Version control software. See http://subversion.apache.org/  
 
 PyChecker 
-   This is a tool for finding bugs in python source code. See http://pychecker.sourceforge.net/   
+   This is a tool for finding bugs in python source code. See http://pychecker.sourceforge.net/    
    
 Sphinx
-   For generating HTML documentation. See http://sphinx.pocoo.org/
+   For generating HTML documentation. See http://sphinx.pocoo.org/ 
 
 Coverage.py
-   Unittest coverage tool. See http://nedbatchelder.com/code/coverage/
+   Unittest coverage tool. See http://nedbatchelder.com/code/coverage/ 
 
+Each of these have some additional information below on this page.
    
 Shortlist of most used SVN commands
 -----------------------------------
@@ -99,8 +101,8 @@ Build the HTML and PDF documentation  ( in :file:`/doc` after making sure that `
 
 Build the test coverage report::
 
-    coverage run ??
-	coverage report ??
+    coverage run test_all.py
+	coverage html
 	
 Upload the :file:`.gzip.tar` and :file:`.zip` files to Sourceforge by logging in and manually using the web form.
 
@@ -140,10 +142,10 @@ Notes on distribution
 
 python setup.py register sdist --formats=gztar,zip upload
 
-Notes on generating source distributions
-----------------------------------------
+How to generate a source distribution of the present development code
+-----------------------------------------------------------------------
 
-Create a subfolder **dist** with zipped or gztared source folders::
+This will create a subfolder **dist** with zipped or gztared source folders::
 
     python setup.py sdist
     python setup.py sdist --formats=gztar,zip
@@ -152,19 +154,19 @@ Create a subfolder **dist** with zipped or gztared source folders::
 Notes on generating binary distributions
 ----------------------------------------
 
-Create subfolders ``build`` and ``dist``::
+This will create the subfolders ``build`` and ``dist``::
 
     python setup.py bdist
 
-Create a subfolder ``dist`` with a Windows installer::
+This will create a subfolder ``dist`` with a Windows installer::
 
     python setup.py bdist --formats=wininst
 
 
-Test distributions
-------------------
+Test a distribution before installing it
+----------------------------------------
 
-Create a subfolder ``build``::
+This will create a subfolder ``build``::
 
     python setup.py build
 
@@ -174,6 +176,8 @@ Install a distribution
 Use::
 
     sudo python setup.py install
+
+On a development machine, go to the minimalmodbus/trunk directory before running the command.
 
 
 Installation target
@@ -192,6 +196,11 @@ The Windows installer also creates a :file:`.pyo` file (and also the :file:`.pyc
 Sphinx usage
 ------------
 The documentation is generated with the Sphinx tool: http://sphinx.pocoo.org/
+
+Install it with::
+
+   ?
+
 
 Sphinx reStructuredText Primer
     http://sphinx.pocoo.org/rest.html
@@ -239,7 +248,7 @@ If the python source files not are updated in the html output, then remove the c
 
 Remember that the :file:`Makefile` uses tabs for indentation, not spaces.
 
-Test unittest coverage measurement
+Unittest coverage measurement
 ----------------------------------
 
 Install the script coverage.py::
@@ -268,6 +277,7 @@ or::
     export PYTHONPATH=$PYTHONPATH:/home/jonas/pythonprogrammering/minimalmodbus/trunk
 
 It is better to set the path in the :file:`.basrc` file.
+
 
 Downloading backups from the Sourceforge server
 -----------------------------------------------
