@@ -1,7 +1,22 @@
 Developer documentation
 =======================
 
+Useful development tools
+------------------------
 
+SVN
+   Version control software. See http://subversion.apache.org/   
+
+PyChecker 
+   This is a tool for finding bugs in python source code. See http://pychecker.sourceforge.net/   
+   
+Sphinx
+   For generating HTML documentation. See http://sphinx.pocoo.org/
+
+Coverage.py
+   Unittest coverage tool. See http://nedbatchelder.com/code/coverage/
+
+   
 Shortlist of most used SVN commands
 -----------------------------------
 These are the most used commands::
@@ -82,6 +97,11 @@ Build the HTML and PDF documentation  ( in :file:`/doc` after making sure that `
     make html
     make latexpdf
 
+Build the test coverage report::
+
+    coverage run ??
+	coverage report ??
+	
 Upload the :file:`.gzip.tar` and :file:`.zip` files to Sourceforge by logging in and manually using the web form.
 
 Upload the generated documentation to Sourceforge. In directory trunk/doc/build/html::
@@ -98,6 +118,10 @@ Upload the generated documentation to Sourceforge. In directory trunk/doc/build/
 
     etc
 
+Upload the test coverage report::
+
+    ?	
+	
 Upload the documentation PDF by (in proper directory)::
 
     put *.pdf
@@ -254,16 +278,13 @@ To download the svn repository in archive format, type this in the destination d
 
 TODO
 ----
-* Make sure that the entire response is printed in case of error
-* Test with Python3
-* Test the dependency of pySerial in setup.py
-* Mailing list
-* Bug tracker settings
-
+* Type checking
+* Write more unittests
 
 For next release:
-
-* Unittests in folder test/test*.py
+* Test with Python3
+* Bug tracker settings
+* Test the dependency of pySerial in setup.py
 * Upload files with ``scp -r`` instead
 
 
