@@ -211,6 +211,10 @@ class TestBitResponseToValue(unittest.TestCase):
     def testInputNotStringType(self):     
         self.assertRaises(TypeError, minimalmodbus._bitResponseToValue, 1 )
         
+class TestCreateBitPattern(unittest.TestCase):            
+    
+    pass #TODO
+        
 ####################    
 # Bit manipulation #
 ####################    
@@ -455,6 +459,7 @@ class TestDummyCommunication(unittest.TestCase):
 
 
     #TODO Test Write wrong value with functioncode 5
+     #TODO Wrong functioncode etc
 
     def testReadRegister(self):
         self.assertEqual( self.instrument.read_register(289), 770 )
@@ -704,17 +709,10 @@ RESPONSES['MessageForEmptyResponse'] = ''
 
 if __name__ == '__main__':
 
-    #print repr('\x01\x02' + '\x00\x3d\x00\x01')
-    #print hex(71)
-    #print '\x48'
     #print hex(61)
     #print repr( minimalmodbus._calculateCrcString( '\x01\x0f' + '\x00\x48\x00\x01' ) )
 
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestDummyCommunication)
-    #suite = unittest.TestLoader().loadTestsFromTestCase(TestVerboseDummyCommunicationWithPortClosure)
-    #suite = unittest.TestLoader().loadTestsFromTestCase(TestDummyCommunicationDebugmode)
-    #suite = unittest.TestLoader().loadTestsFromTestCase(TestCheckNumberOfBytes)
-    #suite = unittest.TestLoader().loadTestsFromTestCase(TestCheckFunctioncode)
     #unittest.TextTestRunner(verbosity=0).run(suite)
 
     unittest.main()

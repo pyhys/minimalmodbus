@@ -200,7 +200,6 @@ class Instrument():
         NUMBER_OF_BITS = 1
         NUMBER_OF_BYTES_FOR_ONE_BIT = 1
                         
-        BYTEPOSITION_FOR_RESPONSE_NUMBEROFBYTES = 0
         NUMBER_OF_BYTES_BEFORE_REGISTERDATA = 1
                         
         _checkFunctioncode(functioncode, None)
@@ -508,7 +507,7 @@ def _numToTwoByteString(value, numberOfDecimals = 0, LsbFirst = False):
     if value < 0:
         raise ValueError( 'The input value must not be negative. Given: {0}'.format(value) )
 
-     if not isinstance( LsbFirst, bool ):
+    if not isinstance( LsbFirst, bool ):
         raise TypeError( 'The LsbFirst must be a boolean. Given: {0}'.format(LsbFirst) )    
         
     multiplier = 10 ** numberOfDecimals
@@ -672,7 +671,7 @@ def _rightshift(inputInteger):
         An inputInteger = 9 (dec) = 1001 (bin) will after a rightshift be 0100 (bin) = 4 and the carry bit is 1.
         The return value will then be the tuple (4, 1). 
     """
-    _checkInt(numberOfRegisters, minvalue=0)
+    _checkInt(inputInteger, minvalue=0)
         
     shifted = inputInteger >> 1
     carrybit = inputInteger & 1
@@ -775,7 +774,7 @@ def _checkRegisteraddress( registeraddress ):
     
     _checkInt(registeraddress, REGISTERADDRESS_MIN, REGISTERADDRESS_MAX, description='registeraddress' )          
             
-            
+       
 def _checkResponseByteCount(payload):
     """Check that the number of bytes as given in the response is correct.
     
@@ -902,7 +901,7 @@ def _checkString(inputstring, minlength=0, maxlength=None, description='input st
         raise ValueError( 'The {0} is too short: {1}, but minimum value is {2}. Given: {3}'.format( \
             description, len(inputstring), minlength, repr(inputstring)))  
             
-    if maxlength not is None:    
+    if not maxlength is None:    
         if len(inputstring) > maxlength:
             raise ValueError( 'The {0} is too long: {1}, but maximum value is {2}. Given: {3}'.format( \
                 description, len(inputstring), maxlength, repr(inputstring)))       
@@ -920,14 +919,14 @@ def _checkInt(inputvalue, minvalue=None, maxvalue=None, description='inputvalue'
 
     """        
     if not isinstance(inputvalue, int):
-        raise TypeError( 'The {0} must be an integer. Given: {1}'.format(description, repr(inputstring)) )
+        raise TypeError( 'The {0} must be an integer. Given: {1}'.format(description, repr(inputvalue)) )
 
-    if minvalue not is None:    
+    if not minvalue is None:    
         if inputvalue < minvalue:
             raise ValueError( 'The {0} is too small: {1}, but minimum value is {2}.'.format( \
                 description, inputvalue, minvalue))  
 
-    if maxvalue not is None:    
+    if not maxvalue is None:    
         if inputvalue > maxvalue:
             raise ValueError( 'The {0} is too large: {1}, but maximum value is {2}.'.format( \
                 description, inputvalue, maxvalue))                  
