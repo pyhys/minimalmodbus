@@ -33,8 +33,6 @@ __author__  = "Jonas Berg"
 __email__   = "pyhys@users.sourceforge.net"
 __license__ = "Apache License, Version 2.0"
 
-__version__   = minimalmodbus.__version__
-__status__    = minimalmodbus.__status__
 __revision__  = "$Rev$"
 __date__      = "$Date$"
 
@@ -86,7 +84,7 @@ class Eurotherm3500( minimalmodbus.Instrument ):
     ## Auto/manual mode
     
     def is_manual_loop1(self):
-        """Return the True if loop1 is in man mode."""
+        """Return True if loop1 is in manual mode."""
         return self.read_register(273, 1) > 0
     
     ## Setpoint
