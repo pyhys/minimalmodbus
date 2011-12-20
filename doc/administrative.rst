@@ -73,9 +73,7 @@ Check the code::
 
 Run unit tests (in the :file:`trunc/test` directory)::
     
-    python test_minimalmodbus.py
-    python test_eurotherm3500.py
-    python test_omegacn7500.py
+    python test_all.py
 
 Test the source distribution build (look in the PKG-INFO file)::
 
@@ -292,10 +290,13 @@ TODO
 * Write more unittests
 
 For next release:
-* Test with Python3
-* Bug tracker settings
-* Test the dependency of pySerial in setup.py
-* Upload files with ``scp -r`` instead
+  * Test with Python3
+  * Bug tracker settings
+  * Test the dependency of pySerial in setup.py
+  * Upload files with ``scp -r`` instead
+
+
+
 
 
 
