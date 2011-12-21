@@ -30,7 +30,7 @@ __author__  = "Jonas Berg"
 __email__   = "pyhys@users.sourceforge.net"
 __license__ = "Apache License, Version 2.0"
 
-__version__   = "0.25"
+__version__   = "0.26"
 __status__    = "Alpha"
 __revision__  = "$Rev$"
 __date__      = "$Date$"
@@ -737,7 +737,11 @@ def _checkFunctioncode(functioncode, listOfAllowedValues):
     if listOfAllowedValues == None:
         return
 
-    # TODO check that listOfAllowedValues is a list    
+    if not isinstance(listOfAllowedValues, list):
+        raise TypeError( 'The listOfAllowedValues should be a list. Given: {0}'.format(repr(listOfAllowedValues)) )
+
+    for value in listOfAllowedValues:
+        _checkInt(value, FUNCTIONCODE_MIN, FUNCTIONCODE_MAX, description='functioncode inside listOfAllowedValues')
         
     if functioncode not in listOfAllowedValues:
         raise ValueError( 'Wrong function code: {0}, allowed values are {1}'.format(functioncode, repr(listOfAllowedValues)) )
@@ -895,7 +899,7 @@ def _checkString(inputstring, minlength=0, maxlength=None, description='input st
 
     """        
     if not isinstance(inputstring, str):
-        raise TypeError( 'The {0} be a string. Given: {1}'.format(description, repr(inputstring)) )
+        raise TypeError( 'The {0} should be a string. Given: {1}'.format(description, repr(inputstring)) )
 
     if len(inputstring) < minlength:
         raise ValueError( 'The {0} is too short: {1}, but minimum value is {2}. Given: {3}'.format( \
@@ -1002,12 +1006,17 @@ if __name__ == '__main__':
 
     _print_out( 'TESTING MODBUS MODULE' )
 
+    a = [1, 2]
+    print a
+    
+    print isinstance(2, str)
+    
     _CLOSE_PORT_AFTER_EACH_CALL = False
-    instrument = Instrument('/dev/cvdHeatercontroller', 1)
-    instrument._debug = True
+    #instrument = Instrument('/dev/cvdHeatercontroller', 1)
+    #instrument._debug = True
     
     
-    _print_out( str(instrument.read_register(273, 1)) )
+    #_print_out( str(instrument.read_register(273, 1)) )
 
     _print_out( 'DONE!' )
     
