@@ -344,7 +344,13 @@ class TestCheckFunctioncode(unittest.TestCase):
         self.assertRaises(TypeError, minimalmodbus._checkFunctioncode, 7.5, [7, 8])
 
     def testWrongListType(self):
-        self.assertRaises(TypeError, minimalmodbus._checkFunctioncode, 4, 7)
+        self.assertRaises(TypeError,  minimalmodbus._checkFunctioncode, 4, 7)
+        self.assertRaises(TypeError,  minimalmodbus._checkFunctioncode, 4, 'ABC')
+        self.assertRaises(TypeError,  minimalmodbus._checkFunctioncode, 4, (7, 8))
+        self.assertRaises(ValueError, minimalmodbus._checkFunctioncode, 4, [7, -23])
+        self.assertRaises(ValueError, minimalmodbus._checkFunctioncode, 4, [7, 128])
+        self.assertRaises(TypeError,  minimalmodbus._checkFunctioncode, 4, [7, 'ABC'])
+        self.assertRaises(TypeError,  minimalmodbus._checkFunctioncode, 4, [7.5, 8])
 
     def testWrongFunctioncodeRange(self):
         self.assertRaises(ValueError, minimalmodbus._checkFunctioncode, -1, [-1, 8])
