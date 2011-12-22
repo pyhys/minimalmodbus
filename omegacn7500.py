@@ -50,10 +50,18 @@ link_pattern_addresses = range(4192, 4200)
 class OmegaCN7500( minimalmodbus.Instrument ):
     """Instrument class for Omega CN7500 process controller. 
     
-    Communicates via Modbus RTU protocol (via RS485), using the :mod:`minimalmodbus` Python module.    
+    Communicates via Modbus RTU protocol (via RS485), using the :mod:`minimalmodbus` Python module.
+
+    This driver is intended to enable control of the OMEGA CN7500 controller from the command line.
 
     Args:
         * portname (str): port name
+
+            * examples:
+            * OS X: '/dev/tty.usbserial'
+            * Linux: '/dev/ttyUSB0'
+            * Windows: '/com3'
+            
         * slaveaddress (int): slave address in the range 1 to 247 (in decimal)
 
     Implemented with these function codes (in decimal):
@@ -115,7 +123,7 @@ class OmegaCN7500( minimalmodbus.Instrument ):
     ## Control Mode
 
     def get_control_mode(self):
-        """Return the current operation mode"""
+        """Return the integer value corresponding to the current operation mode."""
         mode_value = self.read_register(4101)
         if mode_value == 0:
             mode_string = 'PID'
@@ -131,7 +139,11 @@ class OmegaCN7500( minimalmodbus.Instrument ):
             return mode_string
 
     def set_control_mode(self, value):
-        """Set the control method"""
+        """Set the control method using the corresponding integer value.
+                
+        Args:
+            value (float): PID-0, ON/OFF-1, Tuning-2, Program-3
+        """
         if 0 <= value <= 3:
             return self.write_register(4101, value)
         else:
@@ -140,18 +152,28 @@ class OmegaCN7500( minimalmodbus.Instrument ):
     ## Set program pattern variables
 
     def get_start_pattern_no(self):
-        """Return the starting pattern number"""
+        """Return the starting pattern number."""
         return self.read_register(4144, 0)
 
     def set_start_pattern_no(self, value):
-        """Set the starting pattern number"""
+        """Set the starting pattern number.
+
+        Args:
+            value (integer): From 0-7
+        """
         if 0 <= value <= 7:
             return self.write_register(4144, value, 0)
         else:
             return 'Not a valid pattern number, must be 0-7'
     
     def get_pattern_step_setpoint(self, pattern, step):
-        """Return the value of the desired program step"""
+        """Return the value of the desired pattern step.
+
+        Args:
+            pattern (integer): From 0-7
+
+            step (integer): From 0-7
+        """
         if 0<=pattern<=7 and 0<=step<=7:
             address = setpoint_addresses[pattern][step] 
             return self.read_register(address, 1)
@@ -161,7 +183,15 @@ class OmegaCN7500( minimalmodbus.Instrument ):
             return 'Not a valid step number, must be 0-7'
         
     def set_pattern_step_setpoint(self, pattern, step, value):
-        """Set the value of the desired program step"""
+        """Set the value of the desired pattern step
+
+        Args:
+            pattern (integer): From 0-7
+
+            step (integer): From 0-7
+
+            value (float): Setpoint value
+        """
         if 0<=pattern<=7 and 0<=step<=7 and 0 <= value <= 999.9:
             address = setpoint_addresses[pattern][step]
             return self.write_register(address, value, 1)
@@ -173,7 +203,13 @@ class OmegaCN7500( minimalmodbus.Instrument ):
             return 'Nice try rookie, how about 1000?'
 
     def get_pattern_step_time(self, pattern, step):
-        """Return the value of the desired pattern step time"""
+        """Return the value of the desired pattern step time.
+
+        Args:
+            pattern (integer): From 0-7
+
+            step (integer): From 0-7
+        """
         if 0<=pattern<=7 and 0<=step<=7:
             address = time_addresses[pattern][step]
             return self.read_register(address, 0)
@@ -183,7 +219,15 @@ class OmegaCN7500( minimalmodbus.Instrument ):
             return 'Not a valid step number, must be 0-7'
 
     def set_pattern_step_time(self, pattern, step, value):
-        """Set the value of the desired pattern step time"""
+        """Set the value of the desired pattern step time.
+
+        Args:
+            pattern (integer): From 0-7
+
+            step (integer): From 0-7
+
+            value (integer): From 0-900
+        """
         if  0<=pattern<=7 and 0<=step<=7 and 0 <= value <= 900:
             address = time_addresses[pattern][step]
             return self.write_register(address, value, 0)
@@ -195,7 +239,11 @@ class OmegaCN7500( minimalmodbus.Instrument ):
             return 'Time must be between 0-900'
 
     def get_pattern_actual_step(self, pattern):
-        """Return the value of the actual step for a given pattern"""
+        """Return the value of the actual step parameter for a given pattern.
+
+        Args:
+            pattern (integer): From 0-7
+        """
         if 0<=pattern<=7:
             address = actual_step_addresses[pattern]
             return self.read_register(address, 0)
@@ -203,7 +251,13 @@ class OmegaCN7500( minimalmodbus.Instrument ):
             return 'Not a valid pattern number, must be 0-7'
 
     def set_pattern_actual_step(self, pattern, value):
-        """Set the actual step for a given pattern"""
+        """Set the actual step parameter for a given pattern.
+
+        Args:
+            pattern (integer): From 0-7
+
+            value (integer): From 0-7
+        """
         if 0<=pattern<=7 and 0 <= value <= 7:
             address = actual_step_addresses[pattern]
             return self.write_register(address, value, 0)
@@ -213,7 +267,11 @@ class OmegaCN7500( minimalmodbus.Instrument ):
             return 'Not a valid step number, must be 0-7'
 
     def get_pattern_additional_cycles(self, pattern):
-        """Return the value of the additional cycles for a given pattern"""
+        """Return the value of the additional cycles for a given pattern.
+
+        Args:
+            pattern (integer): From 0-7
+        """
         if 0<=pattern<=7:
             address = additional_cycles_addresses[pattern]
             return self.read_register(address)
@@ -221,7 +279,13 @@ class OmegaCN7500( minimalmodbus.Instrument ):
             return 'Not a valid pattern number, must be 0-7'
 
     def set_pattern_additional_cycles(self, pattern, value):
-        """Set the number of additional cycles for a given pattern"""
+        """Set the number of additional cycles for a given pattern.
+
+        Args:
+            pattern (integer): From 0-7
+
+            value (integer): From 0-99
+        """
         if 0 <= pattern <= 7 and 0 <= value <= 99:
             address = additional_cycles_addresses[pattern]
             return self.write_register(address, value, 0)
@@ -231,7 +295,11 @@ class OmegaCN7500( minimalmodbus.Instrument ):
             return 'Not a valid number of additional cycles, must be 0-99'
         
     def get_pattern_link_topattern(self, pattern):
-        """Get the linked pattern value for a given pattern"""
+        """Get the linked pattern value for a given pattern.
+
+        Args:
+            pattern (integer): From 0-7
+        """
         if 0<=pattern<=7:
             address = link_pattern_addresses[pattern]
             return self.read_register(address)
@@ -239,7 +307,13 @@ class OmegaCN7500( minimalmodbus.Instrument ):
             return 'Not a valid pattern number, must be 0-7'
 
     def set_pattern_link_topattern(self, pattern, value):
-        """Set the linked pattern value for a given pattern, value = 8 sets the link parameter to OFF"""
+        """Set the linked pattern value for a given pattern.
+
+        Args:
+            pattern (integer): From 0-7
+
+            value (integer): From 0-7, value=8 sets the link parameter to OFF
+        """
         if 0 <= pattern <= 7 and 0 <= value <= 8:
             address = link_pattern_addresses[pattern]
             return self.write_register(address, value, 0)
@@ -249,7 +323,11 @@ class OmegaCN7500( minimalmodbus.Instrument ):
             return 'Not a valid value, must be pattern 0-7 or 8 for OFF'
 
     def get_all_pattern_variables(self, pattern):
-        """Get all variables for a given pattern at one time"""
+        """Get all variables for a given pattern at one time.
+
+        Args:
+            pattern (integer): From 0-7
+        """
         if 0<=pattern<=7:
             sp0_address = setpoint_addresses[pattern][0]
             sp1_address = setpoint_addresses[pattern][1]
@@ -302,44 +380,54 @@ class OmegaCN7500( minimalmodbus.Instrument ):
             print "%-17s %d" % ("Linked pattern:",link_pattern)
             
     def set_all_pattern_variables(self, pattern, sp0, ti0, sp1, ti1, sp2, ti2, sp3, ti3, sp4, ti4, sp5, ti5, sp6, ti6, sp7, ti7, actual_step, additional_cycles, link_pattern):
-            sp0_address = setpoint_addresses[pattern][0]
-            sp1_address = setpoint_addresses[pattern][1]
-            sp2_address = setpoint_addresses[pattern][2]
-            sp3_address = setpoint_addresses[pattern][3]
-            sp4_address = setpoint_addresses[pattern][4]
-            sp5_address = setpoint_addresses[pattern][5]
-            sp6_address = setpoint_addresses[pattern][6]
-            sp7_address = setpoint_addresses[pattern][7]
-            ti0_address = time_addresses[pattern][0]
-            ti1_address = time_addresses[pattern][1]
-            ti2_address = time_addresses[pattern][2]
-            ti3_address = time_addresses[pattern][3]
-            ti4_address = time_addresses[pattern][4]
-            ti5_address = time_addresses[pattern][5]
-            ti6_address = time_addresses[pattern][6]
-            ti7_address = time_addresses[pattern][7]
-            actual_step_address = actual_step_addresses[pattern]
-            additional_cycles_address = additional_cycles_addresses[pattern]
-            link_pattern_address = link_pattern_addresses[pattern]
-            self.write_register(sp0_address,sp0,1)
-            self.write_register(sp1_address,sp1,1)
-            self.write_register(sp2_address,sp2,1)
-            self.write_register(sp3_address,sp3,1)
-            self.write_register(sp4_address,sp4,1)
-            self.write_register(sp5_address,sp5,1)
-            self.write_register(sp6_address,sp6,1)
-            self.write_register(sp7_address,sp7,1)
-            self.write_register(ti0_address,ti0,0)
-            self.write_register(ti1_address,ti1,0)
-            self.write_register(ti2_address,ti2,0)
-            self.write_register(ti3_address,ti3,0)
-            self.write_register(ti4_address,ti4,0)
-            self.write_register(ti5_address,ti5,0)
-            self.write_register(ti6_address,ti6,0)
-            self.write_register(ti7_address,ti7,0)
-            self.write_register(actual_step_address,actual_step,0)
-            self.write_register(additional_cycles_address,additional_cycles,0)
-            self.write_register(link_pattern_address,link_pattern,0)
+        
+        """Set all variables for a given pattern at one time.
+
+        Args:
+            pattern (integer): From 0-7
+
+            sp[n] (float): setpoint value for *n* pattern
+
+            ti[n] (integer): time value for *n* pattern, 0-900
+        """
+        sp0_address = setpoint_addresses[pattern][0]
+        sp1_address = setpoint_addresses[pattern][1]
+        sp2_address = setpoint_addresses[pattern][2]
+        sp3_address = setpoint_addresses[pattern][3]
+        sp4_address = setpoint_addresses[pattern][4]
+        sp5_address = setpoint_addresses[pattern][5]
+        sp6_address = setpoint_addresses[pattern][6]
+        sp7_address = setpoint_addresses[pattern][7]
+        ti0_address = time_addresses[pattern][0]
+        ti1_address = time_addresses[pattern][1]
+        ti2_address = time_addresses[pattern][2]
+        ti3_address = time_addresses[pattern][3]
+        ti4_address = time_addresses[pattern][4]
+        ti5_address = time_addresses[pattern][5]
+        ti6_address = time_addresses[pattern][6]
+        ti7_address = time_addresses[pattern][7]
+        actual_step_address = actual_step_addresses[pattern]
+        additional_cycles_address = additional_cycles_addresses[pattern]
+        link_pattern_address = link_pattern_addresses[pattern]
+        self.write_register(sp0_address,sp0,1)
+        self.write_register(sp1_address,sp1,1)
+        self.write_register(sp2_address,sp2,1)
+        self.write_register(sp3_address,sp3,1)
+        self.write_register(sp4_address,sp4,1)
+        self.write_register(sp5_address,sp5,1)
+        self.write_register(sp6_address,sp6,1)
+        self.write_register(sp7_address,sp7,1)
+        self.write_register(ti0_address,ti0,0)
+        self.write_register(ti1_address,ti1,0)
+        self.write_register(ti2_address,ti2,0)
+        self.write_register(ti3_address,ti3,0)
+        self.write_register(ti4_address,ti4,0)
+        self.write_register(ti5_address,ti5,0)
+        self.write_register(ti6_address,ti6,0)
+        self.write_register(ti7_address,ti7,0)
+        self.write_register(actual_step_address,actual_step,0)
+        self.write_register(additional_cycles_address,additional_cycles,0)
+        self.write_register(link_pattern_address,link_pattern,0)
             
     ## Output signal
     
