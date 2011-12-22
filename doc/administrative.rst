@@ -288,6 +288,8 @@ TODO
 ----
 * Type checking
 * Write more unittests
+* dummy_serial: Use isOpen() to make sure opening and closing works fine.
+* Unit tests for omegacn, incl port data
 
 For next release:
   * Test with Python3
