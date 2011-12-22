@@ -107,6 +107,7 @@ class OmegaCN7500( minimalmodbus.Instrument ):
         if value <= 999.9:
             self.write_register( 4097, value, 1)
         else:
+            #I only allow our users to set our furnaces to 1000C, and with one decimal place on the display the maximum value is 999.9. 
             value = 999.9
             print 'Nice try rookie, how about 1000?'
             return self.write_register(4097, value, 1)
@@ -131,10 +132,10 @@ class OmegaCN7500( minimalmodbus.Instrument ):
 
     def set_control_mode(self, value):
         """Set the control method"""
-        if 0 <= value <= 4:
+        if 0 <= value <= 3:
             return self.write_register(4101, value)
         else:
-            return 'Not a valid control value'
+            return 'Not a valid control value: PID-0, ON/OFF-1, Tuning-2, Program-3'
 
     ## Set program pattern variables
 
@@ -238,14 +239,14 @@ class OmegaCN7500( minimalmodbus.Instrument ):
             return 'Not a valid pattern number, must be 0-7'
 
     def set_pattern_link_topattern(self, pattern, value):
-        """Set the linked pattern value for a given pattern"""
-        if 0 <= pattern <= 7 and 0 <= value <= 7:
+        """Set the linked pattern value for a given pattern, value = 8 sets the link parameter to OFF"""
+        if 0 <= pattern <= 7 and 0 <= value <= 8:
             address = link_pattern_addresses[pattern]
             return self.write_register(address, value, 0)
         elif pattern not in range(0,8):
             return 'Not a valid pattern number, must be 0-7'
-        elif value not in range(0,8):
-            return 'Not a valid step number, must be 0-7'
+        elif value not in range(0,9):
+            return 'Not a valid value, must be pattern 0-7 or 8 for OFF'
 
     def get_all_pattern_variables(self, pattern):
         """Get all variables for a given pattern at one time"""
