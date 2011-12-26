@@ -75,7 +75,6 @@ class TestDummyCommunication(unittest.TestCase):
     def testReadPv6(self):
         self.assertAlmostEqual( self.instrument.get_pv_module6(), 18.7 )
     
-    
     ## Read and write SP and SP change rate ##
     
     def testReadSp1(self):
@@ -105,7 +104,6 @@ class TestDummyCommunication(unittest.TestCase):
     def testDisableSprate1(self):
         self.instrument.disable_sprate_loop1() 
 
-    
     ## Read OP ##
  
     def testReadOp1(self):
@@ -114,7 +112,6 @@ class TestDummyCommunication(unittest.TestCase):
     def testReadOp2(self):
         self.assertAlmostEqual( self.instrument.get_op_loop2(), 0.0 ) 
     
-    
     ## Read alarms ##
     
     def testReadAlarm1Threshold(self):
@@ -122,7 +119,6 @@ class TestDummyCommunication(unittest.TestCase):
     
     def testReadAlarmSummary(self):
         self.assertTrue( self.instrument.is_set_alarmsummary() )   
-    
     
     ## Read controller state ##
     
@@ -213,4 +209,3 @@ RESPONSES['\x01\x10' + '\x00N\x00\x01\x02\x00\x01' + 'h~']       = '\x01\x10' + 
     
 if __name__ == '__main__':
     unittest.main()  
-    #dummyexperiment()
