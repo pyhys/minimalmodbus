@@ -249,7 +249,7 @@ class Instrument():
             _checkResponseWriteData(payloadFromSlave, _numToTwoByteString(value, numberOfDecimals)) # given write data
         
         if functioncode in [5, 6, 15, 16]:
-            _checkResponseAddress(payloadFromSlave, registeraddress)  # given register address        
+            _checkResponseRegisterAddress(payloadFromSlave, registeraddress)  # given register address        
             
         if functioncode == 15:
             _checkResponseNumberOfRegisters(payloadFromSlave, NUMBER_OF_BITS) # given number of bits    
@@ -597,10 +597,9 @@ def _createBitpattern(functioncode, value):
         * value (int): can be 0 or 1
 
     """
+    _checkFunctioncode(functioncode, [5, 15])
+    _checkInt(value, minvalue=0, maxvalue=1, description='inputvalue' )
     
-    if value not in [0, 1]:
-        raise ValueError('Wrong value for the functioncode {0}. Given value: {1}'.format(functioncode, repr(value)) )
-
     if functioncode == 5:
         if value == 0:
             return '\x00\x00'
@@ -612,9 +611,6 @@ def _createBitpattern(functioncode, value):
             return '\x00'
         else:
             return '\x01' # Is this correct??
-    
-    else:
-        raise ValueError( 'Wrong functioncode for createBitPattern. Given value: {1}'.format(functioncode) )
 
 
 ####################    
@@ -807,14 +803,14 @@ def _checkResponseByteCount(payload):
         raise ValueError(errortext)    
 
 
-def _checkResponseAddress(payload, registeraddress):
+def _checkResponseRegisterAddress(payload, registeraddress):
     """Check that the start adress as given in the response is correct.
     
     The first two bytes in the payload holds the address value.
     
     Args:
-        payload (string): The payload
-        registeraddress (int): The register address (use decimal numbers, not hex). 
+        * payload (string): The payload
+        * registeraddress (int): The register address (use decimal numbers, not hex). 
     
     Raises:
         * ValueError
@@ -840,8 +836,8 @@ def _checkResponseNumberOfRegisters(payload, numberOfRegisters):
     The bytes 2 and 3 (zero based counting) in the payload holds the value.
     
     Args:
-        payload (string): The payload
-        numberOfRegisters (int): Number of registers that have been written
+        * payload (string): The payload
+        * numberOfRegisters (int): Number of registers that have been written
     
     Raises:
         * ValueError
@@ -849,7 +845,7 @@ def _checkResponseNumberOfRegisters(payload, numberOfRegisters):
     
     """ 
     _checkString(payload, minlength=4)
-    _checkInt(numberOfRegisters, minvalue=1, description='numberOfRegisters' )
+    _checkInt(numberOfRegisters, minvalue=1, maxvalue=0xFFFF, description='numberOfRegisters' )
             
     BYTERANGE_FOR_NUMBER_OF_REGISTERS = slice(2, 4)
     
@@ -867,8 +863,8 @@ def _checkResponseWriteData(payload, writedata):
     The bytes 2 and 3 (zero based counting) in the payload holds the write data.
     
     Args:
-        payload (string): The payload
-        writedata (string): The data to write
+        * payload (string): The payload
+        * writedata (string): The data to write, should be 2 bytes.
     
     Raises:
         * ValueError
@@ -876,7 +872,7 @@ def _checkResponseWriteData(payload, writedata):
     
     """ 
     _checkString(payload, minlength=4, description='payload')
-    _checkString(writedata, description='writedata')
+    _checkString(writedata, minlength=2, maxlength=2, description='writedata')
         
     BYTERANGE_FOR_WRITEDATA = slice(2, 4)
     
@@ -884,7 +880,7 @@ def _checkResponseWriteData(payload, writedata):
     
     if receivedWritedata != writedata:
         raise ValueError( 'Wrong write data in the response: {0}, but commanded is {1}'.format( \
-            receivedWritedata, writedata) )
+            repr(receivedWritedata), repr(writedata)) )
 
             
 def _checkString(inputstring, minlength=0, maxlength=None, description='input string' ):
@@ -893,19 +889,40 @@ def _checkString(inputstring, minlength=0, maxlength=None, description='input st
     Args:
         * inputstring (string): The string to be checked
         * minlength (int): Minimum length of the string
+        * maxlength (int or None): Maximum length of the string
+        * description (string): Used in error messages for the checked inputstring
     
     Raises:
         TypeError, ValueError
 
-    """        
+    Uses the function _checkInt() internally.
+
+    """       
+    # Type checking 
+    if not isinstance(description, str):
+        raise TypeError( 'The description should be a string. Given: {0}'.format(repr(description)) )
+
     if not isinstance(inputstring, str):
         raise TypeError( 'The {0} should be a string. Given: {1}'.format(description, repr(inputstring)) )
+
+    if not isinstance(maxlength, (int, type(None))):
+        raise TypeError( 'The maxlength must be an integer or None. Given: {0}'.format(repr(maxlength)) )
+
+    # Check values
+    _checkInt(minlength, minvalue=0, maxvalue=None, description='minlength')
 
     if len(inputstring) < minlength:
         raise ValueError( 'The {0} is too short: {1}, but minimum value is {2}. Given: {3}'.format( \
             description, len(inputstring), minlength, repr(inputstring)))  
             
     if not maxlength is None:    
+        if maxlength < 0:
+            raise ValueError( 'The maxlength must be positive. Given: {0}'.format(maxlength) )
+        
+        if maxlength < minlength:
+            raise ValueError( 'The maxlength must not be smaller than minlength. Given: {0} and {1}'.format( \
+                maxlength, minlength) )
+        
         if len(inputstring) > maxlength:
             raise ValueError( 'The {0} is too long: {1}, but maximum value is {2}. Given: {3}'.format( \
                 description, len(inputstring), maxlength, repr(inputstring)))       
@@ -917,20 +934,41 @@ def _checkInt(inputvalue, minvalue=None, maxvalue=None, description='inputvalue'
         * inputvalue (integer): The integer to be checked
         * minvalue (int): Minimum value of the integer
         * maxvalue (int): Maximum value of the integer
+        * description (string): Used in error messages for the checked inputvalue
     
     Raises:
         TypeError, ValueError
 
+    Note: Can not use the function _checkString(), as it uses this function internally.
+
     """        
+    
+    # Type checking
+    if not isinstance(description, str):
+        raise TypeError( 'The description should be a string. Given: {0}'.format(repr(description)) )
+    
     if not isinstance(inputvalue, int):
         raise TypeError( 'The {0} must be an integer. Given: {1}'.format(description, repr(inputvalue)) )
 
-    if not minvalue is None:    
+    if not isinstance(minvalue, (int, type(None))):
+        raise TypeError( 'The minvalue must be an integer or None. Given: {0}'.format(repr(minvalue)) )
+
+    if not isinstance(maxvalue, (int, type(None))):
+        raise TypeError( 'The maxvalue must be an integer or None. Given: {0}'.format(repr(maxvalue)) )
+    
+    # Consistency checking
+    if (not minvalue is None) and (not maxvalue is None): 
+        if maxvalue < minvalue:
+            raise ValueError( 'The maxvalue must not be smaller than minvalue. Given: {0} and {1}'.format( \
+                maxvalue, minvalue) )
+    
+    # Value checking
+    if not minvalue is None: 
         if inputvalue < minvalue:
             raise ValueError( 'The {0} is too small: {1}, but minimum value is {2}.'.format( \
                 description, inputvalue, minvalue))  
-
-    if not maxvalue is None:    
+                
+    if not maxvalue is None:          
         if inputvalue > maxvalue:
             raise ValueError( 'The {0} is too large: {1}, but maximum value is {2}.'.format( \
                 description, inputvalue, maxvalue))                  
