@@ -1173,9 +1173,9 @@ RESPONSES['\x01\x05' + '\x00\x47\xff\x00' + '</'] = '\x01\x05' + '\x00\x47\xff\x
 # Response: Slave address 1, function code 15. Register address 72, 1 bit. CRC.
 RESPONSES['\x01\x0f' + '\x00\x48\x00\x01\x01\x01' + '\x0fY'] = '\x01\x0f' + '\x00\x48\x00\x01' + '\x14\x1d'
 
-# Retrieve an empty response #
-# -------------------------- #
-RESPONSES['MessageForEmptyResponse'] = ''
+# Retrieve an empty response (for testing the _communicate method) #
+# ---------------------------------------------------------------- #
+RESPONSES['MessageForEmptyResponse'] = '' 
 
 
 ## Recorded data from OmegaCN7500 ##

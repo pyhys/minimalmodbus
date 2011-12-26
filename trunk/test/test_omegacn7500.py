@@ -37,31 +37,18 @@ import omegacn7500
 import unittest
 import dummy_serial
 
-def dummyexperiment():
-    print 'TEST: omega CN7500'
-
-    # Monkey-patch a dummy serial port for testing purpose
-    dummy_serial.VERBOSE = False
-    dummy_serial.RESPONSES = RESPONSES
-    eurotherm3500.minimalmodbus.serial.Serial = dummy_serial.Serial
-
-    # Create a dummy instrument
-    instrument = omegacn7500.OmegaCN7500('DUMMYPORTNAME', 1) 
-    instrument._debug = True
-    
-    print instrument.get_pv_loop1() 
-    
 ###########################################
 # Communication using a dummy serial port #
 ###########################################
 
-class TestDummyCommunication(unittest.TestCase):
+class TestDummyCommunicationSlave1(unittest.TestCase):
 
     def setUp(self):   
     
         # Prepare a dummy serial port to have proper responses
         dummy_serial.VERBOSE = False
         dummy_serial.RESPONSES = RESPONSES
+        dummy_serial.DEFAULT_RESPONSE = 'NotFoundInDictionary'
 
         # Monkey-patch a dummy serial port for testing purpose
         omegacn7500.minimalmodbus.serial.Serial = dummy_serial.Serial
@@ -71,9 +58,72 @@ class TestDummyCommunication(unittest.TestCase):
         self.instrument._debug = False
 
     def testReadPv1(self):
-        self.assertEqual( self.instrument.get_pv_loop1(), 77.0 )
+        self.assertAlmostEqual( self.instrument.get_pv(), 24.6 )
 
+    def testRun(self):
+        self.instrument.run()
     
+    def testStop(self):
+        self.instrument.stop()
+    
+    def testIsRunning(self):
+        self.assertFalse( self.instrument.is_running() )
+
+    def testGetSetpoint(self):
+        self.assertAlmostEqual( self.instrument.get_setpoint(), 100)
+
+    def testSetSetpoint(self):
+        self.instrument.set_setpoint(100)
+
+    def testGetControlMode(self):   
+        self.assertEqual( self.instrument.get_control_mode(), 'PID')
+    
+    def testSetControlMode(self):   
+        self.instrument.set_control_mode(3)
+
+    def testGetStartPatternNo(self):       
+        self.assertEqual( self.instrument.get_start_pattern_no(), 2)
+    
+    
+class TestDummyCommunicationSlave10(unittest.TestCase):
+
+    def setUp(self):   
+        dummy_serial.RESPONSES = RESPONSES
+        dummy_serial.DEFAULT_RESPONSE = 'NotFoundInDictionary'
+        omegacn7500.minimalmodbus.serial.Serial = dummy_serial.Serial
+        self.instrument = omegacn7500.OmegaCN7500('DUMMYPORTNAME', 10)
+
+    def testReadPv1(self):
+        self.assertAlmostEqual( self.instrument.get_pv(), 25.9 )
+
+    def testRun(self):
+        self.instrument.run()
+    
+    def testStop(self):
+        self.instrument.stop()
+    
+    def testIsRunning(self):
+        self.assertFalse( self.instrument.is_running() )
+
+    def testGetSetpoint(self):
+        self.assertAlmostEqual( self.instrument.get_setpoint(), 100)
+
+    def testSetSetpoint(self):
+        self.instrument.set_setpoint(100)
+        
+    def testGetControlMode(self):   
+        self.assertEqual( self.instrument.get_control_mode(), 'PID')
+    
+    def testSetControlMode(self):   
+        self.instrument.set_control_mode(3)
+
+    def testGetStartPatternNo(self):       
+        self.assertEqual( self.instrument.get_start_pattern_no(), 2)
+    
+    # ABOVE
+    
+    
+
     
 RESPONSES = {}
 """A dictionary of respones from a dummy Omega CN7500 instrument. 
@@ -82,15 +132,70 @@ The key is the message (string) sent to the serial port, and the item is the res
 from the dummy serial port.
 
 """
-# Note that the string 'AAAAAAA' might be easier to read if grouped, 
-# like 'AA' + 'AAAA' + 'A' for the initial part (address etc) + payload + CRC.
 
 
-# get_pv_loop1: Read register 289 on slave 1 using function code 3 #
-# -----------------------------------------------------------------#
-# Message:  slave address 1, function code 3, register address 289, 1 register, CRC. 
-# Response: slave address 1, function code 3, 2 bytes, value=770, CRC=14709
-RESPONSES['\x01\x03' + '\x01!\x00\x01' + '\xd5\xfc'] = '\x01\x03' + '\x02\x03\x02' + '\x39\x75'
+## Recorded data from OmegaCN7500 ##
+####################################
+
+# Slave address 1, get_pv()
+RESPONSES['\x01\x03\x10\x00\x00\x01\x80\xca'] = '\x01\x03\x02\x00\xf68\x02'
+
+# Slave address 1, run()
+RESPONSES['\x01\x05\x08\x14\xff\x00\xce^'] = '\x01\x05\x08\x14\xff\x00\xce^'
+    
+# Slave address 1, stop()
+RESPONSES['\x01\x05\x08\x14\x00\x00\x8f\xae'] = '\x01\x05\x08\x14\x00\x00\x8f\xae'
+    
+# Slave address 1, is_running()
+RESPONSES['\x01\x02\x08\x14\x00\x01\xfb\xae'] = '\x01\x02\x01\x00\xa1\x88'
+   
+# Slave address 1, get_setpoint()
+RESPONSES['\x01\x03\x10\x01\x00\x01\xd1\n'] = '\x01\x03\x02\x03\xe8\xb8\xfa'
+    
+# Slave address 1, set_setpoint()    
+RESPONSES['\x01\x10\x10\x01\x00\x01\x02\x03\xe8\xb6\xfe'] = '\x01\x10\x10\x01\x00\x01T\xc9'
+
+# Slave address 1, get_control_mode()        
+RESPONSES['\x01\x03\x10\x05\x00\x01\x90\xcb'] = '\x01\x03\x02\x00\x00\xb8D'    
+
+# Slave address 1, set_control_mode()  
+RESPONSES['\x01\x10\x10\x05\x00\x01\x02\x00\x03\xf7\xc5'] = '\x01\x10\x10\x05\x00\x01\x15\x08'
+
+# Slave address 1, get_start_pattern_no()
+RESPONSES['\x01\x03\x100\x00\x01\x80\xc5'] = '\x01\x03\x02\x00\x029\x85'
+
+
+
+
+# Slave address 10, get_pv()
+RESPONSES['\n\x03\x10\x00\x00\x01\x81\xb1'] = '\n\x03\x02\x01\x03\\\x14'
+
+# Slave address 10, run()
+RESPONSES['\n\x05\x08\x14\xff\x00\xcf%'] = '\n\x05\x08\x14\xff\x00\xcf%'
+    
+# Slave address 10, stop()
+RESPONSES['\n\x05\x08\x14\x00\x00\x8e\xd5'] = '\n\x05\x08\x14\x00\x00\x8e\xd5'
+    
+# Slave address 10, is_running()
+RESPONSES['\n\x02\x08\x14\x00\x01\xfa\xd5'] = '\n\x02\x01\x00\xa3\xac'   
+    
+# Slave address 10, get_setpoint()
+RESPONSES['\n\x03\x10\x01\x00\x01\xd0q'] = '\n\x03\x02\x03\xe8\x1d;'
+    
+# Slave address 10, set_setpoint()    
+RESPONSES['\n\x10\x10\x01\x00\x01\x02\x03\xe8\xc5\xce'] = '\n\x10\x10\x01\x00\x01U\xb2'
+
+# Slave address 10, get_control_mode()        
+RESPONSES['\n\x03\x10\x05\x00\x01\x91\xb0'] = '\n\x03\x02\x00\x00\x1d\x85' 
+
+# Slave address 10, set_control_mode()  
+RESPONSES['\n\x10\x10\x05\x00\x01\x02\x00\x03\x84\xf5'] = '\n\x10\x10\x05\x00\x01\x14s'
+
+# Slave address 10, get_start_pattern_no()
+RESPONSES['\n\x03\x100\x00\x01\x81\xbe'] = '\n\x03\x02\x00\x02\x9cD'
+
+
+
 
     
 if __name__ == '__main__':
