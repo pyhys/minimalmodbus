@@ -37,20 +37,6 @@ import eurotherm3500
 import unittest
 import dummy_serial
 
-def dummyexperiment():
-    print 'TEST: EUROTHERM 3500'
-
-    # Monkey-patch a dummy serial port for testing purpose
-    dummy_serial.VERBOSE = False
-    dummy_serial.RESPONSES = RESPONSES
-    eurotherm3500.minimalmodbus.serial.Serial = dummy_serial.Serial
-
-    # Create a dummy instrument
-    instrument = eurotherm3500.Eurotherm3500('DUMMYPORTNAME', 1)
-    instrument._debug = True
-    
-    print instrument.get_pv_loop1() 
-    quit()
     
 ###########################################
 # Communication using a dummy serial port #
@@ -90,7 +76,7 @@ class TestDummyCommunication(unittest.TestCase):
         self.assertAlmostEqual( self.instrument.get_pv_module6(), 18.7 )
     
     
-    ## Read and write SP and SP rate ##
+    ## Read and write SP and SP change rate ##
     
     def testReadSp1(self):
         self.assertAlmostEqual( self.instrument.get_sp_loop1(), 18.4 )

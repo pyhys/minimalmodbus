@@ -172,18 +172,23 @@ class TestNumToTwoByteString(unittest.TestCase):
             resultstring = minimalmodbus._numToTwoByteString(inputvalue, numberOfDecimals, LsbFirst)
             self.assertEqual(resultstring, knownstring)      
 
-    def testNumberofdecimalsNotInteger(self):
-        self.assertRaises(TypeError, minimalmodbus._numToTwoByteString, 77, 1.0, False)
-
-    def testNegativeNumberofdecimals(self):
-        self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, 77, -1, False)
-
     def testNegativeValue(self):
         self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, -77, 1, False)
 
     def testTooLargeValue(self):
         self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, 77000, 0, False)
         self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, 77, 4, False)
+
+    def testValueNotNumerical(self):
+        self.assertRaises(TypeError, minimalmodbus._numToTwoByteString, '77', 1, False)
+        self.assertRaises(TypeError, minimalmodbus._numToTwoByteString, [77], 1, False)
+        self.assertRaises(TypeError, minimalmodbus._numToTwoByteString, None, 1, False)
+
+    def testNumberofdecimalsNotInteger(self):
+        self.assertRaises(TypeError, minimalmodbus._numToTwoByteString, 77, 1.0, False)
+
+    def testNegativeNumberofdecimals(self):
+        self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, 77, -1, False)
 
     def testLsbfirstNotBoolean(self):
         self.assertRaises(TypeError, minimalmodbus._numToTwoByteString, 77, 1, '1')
@@ -646,12 +651,12 @@ class TestCheckString(unittest.TestCase):
 class TestCheckInt(unittest.TestCase):  
     
     def testKnownValues(self):
-        minimalmodbus._checkInt(47, minvalue=None, maxvalue=None, description='ABC' )
-        minimalmodbus._checkInt(47, minvalue=40, maxvalue=50, description='ABC' )
-        minimalmodbus._checkInt(47, minvalue=-40, maxvalue=50, description='ABC' )
-        minimalmodbus._checkInt(47, description='ABC', maxvalue=50, minvalue=40 )
-        minimalmodbus._checkInt(47, minvalue=None, maxvalue=50, description='ABC' )
-        minimalmodbus._checkInt(47, minvalue=40, maxvalue=None, description='ABC' )
+        minimalmodbus._checkInt(47, minvalue=None, maxvalue=None, description='ABC')
+        minimalmodbus._checkInt(47, minvalue=40, maxvalue=50, description='ABC')
+        minimalmodbus._checkInt(47, minvalue=-40, maxvalue=50, description='ABC')
+        minimalmodbus._checkInt(47, description='ABC', maxvalue=50, minvalue=40)
+        minimalmodbus._checkInt(47, minvalue=None, maxvalue=50, description='ABC')
+        minimalmodbus._checkInt(47, minvalue=40, maxvalue=None, description='ABC')
         
     def testTooLargeValue(self):
         self.assertRaises(ValueError, minimalmodbus._checkInt, 47, minvalue=30, maxvalue=40, description='ABC')
@@ -680,6 +685,50 @@ class TestCheckInt(unittest.TestCase):
         self.assertRaises(TypeError, minimalmodbus._checkInt, 47, minvalue=40, maxvalue=50, description=1.0)
         self.assertRaises(TypeError, minimalmodbus._checkInt, 47, minvalue=40, maxvalue=50, description=['A', 'B', 'C'])
         self.assertRaises(TypeError, minimalmodbus._checkInt, 47, minvalue=40, maxvalue=50, description=['ABC'])
+        
+        
+class TestCheckNumerical(unittest.TestCase):  
+    
+    def testKnownValues(self):
+        minimalmodbus._checkNumerical(47, minvalue=None, maxvalue=None, description='ABC')
+        minimalmodbus._checkNumerical(47, minvalue=40, maxvalue=50, description='ABC')
+        minimalmodbus._checkNumerical(47, minvalue=-40, maxvalue=50, description='ABC')
+        minimalmodbus._checkNumerical(47, description='ABC', maxvalue=50, minvalue=40)
+        minimalmodbus._checkNumerical(47, minvalue=None, maxvalue=50, description='ABC')
+        minimalmodbus._checkNumerical(47, minvalue=40, maxvalue=None, description='ABC')
+        minimalmodbus._checkNumerical(47.0, minvalue=40)
+        minimalmodbus._checkNumerical(47, minvalue=40.0, maxvalue=50, description='ABC')
+        minimalmodbus._checkNumerical(47.0, minvalue=40, maxvalue=None, description='ABC' )
+        minimalmodbus._checkNumerical(47.0, minvalue=40.0, maxvalue=50.0, description='ABC' )
+        
+    def testTooLargeValue(self):
+        self.assertRaises(ValueError, minimalmodbus._checkNumerical, 47.0, minvalue=30, maxvalue=40, description='ABC')
+        self.assertRaises(ValueError, minimalmodbus._checkNumerical, 47.0, minvalue=30.0, maxvalue=40.0, description='ABC')
+        self.assertRaises(ValueError, minimalmodbus._checkNumerical, 47, maxvalue=46.0)
+        
+    def testTooSmallValue(self):    
+        self.assertRaises(ValueError, minimalmodbus._checkNumerical, 47.0, minvalue=48 )
+        self.assertRaises(ValueError, minimalmodbus._checkNumerical, 47.0, minvalue=48.0 )
+        self.assertRaises(ValueError, minimalmodbus._checkNumerical, 47, minvalue=48.0 )
+        self.assertRaises(ValueError, minimalmodbus._checkNumerical, 47, minvalue=48, maxvalue=None, description='ABC')
+        
+    def testInconsistentLimits(self):
+        self.assertRaises(ValueError, minimalmodbus._checkNumerical, 47, minvalue=47, maxvalue=45, description='ABC')        
+        self.assertRaises(ValueError, minimalmodbus._checkNumerical, 47.0, minvalue=47.0, maxvalue=45.0, description='ABC')  
+        
+    def testNotNumericInput(self):
+        self.assertRaises(TypeError, minimalmodbus._checkNumerical, '47.0', minvalue=40.0)
+        self.assertRaises(TypeError, minimalmodbus._checkNumerical, [47.0], minvalue=40)
+        self.assertRaises(TypeError, minimalmodbus._checkNumerical, 47.0, minvalue='40.0', maxvalue=50.0, description='ABC')
+        self.assertRaises(TypeError, minimalmodbus._checkNumerical, 47.0, minvalue=[40.0], maxvalue=50.0, description='ABC')
+        self.assertRaises(TypeError, minimalmodbus._checkNumerical, 47.0, minvalue=40.0, maxvalue=[50.0], description='ABC')
+        self.assertRaises(TypeError, minimalmodbus._checkNumerical, 47.0, minvalue=40.0, maxvalue='50.0', description='ABC')
+        
+    def testDescriptionNotString(self):
+        self.assertRaises(TypeError, minimalmodbus._checkNumerical, 47.0, minvalue=40, maxvalue=50, description=12)
+        self.assertRaises(TypeError, minimalmodbus._checkNumerical, 47, minvalue=40.0, maxvalue=50, description=1.0)
+        self.assertRaises(TypeError, minimalmodbus._checkNumerical, 47, minvalue=40, maxvalue=50.0, description=['A', 'B', 'C'])
+        self.assertRaises(TypeError, minimalmodbus._checkNumerical, 47, minvalue=40, maxvalue=50.0, description=['ABC'])
         
         
 #####################
@@ -743,17 +792,30 @@ class TestDummyCommunication(unittest.TestCase):
         self.assertEqual( self.instrument.read_bit(61), 1 )
         self.assertEqual( self.instrument.read_bit(62, functioncode=1), 0 )
     
-    def testReadBitWrongAddress(self):
-        pass
-    
+    def testReadBitWrongRegisterAddress(self):
+        self.assertRaises(ValueError, self.instrument.read_bit, -1)
+        self.assertRaises(ValueError, self.instrument.read_bit, 65536 )
+            
     def testReadBitWrongAddressType(self):
-        pass
+        self.assertRaises(TypeError, self.instrument.read_bit, 61.0)
+        self.assertRaises(TypeError, self.instrument.read_bit, '61')
+        self.assertRaises(TypeError, self.instrument.read_bit, [61])
+        self.assertRaises(TypeError, self.instrument.read_bit, None)
+        
     def testReadBitWrongFunctioncode(self):
-        pass
+        self.assertRaises(ValueError, self.instrument.read_bit, 62, 0)
+        self.assertRaises(ValueError, self.instrument.read_bit, 62, -1)
+        self.assertRaises(ValueError, self.instrument.read_bit, 62, 128)
     
     def testReadBitWrongFunctioncodeType(self):
-        pass
+        self.assertRaises(TypeError, self.instrument.read_bit, 62, 1.0)
+        self.assertRaises(TypeError, self.instrument.read_bit, 62, '1')
+        self.assertRaises(TypeError, self.instrument.read_bit, 62, [1])
+        self.assertRaises(TypeError, self.instrument.read_bit, 62, None)
                     
+    def testReadBitWithWrongByteCountResponse(self):
+        pass    
+        
     ## Write bit ##
     
     def testWriteBit(self):        
@@ -843,6 +905,7 @@ class TestDummyCommunication(unittest.TestCase):
         
     def testWriteRegister(self):    
         self.instrument.write_register(35, 20)    
+        self.instrument.write_register(35, 20.0) 
         self.instrument.write_register(24, 50)    
         self.instrument.write_register(45, 88, functioncode = 6)     
         
@@ -851,12 +914,13 @@ class TestDummyCommunication(unittest.TestCase):
         self.instrument.write_register(45, 8.8, 1, functioncode = 6)       
 
     def testWriteRegisterWithWrongValue(self):
-        pass
-        
+        self.assertRaises(ValueError, self.instrument.write_register, 35, -1) 
+        self.assertRaises(ValueError, self.instrument.write_register, 35, 65536)
         
     def testWriteRegisterWithWrongValueType(self):
-        pass
-                
+        self.assertRaises(TypeError, self.instrument.write_register, 35, '20') 
+        self.assertRaises(TypeError, self.instrument.write_register, 35, [20])         
+        self.assertRaises(TypeError, self.instrument.write_register, 35, None)
         
     def testWriteRegisterWithNegativeNumberofdecimals(self):
         self.assertRaises(ValueError, self.instrument.write_register, 35, 20, -1)     
@@ -875,6 +939,13 @@ class TestDummyCommunication(unittest.TestCase):
         self.assertRaises(TypeError, self.instrument.write_register, 35, 20, functioncode = 16.0 ) 
         self.assertRaises(TypeError, self.instrument.write_register, 35, 20, functioncode = None ) 
         
+    def testWriteRegisterWithWrongFunctioncodeResponse(self):
+        pass    
+    
+    def testWriteRegisterWithWrongWritedataResponse(self):
+        # Use functioncode 6
+        pass        
+        
     def testWriteRegisterWithWrongCrcResponse(self):    
         self.assertRaises(ValueError, self.instrument.write_register, 51, 99 ) # Slave gives wrong CRC
         
@@ -884,32 +955,75 @@ class TestDummyCommunication(unittest.TestCase):
     def testWriteRegisterWithWrongRegisteraddressResponse(self): 
         self.assertRaises(ValueError, self.instrument.write_register, 53, 99 ) # Slave gives wrong registeraddress
     
-    ## Tear down fixture ##
+    def testWriteRegisterWithWrongSlaveaddressResponse(self): 
+        self.assertRaises(ValueError, self.instrument.write_register, 54, 99 ) # Slave gives wrong slaveaddress
+    
+    ## Generic function
+    pass
+    
+    ## Tear down test fixture ##
         
     def tearDown(self):
         self.instrument = None
         del(self.instrument)
 
 
+class TestDummyCommunicationOmegaSlave1(unittest.TestCase):
+
+    def setUp(self):   
+        import dummy_serial
+        dummy_serial.RESPONSES = RESPONSES
+        minimalmodbus.serial.Serial = dummy_serial.Serial
+        self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1) # port name, slave address (in decimal)
+
+    def testReadBit(self):  
+        self.assertEqual( self.instrument.read_bit(2068), 1 )
+
+    def testWriteBit(self): 
+        self.instrument.write_bit(2068, 0)
+        self.instrument.write_bit(2068, 1)
+
+    def testReadRegister(self): 
+        self.assertAlmostEqual( self.instrument.read_register(4097, 1), 823.6 ) 
+
+    def testWriteRegister(self):  
+        self.instrument.write_register(4097, 700.0, 1)
+        self.instrument.write_register(4097, 823.6, 1)
+        
+        
+class TestDummyCommunicationOmegaSlave10(unittest.TestCase):
+
+    def setUp(self):   
+        import dummy_serial
+        dummy_serial.RESPONSES = RESPONSES
+        minimalmodbus.serial.Serial = dummy_serial.Serial
+        self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 10) # port name, slave address (in decimal)
+
+    def testReadBit(self):  
+        self.assertEqual( self.instrument.read_bit(2068), 1 )
+
+    def testWriteBit(self): 
+        self.instrument.write_bit(2068, 0)
+        self.instrument.write_bit(2068, 1)
+
+    def testReadRegister(self): 
+        self.assertAlmostEqual( self.instrument.read_register(4096, 1), 25.0 ) 
+        self.assertAlmostEqual( self.instrument.read_register(4097, 1), 325.8 ) 
+
+    def testWriteRegister(self):  
+        self.instrument.write_register(4097, 325.8, 1)
+        self.instrument.write_register(4097, 20.0, 1)
+        self.instrument.write_register(4097, 200.0, 1)     
+
+        
 class TestDummyCommunicationWithPortClosure(unittest.TestCase):
 
     def setUp(self):   
-    
-        # Prepare a dummy serial port to have proper responses
         import dummy_serial
-        dummy_serial.VERBOSE = False
         dummy_serial.RESPONSES = RESPONSES
-        dummy_serial.DEFAULT_RESPONSE = 'NotFoundInDictionary'
-
-        # Monkey-patch a dummy serial port for testing purpose
         minimalmodbus.serial.Serial = dummy_serial.Serial
-        
-        # Mimic a WindowsXP serial port
-        minimalmodbus._CLOSE_PORT_AFTER_EACH_CALL = True
-
-        # Initialize a (dummy) instrument
+        minimalmodbus._CLOSE_PORT_AFTER_EACH_CALL = True # Mimic a WindowsXP serial port
         self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1) # port name, slave address (in decimal)
-        self.instrument._debug = False
 
     def testReadRegisterSeveralTimes(self):
         self.assertEqual( self.instrument.read_register(289), 770 )
@@ -933,22 +1047,12 @@ class TestDummyCommunicationWithPortClosure(unittest.TestCase):
 class TestVerboseDummyCommunicationWithPortClosure(unittest.TestCase):
 
     def setUp(self):   
-    
-        # Prepare a dummy serial port to have proper responses
         import dummy_serial
         dummy_serial.VERBOSE = True
         dummy_serial.RESPONSES = RESPONSES
-        dummy_serial.DEFAULT_RESPONSE = 'NotFoundInDictionary'
-
-        # Monkey-patch a dummy serial port for testing purpose
         minimalmodbus.serial.Serial = dummy_serial.Serial
-        
-        # Mimic a WindowsXP serial port
-        minimalmodbus._CLOSE_PORT_AFTER_EACH_CALL = True
-
-        # Initialize a (dummy) instrument
+        minimalmodbus._CLOSE_PORT_AFTER_EACH_CALL = True # Mimic a WindowsXP serial port
         self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1) # port name, slave address (in decimal)
-        self.instrument._debug = False
 
     def testReadRegister(self):
         self.assertEqual( self.instrument.read_register(289), 770 )   
@@ -961,17 +1065,9 @@ class TestVerboseDummyCommunicationWithPortClosure(unittest.TestCase):
 class TestDummyCommunicationDebugmode(unittest.TestCase):
 
     def setUp(self):   
-    
-        # Prepare a dummy serial port to have proper responses
         import dummy_serial
-        dummy_serial.VERBOSE = False
         dummy_serial.RESPONSES = RESPONSES
-        dummy_serial.DEFAULT_RESPONSE = 'NotFoundInDictionary'
-
-        # Monkey-patch a dummy serial port for testing purpose
         minimalmodbus.serial.Serial = dummy_serial.Serial
-        
-        # Initialize a (dummy) instrument
         self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1) # port name, slave address (in decimal)
         self.instrument._debug = True
 
@@ -1047,6 +1143,12 @@ RESPONSES['\x01\x10' + '\x00\x34\x00\x01' + '\x02\x00\x63' + '\xe2\r'] = '\x01\x
 # Response: Slave address 1, function code 16. Register address 54 (wrong), 1 register. CRC.
 RESPONSES['\x01\x10' + '\x00\x35\x00\x01' + '\x02\x00\x63' + '\xe3\xdc'] = '\x01\x10' + '\x00\x36\x00\x01' + '\xe1\xc7'
 
+# Write value 99 in register 54 on slave 1 using function code 16, slave gives wrong slave address #
+# ----------------------------------------------------------------------------------------------------#
+# Message:  Slave address 1, function code 16. Register address 54, 1 register, 2 bytes, value=99. CRC. 
+# Response: Slave address 2 (wrong), function code 16. Register address 54, 1 register. CRC.
+RESPONSES['\x01\x10' + '\x00\x36\x00\x01' + '\x02\x00\x63' + '\xe3\xef'] = '\x02\x10' + '\x00\x36\x00\x01' + '\xe1\xf4'
+
 # Read bit register 61 on slave 1 using function code 2 #   
 # ----------------------------------------------------- #
 # Message:  Slave address 1, function code 2. Register address 61, 1 coil. CRC. 
@@ -1062,7 +1164,7 @@ RESPONSES['\x01\x01' + '\x00\x3e\x00\x01' + '\x9c\x06'] = '\x01\x01' + '\x01\x00
 # Write bit register 71 on slave 1 using function code 5 #   
 # ------------------------------------------------------ #
 # Message:  Slave address 1, function code 5. Register address 71, value 1 (FF00). CRC. 
-# Response: Slave address 1, function code 5. ?????  1 byte, value=1. CRC.
+# Response: Slave address 1, function code 5. Register address 71, value 1 (FF00). CRC.
 RESPONSES['\x01\x05' + '\x00\x47\xff\x00' + '</'] = '\x01\x05' + '\x00\x47\xff\x00' + '</'
 
 # Write bit register 72 on slave 1 using function code 15 #   
@@ -1075,6 +1177,53 @@ RESPONSES['\x01\x0f' + '\x00\x48\x00\x01\x01\x01' + '\x0fY'] = '\x01\x0f' + '\x0
 # -------------------------- #
 RESPONSES['MessageForEmptyResponse'] = ''
 
+
+## Recorded data from OmegaCN7500 ##
+####################################
+
+# Slave address 1, read_bit(2068) Response value 1 
+RESPONSES['\x01\x02\x08\x14\x00\x01\xfb\xae'] ='\x01\x02\x01\x01`H'
+
+# Slave address 1, write_bit(2068, 0)
+RESPONSES['\x01\x05\x08\x14\x00\x00\x8f\xae'] ='\x01\x05\x08\x14\x00\x00\x8f\xae'
+
+# Slave address 1, write_bit(2068, 1)
+RESPONSES['\x01\x05\x08\x14\xff\x00\xce^'] ='\x01\x05\x08\x14\xff\x00\xce^'
+
+# Slave address 1, read_register(4097, 1) Response value 823.6
+RESPONSES['\x01\x03\x10\x01\x00\x01\xd1\n'] ='\x01\x03\x02 ,\xa0Y'
+
+# Slave address 1, write_register(4097, 700.0, 1)
+RESPONSES['\x01\x10\x10\x01\x00\x01\x02\x1bX\xbdJ'] ='\x01\x10\x10\x01\x00\x01T\xc9'
+
+# Slave address 1, write_register(4097, 823.6, 1)
+RESPONSES['\x01\x10\x10\x01\x00\x01\x02 ,\xae]'] ='\x01\x10\x10\x01\x00\x01T\xc9'
+
+# Slave address 10, read_bit(2068) Response value 1
+RESPONSES['\n\x02\x08\x14\x00\x01\xfa\xd5'] = '\n\x02\x01\x01bl'
+
+# Slave address 10, write_bit(2068, 0)
+RESPONSES['\n\x05\x08\x14\x00\x00\x8e\xd5'] ='\n\x05\x08\x14\x00\x00\x8e\xd5'
+
+# Slave address 10, write_bit(2068, 1)
+RESPONSES['\n\x05\x08\x14\xff\x00\xcf%'] ='\n\x05\x08\x14\xff\x00\xcf%'
+
+# Slave address 10, read_register(4096, 1) Response value 25.0
+RESPONSES['\n\x03\x10\x00\x00\x01\x81\xb1'] ='\n\x03\x02\x00\xfa\x9d\xc6'
+
+# Slave address 10, read_register(4097, 1) Response value 325.8
+RESPONSES['\n\x03\x10\x01\x00\x01\xd0q'] ='\n\x03\x02\x0c\xba\x996'
+
+# Slave address 10, write_register(4097, 325.8, 1)
+RESPONSES['\n\x10\x10\x01\x00\x01\x02\x0c\xbaA\xc3'] ='\n\x10\x10\x01\x00\x01U\xb2'
+
+# Slave address 10, write_register(4097, 20.0, 1)
+RESPONSES['\n\x10\x10\x01\x00\x01\x02\x00\xc8\xc4\xe6'] ='\n\x10\x10\x01\x00\x01U\xb2'
+
+# Slave address 10, write_register(4097, 200.0, 1)
+RESPONSES['\n\x10\x10\x01\x00\x01\x02\x07\xd0\xc6\xdc'] ='\n\x10\x10\x01\x00\x01U\xb2'
+
+
 #################
 # Run the tests #
 #################
@@ -1082,9 +1231,10 @@ RESPONSES['MessageForEmptyResponse'] = ''
 if __name__ == '__main__':
 
     #print hex(61)
-    #print repr( minimalmodbus._calculateCrcString( '\x01\x0f' + '\x00\x48\x00\x01' ) )
+    #print repr( minimalmodbus._calculateCrcString( '\x01\x10' + '\x00\x36\x00\x01' + '\x02\x00\x63' ) )
 
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestDummyCommunication)
+    #suite = unittest.TestLoader().loadTestsFromTestCase(TestDummyCommunicationOmegaSlave10)
     #unittest.TextTestRunner(verbosity=0).run(suite)
 
     unittest.main()
