@@ -204,6 +204,10 @@ class Instrument():
                         
         _checkFunctioncode(functioncode, None)
         _checkRegisteraddress(registeraddress)
+        
+        if not isinstance(value, type(None)):
+            _checkNumerical(value, minvalue=0, description='input value')
+        _checkInt(numberOfDecimals, minvalue=0, description='number of decimals' )
                    
         ## Build payload to slave
         
@@ -502,10 +506,9 @@ def _numToTwoByteString(value, numberOfDecimals = 0, LsbFirst = False):
         why the resulting string is ``BACKSLASHx03BACKSLASHx02``, which has the length 2.
 
     """
+    
+    _checkNumerical(value, minvalue=0, description='inputvalue')
     _checkInt(numberOfDecimals, minvalue=0, description='number of decimals' )
-
-    if value < 0:
-        raise ValueError( 'The input value must not be negative. Given: {0}'.format(value) )
 
     if not isinstance( LsbFirst, bool ):
         raise TypeError( 'The LsbFirst must be a boolean. Given: {0}'.format(LsbFirst) )    
@@ -956,6 +959,38 @@ def _checkInt(inputvalue, minvalue=None, maxvalue=None, description='inputvalue'
     if not isinstance(maxvalue, (int, type(None))):
         raise TypeError( 'The maxvalue must be an integer or None. Given: {0}'.format(repr(maxvalue)) )
     
+    _checkNumerical(inputvalue, minvalue, maxvalue, description)           
+
+def _checkNumerical(inputvalue, minvalue=None, maxvalue=None, description='inputvalue'):
+    """Check that the given numerical value is valid.
+
+    Args:
+        * inputvalue (numerical): The value to be checked.
+        * minvalue (numerical): Minimum value 
+        * maxvalue (numerical): Maximum value 
+        * description (string): Used in error messages for the checked inputvalue
+    
+    Raises:
+        TypeError, ValueError
+
+    Note: Can not use the function _checkString(), as it uses this function internally.
+
+    """        
+    
+    # Type checking
+        
+    if not isinstance(description, str):
+        raise TypeError( 'The description should be a string. Given: {0}'.format(repr(description)) )
+       
+    if not isinstance(inputvalue, (int, float)):
+        raise TypeError( 'The {0} must be numerical. Given: {1}'.format(description, repr(inputvalue)) )
+    
+    if not isinstance(minvalue, (int, float, type(None))):
+        raise TypeError( 'The minvalue must be numeric or None. Given: {0}'.format(repr(minvalue)) )
+
+    if not isinstance(maxvalue, (int, float, type(None))):
+        raise TypeError( 'The maxvalue must be numeric or None. Given: {0}'.format(repr(maxvalue)) )
+    
     # Consistency checking
     if (not minvalue is None) and (not maxvalue is None): 
         if maxvalue < minvalue:
@@ -971,8 +1006,8 @@ def _checkInt(inputvalue, minvalue=None, maxvalue=None, description='inputvalue'
     if not maxvalue is None:          
         if inputvalue > maxvalue:
             raise ValueError( 'The {0} is too large: {1}, but maximum value is {2}.'.format( \
-                description, inputvalue, maxvalue))                  
-                
+                description, inputvalue, maxvalue))       
+                                
 
 #####################
 # Development tools #
