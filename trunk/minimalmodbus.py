@@ -930,7 +930,7 @@ def _checkString(inputstring, minlength=0, maxlength=None, description='input st
             raise ValueError( 'The {0} is too long: {1}, but maximum value is {2}. Given: {3}'.format( \
                 description, len(inputstring), maxlength, repr(inputstring)))       
     
-def _checkInt(inputvalue, minvalue=None, maxvalue=None, description='inputvalue' ):
+def _checkInt(inputvalue, minvalue=None, maxvalue=None, description='inputvalue'):
     """Check that the given integer is valid.
 
     Args:

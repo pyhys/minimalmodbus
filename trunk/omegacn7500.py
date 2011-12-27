@@ -47,6 +47,16 @@ actual_step_addresses = range(4160, 4168)
 additional_cycles_addresses = range(4176, 4184)
 link_pattern_addresses = range(4192, 4200)
 
+
+CONTROL_MODES = {0: 'PID', 1: 'ON/OFF',  2: 'Manual Tuning',  3: 'Program'} #   
+
+SETPOINT_MAX = 999.9
+"""Default value for maximum allowed setpoint"""
+#I only allow our users to set our furnaces to 1000C, and with one decimal place on the display the maximum value is 999.9. 
+
+TIME_MAX = 900
+"""Default value for maximum allowed setpoint"""
+
 class OmegaCN7500( minimalmodbus.Instrument ):
     """Instrument class for Omega CN7500 process controller. 
     
@@ -75,7 +85,9 @@ class OmegaCN7500( minimalmodbus.Instrument ):
     * Number of cycles (repetitions of this pattern)
     * Actual step (which step to stop at)
     
-
+    Attributes:
+        * setpoint_max
+        * time_max
 
     Implemented with these function codes (in decimal):
         
@@ -92,7 +104,9 @@ class OmegaCN7500( minimalmodbus.Instrument ):
     
     def __init__(self, portname, slaveaddress):
         minimalmodbus.Instrument.__init__(self, portname, slaveaddress)
-    
+        self.setpoint_max = SETPOINT_MAX
+        self.time_max = TIME_MAX
+        
     ## Process value
     
     def get_pv(self):
@@ -124,43 +138,31 @@ class OmegaCN7500( minimalmodbus.Instrument ):
         
         Args:
             value (float): Setpoint [most often in degrees]
+            
         """
-        if value <= 999.9:
-            self.write_register( 4097, value, 1)
-        else:
-            #I only allow our users to set our furnaces to 1000C, and with one decimal place on the display the maximum value is 999.9. 
-            value = 999.9
-            print 'Nice try rookie, how about 1000?'
-            return self.write_register(4097, value, 1)
+        _checkSetpointValue( value, self.setpoint_max )
+        self.write_register( 4097, value, 1)
 
     ## Control Mode
 
     def get_control_mode(self):
-        """Return the integer value corresponding to the current operation mode."""
+        """Return the integer value ??????????????  corresponding to the current operation mode."""
         mode_value = self.read_register(4101)
-        if mode_value == 0:
-            mode_string = 'PID'
-            return mode_string
-        if mode_value == 1:
-            mode_string = 'ON/OFF'
-            return mode_string
-        if mode_value == 2:
-            mode_string = 'Manual Tuning'
-            return mode_string
-        if mode_value == 3:
-            mode_string = 'Program'
-            return mode_string
+        
+        try:
+            return CONTROL_MODES[mode_value]
+        except KeyError:
+            raise ValueError( 'Could not parse the control mode value: {0}'.format( repr(mode_value)) )
+
 
     def set_control_mode(self, value):
         """Set the control method using the corresponding integer value.
                 
         Args:
-            value (float): PID-0, ON/OFF-1, Tuning-2, Program-3
+            value (float ????): PID-0, ON/OFF-1, Tuning-2, Program-3
         """
-        if 0 <= value <= 3:
-            return self.write_register(4101, value)
-        else:
-            return 'Not a valid control value: PID-0, ON/OFF-1, Tuning-2, Program-3'
+        minimalmodbus._checkInt(value, minvalue=0, maxvalue=3, description='control mode') 
+        self.write_register(4101, value)
 
     ## Set program pattern variables
 
@@ -174,10 +176,8 @@ class OmegaCN7500( minimalmodbus.Instrument ):
         Args:
             value (integer): From 0-7
         """
-        if 0 <= value <= 7:
-            return self.write_register(4144, value, 0)
-        else:
-            return 'Not a valid pattern number, must be 0-7'
+        _checkPatternNumber( value )
+        self.write_register(4144, value, 0)
     
     def get_pattern_step_setpoint(self, pattern, step):
         """Return the value of the desired pattern step.
@@ -187,13 +187,11 @@ class OmegaCN7500( minimalmodbus.Instrument ):
 
             step (integer): From 0-7
         """
-        if 0<=pattern<=7 and 0<=step<=7:
-            address = setpoint_addresses[pattern][step] 
-            return self.read_register(address, 1)
-        elif pattern not in range(0,8):
-            return 'Not a valid pattern number, must be 0-7'
-        elif step not in range(0,8):
-            return 'Not a valid step number, must be 0-7'
+        _checkPatternNumber( pattern )
+        _checkStepNumber( step )
+        
+        address = setpoint_addresses[pattern][step]
+        return self.read_register(address, 1)
         
     def set_pattern_step_setpoint(self, pattern, step, value):
         """Set the value of the desired pattern step
@@ -205,16 +203,13 @@ class OmegaCN7500( minimalmodbus.Instrument ):
 
             value (float): Setpoint value
         """
-        if 0<=pattern<=7 and 0<=step<=7 and 0 <= value <= 999.9:
-            address = setpoint_addresses[pattern][step]
-            return self.write_register(address, value, 1)
-        elif pattern not in range(0,8):
-            return 'Not a valid pattern number, must be 0-7'
-        elif step not in range(0,8):
-            return 'Not a valid step number, must be 0-7'
-        elif value > 999.9:
-            return 'Nice try rookie, how about 1000?'
-
+        _checkPatternNumber( pattern )
+        _checkStepNumber( step )
+        _checkSetpointValue( value, self.setpoint_max  )
+        
+        address = setpoint_addresses[pattern][step]
+        self.write_register(address, value, 1)
+            
     def get_pattern_step_time(self, pattern, step):
         """Return the value of the desired pattern step time.
 
@@ -223,13 +218,11 @@ class OmegaCN7500( minimalmodbus.Instrument ):
 
             step (integer): From 0-7
         """
-        if 0<=pattern<=7 and 0<=step<=7:
-            address = time_addresses[pattern][step]
-            return self.read_register(address, 0)
-        elif pattern not in range(0,8):
-            return 'Not a valid pattern number, must be 0-7'
-        elif step not in range(0,8):
-            return 'Not a valid step number, must be 0-7'
+        _checkPatternNumber( pattern )
+        _checkStepNumber( step )
+        
+        address = time_addresses[pattern][step]
+        return self.read_register(address, 0)
 
     def set_pattern_step_time(self, pattern, step, value):
         """Set the value of the desired pattern step time.
@@ -241,16 +234,13 @@ class OmegaCN7500( minimalmodbus.Instrument ):
 
             value (integer): From 0-900
         """
-        if  0<=pattern<=7 and 0<=step<=7 and 0 <= value <= 900:
-            address = time_addresses[pattern][step]
-            return self.write_register(address, value, 0)
-        elif pattern not in range(0,8):
-            return 'Not a valid pattern number, must be 0-7'
-        elif step not in range(0,8):
-            return 'Not a valid step number, must be 0-7'
-        elif value > 900: 
-            return 'Time must be between 0-900'
-
+        _checkPatternNumber( pattern )
+        _checkStepNumber( step )
+        _checkTimeValue( value, self.time_max )
+        
+        address = time_addresses[pattern][step]
+        self.write_register(address, value, 0)
+        
     def get_pattern_actual_step(self, pattern):
         """Return the value of the actual step parameter for a given pattern.
 
@@ -448,12 +438,34 @@ class OmegaCN7500( minimalmodbus.Instrument ):
         """Return the output value (OP) for output1 [in %]."""
         return self.read_register( 0x1012, 1)
    
+def _checkPatternNumber( patternnumber ):
+    minimalmodbus._checkInt(patternnumber, minvalue=0, maxvalue=7, description='pattern number') 
+
+def _checkStepNumber( stepnumber ):
+    minimalmodbus._checkInt(stepnumber, minvalue=0, maxvalue=7, description='step number') 
+
+def _checkSetpointValue( setpointvalue, maxvalue ):   
+    minimalmodbus._checkNumerical(setpointvalue, minvalue=0, maxvalue=maxvalue, description='setpoint value')   
+   
+def _checkTimeValue( timevalue, maxvalue ):   
+    minimalmodbus._checkNumerical(timevalue, minvalue=0, maxvalue=maxvalue, description='time value')     
+    
+    
+    
 ########################
 ## Testing the module ##
 ########################
 
 if __name__ == '__main__':
 
+    
+    #_checkStepNumber(8)
+    #_checkStepNumber(-3)
+    #_checkSetpointValue( 1200, 1000 )
+    
+    print CONTROL_MODES[2]
+    quit()
+    
     import sys       
     
     def print_out( inputstring ):
