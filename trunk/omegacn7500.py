@@ -64,6 +64,19 @@ class OmegaCN7500( minimalmodbus.Instrument ):
             
         * slaveaddress (int): slave address in the range 1 to 247 (in decimal)
 
+    The controller can be used to follow predefined temperature programs, called patterns. 
+    Eight patterns (numbered 0-7) are available, each having eight temperature steps (numbered 0-7).
+    
+    Each pattern have these parameters:
+    
+    * Temperature for each step (8 parameters)
+    * Time for each step (8 parameters)
+    * Link to another pattern
+    * Number of cycles (repetitions of this pattern)
+    * Actual step (which step to stop at)
+    
+
+
     Implemented with these function codes (in decimal):
         
     ==================  ====================
