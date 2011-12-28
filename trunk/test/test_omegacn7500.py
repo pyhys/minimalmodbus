@@ -21,7 +21,7 @@
 
 test_omegacn7500: Unittests for omegacn7500
 
-Uses a dummy serial port from the module dummy_serial.
+Uses a dummy serial port from the module :py:mod:`dummy_serial`.
 
 This Python file was changed (committed) at $Date$, 
 which was $Revision$.
@@ -42,6 +42,99 @@ import dummy_serial
 ###########################################
 # Communication using a dummy serial port #
 ###########################################
+
+class TestCalculateRegisterAddress(unittest.TestCase):
+
+    knownValues=[
+    ('setpoint',    0, 0,       8192), # registertype, patternnumber, stepnumber, knownresult
+    ('setpoint',    1, 0,       8200),
+    ('time',        0, 0,       8320),
+    ('time',        0, 1,       8321),
+    ('time',        1, 0,       8328),
+    ('actualstep',  0, None,    4160),
+    ('actualstep',  0, 0,       4160),
+    ('actualstep',  1, None,    4161),
+    ('actualstep',  1, 0,       4161),
+    ('actualstep',  1, 5,       4161), # Stepnumber should have no effect.
+    ('cycles',      0, None,    4176),
+    ('cycles',      1, None,    4177),
+    ('linkpattern', 0, None,    4192),
+    ('linkpattern', 1, None,    4193),
+    ]
+
+    def testKnownValues(self):
+        for registertype, patternnumber, stepnumber, knownresult in self.knownValues:
+            
+            resultvalue = omegacn7500._calculateRegisterAddress(registertype, patternnumber, stepnumber)
+            self.assertEqual(resultvalue, knownresult)      
+
+    def testWrongValues(self):
+        self.assertRaises(ValueError, omegacn7500._calculateRegisterAddress, 0,             0, 0)
+        self.assertRaises(ValueError, omegacn7500._calculateRegisterAddress, 1.0,           0, 0)
+        self.assertRaises(ValueError, omegacn7500._calculateRegisterAddress, 'ABC',         0, 0)
+        self.assertRaises(ValueError, omegacn7500._calculateRegisterAddress, None,          0, 0)
+        self.assertRaises(ValueError, omegacn7500._calculateRegisterAddress, ['setpoint'],  0, 0)
+        self.assertRaises(ValueError, omegacn7500._calculateRegisterAddress, 'setpoint',    -1, 0)
+        self.assertRaises(ValueError, omegacn7500._calculateRegisterAddress, 'setpoint',    8, 0)
+        self.assertRaises(ValueError, omegacn7500._calculateRegisterAddress, 'setpoint',    0, -1)
+        self.assertRaises(ValueError, omegacn7500._calculateRegisterAddress, 'setpoint',    0, 8)
+          
+    def testWrongType(self):
+        self.assertRaises(TypeError, omegacn7500._calculateRegisterAddress, 'setpoint', 0.0,  0)   
+        self.assertRaises(TypeError, omegacn7500._calculateRegisterAddress, 'setpoint', [0],  0) 
+        self.assertRaises(TypeError, omegacn7500._calculateRegisterAddress, 'setpoint', None, 0) 
+        self.assertRaises(TypeError, omegacn7500._calculateRegisterAddress, 'setpoint', 0,    0.0) 
+        self.assertRaises(TypeError, omegacn7500._calculateRegisterAddress, 'setpoint', 0,    [0]) 
+
+class TestCheckPatternNumber(unittest.TestCase):
+
+    def testKnownResults(self):
+        omegacn7500._checkPatternNumber(0)
+        omegacn7500._checkPatternNumber(3)
+        omegacn7500._checkPatternNumber(7)
+
+    def testWrongValue(self):
+        self.assertRaises(ValueError, omegacn7500._checkPatternNumber, -1)
+        self.assertRaises(ValueError, omegacn7500._checkPatternNumber, 8)
+        self.assertRaises(ValueError, omegacn7500._checkPatternNumber, 99)
+        self.assertRaises(ValueError, omegacn7500._checkPatternNumber, 12345)
+
+    def testNotIntegerInput(self):
+        self.assertRaises(TypeError, omegacn7500._checkPatternNumber, '1')
+        self.assertRaises(TypeError, omegacn7500._checkPatternNumber, 1.0)
+        self.assertRaises(TypeError, omegacn7500._checkPatternNumber, [1])
+        self.assertRaises(TypeError, omegacn7500._checkPatternNumber, None)
+
+
+class TestCheckStepNumber(unittest.TestCase):
+
+    def testKnownResults(self):
+        omegacn7500._checkStepNumber(0)
+        omegacn7500._checkStepNumber(3)
+        omegacn7500._checkStepNumber(7)
+
+    def testWrongValue(self):
+        self.assertRaises(ValueError, omegacn7500._checkStepNumber, -1)
+        self.assertRaises(ValueError, omegacn7500._checkStepNumber, 8)
+        self.assertRaises(ValueError, omegacn7500._checkStepNumber, 99)
+        self.assertRaises(ValueError, omegacn7500._checkStepNumber, 12345)
+
+    def testNotIntegerInput(self):
+        self.assertRaises(TypeError, omegacn7500._checkStepNumber, '1')
+        self.assertRaises(TypeError, omegacn7500._checkStepNumber, 1.0)
+        self.assertRaises(TypeError, omegacn7500._checkStepNumber, [1])
+        self.assertRaises(TypeError, omegacn7500._checkStepNumber, None)
+
+
+class TestCheckSetpointValue(unittest.TestCase):
+    
+    pass
+    
+    
+class TestCheckTimeValue(unittest.TestCase):
+    
+    pass    
+    
 
 class TestDummyCommunication_Slave1(unittest.TestCase):
 
@@ -82,6 +175,14 @@ class TestDummyCommunication_Slave1(unittest.TestCase):
     
     def testSetControlMode(self):   
         self.instrument.set_control_mode(3)
+
+    def testSetControlModeWithWrongValue(self):   
+        pass
+        #self.instrument.set_control_mode(3)
+
+    def testSetControlModeWithWrongValueType(self):   
+        pass
+        #self.instrument.set_control_mode(3)
 
     def testGetStartPatternNo(self):       
         self.assertEqual( self.instrument.get_start_pattern_no(), 2)
@@ -124,7 +225,8 @@ class TestDummyCommunication_Slave1(unittest.TestCase):
         
     def testGetAllPatternVariables(self):     
         print '\nSlave address 1:'     
-        self.instrument.get_all_pattern_variables(0) 
+        print self.instrument.get_all_pattern_variables(0) 
+        pass
 
     def testSetAllPatternVariables(self):       
         self.instrument.set_all_pattern_variables(0,
@@ -256,6 +358,7 @@ RESPONSES['\x01\x10\x10\x01\x00\x01\x02\x03\xe8\xb6\xfe'] = '\x01\x10\x10\x01\x0
 
 # Slave address 1, get_control_mode()        
 RESPONSES['\x01\x03\x10\x05\x00\x01\x90\xcb'] = '\x01\x03\x02\x00\x00\xb8D'    
+#RESPONSES['\x01\x03\x10\x05\x00\x01\x90\xcb'] = '\x01\x03\x02\x00\x09xB'  # Use this for testing wrong controlmode
 
 # Slave address 1, set_control_mode()  
 RESPONSES['\x01\x10\x10\x05\x00\x01\x02\x00\x03\xf7\xc5'] = '\x01\x10\x10\x05\x00\x01\x15\x08'
@@ -435,3 +538,7 @@ RESPONSES['\n\x10\x10`\x00\x01\x02\x00\x01\x0c\xc1'] = '\n\x10\x10`\x00\x01\x04l
     
 if __name__ == '__main__':
     unittest.main()  
+    
+    #suite = unittest.TestLoader().loadTestsFromTestCase(TestCalculateRegisterAddress)
+    #unittest.TextTestRunner(verbosity=0).run(suite)
+

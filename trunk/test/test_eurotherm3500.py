@@ -21,7 +21,7 @@
 
 test_eurotherm3500: Unittests for eurotherm3500
 
-Uses a dummy serial port from the module dummy_serial.
+Uses a dummy serial port from the module :py:mod:`dummy_serial`.
 
 This Python file was changed (committed) at $Date$, 
 which was $Revision$.

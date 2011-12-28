@@ -75,6 +75,10 @@ Run unit tests (in the :file:`trunc/test` directory)::
     
     python test_all.py
 
+
+2to3 tool
+
+
 Test the source distribution build (look in the PKG-INFO file)::
 
     python setup.py sdist
