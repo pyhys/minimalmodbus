@@ -5,7 +5,7 @@ Introduction
 ------------
 MinimalModbus is an easy-to-use Python module for talking to instruments (slaves) from a computer (master) using the Modbus protocol. Example code includes drivers for Eurotherm process controllers. The only dependence is the pySerial module. 
 
-This software supports the 'Modbus RTU' serial communication version of the protocol, and is intended for use on Linux and Windows platforms. It is open source, and has the Apache License, Version 2.0.
+This software supports the 'Modbus RTU' serial communication version of the protocol, and is intended for use on Linux, OS X and Windows platforms. It is open source, and has the Apache License, Version 2.0.
 
 General on Modbus protocol
 --------------------------
@@ -50,7 +50,7 @@ For example, consider an instrument (slave) with address number 1 to which we ar
     instrument = minimalmodbus.Instrument('/dev/ttyUSB1', 1) # port name, slave address (in decimal)
 
     ## Read temperature (PV = ProcessValue) ##
-    temperature = instrument.read_register( 289, 1 ) # Registernumber, number of decimals
+    temperature = instrument.read_register(289, 1) # Registernumber, number of decimals
     print temperature
 
     ## Change temperature setpoint (SP) ##
@@ -140,9 +140,9 @@ In Modbus RTU, the request message is sent from the master in this format::
     
     Slave address [1 Byte], Function code [1 Byte], Payload data [0 to 252 Bytes], CRC [2 Bytes].
 
-For the function code, the allowed range is 1 to 127 (in decimal). 
-
-The CRC is a cyclic redundacy check code, for error checking of the message. The response from the client is similar, but with another payload data.
+  * For the function code, the allowed range is 1 to 127 (in decimal). 
+  * The CRC is a cyclic redundacy check code, for error checking of the message. 
+  * The response from the client is similar, but with another payload data.
 
 ============================== ============================================================================================== ======================================================
 Function code (in decimal)     Payload data to slave (Request)                                                                Payload data from slave (Response)                  
@@ -178,17 +178,6 @@ when communicating with more than one instrument. It is possible to make Minimal
     print instrument.read_register( 289, 1 ) 
 
 	
-Unit testing
-------------
-Unit tests are provided in the /test subfolder. To run them::
-
-    python test_minimalmodbus.py
-    
-Also a dummy/mock/stub for the serial port is provided for test purposes.
-
-The test coverage analysis is found at http://minimalmodbus.sourceforge.net/htmlcov/index.html. To see which parts of the code that have been tested, click the file name.	
-	
-	
 Licence
 -------
 Apache License, Version 2.0.
@@ -205,6 +194,33 @@ Python package index
 The SourceForge project page
     http://sourceforge.net/projects/minimalmodbus/ with bug tracker, mailing list and subversion repository ( http://minimalmodbus.svn.sourceforge.net/viewvc/minimalmodbus/trunk/ ).
 
+Support
+-------
+Send a mail to minimalmodbus-list@lists.sourceforge.net
+
+Describe the problem in detail, and include any error messsages. Please also include the output after running::
+
+  >>> import minimalmodbus 
+  >>> print minimalmodbus._getDiagnosticString()
+
+Note that it can be very helpful to switch on the debug mode, where the communication 
+details are printed. See the 'Develop' section above.
+
+Author
+------
+Jonas Berg, pyhys@users.sourceforge.net
+
+
+Credits
+-------
+Significant contributions by Aaron LaLonde.
+
+
+Feedback
+--------
+If you find this software useful, then please leave a review on the SourceForge project page (Log-in is required).
+
+Please also subscribe to the (low volume) mailing list minimalmodbus-list@lists.sourceforge.net (see https://lists.sourceforge.net/lists/listinfo/minimalmodbus-list) so you can help other users getting started.
 	
 Develop
 -------
@@ -229,34 +245,20 @@ ASCII control signs. For example 'vertical tab' and 'line feed' are among those.
 	print repr(bytestringname)
 	
 The details printed in debug mode (messages and responses) are very useful for using the dummy_serial port for unit testing purposes. For examples, see the file /test/test_minimalmodbus.py
+
+
+More implementation details ?? internalminimalmodbus.html
 	
-Support
--------
-Send a mail to minimalmodbus-list@lists.sourceforge.net
+Unit testing
+------------
+Unit tests are provided in the /test subfolder. To run them::
 
-Describe the problem in detail, and include any error messsages. Please also include the output after running::
+    python test_minimalmodbus.py
+    
+Also a dummy/mock/stub for the serial port is provided for test purposes.
 
-  >>> import minimalmodbus 
-  >>> print minimalmodbus._getDiagnosticString()
-
-Note that it can be very helpful to switch on the debug mode, where the communication 
-details are printed. See the 'Develop' section above.
-
-
-Author
-------
-Jonas Berg, pyhys@users.sourceforge.net
-
-
-Credits
--------
-Significant contributions by Aaron LaLonde.
-
-
-Feedback
---------
-If you find this software useful, then please leave a review on the SourceForge project page (Log-in is required).
-
+The test coverage analysis is found at http://minimalmodbus.sourceforge.net/htmlcov/index.html. To see which parts of the code that have been tested, click the file name.	
+		
 
 Related software
 ----------------

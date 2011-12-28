@@ -33,7 +33,6 @@ __license__ = "Apache License, Version 2.0"
 __revision__  = "$Rev: 83 $"
 __date__      = "$Date: 2011-12-20 11:37:59 +0100 (Tue, 20 Dec 2011) $"
 
-
 import unittest
 
 import test_minimalmodbus
@@ -44,7 +43,7 @@ if __name__ == '__main__':
    
     suite = unittest.TestLoader().loadTestsFromModule( test_minimalmodbus )
     suite.addTest( unittest.TestLoader().loadTestsFromModule(test_eurotherm3500) )
-    #suite.addTest( unittest.TestLoader().loadTestsFromModule(test_omegacn7500) )
+    suite.addTest( unittest.TestLoader().loadTestsFromModule(test_omegacn7500) )
 
     unittest.TextTestRunner(verbosity=0).run(suite)
 

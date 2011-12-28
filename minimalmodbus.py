@@ -30,7 +30,7 @@ __author__  = "Jonas Berg"
 __email__   = "pyhys@users.sourceforge.net"
 __license__ = "Apache License, Version 2.0"
 
-__version__   = "0.26"
+__version__   = "0.27"
 __status__    = "Alpha"
 __revision__  = "$Rev$"
 __date__      = "$Date$"
@@ -61,7 +61,7 @@ class Instrument():
     """Instrument class for talking to instruments (slaves) via the Modbus RTU protocol (via RS485 or RS232).
 
     Args:
-        * port (str): The serial port name, for example ``/dev/ttyS1`` or ``COM1``.
+        * port (str): The serial port name, for example ``/dev/ttyUSB0`` (linux), ``/dev/tty.usbserial`` (OS X) or ``/com3`` (Windows).
         * slaveaddress (int): Slave address in the range 1 to 247 (use decimal numbers, not hex).
 
     """
@@ -108,13 +108,13 @@ class Instrument():
 
         Args:
             * registeraddress (int): The register address (use decimal numbers, not hex).  
-            * functioncode (int): Modbus functions code. Can be 1 or 2.
+            * functioncode (int): Modbus function code. Can be 1 or 2.
 
         Returns:
             The bit value 0 or 1 (int).
 
         Raises:
-            ValueError
+            ValueError, TypeError, IOError
 
         """
         _checkFunctioncode(functioncode, [1, 2])
@@ -127,13 +127,13 @@ class Instrument():
         Args:
             * registeraddress (int): The register address  (use decimal numbers, not hex).
             * value (int): 0 or 1 
-            * functioncode (int): Modbus functions code. Can be 5 or 15.
+            * functioncode (int): Modbus function code. Can be 5 or 15.
 
         Returns:
             None
 
         Raises:
-            ValueError
+            ValueError, TypeError, IOError
 
         """
         _checkFunctioncode(functioncode, [5, 15])     
@@ -145,8 +145,8 @@ class Instrument():
 
         Args:
             * registeraddress (int): The register address (use decimal numbers, not hex).  
-            * numberOfDecimals (int): The number of decimals for content conversion
-            * functioncode (int): Modbus functions code. Can be 3 or 4.
+            * numberOfDecimals (int): The number of decimals for content conversion.
+            * functioncode (int): Modbus function code. Can be 3 or 4.
 
         If a value of 77.0 is stored internally in the slave register as 770, then use numberOfDecimals=1
 
@@ -154,7 +154,7 @@ class Instrument():
             The register data in numerical value (int or float).
 
         Raises:
-            ValueError
+            ValueError, TypeError, IOError
 
         """
         _checkFunctioncode(functioncode, [3, 4])   
@@ -166,9 +166,9 @@ class Instrument():
         
         Args:
             * registeraddress (int): The register address  (use decimal numbers, not hex).
-            * value (float): The value to store in the register 
+            * value (float): The value to store in the register. 
             * numberOfDecimals (int): The number of decimals for content conversion.
-            * functioncode (int): Modbus functions code. Can be 6 or 16.
+            * functioncode (int): Modbus function code. Can be 6 or 16.
 
         To store for example value=77.0, use numberOfDecimals=1 if the register will hold it as 770 internally.
 
@@ -176,7 +176,7 @@ class Instrument():
             None
 
         Raises:
-            ValueError
+            ValueError, TypeError, IOError
 
         """
         _checkFunctioncode(functioncode, [6, 16])
@@ -187,10 +187,16 @@ class Instrument():
         """Generic command for reading and writing registers and bits.
         
         Args:
-            * functioncode (int): Modbus functions code. 
+            * functioncode (int): Modbus function code. 
             * registeraddress (int): The register address  (use decimal numbers, not hex).
             * value (numerical): The value to store in the register 
             * numberOfDecimals (int): The number of decimals for content conversion.
+        
+        Returns:
+            The register data in numerical value (int or float), or the bit value 0 or 1 (int), or None.
+        
+        Raises:
+            ValueError, TypeError, IOError
         
         """
         
@@ -286,7 +292,10 @@ class Instrument():
         Returns:
             The extracted data payload from the slave (a string). It has been stripped of CRC etc.
 
-        Makes use of the Instrument._communicate method. The message is generated with the :func:`_embedPayload` function, and the parsing of the response is done with the :func:`_extractPayload` function.
+        Raises:
+            ValueError, TypeError. 
+
+        Makes use of the :meth:`_communicate` method. The message is generated with the :func:`_embedPayload` function, and the parsing of the response is done with the :func:`_extractPayload` function.
 
         """
         _checkFunctioncode(functioncode, None )
@@ -380,6 +389,9 @@ def _embedPayload(slaveaddress, functioncode, payloaddata):
     Returns:
         The built (raw) message string for sending to the slave (including CRC etc).    
 
+    Raises:
+        ValueError, TypeError. 
+        
     The resulting message has the format: slaveaddress byte + functioncode byte + payloaddata + CRC (which is two bytes)
     
     """
@@ -476,8 +488,8 @@ def _numToOneByteString(inputvalue):
         A one-byte string created by chr(inputvalue).
 
     Raises:
-        * ValueError
-        * TypeError
+        TypeError, ValueError
+        
     """
     _checkInt(inputvalue, minvalue=0, maxvalue=0xFF)
     
@@ -496,8 +508,7 @@ def _numToTwoByteString(value, numberOfDecimals = 0, LsbFirst = False):
         A two-byte string.
 
     Raises:
-        * ValueError
-        * TypeError
+        TypeError, ValueError
 
     For example:
         To store for example value=77.0, use numberOfDecimals=1 if the register will hold it as 770 internally.
@@ -543,8 +554,7 @@ def _twoByteStringToNum(bytestring, numberOfDecimals = 0):
         The numerical value (int or float) calculated from the ``bytestring``.        
         
     Raises:
-        * ValueError
-        * TypeError
+        TypeError, ValueError
         
     For example:
         A string ``BACKSLASHx03BACKSLASHx02`` (which has the length 2) corresponds to 0302 (hex) = 770 (dec). If
@@ -571,7 +581,10 @@ def _bitResponseToValue(bytestring):
     """Convert a response string to a numerical value.
     
     Args:    
-        bytestring (str): A string of length 1
+        bytestring (str): A string of length 1. Can be for example ``BACKSLASHx01``.
+        
+    Returns:
+        The converted value (int).     
         
     Raises:
         TypeError
@@ -598,6 +611,9 @@ def _createBitpattern(functioncode, value):
     Args:    
         * functioncode (int): can be 5 or 15
         * value (int): can be 0 or 1
+
+    Returns:
+        The bit pattern (string).    
 
     """
     _checkFunctioncode(functioncode, [5, 15])
@@ -787,8 +803,7 @@ def _checkResponseByteCount(payload):
         payload (string): The payload
     
     Raises:
-        * ValueError
-        * TypeError
+        TypeError, ValueError
     
     """ 
     POSITION = 0
@@ -816,8 +831,7 @@ def _checkResponseRegisterAddress(payload, registeraddress):
         * registeraddress (int): The register address (use decimal numbers, not hex). 
     
     Raises:
-        * ValueError
-        * TypeError
+        TypeError, ValueError
     
     """ 
     _checkString(payload, minlength=2)
@@ -843,8 +857,7 @@ def _checkResponseNumberOfRegisters(payload, numberOfRegisters):
         * numberOfRegisters (int): Number of registers that have been written
     
     Raises:
-        * ValueError
-        * TypeError
+        TypeError, ValueError
     
     """ 
     _checkString(payload, minlength=4)
@@ -870,8 +883,7 @@ def _checkResponseWriteData(payload, writedata):
         * writedata (string): The data to write, should be 2 bytes.
     
     Raises:
-        * ValueError
-        * TypeError
+        TypeError, ValueError
     
     """ 
     _checkString(payload, minlength=4, description='payload')
@@ -898,7 +910,7 @@ def _checkString(inputstring, minlength=0, maxlength=None, description='input st
     Raises:
         TypeError, ValueError
 
-    Uses the function _checkInt() internally.
+    Uses the function :func:`_checkInt` internally.
 
     """       
     # Type checking 
@@ -934,7 +946,7 @@ def _checkInt(inputvalue, minvalue=None, maxvalue=None, description='inputvalue'
     """Check that the given integer is valid.
 
     Args:
-        * inputvalue (integer): The integer to be checked
+        * inputvalue (int): The integer to be checked
         * minvalue (int): Minimum value of the integer
         * maxvalue (int): Maximum value of the integer
         * description (string): Used in error messages for the checked inputvalue
@@ -942,7 +954,7 @@ def _checkInt(inputvalue, minvalue=None, maxvalue=None, description='inputvalue'
     Raises:
         TypeError, ValueError
 
-    Note: Can not use the function _checkString(), as it uses this function internally.
+    Note: Can not use the function :func:`_checkString`, as that function uses this function internally.
 
     """        
     
@@ -973,7 +985,7 @@ def _checkNumerical(inputvalue, minvalue=None, maxvalue=None, description='input
     Raises:
         TypeError, ValueError
 
-    Note: Can not use the function _checkString(), as it uses this function internally.
+    Note: Can not use the function :func:`_checkString`, as it uses this function internally.
 
     """        
     

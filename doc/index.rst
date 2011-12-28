@@ -21,6 +21,7 @@ Additional resources available on home page
    changes
    administrative
    internalminimalmodbus
+   internalomegacn7500
    internaltestminimalmodbus
    internaldummyserial
    internaltesteurotherm3500

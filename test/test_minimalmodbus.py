@@ -21,7 +21,7 @@
 
 test_minimalmodbus: Unittests for minimalmodbus
 
-Uses a dummy serial port from the module dummy_serial.
+Uses a dummy serial port from the module :py:mod:`dummy_serial`.
 
 This Python file was changed (committed) at $Date$, 
 which was $Revision$.
@@ -81,6 +81,7 @@ class TestEmbedPayload(unittest.TestCase):
         self.assertRaises(TypeError, minimalmodbus._embedPayload, 1, 16, ['ABC']) 
         self.assertRaises(TypeError, minimalmodbus._embedPayload, 1, 16, None) 
 
+
 class TestExtractPayload(unittest.TestCase):
 
     knownValues=TestEmbedPayload.knownValues
@@ -123,6 +124,7 @@ class TestExtractPayload(unittest.TestCase):
         self.assertRaises(TypeError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 2, [2])
         self.assertRaises(TypeError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 2, None)      
     
+    
 ##############################
 # String and num conversions #
 ##############################
@@ -130,7 +132,9 @@ class TestExtractPayload(unittest.TestCase):
 class TestNumToOneByteString(unittest.TestCase):
 
     knownValues=[
+    (0, '\x00' ), 
     (7, '\x07' ), 
+    (255, '\xff' ),
     ]
 
     def testKnownValues(self):
@@ -146,22 +150,21 @@ class TestNumToOneByteString(unittest.TestCase):
             
             self.assertEqual(resultstring, knownstring)       
 
-    def testNotIntegerInput(self):
+    def testWrongInput(self):
+        self.assertRaises(ValueError, minimalmodbus._numToOneByteString, -1)
+        self.assertRaises(ValueError, minimalmodbus._numToOneByteString, 256)
+
+    def testWrongType(self):
         self.assertRaises(TypeError, minimalmodbus._numToOneByteString, 1.0)
         self.assertRaises(TypeError, minimalmodbus._numToOneByteString, '1')
         self.assertRaises(TypeError, minimalmodbus._numToOneByteString, [1])
         self.assertRaises(TypeError, minimalmodbus._numToOneByteString, None)
 
-    def testNegativeInput(self):
-        self.assertRaises(ValueError, minimalmodbus._numToOneByteString, -1)
-
-    def testTooLargeInput(self):
-        self.assertRaises(ValueError, minimalmodbus._numToOneByteString, 256)
-
 
 class TestNumToTwoByteString(unittest.TestCase):
 
     knownValues=[
+    (0.0,  0, False, '\x00\x00' ), 
     (77.0, 1, False, '\x03\x02' ), 
     (77.0, 1, True,  '\x02\x03' ), 
     (770,  0, False, '\x03\x02' ), 
@@ -235,6 +238,7 @@ class TestSanityTwoByteString(unittest.TestCase):
         
             resultvalue = minimalmodbus._twoByteStringToNum( minimalmodbus._numToTwoByteString(x) )
             self.assertEqual(resultvalue, x)       
+
 
 class TestBitResponseToValue(unittest.TestCase):            
 
@@ -546,6 +550,7 @@ class TestCheckResponseRegisterAddress(unittest.TestCase):
         self.assertRaises(TypeError, minimalmodbus._checkResponseRegisterAddress, '\x00\x2d\x00\x58', [45])  
         self.assertRaises(TypeError, minimalmodbus._checkResponseRegisterAddress, '\x00\x2d\x00\x58', None)  
 
+
 class TestCheckResponseNumberOfRegisters(unittest.TestCase):    
         
     def testCorrectResponseNumberOfRegisters(self):
@@ -575,6 +580,7 @@ class TestCheckResponseNumberOfRegisters(unittest.TestCase):
         self.assertRaises(TypeError, minimalmodbus._checkResponseNumberOfRegisters, '\x00\x18\x00\x01', 1.0 )
         self.assertRaises(TypeError, minimalmodbus._checkResponseNumberOfRegisters, '\x00\x18\x00\x01', 'ABC' )
         self.assertRaises(TypeError, minimalmodbus._checkResponseNumberOfRegisters, '\x00\x18\x00\x01', None )
+
 
 class TestCheckResponseWriteData(unittest.TestCase):    
   
@@ -745,7 +751,7 @@ class TestGetDiagnosticString(unittest.TestCase):
         self.assertTrue( len(resultstring) > 100) # For Python 2.6 compatibility
 
 
-class TestToPrintableStrin(unittest.TestCase):
+class TestToPrintableString(unittest.TestCase):
 
     def testReturnsPrintable(self):
         allASCII = ''.join( [chr(x) for x in range(256)] )
