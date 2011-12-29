@@ -35,15 +35,35 @@ __license__ = "Apache License, Version 2.0"
 __revision__  = "$Rev$"
 __date__      = "$Date$"
 
+import sys
 import unittest
+
 import minimalmodbus
 
+###########################################################
+# For showing the error messages caught by assertRaises() #
+###########################################################
+
+VERBOSITY = 0        # Use 0 or 2
+SHOW_ERROR_MESSAGES = False
+
+class NonexistantError(Exception):
+    pass
+
+class ExtendedTestCase(unittest.TestCase):
+    def assertRaises(self, excClass, callableObj, *args, **kwargs):
+        if SHOW_ERROR_MESSAGES:
+            excClass = NonexistantError
+        try:
+            unittest.TestCase.assertRaises(self, excClass, callableObj, *args, **kwargs)
+        except:
+            minimalmodbus._print_out( '\n    ' + repr(sys.exc_info()[1]) )
 
 ####################
 # Payload handling #
 ####################
 
-class TestEmbedPayload(unittest.TestCase):
+class TestEmbedPayload(ExtendedTestCase):
 
     knownValues=[
     (1, 16, 'ABC', '\x01\x10ABC<E'),
@@ -82,7 +102,7 @@ class TestEmbedPayload(unittest.TestCase):
         self.assertRaises(TypeError, minimalmodbus._embedPayload, 1, 16, None) 
 
 
-class TestExtractPayload(unittest.TestCase):
+class TestExtractPayload(ExtendedTestCase):
 
     knownValues=TestEmbedPayload.knownValues
 
@@ -129,7 +149,7 @@ class TestExtractPayload(unittest.TestCase):
 # String and num conversions #
 ##############################
 
-class TestNumToOneByteString(unittest.TestCase):
+class TestNumToOneByteString(ExtendedTestCase):
 
     knownValues=[
     (0, '\x00' ), 
@@ -161,7 +181,7 @@ class TestNumToOneByteString(unittest.TestCase):
         self.assertRaises(TypeError, minimalmodbus._numToOneByteString, None)
 
 
-class TestNumToTwoByteString(unittest.TestCase):
+class TestNumToTwoByteString(ExtendedTestCase):
 
     knownValues=[
     (0.0,  0, False, '\x00\x00' ), 
@@ -200,7 +220,7 @@ class TestNumToTwoByteString(unittest.TestCase):
         self.assertRaises(TypeError, minimalmodbus._numToTwoByteString, 77, 1, 1)
 
 
-class TestTwoByteStringToNum(unittest.TestCase):
+class TestTwoByteStringToNum(ExtendedTestCase):
 
     knownValues=[
     ('\x03\x02', 1, 77.0), 
@@ -231,7 +251,7 @@ class TestTwoByteStringToNum(unittest.TestCase):
         self.assertRaises(ValueError, minimalmodbus._twoByteStringToNum, 'AB', -1)
 
 
-class TestSanityTwoByteString(unittest.TestCase):
+class TestSanityTwoByteString(ExtendedTestCase):
 
     def testKnownValuesLoop(self):
         for x in range(0x10000):
@@ -240,7 +260,7 @@ class TestSanityTwoByteString(unittest.TestCase):
             self.assertEqual(resultvalue, x)       
 
 
-class TestBitResponseToValue(unittest.TestCase):            
+class TestBitResponseToValue(ExtendedTestCase):            
 
     def testKnownValues(self):
         self.assertEqual(minimalmodbus._bitResponseToValue('\x00'), 0) 
@@ -256,7 +276,7 @@ class TestBitResponseToValue(unittest.TestCase):
         self.assertRaises(TypeError, minimalmodbus._bitResponseToValue, None )
         
         
-class TestCreateBitPattern(unittest.TestCase):           
+class TestCreateBitPattern(ExtendedTestCase):           
 
     knownValues=[
     (5,  0, '\x00\x00'), 
@@ -303,7 +323,7 @@ class TestCreateBitPattern(unittest.TestCase):
 # Bit manipulation #
 ####################    
     
-class TestSetBitOn(unittest.TestCase):
+class TestSetBitOn(ExtendedTestCase):
 
     knownValues=[
     (4,0,5),
@@ -332,7 +352,7 @@ class TestSetBitOn(unittest.TestCase):
         self.assertRaises(ValueError, minimalmodbus._setBitOn, -2, 1)     
                
                
-class TestXOR(unittest.TestCase):
+class TestXOR(ExtendedTestCase):
 
     knownValues=[
     (1,1,0),
@@ -369,7 +389,7 @@ class TestXOR(unittest.TestCase):
         self.assertRaises(ValueError, minimalmodbus._XOR, -1, 1)         
     
     
-class TestRightshift(unittest.TestCase):
+class TestRightshift(ExtendedTestCase):
 
     knownValues=[
     (9,4,1),
@@ -409,7 +429,7 @@ class TestRightshift(unittest.TestCase):
 # Error checking functions #    
 ############################
 
-class TestCalculateCrcString(unittest.TestCase):
+class TestCalculateCrcString(ExtendedTestCase):
 
     knownValues=[
     ('\x02\x07','\x41\x12'), # Example from MODBUS over Serial Line Specification and Implementation Guide V1.02 
@@ -428,7 +448,7 @@ class TestCalculateCrcString(unittest.TestCase):
         self.assertRaises(TypeError, minimalmodbus._calculateCrcString, ['ABC'])
 
         
-class TestCheckFunctioncode(unittest.TestCase):    
+class TestCheckFunctioncode(ExtendedTestCase):    
     
     def testCorrectFunctioncode(self):
         minimalmodbus._checkFunctioncode( 7, [7, 8] )
@@ -466,7 +486,7 @@ class TestCheckFunctioncode(unittest.TestCase):
         self.assertRaises(TypeError,  minimalmodbus._checkFunctioncode, 4, [7.5, 8])
 
 
-class TestCheckSlaveaddress(unittest.TestCase):  
+class TestCheckSlaveaddress(ExtendedTestCase):  
 
     def testKnownValues(self):
         minimalmodbus._checkSlaveaddress( 0 )
@@ -485,7 +505,7 @@ class TestCheckSlaveaddress(unittest.TestCase):
         self.assertRaises(TypeError, minimalmodbus._checkSlaveaddress, None)
         
 
-class TestCheckRegisteraddress(unittest.TestCase):  
+class TestCheckRegisteraddress(ExtendedTestCase):  
     
     def testKnownValues(self):
         minimalmodbus._checkRegisteraddress( 0 )
@@ -504,7 +524,7 @@ class TestCheckRegisteraddress(unittest.TestCase):
         self.assertRaises(TypeError, minimalmodbus._checkRegisteraddress, None)
         
     
-class TestCheckResponseNumberOfBytes(unittest.TestCase):    
+class TestCheckResponseNumberOfBytes(ExtendedTestCase):    
     
     def testCorrectNumberOfBytes(self):
         minimalmodbus._checkResponseByteCount('\x02\x03\x02')
@@ -520,7 +540,7 @@ class TestCheckResponseNumberOfBytes(unittest.TestCase):
         self.assertRaises(TypeError, minimalmodbus._checkRegisteraddress, None)
         
         
-class TestCheckResponseRegisterAddress(unittest.TestCase):    
+class TestCheckResponseRegisterAddress(ExtendedTestCase):    
        
     def testCorrectResponseRegisterAddress(self):
         minimalmodbus._checkResponseRegisterAddress( '\x00\x2d\x00\x58', 45)
@@ -551,7 +571,7 @@ class TestCheckResponseRegisterAddress(unittest.TestCase):
         self.assertRaises(TypeError, minimalmodbus._checkResponseRegisterAddress, '\x00\x2d\x00\x58', None)  
 
 
-class TestCheckResponseNumberOfRegisters(unittest.TestCase):    
+class TestCheckResponseNumberOfRegisters(ExtendedTestCase):    
         
     def testCorrectResponseNumberOfRegisters(self):
         minimalmodbus._checkResponseNumberOfRegisters( '\x00\x18\x00\x01', 1 )
@@ -582,7 +602,7 @@ class TestCheckResponseNumberOfRegisters(unittest.TestCase):
         self.assertRaises(TypeError, minimalmodbus._checkResponseNumberOfRegisters, '\x00\x18\x00\x01', None )
 
 
-class TestCheckResponseWriteData(unittest.TestCase):    
+class TestCheckResponseWriteData(ExtendedTestCase):    
   
     def testCorrectResponseWritedata(self):
         minimalmodbus._checkResponseWriteData('\x00\x2d\x00\x58', '\x00\x58')
@@ -616,7 +636,7 @@ class TestCheckResponseWriteData(unittest.TestCase):
         self.assertRaises(ValueError, minimalmodbus._checkResponseWriteData, '\x00\x2d\x00\x58', '\x00\x58\x00')  
         
 
-class TestCheckString(unittest.TestCase):  
+class TestCheckString(ExtendedTestCase):  
 
     def testKnownValues(self):
         minimalmodbus._checkString('DEF', minlength=3, maxlength=3, description='ABC' )
@@ -656,7 +676,7 @@ class TestCheckString(unittest.TestCase):
         self.assertRaises(TypeError, minimalmodbus._checkString, 'DEF', minlength=3, maxlength=3, description=['A', 'B', 'C'])
 
 
-class TestCheckInt(unittest.TestCase):  
+class TestCheckInt(ExtendedTestCase):  
     
     def testKnownValues(self):
         minimalmodbus._checkInt(47, minvalue=None, maxvalue=None, description='ABC')
@@ -695,7 +715,7 @@ class TestCheckInt(unittest.TestCase):
         self.assertRaises(TypeError, minimalmodbus._checkInt, 47, minvalue=40, maxvalue=50, description=['ABC'])
         
         
-class TestCheckNumerical(unittest.TestCase):  
+class TestCheckNumerical(ExtendedTestCase):  
     
     def testKnownValues(self):
         minimalmodbus._checkNumerical(47, minvalue=None, maxvalue=None, description='ABC')
@@ -743,7 +763,7 @@ class TestCheckNumerical(unittest.TestCase):
 # Development tools #
 #####################
 
-class TestGetDiagnosticString(unittest.TestCase):
+class TestGetDiagnosticString(ExtendedTestCase):
 
     def testReturnsString(self):
 
@@ -751,7 +771,7 @@ class TestGetDiagnosticString(unittest.TestCase):
         self.assertTrue( len(resultstring) > 100) # For Python 2.6 compatibility
 
 
-class TestToPrintableString(unittest.TestCase):
+class TestToPrintableString(ExtendedTestCase):
 
     def testReturnsPrintable(self):
         allASCII = ''.join( [chr(x) for x in range(256)] )
@@ -767,7 +787,7 @@ class TestToPrintableString(unittest.TestCase):
 # Communication using a dummy serial port #
 ###########################################
 
-class TestDummyCommunication(unittest.TestCase):
+class TestDummyCommunication(ExtendedTestCase):
 
     ## Test fixture ##
 
@@ -976,7 +996,7 @@ class TestDummyCommunication(unittest.TestCase):
         del(self.instrument)
 
 
-class TestDummyCommunicationOmegaSlave1(unittest.TestCase):
+class TestDummyCommunicationOmegaSlave1(ExtendedTestCase):
 
     def setUp(self):   
         import dummy_serial
@@ -999,7 +1019,7 @@ class TestDummyCommunicationOmegaSlave1(unittest.TestCase):
         self.instrument.write_register(4097, 823.6, 1)
         
         
-class TestDummyCommunicationOmegaSlave10(unittest.TestCase):
+class TestDummyCommunicationOmegaSlave10(ExtendedTestCase):
 
     def setUp(self):   
         import dummy_serial
@@ -1024,7 +1044,7 @@ class TestDummyCommunicationOmegaSlave10(unittest.TestCase):
         self.instrument.write_register(4097, 200.0, 1)     
 
         
-class TestDummyCommunicationWithPortClosure(unittest.TestCase):
+class TestDummyCommunicationWithPortClosure(ExtendedTestCase):
 
     def setUp(self):   
         import dummy_serial
@@ -1052,7 +1072,7 @@ class TestDummyCommunicationWithPortClosure(unittest.TestCase):
         del(self.instrument)
 
    
-class TestVerboseDummyCommunicationWithPortClosure(unittest.TestCase):
+class TestVerboseDummyCommunicationWithPortClosure(ExtendedTestCase):
 
     def setUp(self):   
         import dummy_serial
@@ -1070,7 +1090,7 @@ class TestVerboseDummyCommunicationWithPortClosure(unittest.TestCase):
         del(self.instrument)
 
 
-class TestDummyCommunicationDebugmode(unittest.TestCase):
+class TestDummyCommunicationDebugmode(ExtendedTestCase):
 
     def setUp(self):   
         import dummy_serial
@@ -1238,11 +1258,6 @@ RESPONSES['\n\x10\x10\x01\x00\x01\x02\x07\xd0\xc6\xdc'] ='\n\x10\x10\x01\x00\x01
 
 if __name__ == '__main__':
 
-    #print hex(61)
-    #print repr( minimalmodbus._calculateCrcString( '\x01\x10' + '\x00\x36\x00\x01' + '\x02\x00\x63' ) )
+    unittest.main(verbosity=VERBOSITY)
 
-    #suite = unittest.TestLoader().loadTestsFromTestCase(TestDummyCommunication)
-    #suite = unittest.TestLoader().loadTestsFromTestCase(TestDummyCommunicationOmegaSlave10)
-    #unittest.TextTestRunner(verbosity=0).run(suite)
 
-    unittest.main()

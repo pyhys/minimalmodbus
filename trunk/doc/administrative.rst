@@ -265,6 +265,10 @@ Generate html report (ends up in trunk/test/htmlcov)::
 
     coverage html
     
+Or to exclude some third party modules (adapt to your file structure):
+    
+    coverage html --omit=/usr/share/*
+    
 
 Setting the PYTHONPATH
 ----------------------
@@ -290,20 +294,21 @@ To download the svn repository in archive format, type this in the destination d
 
 TODO
 ----
-* Type checking
-* Write more unittests
-* dummy_serial: Use isOpen() to make sure opening and closing works fine.
-* Unit tests for omegacn, incl port data
 
-For next release:
-  * Test with Python3
-  * Bug tracker settings
+  * Write more unittests
+  * dummy_serial: Use isOpen() to make sure opening and closing works fine.
+  * Test with Python3 and 2to3
+  * Check error codes
   * Test the dependency of pySerial in setup.py
+  
+  
   * Upload files with ``scp -r`` instead
 
+For next release:
+  * Bug tracker settings
 
 
-
+.
 
 
 

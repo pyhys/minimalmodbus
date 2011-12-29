@@ -1006,7 +1006,7 @@ def _checkNumerical(inputvalue, minvalue=None, maxvalue=None, description='input
     # Consistency checking
     if (not minvalue is None) and (not maxvalue is None): 
         if maxvalue < minvalue:
-            raise ValueError( 'The maxvalue must not be smaller than minvalue. Given: {0} and {1}'.format( \
+            raise ValueError( 'The maxvalue must not be smaller than minvalue. Given: {0} and {1}, respectively.'.format( \
                 maxvalue, minvalue) )
     
     # Value checking
@@ -1090,19 +1090,9 @@ def _getDiagnosticString():
 if __name__ == '__main__':
 
     _print_out( 'TESTING MODBUS MODULE' )
-
-    a = [1, 2]
-    print a
-    
-    print isinstance(2, str)
-    
-    _CLOSE_PORT_AFTER_EACH_CALL = False
     #instrument = Instrument('/dev/cvdHeatercontroller', 1)
-    #instrument._debug = True
-    
-    
+    #instrument._debug = True    
     #_print_out( str(instrument.read_register(273, 1)) )
-
     _print_out( 'DONE!' )
     
 pass    
