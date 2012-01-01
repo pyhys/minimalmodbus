@@ -291,22 +291,28 @@ To download the svn repository in archive format, type this in the destination d
 
     rsync -av minimalmodbus.svn.sourceforge.net::svn/minimalmodbus/* .
 
+Known issues
+----------------
+Sending negative values to the slave is not yet implemented. If this is an issue for you, please provide the manual for your instrument.
+
+Changing `close_port_after_each_call` after instantiation of Instrument() might be 
+problematic. Set the value minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL=True instead.
+
 
 TODO
 ----
 
   * Write more unittests
-  * dummy_serial: Use isOpen() to make sure opening and closing works fine.
-  * Test with Python3 and 2to3
   * Check error codes
+  * Write documentation with examples.
+  * Test with Python3 and 2to3
   * Test the dependency of pySerial in setup.py
-  
   
   * Upload files with ``scp -r`` instead
 
 For next release:
   * Bug tracker settings
-
+  * dummy_serial: Use isOpen() to make sure opening and closing works fine.
 
 .
 

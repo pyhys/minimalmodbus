@@ -54,7 +54,7 @@ STOPBITS = 1
 TIMEOUT  = 0.05 
 """Default value for the timeout value in seconds (float).""" 
 
-_CLOSE_PORT_AFTER_EACH_CALL = False
+CLOSE_PORT_AFTER_EACH_CALL = False
 """Default value for port closure setting.""" 
 
 class Instrument():
@@ -90,13 +90,13 @@ class Instrument():
         self.address = slaveaddress
         """Slave address (int). Most often set by the constructor (see the class documentation). """
 
-        self._debug = False
-        """Set this to True to print the communication details."""
+        self.debug = False
+        """Set this to True to print the communication details. Defaults to False."""
         
-        self._close_port_after_each_call = _CLOSE_PORT_AFTER_EACH_CALL
-        """Set this to True to close the serial port after each call."""      
+        self.close_port_after_each_call = CLOSE_PORT_AFTER_EACH_CALL
+        """If this is True, the serial port will be closed after each call. Defaults to :data:`CLOSE_PORT_AFTER_EACH_CALL`. To change it, set the value minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL=True ."""      
         
-        if  self._close_port_after_each_call:
+        if  self.close_port_after_each_call:
             self.serial.close()
 
     ########################################
@@ -200,6 +200,8 @@ class Instrument():
         
         """
         
+        ALLOWED_FUNCTIONCODES = range(1,7) + [15, 16]
+        
         NUMBER_OF_REGISTERS = 1
         NUMBER_OF_BYTES_PER_REGISTER = 2
         numberOfRegisterBytes = NUMBER_OF_REGISTERS * NUMBER_OF_BYTES_PER_REGISTER
@@ -208,7 +210,8 @@ class Instrument():
                         
         NUMBER_OF_BYTES_BEFORE_REGISTERDATA = 1
                         
-        _checkFunctioncode(functioncode, None)
+                        
+        _checkFunctioncode(functioncode, ALLOWED_FUNCTIONCODES)
         _checkRegisteraddress(registeraddress)
         
         if not isinstance(value, type(None)):
@@ -325,7 +328,7 @@ class Instrument():
         
         Will block until timeout (or reaching a large number of bytes).
 
-        If the attribute ._debug is True, the communication details are printed.
+        If the attribute .debug is True, the communication details are printed.
 
         .. note::
             Some implementation details:
@@ -353,19 +356,19 @@ class Instrument():
                 
         _checkString(message, minlength=1)
         
-        if self._debug:
+        if self.debug:
             _print_out( 'MinimalModbus debug mode. Writing to instrument: ' + repr(message) )           
         
-        if self._close_port_after_each_call:
+        if self.close_port_after_each_call:
             self.serial.open()  
             
         self.serial.write(message)
         answer =  self.serial.read(MAX_NUMBER_OF_BYTES)
         
-        if self._close_port_after_each_call:
+        if self.close_port_after_each_call:
             self.serial.close()
         
-        if self._debug:
+        if self.debug:
             _print_out( 'MinimalModbus debug mode. Response from instrument: ' + repr(answer) )  
 
         if len(answer) == 0:
@@ -1091,7 +1094,7 @@ if __name__ == '__main__':
 
     _print_out( 'TESTING MODBUS MODULE' )
     #instrument = Instrument('/dev/cvdHeatercontroller', 1)
-    #instrument._debug = True    
+    #instrument.debug = True    
     #_print_out( str(instrument.read_register(273, 1)) )
     _print_out( 'DONE!' )
     

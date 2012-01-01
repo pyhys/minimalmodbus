@@ -45,19 +45,33 @@ import minimalmodbus
 ###########################################################
 
 VERBOSITY = 0        # Use 0 or 2
-SHOW_ERROR_MESSAGES = False
+"""Verbosity level for the unit testing. Use value 0 or 2."""
 
-class NonexistantError(Exception):
+SHOW_ERROR_MESSAGES_FOR_ASSERTRAISES = False
+"""Set this to True for printing the error messages caught by assertRaises().
+
+If set to True, any unintentional error messages raised during the processing of the command in assertRaises() are also caught (not counted). It will also be printed in the short form, and will show no traceback.
+"""
+
+class _NonexistantError(Exception):
     pass
 
 class ExtendedTestCase(unittest.TestCase):
+    """Overriding the assertRaises() method to be able to print the error message.
+    
+    Use SHOW_ERROR_MESSAGES_FOR_ASSERTRAISES=True for this option. It can also be useful 
+    to set VERBOSITY=2.
+    
+    """
+
     def assertRaises(self, excClass, callableObj, *args, **kwargs):
-        if SHOW_ERROR_MESSAGES:
-            excClass = NonexistantError
-        try:
+        if SHOW_ERROR_MESSAGES_FOR_ASSERTRAISES:
+            try:
+                unittest.TestCase.assertRaises(self, _NonexistantError, callableObj, *args, **kwargs)
+            except:
+                minimalmodbus._print_out( '\n    ' + repr(sys.exc_info()[1]) )
+        else:
             unittest.TestCase.assertRaises(self, excClass, callableObj, *args, **kwargs)
-        except:
-            minimalmodbus._print_out( '\n    ' + repr(sys.exc_info()[1]) )
 
 ####################
 # Payload handling #
@@ -804,7 +818,7 @@ class TestDummyCommunication(ExtendedTestCase):
         
         # Initialize a (dummy) instrument
         self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1) # port name, slave address (in decimal)
-        self.instrument._debug = False
+        self.instrument.debug = False
 
     ## Communicate ##
 
@@ -885,6 +899,9 @@ class TestDummyCommunication(ExtendedTestCase):
         self.assertRaises(TypeError, self.instrument.write_bit, 71, 1, '5')
         self.assertRaises(TypeError, self.instrument.write_bit, 71, 1, [5])
         self.assertRaises(TypeError, self.instrument.write_bit, 71, 1, None)
+
+    # Wrong number of registers in write data (function code 15)
+    pass
 
     ## Read register ##
 
@@ -986,8 +1003,16 @@ class TestDummyCommunication(ExtendedTestCase):
     def testWriteRegisterWithWrongSlaveaddressResponse(self): 
         self.assertRaises(ValueError, self.instrument.write_register, 54, 99 ) # Slave gives wrong slaveaddress
     
-    ## Generic function
-    pass
+    ## Generic function 
+    
+    def testGenericCommand(self):    
+        self.assertEqual( self.instrument._genericCommand(3, 289), 770 ) # Read register 289
+        self.assertEqual( self.instrument._genericCommand(2, 61),  1 ) # Read bit 61       
+        
+    def testGenericCommandWrongFunctioncode(self):    
+        self.assertRaises(ValueError, self.instrument._genericCommand, 35, 20)    
+    
+        pass
     
     ## Tear down test fixture ##
         
@@ -1018,6 +1043,10 @@ class TestDummyCommunicationOmegaSlave1(ExtendedTestCase):
         self.instrument.write_register(4097, 700.0, 1)
         self.instrument.write_register(4097, 823.6, 1)
         
+    def tearDown(self):
+        self.instrument = None
+        del(self.instrument)        
+        
         
 class TestDummyCommunicationOmegaSlave10(ExtendedTestCase):
 
@@ -1043,6 +1072,10 @@ class TestDummyCommunicationOmegaSlave10(ExtendedTestCase):
         self.instrument.write_register(4097, 20.0, 1)
         self.instrument.write_register(4097, 200.0, 1)     
 
+    def tearDown(self):
+        self.instrument = None
+        del(self.instrument)
+        
         
 class TestDummyCommunicationWithPortClosure(ExtendedTestCase):
 
@@ -1050,7 +1083,7 @@ class TestDummyCommunicationWithPortClosure(ExtendedTestCase):
         import dummy_serial
         dummy_serial.RESPONSES = RESPONSES
         minimalmodbus.serial.Serial = dummy_serial.Serial
-        minimalmodbus._CLOSE_PORT_AFTER_EACH_CALL = True # Mimic a WindowsXP serial port
+        minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = True # Mimic a WindowsXP serial port
         self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1) # port name, slave address (in decimal)
 
     def testReadRegisterSeveralTimes(self):
@@ -1065,9 +1098,13 @@ class TestDummyCommunicationWithPortClosure(ExtendedTestCase):
    
     def testPortAlreadyClosed(self):
         self.assertEqual( self.instrument.read_register(289), 770 )
-        self.assertRaises(IOError, self.instrument.serial.close) 
+        self.assertRaises(IOError, self.instrument.serial.close)
  
     def tearDown(self):
+        try:
+            self.instrument.serial.close() 
+        except:
+            pass
         self.instrument = None
         del(self.instrument)
 
@@ -1079,13 +1116,17 @@ class TestVerboseDummyCommunicationWithPortClosure(ExtendedTestCase):
         dummy_serial.VERBOSE = True
         dummy_serial.RESPONSES = RESPONSES
         minimalmodbus.serial.Serial = dummy_serial.Serial
-        minimalmodbus._CLOSE_PORT_AFTER_EACH_CALL = True # Mimic a WindowsXP serial port
+        minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = True # Mimic a WindowsXP serial port
         self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1) # port name, slave address (in decimal)
 
     def testReadRegister(self):
         self.assertEqual( self.instrument.read_register(289), 770 )   
 
     def tearDown(self):
+        try:
+            self.instrument.serial.close() 
+        except:
+            pass
         self.instrument = None
         del(self.instrument)
 
@@ -1097,7 +1138,7 @@ class TestDummyCommunicationDebugmode(ExtendedTestCase):
         dummy_serial.RESPONSES = RESPONSES
         minimalmodbus.serial.Serial = dummy_serial.Serial
         self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1) # port name, slave address (in decimal)
-        self.instrument._debug = True
+        self.instrument.debug = True
 
     def testReadRegister(self):
         self.assertEqual( self.instrument.read_register(289), 770 )        
@@ -1259,5 +1300,7 @@ RESPONSES['\n\x10\x10\x01\x00\x01\x02\x07\xd0\xc6\xdc'] ='\n\x10\x10\x01\x00\x01
 if __name__ == '__main__':
 
     unittest.main(verbosity=VERBOSITY)
-
+    
+    #suite = unittest.TestLoader().loadTestsFromTestCase(TestDummyCommunicationWithPortClosure)
+    #unittest.TextTestRunner(verbosity=VERBOSITY).run(suite)
 
