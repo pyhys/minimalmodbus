@@ -172,7 +172,7 @@ when communicating with more than one instrument. It is possible to make Minimal
 
     #!/usr/bin/env python
     import minimalmodbus
-    minimalmodbus._CLOSE_PORT_AFTER_EACH_CALL = True
+    minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = True
 	
     instrument = minimalmodbus.Instrument('/dev/ttyUSB1', 1) # port name, slave address (in decimal)
     print instrument.read_register( 289, 1 ) 
@@ -204,7 +204,7 @@ Describe the problem in detail, and include any error messsages. Please also inc
   >>> print minimalmodbus._getDiagnosticString()
 
 Note that it can be very helpful to switch on the debug mode, where the communication 
-details are printed. See the 'Develop' section above.
+details are printed. See the 'Develop' section below.
 
 Author
 ------
@@ -231,7 +231,7 @@ To switch on the debug mode, where the communication details are printed::
     import minimalmodbus
 
     instrument = minimalmodbus.Instrument('/dev/ttyUSB1', 1) # port name, slave address (in decimal)
-    instrument._debug = True
+    instrument.debug = True
     print instrument.read_register( 289, 1 ) 
 
 The data is stored internally in this driver as byte strings (representing byte values). 

@@ -106,6 +106,7 @@ class OmegaCN7500( minimalmodbus.Instrument ):
             - Defaults to :data:`SETPOINT_MAX`.
         * time_max
             - Defaults to :data:`TIME_MAX`.
+            
     Implemented with these function codes (in decimal):
         
     ==================  ====================
