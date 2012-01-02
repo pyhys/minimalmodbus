@@ -39,9 +39,6 @@ import omegacn7500
 import unittest
 import dummy_serial
 
-###########################################
-# Communication using a dummy serial port #
-###########################################
 
 class TestCalculateRegisterAddress(unittest.TestCase):
 
@@ -85,6 +82,7 @@ class TestCalculateRegisterAddress(unittest.TestCase):
         self.assertRaises(TypeError, omegacn7500._calculateRegisterAddress, 'setpoint', None, 0) 
         self.assertRaises(TypeError, omegacn7500._calculateRegisterAddress, 'setpoint', 0,    0.0) 
         self.assertRaises(TypeError, omegacn7500._calculateRegisterAddress, 'setpoint', 0,    [0]) 
+
 
 class TestCheckPatternNumber(unittest.TestCase):
 
@@ -135,6 +133,10 @@ class TestCheckTimeValue(unittest.TestCase):
     
     pass    
     
+
+###########################################
+# Communication using a dummy serial port #
+###########################################
 
 class TestDummyCommunication_Slave1(unittest.TestCase):
 

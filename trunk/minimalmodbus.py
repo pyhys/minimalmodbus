@@ -199,9 +199,7 @@ class Instrument():
             ValueError, TypeError, IOError
         
         """
-        
-        ALLOWED_FUNCTIONCODES = range(1,7) + [15, 16]
-        
+                
         NUMBER_OF_REGISTERS = 1
         NUMBER_OF_BYTES_PER_REGISTER = 2
         numberOfRegisterBytes = NUMBER_OF_REGISTERS * NUMBER_OF_BYTES_PER_REGISTER
@@ -210,8 +208,7 @@ class Instrument():
                         
         NUMBER_OF_BYTES_BEFORE_REGISTERDATA = 1
                         
-                        
-        _checkFunctioncode(functioncode, ALLOWED_FUNCTIONCODES)
+        _checkFunctioncode(functioncode, None)
         _checkRegisteraddress(registeraddress)
         
         if not isinstance(value, type(None)):
@@ -452,7 +449,7 @@ def _extractPayload(response, slaveaddress, functioncode):
             repr(calculatedCRC),
             repr(response)    ))
 
-    # Check address
+    # Check slave address
     responseaddress = ord( response[BYTEPOSITION_FOR_SLAVEADDRESS] )
     
     if responseaddress != slaveaddress:
@@ -749,11 +746,12 @@ def _checkFunctioncode(functioncode, listOfAllowedValues):
     """
     FUNCTIONCODE_MIN = 1
     FUNCTIONCODE_MAX = 127
+    ALL_ALLOWED_FUNCTIONCODES = range(1,7) + [15, 16]
         
     _checkInt(functioncode, FUNCTIONCODE_MIN, FUNCTIONCODE_MAX, description='functioncode' )    
     
     if listOfAllowedValues == None:
-        return
+        listOfAllowedValues = ALL_ALLOWED_FUNCTIONCODES
 
     if not isinstance(listOfAllowedValues, list):
         raise TypeError( 'The listOfAllowedValues should be a list. Given: {0}'.format(repr(listOfAllowedValues)) )
