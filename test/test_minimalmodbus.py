@@ -44,13 +44,13 @@ import minimalmodbus
 # For showing the error messages caught by assertRaises() #
 ###########################################################
 
-VERBOSITY = 0        # Use 0 or 2
+VERBOSITY = 0 
 """Verbosity level for the unit testing. Use value 0 or 2."""
 
 SHOW_ERROR_MESSAGES_FOR_ASSERTRAISES = False
 """Set this to True for printing the error messages caught by assertRaises().
 
-If set to True, any unintentional error messages raised during the processing of the command in assertRaises() are also caught (not counted). It will also be printed in the short form, and will show no traceback.
+If set to True, any unintentional error messages raised during the processing of the command in assertRaises() are also caught (not counted). It will be printed in the short form, and will show no traceback.
 """
 
 class _NonexistantError(Exception):
@@ -73,6 +73,7 @@ class ExtendedTestCase(unittest.TestCase):
         else:
             unittest.TestCase.assertRaises(self, excClass, callableObj, *args, **kwargs)
 
+
 ####################
 # Payload handling #
 ####################
@@ -80,15 +81,15 @@ class ExtendedTestCase(unittest.TestCase):
 class TestEmbedPayload(ExtendedTestCase):
 
     knownValues=[
+    (2, 2, '123', '\x02\x02123X\xc2'),
     (1, 16, 'ABC', '\x01\x10ABC<E'),
     (0, 5, 'hjl', '\x00\x05hjl\x8b\x9d'),
-    (2, 2, '123', '\x02\x02123X\xc2'),
     ]
     
     def testKnownValues(self):
-        for address, functioncode, inputstring, knownresult in self.knownValues:
+        for slaveaddress, functioncode, inputstring, knownresult in self.knownValues:
             
-            result = minimalmodbus._embedPayload(address, functioncode, inputstring)
+            result = minimalmodbus._embedPayload(slaveaddress, functioncode, inputstring)
             self.assertEqual(result, knownresult)
 
     def testWrongSlaveaddressValue(self):
@@ -128,13 +129,7 @@ class TestExtractPayload(ExtendedTestCase):
             
     def testTooShortMessage(self):
         self.assertRaises(ValueError, minimalmodbus._extractPayload, 'A', 2, 2) 
-
-    def testWrongCrc(self):
-        self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc3', 2, 2) 
     
-    def testErrorindicationFromSlave(self):
-        self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x82123q\x02', 2, 2) 
-            
     def testWrongSlaveAddress(self):
         self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 3, 2)
         self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 248, 2)
@@ -146,18 +141,24 @@ class TestExtractPayload(ExtendedTestCase):
         self.assertRaises(TypeError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', [2], 2) 
         self.assertRaises(TypeError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', None, 2) 
         
+    def testErrorindicationFromSlave(self):
+        self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x82123q\x02', 2, 2)     
+        
     def testWrongFunctionCode(self):
         self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 2, 3)  
-        self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x72123B\x02', 2, 2) 
+        self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x72123B\x02', 2, 2) # Other value in response
+        self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 2, 95)
         self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 2, -1)
         self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 2, 128)
-  
+        
     def testFunctionCodeNotInteger(self):
         self.assertRaises(TypeError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 2, 2.0)   
         self.assertRaises(TypeError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 2, '2')   
         self.assertRaises(TypeError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 2, [2])
         self.assertRaises(TypeError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 2, None)      
     
+    def testWrongCrc(self):
+        self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc3', 2, 2) 
     
 ##############################
 # String and num conversions #
@@ -465,39 +466,39 @@ class TestCalculateCrcString(ExtendedTestCase):
 class TestCheckFunctioncode(ExtendedTestCase):    
     
     def testCorrectFunctioncode(self):
-        minimalmodbus._checkFunctioncode( 7, [7, 8] )
+        minimalmodbus._checkFunctioncode( 4, [4, 5] )
         
     def testCorrectFunctioncodeNoRange(self):
-        minimalmodbus._checkFunctioncode( 7, None )    
+        minimalmodbus._checkFunctioncode( 4, None )    
         
     def testWrongFunctioncode(self):
-        self.assertRaises(ValueError, minimalmodbus._checkFunctioncode, 4, [7, 8])
+        self.assertRaises(ValueError, minimalmodbus._checkFunctioncode, 3, [4, 5])
 
     def testWrongFunctioncodeNoRange(self):   
         self.assertRaises(ValueError, minimalmodbus._checkFunctioncode, 1000, None)
         self.assertRaises(ValueError, minimalmodbus._checkFunctioncode, -1, None)
 
     def testWrongFunctioncodeType(self):
-        self.assertRaises(TypeError, minimalmodbus._checkFunctioncode, '7', [7, 8])
-        self.assertRaises(TypeError, minimalmodbus._checkFunctioncode, 7.5, [7, 8])
-        self.assertRaises(TypeError, minimalmodbus._checkFunctioncode, 7.0, [7, 8])
-        self.assertRaises(TypeError, minimalmodbus._checkFunctioncode, [7], [7, 8])
-        self.assertRaises(TypeError, minimalmodbus._checkFunctioncode, None, [7, 8])
+        self.assertRaises(TypeError, minimalmodbus._checkFunctioncode, '4', [4, 5])
+        self.assertRaises(TypeError, minimalmodbus._checkFunctioncode, 4.5, [4, 5])
+        self.assertRaises(TypeError, minimalmodbus._checkFunctioncode, 4.0, [4, 5])
+        self.assertRaises(TypeError, minimalmodbus._checkFunctioncode, [4], [4, 5])
+        self.assertRaises(TypeError, minimalmodbus._checkFunctioncode, None, [4, 5])
 
     def testWrongFunctioncodeListValues(self):
-        self.assertRaises(ValueError, minimalmodbus._checkFunctioncode, -1, [-1, 8])
-        self.assertRaises(ValueError, minimalmodbus._checkFunctioncode, 128, [7, 128])
+        self.assertRaises(ValueError, minimalmodbus._checkFunctioncode, -1, [-1, 5])
+        self.assertRaises(ValueError, minimalmodbus._checkFunctioncode, 128, [4, 128])
 
     def testWrongListType(self):
-        self.assertRaises(TypeError,  minimalmodbus._checkFunctioncode, 4, 7)
+        self.assertRaises(TypeError,  minimalmodbus._checkFunctioncode, 4, 4)
         self.assertRaises(TypeError,  minimalmodbus._checkFunctioncode, 4, 'ABC')
-        self.assertRaises(TypeError,  minimalmodbus._checkFunctioncode, 4, (7, 8))
-        self.assertRaises(ValueError, minimalmodbus._checkFunctioncode, 4, [7, -23])
-        self.assertRaises(ValueError, minimalmodbus._checkFunctioncode, 4, [7, 128])
-        self.assertRaises(TypeError,  minimalmodbus._checkFunctioncode, 4, [7, 'ABC'])
-        self.assertRaises(TypeError,  minimalmodbus._checkFunctioncode, 4, [7, None])
-        self.assertRaises(TypeError,  minimalmodbus._checkFunctioncode, 4, [7, [8]])
-        self.assertRaises(TypeError,  minimalmodbus._checkFunctioncode, 4, [7.5, 8])
+        self.assertRaises(TypeError,  minimalmodbus._checkFunctioncode, 4, (4, 5))
+        self.assertRaises(ValueError, minimalmodbus._checkFunctioncode, 4, [4, -23])
+        self.assertRaises(ValueError, minimalmodbus._checkFunctioncode, 4, [4, 128])
+        self.assertRaises(TypeError,  minimalmodbus._checkFunctioncode, 4, [4, '5'])
+        self.assertRaises(TypeError,  minimalmodbus._checkFunctioncode, 4, [4, None])
+        self.assertRaises(TypeError,  minimalmodbus._checkFunctioncode, 4, [4, [5]])
+        self.assertRaises(TypeError,  minimalmodbus._checkFunctioncode, 4, [4.0, 5])
 
 
 class TestCheckSlaveaddress(ExtendedTestCase):  
@@ -867,7 +868,7 @@ class TestDummyCommunication(ExtendedTestCase):
         self.instrument.write_bit(72, 1, 15)
         self.instrument.write_bit(72, 1, functioncode=15)
 
-    def testWriteBitWrongAddress(self):
+    def testWriteBitWrongAddressRange(self):
         self.assertRaises(ValueError, self.instrument.write_bit, 65536, 1)
         self.assertRaises(ValueError, self.instrument.write_bit, -1, 1)
 
@@ -900,8 +901,9 @@ class TestDummyCommunication(ExtendedTestCase):
         self.assertRaises(TypeError, self.instrument.write_bit, 71, 1, [5])
         self.assertRaises(TypeError, self.instrument.write_bit, 71, 1, None)
 
-    # Wrong number of registers in write data (function code 15)
-    pass
+    def testWriteBitWithWrongRegisternumbersResponse(self):     
+        self.assertRaises(ValueError, self.instrument.write_bit, 73, 1, functioncode=15)
+    
 
     ## Read register ##
 
@@ -984,26 +986,26 @@ class TestDummyCommunication(ExtendedTestCase):
         self.assertRaises(TypeError, self.instrument.write_register, 35, 20, functioncode = 16.0 ) 
         self.assertRaises(TypeError, self.instrument.write_register, 35, 20, functioncode = None ) 
         
-    def testWriteRegisterWithWrongFunctioncodeResponse(self):
-        pass    
-    
-    def testWriteRegisterWithWrongWritedataResponse(self):
-        # Use functioncode 6
-        pass        
-        
     def testWriteRegisterWithWrongCrcResponse(self):    
         self.assertRaises(ValueError, self.instrument.write_register, 51, 99 ) # Slave gives wrong CRC
         
-    def testWriteRegisterWithWrongRegisternumbersResponse(self):     
-        self.assertRaises(ValueError, self.instrument.write_register, 52, 99 ) # Slave gives wrong number of registers
+    def testWriteRegisterWithWrongSlaveaddressResponse(self): 
+        self.assertRaises(ValueError, self.instrument.write_register, 54, 99 ) # Slave gives wrong slaveaddress    
+        
+    def testWriteRegisterWithWrongFunctioncodeResponse(self):
+        self.assertRaises(ValueError, self.instrument.write_register, 55, 99 ) # Slave gives wrong functioncode                   
+        self.assertRaises(ValueError, self.instrument.write_register, 56, 99) # Slave indicates an error
             
     def testWriteRegisterWithWrongRegisteraddressResponse(self): 
         self.assertRaises(ValueError, self.instrument.write_register, 53, 99 ) # Slave gives wrong registeraddress
     
-    def testWriteRegisterWithWrongSlaveaddressResponse(self): 
-        self.assertRaises(ValueError, self.instrument.write_register, 54, 99 ) # Slave gives wrong slaveaddress
+    def testWriteRegisterWithWrongRegisternumbersResponse(self):     
+        self.assertRaises(ValueError, self.instrument.write_register, 52, 99 ) # Slave gives wrong number of registers
+
+    def testWriteRegisterWithWrongWritedataResponse(self):   
+        self.assertRaises(ValueError, self.instrument.write_register, 55, 99, functioncode = 6) # Functioncode 6. Slave gives wrong write data.
     
-    ## Generic function 
+    ## Generic command 
     
     def testGenericCommand(self):    
         self.assertEqual( self.instrument._genericCommand(3, 289), 770 ) # Read register 289
@@ -1158,6 +1160,45 @@ from the dummy serial port.
 # Note that the string 'AAAAAAA' might be easier to read if grouped, 
 # like 'AA' + 'AAAA' + 'A' for the initial part (address etc) + payload + CRC.
 
+
+#                ##  READ BIT  ##  
+
+# Read bit register 61 on slave 1 using function code 2 #   
+# ----------------------------------------------------- #
+# Message:  Slave address 1, function code 2. Register address 61, 1 coil. CRC. 
+# Response: Slave address 1, function code 2. 1 byte, value=1. CRC.
+RESPONSES['\x01\x02' + '\x00\x3d\x00\x01' + '(\x06'] = '\x01\x02' + '\x01\x01' + '`H'
+
+# Read bit register 62 on slave 1 using function code 1 #   
+# ----------------------------------------------------- #
+# Message:  Slave address 1, function code 1. Register address 62, 1 coil. CRC. 
+# Response: Slave address 1, function code 1. 1 byte, value=0. CRC.
+RESPONSES['\x01\x01' + '\x00\x3e\x00\x01' + '\x9c\x06'] = '\x01\x01' + '\x01\x00' + 'Q\x88'
+
+
+#                ##  WRITE BIT  ##  
+
+# Write bit register 71 on slave 1 using function code 5 #   
+# ------------------------------------------------------ #
+# Message:  Slave address 1, function code 5. Register address 71, value 1 (FF00). CRC. 
+# Response: Slave address 1, function code 5. Register address 71, value 1 (FF00). CRC.
+RESPONSES['\x01\x05' + '\x00\x47\xff\x00' + '</'] = '\x01\x05' + '\x00\x47\xff\x00' + '</'
+
+# Write bit register 72 on slave 1 using function code 15 #   
+# ------------------------------------------------------ #
+# Message:  Slave address 1, function code 15. Register address 72, 1 bit, 1 byte, value 1 (0100). CRC. 
+# Response: Slave address 1, function code 15. Register address 72, 1 bit. CRC.
+RESPONSES['\x01\x0f' + '\x00\x48\x00\x01\x01\x01' + '\x0fY'] = '\x01\x0f' + '\x00\x48\x00\x01' + '\x14\x1d'
+
+# Write bit register 73 on slave 1 using function code 15, slave gives wrong number of registers #   
+# ---------------------------------------------------------------------------------------------- #
+# Message:  Slave address 1, function code 15. Register address 73, 1 bit, 1 byte, value 1 (0100). CRC. 
+# Response: Slave address 1, function code 15. Register address 73, 2 bits (wrong). CRC.
+RESPONSES['\x01\x0f' + '\x00\x49\x00\x01\x01\x01' + '2\x99'] = '\x01\x0f' + '\x00\x49\x00\x02' + '\x05\xdc'
+
+
+#                ##  READ REGISTER  ##  
+
 # Read register 289 on slave 1 using function code 3 #
 # ---------------------------------------------------#
 # Message:  Slave address 1, function code 3. Register address 289, 1 register. CRC. 
@@ -1175,6 +1216,9 @@ RESPONSES['\x01\x03' + '\x00\x05\x00\x01' + '\x94\x0b'] = '\x01\x03' + '\x02\x00
 # Message:  Slave address 1, function code 4. Register address 14, 1 register. CRC. 
 # Response: Slave address 1, function code 4. 2 bytes, value=880. CRC.
 RESPONSES['\x01\x04' + '\x00\x0e\x00\x01' + 'P\t'] = '\x01\x04' + '\x02\x03\x70' + '\xb8$'
+
+
+#                ##  WRITE REGISTER  ##  
 
 # Write value 50 in register 24 on slave 1 using function code 16 #
 # ----------------------------------------------------------------#
@@ -1213,34 +1257,29 @@ RESPONSES['\x01\x10' + '\x00\x34\x00\x01' + '\x02\x00\x63' + '\xe2\r'] = '\x01\x
 RESPONSES['\x01\x10' + '\x00\x35\x00\x01' + '\x02\x00\x63' + '\xe3\xdc'] = '\x01\x10' + '\x00\x36\x00\x01' + '\xe1\xc7'
 
 # Write value 99 in register 54 on slave 1 using function code 16, slave gives wrong slave address #
-# ----------------------------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------------------------ #
 # Message:  Slave address 1, function code 16. Register address 54, 1 register, 2 bytes, value=99. CRC. 
 # Response: Slave address 2 (wrong), function code 16. Register address 54, 1 register. CRC.
 RESPONSES['\x01\x10' + '\x00\x36\x00\x01' + '\x02\x00\x63' + '\xe3\xef'] = '\x02\x10' + '\x00\x36\x00\x01' + '\xe1\xf4'
 
-# Read bit register 61 on slave 1 using function code 2 #   
-# ----------------------------------------------------- #
-# Message:  Slave address 1, function code 2. Register address 61, 1 coil. CRC. 
-# Response: Slave address 1, function code 2. 1 byte, value=1. CRC.
-RESPONSES['\x01\x02' + '\x00\x3d\x00\x01' + '(\x06'] = '\x01\x02' + '\x01\x01' + '`H'
+# Write value 99 in register 55 on slave 1 using function code 16, slave gives wrong functioncode #
+# ----------------------------------------------------------------------------------------------- #
+# Message:  Slave address 1, function code 16. Register address 55, 1 register, 2 bytes, value=99. CRC. 
+# Response: Slave address 1, function code 6 (wrong). Register address 55, 1 register. CRC.
+RESPONSES['\x01\x10' + '\x00\x37\x00\x01' + '\x02\x00\x63' + '\xe2>'] = '\x01\x06' + '\x00\x37\x00\x01' + '\xf9\xc4'
 
-# Read bit register 62 on slave 1 using function code 1 #   
-# ----------------------------------------------------- #
-# Message:  Slave address 1, function code 1. Register address 62, 1 coil. CRC. 
-# Response: Slave address 1, function code 1. 1 byte, value=0. CRC.
-RESPONSES['\x01\x01' + '\x00\x3e\x00\x01' + '\x9c\x06'] = '\x01\x01' + '\x01\x00' + 'Q\x88'
+# Write value 99 in register 56 on slave 1 using function code 16, slave gives wrong functioncode (indicates an error) #
+# -------------------------------------------------------------------------------------------------------------------- #
+# Message:  Slave address 1, function code 16. Register address 56, 1 register, 2 bytes, value=99. CRC. 
+# Response: Slave address 1, function code 144 (wrong). Register address 56, 1 register. CRC.
+RESPONSES['\x01\x10' + '\x00\x38\x00\x01' + '\x02\x00\x63' + '\xe2\xc1'] = '\x01\x90' + '\x00\x38\x00\x01' + '\x81\xda'
 
-# Write bit register 71 on slave 1 using function code 5 #   
-# ------------------------------------------------------ #
-# Message:  Slave address 1, function code 5. Register address 71, value 1 (FF00). CRC. 
-# Response: Slave address 1, function code 5. Register address 71, value 1 (FF00). CRC.
-RESPONSES['\x01\x05' + '\x00\x47\xff\x00' + '</'] = '\x01\x05' + '\x00\x47\xff\x00' + '</'
+# Write value 99 in register 55 on slave 1 using function code 6, slave gives wrong write data #
+# -------------------------------------------------------------------------------------------- #
+# Message:  Slave address 1, function code 6. Register address 55, value=99. CRC. 
+# Response: Slave address 1, function code 6. Register address 55, value=98 (wrong). CRC.
+RESPONSES['\x01\x06' + '\x00\x37\x00\x63' + 'x-'] = '\x01\x06' + '\x00\x37\x00\x62' + '\xb9\xed'
 
-# Write bit register 72 on slave 1 using function code 15 #   
-# ------------------------------------------------------ #
-# Message:  Slave address 1, function code 15. Register address 72, 1 bit, 1 byte, value 1 (0100). CRC. 
-# Response: Slave address 1, function code 15. Register address 72, 1 bit. CRC.
-RESPONSES['\x01\x0f' + '\x00\x48\x00\x01\x01\x01' + '\x0fY'] = '\x01\x0f' + '\x00\x48\x00\x01' + '\x14\x1d'
 
 # Retrieve an empty response (for testing the _communicate method) #
 # ---------------------------------------------------------------- #
@@ -1299,6 +1338,7 @@ RESPONSES['\n\x10\x10\x01\x00\x01\x02\x07\xd0\xc6\xdc'] ='\n\x10\x10\x01\x00\x01
 
 if __name__ == '__main__':
 
+    print repr( minimalmodbus._calculateCrcString('\x01\x0f' + '\x00\x49\x00\x01\x01\x01' ))
     unittest.main(verbosity=VERBOSITY)
     
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestDummyCommunicationWithPortClosure)
