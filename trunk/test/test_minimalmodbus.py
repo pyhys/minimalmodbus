@@ -28,28 +28,27 @@ For each function are these tests performed:
   * Invalid input value
   * Invalid input type
 
-
-This unittest suite use a dummy serial port from the module :mod:`dummy_serial`. 
-With this it is possible to test the functionality using previously recorded communication data.
+This unittest suite uses a dummy serial port from the module :mod:`dummy_serial`, 
+so it is possible to test the functionality using previously recorded communication data.
 
 With the dummy responses, it is also possible to simulate errors in the communication 
 from the slave. A few different types of errors are tested, as seen in this table.
 
-=====================================  ============== ===================
-Simulated error                        function       Modbus functioncode
-=====================================  ============== ===================
-No response                            read_bit       2
-Wrong CRC in response                  write_register 16
-Wrong slave address in response        write_register 16
-Wrong function code in response        write_register 16
-Slave indicates an error               write_register 16
-Wrong byte count in response           read_bit       2
-Wrong register address in response     write_register 16
-Wrong number of registers in response  write_bit      15
-Wrong number of registers in response  write_register 16
-Wrong write data in response           write_bit      5
-Wrong write data in response           write_register 6
-=====================================  ============== ===================
+=====================================  ===================== ================================
+Simulated response error               Tested using function Tested using Modbus functioncode
+=====================================  ===================== ================================
+No response                            read_bit              2
+Wrong CRC in response                  write_register        16
+Wrong slave address in response        write_register        16
+Wrong function code in response        write_register        16
+Slave indicates an error               write_register        16
+Wrong byte count in response           read_bit              2
+Wrong register address in response     write_register        16
+Wrong number of registers in response  write_bit             15
+Wrong number of registers in response  write_register        16
+Wrong write data in response           write_bit             5
+Wrong write data in response           write_register        6
+=====================================  ===================== ================================
 
 This Python file was changed (committed) at $Date$, 
 which was $Revision$.
@@ -72,7 +71,7 @@ import minimalmodbus
 # For showing the error messages caught by assertRaises() #
 ###########################################################
 
-VERBOSITY = 0 
+VERBOSITY = 0
 """Verbosity level for the unit testing. Use value 0 or 2."""
 
 SHOW_ERROR_MESSAGES_FOR_ASSERTRAISES = False
@@ -87,7 +86,7 @@ class _NonexistantError(Exception):
 class ExtendedTestCase(unittest.TestCase):
     """Overriding the assertRaises() method to be able to print the error message.
     
-    Use :data:`SHOW_ERROR_MESSAGES_FOR_ASSERTRAISES` = True for this option. It can also be useful 
+    Use :data:`SHOW_ERROR_MESSAGES_FOR_ASSERTRAISES` = True in order to use this option. It can also be useful 
     to set :data:`VERBOSITY` = 2.
     
     """
@@ -121,25 +120,25 @@ class TestEmbedPayload(ExtendedTestCase):
             result = minimalmodbus._embedPayload(slaveaddress, functioncode, inputstring)
             self.assertEqual(result, knownresult)
 
-    def testWrongSlaveaddressValue(self):
+    def testWrongSlaveaddressValue(self):  
         self.assertRaises(ValueError, minimalmodbus._embedPayload, 248, 16, 'ABC')    
         self.assertRaises(ValueError, minimalmodbus._embedPayload, -1, 16, 'ABC')    
        
-    def testSlaveaddressNotInteger(self):
+    def testSlaveaddressNotInteger(self):  
         self.assertRaises(TypeError, minimalmodbus._embedPayload, 1.0, 16, 'ABC') 
         self.assertRaises(TypeError, minimalmodbus._embedPayload, 'DEF', 16, 'ABC') 
 
-    def testWrongFunctioncodeValue(self):
+    def testWrongFunctioncodeValue(self):  
         self.assertRaises(ValueError, minimalmodbus._embedPayload, 1, 222, 'ABC') 
         self.assertRaises(ValueError, minimalmodbus._embedPayload, 1, -1, 'ABC') 
         
-    def testFunctioncodeNotInteger(self):
+    def testFunctioncodeNotInteger(self):  
         self.assertRaises(TypeError, minimalmodbus._embedPayload, 1, 1.0, 'ABC') 
         self.assertRaises(TypeError, minimalmodbus._embedPayload, 1, '1', 'ABC')
         self.assertRaises(TypeError, minimalmodbus._embedPayload, 1, [1], 'ABC')
         self.assertRaises(TypeError, minimalmodbus._embedPayload, 1, None, 'ABC')
 
-    def testPayloadNotString(self):
+    def testPayloadNotString(self):  
         self.assertRaises(TypeError, minimalmodbus._embedPayload, 1, 16, 1) 
         self.assertRaises(TypeError, minimalmodbus._embedPayload, 1, 16, 1.0) 
         self.assertRaises(TypeError, minimalmodbus._embedPayload, 1, 16, ['ABC']) 
@@ -156,7 +155,7 @@ class TestExtractPayload(ExtendedTestCase):
             result = minimalmodbus._extractPayload(inputstring, address, functioncode )
             self.assertEqual(result, knownresult)
             
-    def testTooShortMessage(self):
+    def testTooShortMessage(self):  
         self.assertRaises(ValueError, minimalmodbus._extractPayload, 'A', 2, 2) 
     
     def testWrongSlaveAddress(self):
@@ -164,29 +163,29 @@ class TestExtractPayload(ExtendedTestCase):
         self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 248, 2)
         self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', -1, 2)
         
-    def testSlaveaddressNotInteger(self):    
+    def testSlaveaddressNotInteger(self):      
         self.assertRaises(TypeError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 2.0, 2) 
         self.assertRaises(TypeError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', '2', 2) 
         self.assertRaises(TypeError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', [2], 2) 
         self.assertRaises(TypeError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', None, 2) 
         
-    def testErrorindicationFromSlave(self):
+    def testErrorindicationFromSlave(self):   
         self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x82123q\x02', 2, 2)     
         
-    def testWrongFunctionCode(self):
+    def testWrongFunctionCode(self):  
         self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 2, 3)  
         self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x72123B\x02', 2, 2) # Other value in response
         self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 2, 95)
         self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 2, -1)
         self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 2, 128)
         
-    def testFunctionCodeNotInteger(self):
+    def testFunctionCodeNotInteger(self):   
         self.assertRaises(TypeError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 2, 2.0)   
         self.assertRaises(TypeError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 2, '2')   
         self.assertRaises(TypeError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 2, [2])
         self.assertRaises(TypeError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 2, None)      
     
-    def testWrongCrc(self):
+    def testWrongCrc(self):   
         self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc3', 2, 2) 
     
 ##############################
@@ -214,11 +213,11 @@ class TestNumToOneByteString(ExtendedTestCase):
             
             self.assertEqual(resultstring, knownstring)       
 
-    def testWrongInput(self):
+    def testWrongInput(self):  
         self.assertRaises(ValueError, minimalmodbus._numToOneByteString, -1)
         self.assertRaises(ValueError, minimalmodbus._numToOneByteString, 256)
 
-    def testWrongType(self):
+    def testWrongType(self):  
         self.assertRaises(TypeError, minimalmodbus._numToOneByteString, 1.0)
         self.assertRaises(TypeError, minimalmodbus._numToOneByteString, '1')
         self.assertRaises(TypeError, minimalmodbus._numToOneByteString, [1])
@@ -241,22 +240,22 @@ class TestNumToTwoByteString(ExtendedTestCase):
             resultstring = minimalmodbus._numToTwoByteString(inputvalue, numberOfDecimals, LsbFirst)
             self.assertEqual(resultstring, knownstring)      
 
-    def testNegativeValue(self):
+    def testNegativeValue(self):  
         self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, -77, 1, False)
 
-    def testTooLargeValue(self):
+    def testTooLargeValue(self):  
         self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, 77000, 0, False)
         self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, 77, 4, False)
 
-    def testValueNotNumerical(self):
+    def testValueNotNumerical(self):  
         self.assertRaises(TypeError, minimalmodbus._numToTwoByteString, '77', 1, False)
         self.assertRaises(TypeError, minimalmodbus._numToTwoByteString, [77], 1, False)
         self.assertRaises(TypeError, minimalmodbus._numToTwoByteString, None, 1, False)
 
-    def testNumberofdecimalsNotInteger(self):
+    def testNumberofdecimalsNotInteger(self):  
         self.assertRaises(TypeError, minimalmodbus._numToTwoByteString, 77, 1.0, False)
 
-    def testNegativeNumberofdecimals(self):
+    def testNegativeNumberofdecimals(self):  
         self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, 77, -1, False)
 
     def testLsbfirstNotBoolean(self):
@@ -276,22 +275,22 @@ class TestTwoByteStringToNum(ExtendedTestCase):
             resultvalue = minimalmodbus._twoByteStringToNum(inputstring, numberOfDecimals)
             self.assertEqual(resultvalue, knownvalue)      
 
-    def testInputNotStringType(self):        
+    def testInputNotStringType(self):          
         self.assertRaises(TypeError, minimalmodbus._twoByteStringToNum, 1, 1)
 
-    def testInputStringTooLong(self):
+    def testInputStringTooLong(self):  
         self.assertRaises(ValueError, minimalmodbus._twoByteStringToNum, 'ABC', 1)
 
-    def testInputStringTooShort(self):
+    def testInputStringTooShort(self):  
         self.assertRaises(ValueError, minimalmodbus._twoByteStringToNum, 'A', 1)
 
-    def testNumberofdecimalsNotInteger(self):
+    def testNumberofdecimalsNotInteger(self):  
         self.assertRaises(TypeError, minimalmodbus._twoByteStringToNum, 'AB', 1.0)
         self.assertRaises(TypeError, minimalmodbus._twoByteStringToNum, 'AB', '1')
         self.assertRaises(TypeError, minimalmodbus._twoByteStringToNum, 'AB', [1])
         self.assertRaises(TypeError, minimalmodbus._twoByteStringToNum, 'AB', None)
 
-    def testNegativeNumberofdecimals(self):
+    def testNegativeNumberofdecimals(self):  
         self.assertRaises(ValueError, minimalmodbus._twoByteStringToNum, 'AB', -1)
 
 
@@ -310,10 +309,10 @@ class TestBitResponseToValue(ExtendedTestCase):
         self.assertEqual(minimalmodbus._bitResponseToValue('\x00'), 0) 
         self.assertEqual(minimalmodbus._bitResponseToValue('\x01'), 1) 
 
-    def testInputWrongValues(self): 
+    def testWrongValues(self):  
         self.assertRaises(ValueError, minimalmodbus._bitResponseToValue, 'ABC' )
 
-    def testInputNotStringType(self):     
+    def testWrongType(self):      
         self.assertRaises(TypeError, minimalmodbus._bitResponseToValue, 1 )
         self.assertRaises(TypeError, minimalmodbus._bitResponseToValue, 1.0 )
         self.assertRaises(TypeError, minimalmodbus._bitResponseToValue, ['\x00'] )
@@ -334,25 +333,26 @@ class TestCreateBitPattern(ExtendedTestCase):
             resultvalue = minimalmodbus._createBitpattern(functioncode, value)
             self.assertEqual(resultvalue, knownresult) 
                 
-    def testWrongFunctionCode(self):
+    def testWrongFunctionCode(self):  
         self.assertRaises(ValueError, minimalmodbus._createBitpattern, 16, 1)  
         self.assertRaises(ValueError, minimalmodbus._createBitpattern, -1, 1)  
         self.assertRaises(ValueError, minimalmodbus._createBitpattern, 128, 1)  
  
-    def testFunctionCodeNotInteger(self):
+    def testFunctionCodeNotInteger(self):  
         self.assertRaises(TypeError, minimalmodbus._createBitpattern, 15.0, 1) 
         self.assertRaises(TypeError, minimalmodbus._createBitpattern, '15', 1) 
         self.assertRaises(TypeError, minimalmodbus._createBitpattern, [15], 1) 
         self.assertRaises(TypeError, minimalmodbus._createBitpattern, None, 1) 
  
-    def testWrongValue(self):
+    def testWrongValue(self):   
         self.assertRaises(ValueError, minimalmodbus._createBitpattern, 5, 2)  
         self.assertRaises(ValueError, minimalmodbus._createBitpattern, 5, 222) 
         self.assertRaises(ValueError, minimalmodbus._createBitpattern, 5, -1) 
         self.assertRaises(ValueError, minimalmodbus._createBitpattern, 15, 2) 
+        self.assertRaises(ValueError, minimalmodbus._createBitpattern, 15, 222) 
         self.assertRaises(ValueError, minimalmodbus._createBitpattern, 15, -1) 
  
-    def testValueNotInteger(self):
+    def testValueNotInteger(self):  
         self.assertRaises(TypeError, minimalmodbus._createBitpattern, 5, 1.0)  
         self.assertRaises(TypeError, minimalmodbus._createBitpattern, 5, 0.0) 
         self.assertRaises(TypeError, minimalmodbus._createBitpattern, 15, 1.0)  
@@ -363,9 +363,9 @@ class TestCreateBitPattern(ExtendedTestCase):
         self.assertRaises(TypeError, minimalmodbus._createBitpattern, 5, None) 
         
         
-####################    
-# Bit manipulation #
-####################    
+#########################    
+# Test bit manipulation #
+#########################    
     
 class TestSetBitOn(ExtendedTestCase):
 
@@ -381,7 +381,7 @@ class TestSetBitOn(ExtendedTestCase):
             result = minimalmodbus._setBitOn(x, bitnum)
             self.assertEqual(result, knownresult)
 
-    def testNotIntegerInput(self):
+    def testNotIntegerInput(self):   
         self.assertRaises(TypeError, minimalmodbus._setBitOn, 1.0, 1)
         self.assertRaises(TypeError, minimalmodbus._setBitOn, '1', 1)
         self.assertRaises(TypeError, minimalmodbus._setBitOn, [1], 1)
@@ -391,7 +391,7 @@ class TestSetBitOn(ExtendedTestCase):
         self.assertRaises(TypeError, minimalmodbus._setBitOn, 1, [1])
         self.assertRaises(TypeError, minimalmodbus._setBitOn, 1, None)
 
-    def testNegativeInput(self):
+    def testNegativeInput(self):   
         self.assertRaises(ValueError, minimalmodbus._setBitOn, 1, -1)        
         self.assertRaises(ValueError, minimalmodbus._setBitOn, -2, 1)     
                
@@ -418,7 +418,7 @@ class TestXOR(ExtendedTestCase):
                 result = minimalmodbus._XOR(i, k)
                 self.assertEqual(result, knownresult) 
     
-    def testNotIntegerInput(self):
+    def testNotIntegerInput(self):   
         self.assertRaises(TypeError, minimalmodbus._XOR, '1', 1)
         self.assertRaises(TypeError, minimalmodbus._XOR, 1.0, 1)
         self.assertRaises(TypeError, minimalmodbus._XOR, [1], 1)
@@ -428,7 +428,7 @@ class TestXOR(ExtendedTestCase):
         self.assertRaises(TypeError, minimalmodbus._XOR, 1, 1.0)
         self.assertRaises(TypeError, minimalmodbus._XOR, 1, None)
 
-    def testNegativeInput(self):
+    def testNegativeInput(self):   
         self.assertRaises(ValueError, minimalmodbus._XOR, 1, -1)        
         self.assertRaises(ValueError, minimalmodbus._XOR, -1, 1)         
     
@@ -459,13 +459,13 @@ class TestRightshift(ExtendedTestCase):
             self.assertEqual(resultshifted, knownshifted)       
             self.assertEqual(resultcarry, knowncarry) 
    
-    def testNotIntegerInput(self):
+    def testNotIntegerInput(self):  
         self.assertRaises(TypeError, minimalmodbus._rightshift, '1')
         self.assertRaises(TypeError, minimalmodbus._rightshift, [1])
         self.assertRaises(TypeError, minimalmodbus._rightshift, 1.0)
         self.assertRaises(TypeError, minimalmodbus._rightshift, None)
 
-    def testNegativeInput(self):
+    def testNegativeInput(self):   
         self.assertRaises(ValueError, minimalmodbus._rightshift, -1)  
         
 
@@ -485,7 +485,7 @@ class TestCalculateCrcString(ExtendedTestCase):
             resultcrc = minimalmodbus._calculateCrcString(inputstring)
             self.assertEqual(resultcrc, knowncrc)     
 
-    def testNotStringInput(self):
+    def testNotStringInput(self):  
         self.assertRaises(TypeError, minimalmodbus._calculateCrcString, 123)
         self.assertRaises(TypeError, minimalmodbus._calculateCrcString, 1.0)
         self.assertRaises(TypeError, minimalmodbus._calculateCrcString, None)
@@ -500,25 +500,25 @@ class TestCheckFunctioncode(ExtendedTestCase):
     def testCorrectFunctioncodeNoRange(self):
         minimalmodbus._checkFunctioncode( 4, None )    
         
-    def testWrongFunctioncode(self):
+    def testWrongFunctioncode(self):  
         self.assertRaises(ValueError, minimalmodbus._checkFunctioncode, 3, [4, 5])
 
-    def testWrongFunctioncodeNoRange(self):   
+    def testWrongFunctioncodeNoRange(self):     
         self.assertRaises(ValueError, minimalmodbus._checkFunctioncode, 1000, None)
         self.assertRaises(ValueError, minimalmodbus._checkFunctioncode, -1, None)
 
-    def testWrongFunctioncodeType(self):
+    def testWrongFunctioncodeType(self):  
         self.assertRaises(TypeError, minimalmodbus._checkFunctioncode, '4', [4, 5])
         self.assertRaises(TypeError, minimalmodbus._checkFunctioncode, 4.5, [4, 5])
         self.assertRaises(TypeError, minimalmodbus._checkFunctioncode, 4.0, [4, 5])
         self.assertRaises(TypeError, minimalmodbus._checkFunctioncode, [4], [4, 5])
         self.assertRaises(TypeError, minimalmodbus._checkFunctioncode, None, [4, 5])
 
-    def testWrongFunctioncodeListValues(self):
+    def testWrongFunctioncodeListValues(self):   
         self.assertRaises(ValueError, minimalmodbus._checkFunctioncode, -1, [-1, 5])
         self.assertRaises(ValueError, minimalmodbus._checkFunctioncode, 128, [4, 128])
 
-    def testWrongListType(self):
+    def testWrongListType(self):  
         self.assertRaises(TypeError,  minimalmodbus._checkFunctioncode, 4, 4)
         self.assertRaises(TypeError,  minimalmodbus._checkFunctioncode, 4, 'ABC')
         self.assertRaises(TypeError,  minimalmodbus._checkFunctioncode, 4, (4, 5))
@@ -538,11 +538,11 @@ class TestCheckSlaveaddress(ExtendedTestCase):
         minimalmodbus._checkSlaveaddress( 10 )
         minimalmodbus._checkSlaveaddress( 247 )
 
-    def testWrongValues(self):
+    def testWrongValues(self):  
         self.assertRaises(ValueError, minimalmodbus._checkSlaveaddress, -1)
         self.assertRaises(ValueError, minimalmodbus._checkSlaveaddress, 248)
         
-    def testNotIntegerInput(self):
+    def testNotIntegerInput(self):  
         self.assertRaises(TypeError, minimalmodbus._checkSlaveaddress, 1.0)
         self.assertRaises(TypeError, minimalmodbus._checkSlaveaddress, '1')
         self.assertRaises(TypeError, minimalmodbus._checkSlaveaddress, [1])
@@ -557,11 +557,11 @@ class TestCheckRegisteraddress(ExtendedTestCase):
         minimalmodbus._checkRegisteraddress( 10 )
         minimalmodbus._checkRegisteraddress( 65535 )
 
-    def testWrongValues(self):
+    def testWrongValues(self):  
         self.assertRaises(ValueError, minimalmodbus._checkRegisteraddress, -1)
         self.assertRaises(ValueError, minimalmodbus._checkRegisteraddress, 65536)
         
-    def testNotIntegerInput(self):
+    def testWrongType(self):  
         self.assertRaises(TypeError, minimalmodbus._checkRegisteraddress, 1.0)
         self.assertRaises(TypeError, minimalmodbus._checkRegisteraddress, '1')
         self.assertRaises(TypeError, minimalmodbus._checkRegisteraddress, [1])
@@ -579,9 +579,9 @@ class TestCheckResponseNumberOfBytes(ExtendedTestCase):
 
     def testNotStringInput(self):
         self.assertRaises(TypeError, minimalmodbus._checkResponseByteCount, 123)
-        self.assertRaises(TypeError, minimalmodbus._checkRegisteraddress, ['ABC'])
-        self.assertRaises(TypeError, minimalmodbus._checkRegisteraddress, 1.0)
-        self.assertRaises(TypeError, minimalmodbus._checkRegisteraddress, None)
+        self.assertRaises(TypeError, minimalmodbus._checkResponseByteCount, ['ABC'])
+        self.assertRaises(TypeError, minimalmodbus._checkResponseByteCount, 1.0)
+        self.assertRaises(TypeError, minimalmodbus._checkResponseByteCount, None)
         
         
 class TestCheckResponseRegisterAddress(ExtendedTestCase):    
@@ -592,23 +592,23 @@ class TestCheckResponseRegisterAddress(ExtendedTestCase):
         minimalmodbus._checkResponseRegisterAddress( '\x00\x47\xff\x00', 71)
         minimalmodbus._checkResponseRegisterAddress( '\x00\x48\x00\x01', 72)
         
-    def testWrongResponseRegisterAddress(self):
+    def testWrongResponseRegisterAddress(self):  
         self.assertRaises(ValueError, minimalmodbus._checkResponseRegisterAddress, '\x00\x2d\x00\x58', 46)
 
-    def testTooShortString(self):        
+    def testTooShortString(self):         
         self.assertRaises(ValueError, minimalmodbus._checkResponseRegisterAddress, '\x00', 46)
         
-    def testNotString(self):
+    def testNotString(self): 
         self.assertRaises(TypeError, minimalmodbus._checkResponseRegisterAddress, 1, 45)    
         self.assertRaises(TypeError, minimalmodbus._checkResponseRegisterAddress, 1.0, 45)  
         self.assertRaises(TypeError, minimalmodbus._checkResponseRegisterAddress, ['\x00\x2d\x00\x58'], 45)   
         self.assertRaises(TypeError, minimalmodbus._checkResponseRegisterAddress, None, 45)  
 
-    def testWrongAddress(self):
+    def testWrongAddress(self): 
         self.assertRaises(ValueError, minimalmodbus._checkResponseRegisterAddress, '\x00\x2d\x00\x58', -2)     
         self.assertRaises(ValueError, minimalmodbus._checkResponseRegisterAddress, '\x00\x2d\x00\x58', 65536)   
         
-    def testAddressNotInteger(self):
+    def testAddressNotInteger(self):  
         self.assertRaises(TypeError, minimalmodbus._checkResponseRegisterAddress, '\x00\x2d\x00\x58', 45.0)     
         self.assertRaises(TypeError, minimalmodbus._checkResponseRegisterAddress, '\x00\x2d\x00\x58', '45')  
         self.assertRaises(TypeError, minimalmodbus._checkResponseRegisterAddress, '\x00\x2d\x00\x58', [45])  
@@ -622,24 +622,24 @@ class TestCheckResponseNumberOfRegisters(ExtendedTestCase):
         minimalmodbus._checkResponseNumberOfRegisters( '\x00#\x00\x01', 1 )
         minimalmodbus._checkResponseNumberOfRegisters( '\x00\x34\x00\x02', 2 )
         
-    def testWrongResponseNumberOfRegisters(self):
+    def testWrongResponseNumberOfRegisters(self):  
         self.assertRaises(ValueError, minimalmodbus._checkResponseNumberOfRegisters, '\x00#\x00\x01', 4 )
 
-    def testTooShortString(self):
+    def testTooShortString(self):  
         self.assertRaises(ValueError, minimalmodbus._checkResponseNumberOfRegisters, '\x00', 1 )
 
-    def testNotString(self):
+    def testNotString(self):  
         self.assertRaises(TypeError, minimalmodbus._checkResponseNumberOfRegisters, 1, 1 )
         self.assertRaises(TypeError, minimalmodbus._checkResponseNumberOfRegisters, 1.0, 1 )
         self.assertRaises(TypeError, minimalmodbus._checkResponseNumberOfRegisters, None, 1 )
         self.assertRaises(TypeError, minimalmodbus._checkResponseNumberOfRegisters, ['\x00#\x00\x01'], 1 )
     
-    def testWrongResponseNumberOfRegistersRange(self):
+    def testWrongResponseNumberOfRegistersRange(self):  
         self.assertRaises(ValueError, minimalmodbus._checkResponseNumberOfRegisters, '\x00\x18\x00\x00', 0 )
         self.assertRaises(ValueError, minimalmodbus._checkResponseNumberOfRegisters, '\x00\x18\x00\x01', -1 )
         self.assertRaises(ValueError, minimalmodbus._checkResponseNumberOfRegisters, '\x00\x18\x00\x01', 65536 )
 
-    def testNumberOfRegistersNotInteger(self):
+    def testNumberOfRegistersNotInteger(self):  
         self.assertRaises(TypeError, minimalmodbus._checkResponseNumberOfRegisters, '\x00\x18\x00\x01', [1] )
         self.assertRaises(TypeError, minimalmodbus._checkResponseNumberOfRegisters, '\x00\x18\x00\x01', 1.0 )
         self.assertRaises(TypeError, minimalmodbus._checkResponseNumberOfRegisters, '\x00\x18\x00\x01', 'ABC' )
@@ -655,12 +655,12 @@ class TestCheckResponseWriteData(ExtendedTestCase):
         minimalmodbus._checkResponseWriteData('\x00\x47\xff\x00', minimalmodbus._numToTwoByteString(65280))
         minimalmodbus._checkResponseWriteData('\x00\x2d\x00\x58ABCDEFGHIJKLMNOP', '\x00\x58')
 
-    def testWrongResponseWritedata(self):
+    def testWrongResponseWritedata(self):   
         self.assertRaises(ValueError, minimalmodbus._checkResponseWriteData, '\x00\x2d\x00\x58', '\x00\x59')
         self.assertRaises(ValueError, minimalmodbus._checkResponseWriteData, '\x00\x2d\x00\x58', minimalmodbus._numToTwoByteString(89))    
         self.assertRaises(ValueError, minimalmodbus._checkResponseWriteData, '\x00\x47\xff\x00', '\xff\x01')
         
-    def testNotString(self):
+    def testNotString(self):  
         self.assertRaises(TypeError, minimalmodbus._checkResponseWriteData, 1, '\x00\x58')  
         self.assertRaises(TypeError, minimalmodbus._checkResponseWriteData, 1.0, '\x00\x58')  
         self.assertRaises(TypeError, minimalmodbus._checkResponseWriteData, ['\x00\x2d\x00\x58'], '\x00\x58')  
@@ -670,15 +670,15 @@ class TestCheckResponseWriteData(ExtendedTestCase):
         self.assertRaises(TypeError, minimalmodbus._checkResponseWriteData, '\x00\x2d\x00\x58', ['\x00\x58'])  
         self.assertRaises(TypeError, minimalmodbus._checkResponseWriteData, '\x00\x2d\x00\x58', None)  
         
-    def testTooShortString(self):
+    def testTooShortString(self):   
         self.assertRaises(ValueError, minimalmodbus._checkResponseWriteData, '\x00\x58', '\x00\x58')  
         self.assertRaises(ValueError, minimalmodbus._checkResponseWriteData, '', '\x00\x58')  
         self.assertRaises(ValueError, minimalmodbus._checkResponseWriteData, '\x00\x2d\x00\x58', '\x58')  
         self.assertRaises(ValueError, minimalmodbus._checkResponseWriteData, '\x00\x2d\x00\x58', '')  
     
-    def testTooLongString(self):
+    def testTooLongString(self):   
         self.assertRaises(ValueError, minimalmodbus._checkResponseWriteData, '\x00\x2d\x00\x58', '\x00\x58\x00')  
-        
+
 
 class TestCheckString(ExtendedTestCase):  
 
@@ -686,33 +686,33 @@ class TestCheckString(ExtendedTestCase):
         minimalmodbus._checkString('DEF', minlength=3, maxlength=3, description='ABC' )
         minimalmodbus._checkString('DEF', minlength=0, maxlength=100, description='ABC' )
 
-    def testTooShort(self):
-        self.assertRaises(ValueError, minimalmodbus._checkString, 'DE', minlength=3, maxlength=3, description='ABC')
+    def testTooShort(self):   
+        self.assertRaises(ValueError, minimalmodbus._checkString, 'DE',  minlength=3,  maxlength=3, description='ABC')
         self.assertRaises(ValueError, minimalmodbus._checkString, 'DEF', minlength=10, maxlength=3, description='ABC')
 
-    def testTooLong(self):
+    def testTooLong(self):  
         self.assertRaises(ValueError, minimalmodbus._checkString, 'DEFG', minlength=1, maxlength=3, description='ABC')
         
-    def testInconsistentLengthlimits(self):
-        self.assertRaises(ValueError, minimalmodbus._checkString, 'DEFG', minlength=4, maxlength=3, description='ABC')    
-        self.assertRaises(ValueError, minimalmodbus._checkString, 'DEF', minlength=-3, maxlength=3, description='ABC') 
-        self.assertRaises(ValueError, minimalmodbus._checkString, 'DEF', minlength=3, maxlength=-3, description='ABC') 
+    def testInconsistentLengthlimits(self):  
+        self.assertRaises(ValueError, minimalmodbus._checkString, 'DEFG', minlength=4,  maxlength=3, description='ABC')    
+        self.assertRaises(ValueError, minimalmodbus._checkString, 'DEF',  minlength=-3, maxlength=3, description='ABC') 
+        self.assertRaises(ValueError, minimalmodbus._checkString, 'DEF',  minlength=3,  maxlength=-3, description='ABC') 
 
-    def testInputNotString(self):
-        self.assertRaises(TypeError, minimalmodbus._checkString, None, minlength=3, maxlength=3, description='ABC')
-        self.assertRaises(TypeError, minimalmodbus._checkString, 7, minlength=3, maxlength=3, description='ABC')
-        self.assertRaises(TypeError, minimalmodbus._checkString, 7.0, minlength=3, maxlength=3, description='ABC')
+    def testInputNotString(self):  
+        self.assertRaises(TypeError, minimalmodbus._checkString, None,    minlength=3, maxlength=3, description='ABC')
+        self.assertRaises(TypeError, minimalmodbus._checkString, 7,       minlength=3, maxlength=3, description='ABC')
+        self.assertRaises(TypeError, minimalmodbus._checkString, 7.0,     minlength=3, maxlength=3, description='ABC')
         self.assertRaises(TypeError, minimalmodbus._checkString, ['DEF'], minlength=3, maxlength=3, description='ABC')
 
-    def testNotIntegerInput(self):
-        self.assertRaises(TypeError, minimalmodbus._checkString, 'DEF', minlength=3.0, maxlength=3, description='ABC')
-        self.assertRaises(TypeError, minimalmodbus._checkString, 'DEF', minlength='GHI', maxlength=3, description='ABC')
-        self.assertRaises(TypeError, minimalmodbus._checkString, 'DEF', minlength=None, maxlength=3, description='ABC')
-        self.assertRaises(TypeError, minimalmodbus._checkString, 'DEF', minlength=3, maxlength=3.0, description='ABC')
-        self.assertRaises(TypeError, minimalmodbus._checkString, 'DEF', minlength=3, maxlength=3.0, description='ABC')
-        self.assertRaises(TypeError, minimalmodbus._checkString, 'DEF', minlength=3, maxlength='GHI', description='ABC')
+    def testNotIntegerInput(self):      
+        self.assertRaises(TypeError, minimalmodbus._checkString, 'DEF', minlength=3.0,   maxlength=3,     description='ABC')
+        self.assertRaises(TypeError, minimalmodbus._checkString, 'DEF', minlength='GHI', maxlength=3,     description='ABC')
+        self.assertRaises(TypeError, minimalmodbus._checkString, 'DEF', minlength=None,  maxlength=3,     description='ABC')
+        self.assertRaises(TypeError, minimalmodbus._checkString, 'DEF', minlength=3,     maxlength=3.0,   description='ABC')
+        self.assertRaises(TypeError, minimalmodbus._checkString, 'DEF', minlength=3,     maxlength=3.0,   description='ABC')
+        self.assertRaises(TypeError, minimalmodbus._checkString, 'DEF', minlength=3,     maxlength='GHI', description='ABC')
 
-    def testDescriptionNotString(self):
+    def testDescriptionNotString(self):  
         self.assertRaises(TypeError, minimalmodbus._checkString, 'DEF', minlength=3, maxlength=3, description=12)
         self.assertRaises(TypeError, minimalmodbus._checkString, 'DEF', minlength=3, maxlength=3, description=1.0)
         self.assertRaises(TypeError, minimalmodbus._checkString, 'DEF', minlength=3, maxlength=3, description=None)
@@ -730,18 +730,18 @@ class TestCheckInt(ExtendedTestCase):
         minimalmodbus._checkInt(47, minvalue=None, maxvalue=50, description='ABC')
         minimalmodbus._checkInt(47, minvalue=40, maxvalue=None, description='ABC')
         
-    def testTooLargeValue(self):
+    def testTooLargeValue(self):  
         self.assertRaises(ValueError, minimalmodbus._checkInt, 47, minvalue=30, maxvalue=40, description='ABC')
         self.assertRaises(ValueError, minimalmodbus._checkInt, 47, maxvalue=46)
         
-    def testTooSmallValue(self):    
+    def testTooSmallValue(self):     
         self.assertRaises(ValueError, minimalmodbus._checkInt, 47, minvalue=48 )
         self.assertRaises(ValueError, minimalmodbus._checkInt, 47, minvalue=48, maxvalue=None, description='ABC')
         
-    def testInconsistentLimits(self):
+    def testInconsistentLimits(self):  
         self.assertRaises(ValueError, minimalmodbus._checkInt, 47, minvalue=47, maxvalue=45, description='ABC')         
         
-    def testNotIntegerInput(self):
+    def testNotIntegerInput(self):   
         self.assertRaises(TypeError, minimalmodbus._checkInt, 47.0, minvalue=40)
         self.assertRaises(TypeError, minimalmodbus._checkInt, '47', minvalue=40)
         self.assertRaises(TypeError, minimalmodbus._checkInt, [47], minvalue=40)
@@ -752,7 +752,7 @@ class TestCheckInt(ExtendedTestCase):
         self.assertRaises(TypeError, minimalmodbus._checkInt, 47, minvalue=40, maxvalue=[50], description='ABC')
         self.assertRaises(TypeError, minimalmodbus._checkInt, 47, minvalue=40, maxvalue='50', description='ABC')
         
-    def testDescriptionNotString(self):
+    def testDescriptionNotString(self):   
         self.assertRaises(TypeError, minimalmodbus._checkInt, 47, minvalue=40, maxvalue=50, description=12)
         self.assertRaises(TypeError, minimalmodbus._checkInt, 47, minvalue=40, maxvalue=50, description=1.0)
         self.assertRaises(TypeError, minimalmodbus._checkInt, 47, minvalue=40, maxvalue=50, description=['A', 'B', 'C'])
@@ -773,22 +773,24 @@ class TestCheckNumerical(ExtendedTestCase):
         minimalmodbus._checkNumerical(47.0, minvalue=40, maxvalue=None, description='ABC' )
         minimalmodbus._checkNumerical(47.0, minvalue=40.0, maxvalue=50.0, description='ABC' )
         
-    def testTooLargeValue(self):
+    def testTooLargeValue(self):  
         self.assertRaises(ValueError, minimalmodbus._checkNumerical, 47.0, minvalue=30, maxvalue=40, description='ABC')
         self.assertRaises(ValueError, minimalmodbus._checkNumerical, 47.0, minvalue=30.0, maxvalue=40.0, description='ABC')
         self.assertRaises(ValueError, minimalmodbus._checkNumerical, 47, maxvalue=46.0)
+        self.assertRaises(ValueError, minimalmodbus._checkNumerical, 47.0, maxvalue=46.0)
+        self.assertRaises(ValueError, minimalmodbus._checkNumerical, 47.0, maxvalue=46)
         
-    def testTooSmallValue(self):    
-        self.assertRaises(ValueError, minimalmodbus._checkNumerical, 47.0, minvalue=48 )
-        self.assertRaises(ValueError, minimalmodbus._checkNumerical, 47.0, minvalue=48.0 )
-        self.assertRaises(ValueError, minimalmodbus._checkNumerical, 47, minvalue=48.0 )
+    def testTooSmallValue(self):      
+        self.assertRaises(ValueError, minimalmodbus._checkNumerical, 47.0, minvalue=48)
+        self.assertRaises(ValueError, minimalmodbus._checkNumerical, 47.0, minvalue=48.0)
+        self.assertRaises(ValueError, minimalmodbus._checkNumerical, 47, minvalue=48.0)
         self.assertRaises(ValueError, minimalmodbus._checkNumerical, 47, minvalue=48, maxvalue=None, description='ABC')
         
-    def testInconsistentLimits(self):
+    def testInconsistentLimits(self):  
         self.assertRaises(ValueError, minimalmodbus._checkNumerical, 47, minvalue=47, maxvalue=45, description='ABC')        
         self.assertRaises(ValueError, minimalmodbus._checkNumerical, 47.0, minvalue=47.0, maxvalue=45.0, description='ABC')  
         
-    def testNotNumericInput(self):
+    def testNotNumericInput(self):  
         self.assertRaises(TypeError, minimalmodbus._checkNumerical, '47.0', minvalue=40.0)
         self.assertRaises(TypeError, minimalmodbus._checkNumerical, [47.0], minvalue=40)
         self.assertRaises(TypeError, minimalmodbus._checkNumerical, 47.0, minvalue='40.0', maxvalue=50.0, description='ABC')
@@ -796,7 +798,7 @@ class TestCheckNumerical(ExtendedTestCase):
         self.assertRaises(TypeError, minimalmodbus._checkNumerical, 47.0, minvalue=40.0, maxvalue=[50.0], description='ABC')
         self.assertRaises(TypeError, minimalmodbus._checkNumerical, 47.0, minvalue=40.0, maxvalue='50.0', description='ABC')
         
-    def testDescriptionNotString(self):
+    def testDescriptionNotString(self):  
         self.assertRaises(TypeError, minimalmodbus._checkNumerical, 47.0, minvalue=40, maxvalue=50, description=12)
         self.assertRaises(TypeError, minimalmodbus._checkNumerical, 47, minvalue=40.0, maxvalue=50, description=1.0)
         self.assertRaises(TypeError, minimalmodbus._checkNumerical, 47, minvalue=40, maxvalue=50.0, description=['A', 'B', 'C'])
@@ -825,6 +827,12 @@ class TestToPrintableString(ExtendedTestCase):
         responseCharacterValues = [ord(x) for x in response]
         self.assertTrue( min(responseCharacterValues) > 31 )
         self.assertTrue( max(responseCharacterValues) < 128 )
+
+    def testInputNotString(self): 
+        self.assertRaises(TypeError, minimalmodbus._toPrintableString, 47) 
+        self.assertRaises(TypeError, minimalmodbus._toPrintableString, 47.0)
+        self.assertRaises(TypeError, minimalmodbus._toPrintableString, ['ABC'])
+        self.assertRaises(TypeError, minimalmodbus._toPrintableString, None)
 
 
 ###########################################
@@ -859,31 +867,31 @@ class TestDummyCommunication(ExtendedTestCase):
         self.assertEqual( self.instrument.read_bit(62, functioncode=1), 0 ) # Functioncode 1
         self.assertEqual( self.instrument.read_bit(62, 1),              0 )  
     
-    def testReadBitWrongRegisterAddress(self):
+    def testReadBitWrongRegisterAddress(self):  
         self.assertRaises(ValueError, self.instrument.read_bit, -1)
         self.assertRaises(ValueError, self.instrument.read_bit, 65536 )
             
-    def testReadBitWrongAddressType(self):
+    def testReadBitWrongAddressType(self):   
         self.assertRaises(TypeError, self.instrument.read_bit, 61.0)
         self.assertRaises(TypeError, self.instrument.read_bit, '61')
         self.assertRaises(TypeError, self.instrument.read_bit, [61])
         self.assertRaises(TypeError, self.instrument.read_bit, None)
         
-    def testReadBitWrongFunctioncode(self):
+    def testReadBitWrongFunctioncode(self):  
         self.assertRaises(ValueError, self.instrument.read_bit, 62, 0)
         self.assertRaises(ValueError, self.instrument.read_bit, 62, -1)
         self.assertRaises(ValueError, self.instrument.read_bit, 62, 128)
     
-    def testReadBitWrongFunctioncodeType(self):
+    def testReadBitWrongFunctioncodeType(self):   
         self.assertRaises(TypeError, self.instrument.read_bit, 62, 1.0)
         self.assertRaises(TypeError, self.instrument.read_bit, 62, '1')
         self.assertRaises(TypeError, self.instrument.read_bit, 62, [1])
         self.assertRaises(TypeError, self.instrument.read_bit, 62, None)
                     
-    def testReadBitWithWrongByteCountResponse(self): 
+    def testReadBitWithWrongByteCountResponse(self):   
         self.assertRaises(ValueError, self.instrument.read_bit, 63) # Functioncode 2. Slave gives wrong byte count.
 
-    def testReadBitWithNoResponse(self): 
+    def testReadBitWithNoResponse(self):   
         self.assertRaises(IOError, self.instrument.read_bit, 64) # Functioncode 2. Slave gives no response.
         
     ## Write bit ##
@@ -895,43 +903,43 @@ class TestDummyCommunication(ExtendedTestCase):
         self.instrument.write_bit(72, 1, 15)
         self.instrument.write_bit(72, 1, functioncode=15)
 
-    def testWriteBitWrongAddressRange(self):
+    def testWriteBitWrongAddressRange(self):  
         self.assertRaises(ValueError, self.instrument.write_bit, 65536, 1)
         self.assertRaises(ValueError, self.instrument.write_bit, -1, 1)
 
-    def testWriteBitWrongAddressType(self):
+    def testWriteBitWrongAddressType(self):   
         self.assertRaises(TypeError, self.instrument.write_bit, 71.0, 1)
         self.assertRaises(TypeError, self.instrument.write_bit, [71], 1)
         self.assertRaises(TypeError, self.instrument.write_bit, '71', 1)
         self.assertRaises(TypeError, self.instrument.write_bit, None, 1)
 
-    def testWriteBitWrongValue(self):
+    def testWriteBitWrongValue(self):  
         self.assertRaises(ValueError, self.instrument.write_bit, 71, 10)
         self.assertRaises(ValueError, self.instrument.write_bit, 71, -5)
         self.assertRaises(ValueError, self.instrument.write_bit, 71, 10, 5)
     
-    def testWriteBitWrongValueType(self):
+    def testWriteBitWrongValueType(self):   
         self.assertRaises(TypeError, self.instrument.write_bit, 71, 1.0)
         self.assertRaises(TypeError, self.instrument.write_bit, 71, [1])
         self.assertRaises(TypeError, self.instrument.write_bit, 71, '1')
         self.assertRaises(TypeError, self.instrument.write_bit, 71, None)
     
-    def testWriteBitWrongFunctioncode(self):
+    def testWriteBitWrongFunctioncode(self):   
         self.assertRaises(ValueError, self.instrument.write_bit, 71, 1, 6)
         self.assertRaises(ValueError, self.instrument.write_bit, 71, 1, -1)
         self.assertRaises(ValueError, self.instrument.write_bit, 71, 1, 0)
         self.assertRaises(ValueError, self.instrument.write_bit, 71, 1, 128)
     
-    def testWriteBitWrongFunctioncodeType(self):
+    def testWriteBitWrongFunctioncodeType(self):   
         self.assertRaises(TypeError, self.instrument.write_bit, 71, 1, 5.0)
         self.assertRaises(TypeError, self.instrument.write_bit, 71, 1, '5')
         self.assertRaises(TypeError, self.instrument.write_bit, 71, 1, [5])
         self.assertRaises(TypeError, self.instrument.write_bit, 71, 1, None)
 
-    def testWriteBitWithWrongRegisternumbersResponse(self):     
+    def testWriteBitWithWrongRegisternumbersResponse(self):    
         self.assertRaises(ValueError, self.instrument.write_bit, 73, 1, functioncode=15) # Slave gives wrong number of registers
     
-    def testWriteBitWithWrongWritedataResponse(self):     
+    def testWriteBitWithWrongWritedataResponse(self): 
         self.assertRaises(ValueError, self.instrument.write_bit, 74, 1) # Slave gives wrong write data
 
     ## Read register ##
@@ -947,31 +955,31 @@ class TestDummyCommunication(ExtendedTestCase):
         self.assertAlmostEqual( self.instrument.read_register(289, 1), 77.0 )
         self.assertAlmostEqual( self.instrument.read_register(289, 2), 7.7  )
         
-    def testReadRegisterWrongAddress(self):   
+    def testReadRegisterWrongAddress(self):     
         self.assertRaises(ValueError, self.instrument.read_register, -1) 
-        self.assertRaises(ValueError, self.instrument.read_register, 65536) 
         self.assertRaises(ValueError, self.instrument.read_register, -1, 0, 3) 
+        self.assertRaises(ValueError, self.instrument.read_register, 65536) 
         
-    def testReadRegisterWrongAddressType(self):
+    def testReadRegisterWrongAddressType(self):   
         self.assertRaises(TypeError, self.instrument.read_register, 289.0, 0, 3) 
         self.assertRaises(TypeError, self.instrument.read_register, [289], 0, 3) 
         self.assertRaises(TypeError, self.instrument.read_register, '289', 0, 3) 
         self.assertRaises(TypeError, self.instrument.read_register, None, 0, 3) 
         
-    def testReadRegisterWithNegativeNumberofdecimals(self):
+    def testReadRegisterWithNegativeNumberofdecimals(self):   
         self.assertRaises(ValueError, self.instrument.read_register, 289, -1) 
         
-    def testReadRegisterNumberofdecimalsNotInteger(self):
+    def testReadRegisterNumberofdecimalsNotInteger(self):  
         self.assertRaises(TypeError, self.instrument.read_register, 289, 4.0) 
         self.assertRaises(TypeError, self.instrument.read_register, 289, 0.0, 3) 
         self.assertRaises(TypeError, self.instrument.read_register, 289, None) 
         self.assertRaises(TypeError, self.instrument.read_register, 289, '289') 
         
-    def testReadRegisterWrongFunctioncode(self):
+    def testReadRegisterWrongFunctioncode(self):   
         self.assertRaises(ValueError, self.instrument.read_register, 289, 0, 5 )
         self.assertRaises(ValueError, self.instrument.read_register, 289, 0, -4 )
         
-    def testReadRegisterWrongFunctioncodeType(self):    
+    def testReadRegisterWrongFunctioncodeType(self):      
         self.assertRaises(TypeError, self.instrument.read_register, 289, 0, 3.0 ) 
         self.assertRaises(TypeError, self.instrument.read_register, 289, 0, [3] ) 
         self.assertRaises(TypeError, self.instrument.read_register, 289, 0, None ) 
@@ -990,39 +998,40 @@ class TestDummyCommunication(ExtendedTestCase):
         self.instrument.write_register(35, 2.0, 1)    
         self.instrument.write_register(45, 8.8, 1, functioncode = 6)       
 
-    def testWriteRegisterWithWrongValue(self):
+    def testWriteRegisterWithWrongValue(self):   
         self.assertRaises(ValueError, self.instrument.write_register, 35, -1) 
         self.assertRaises(ValueError, self.instrument.write_register, 35, 65536)
         
-    def testWriteRegisterWithWrongValueType(self):
+    def testWriteRegisterWithWrongValueType(self):   
         self.assertRaises(TypeError, self.instrument.write_register, 35, '20') 
         self.assertRaises(TypeError, self.instrument.write_register, 35, [20])         
         self.assertRaises(TypeError, self.instrument.write_register, 35, None)
         
-    def testWriteRegisterWithNegativeNumberofdecimals(self):
+    def testWriteRegisterWithNegativeNumberofdecimals(self):  
         self.assertRaises(ValueError, self.instrument.write_register, 35, 20, -1)     
         
-    def testWriteRegisterWithNumberofdecimalsNotInteger(self):     
+    def testWriteRegisterWithNumberofdecimalsNotInteger(self):       
         self.assertRaises(TypeError, self.instrument.write_register, 35, 20, 1.0) 
         self.assertRaises(TypeError, self.instrument.write_register, 35, 20, '1') 
         
     def testWriteRegisterWithWrongFunctioncode(self):
         self.assertRaises(ValueError, self.instrument.write_register, 35, 20, functioncode = 12 )    
         self.assertRaises(ValueError, self.instrument.write_register, 35, 20, functioncode = -4 ) 
+        self.assertRaises(ValueError, self.instrument.write_register, 35, 20, functioncode = 129 ) 
         
-    def testWriteRegisterWithWrongFunctioncodeType(self):    
+    def testWriteRegisterWithWrongFunctioncodeType(self):      
         self.assertRaises(TypeError, self.instrument.write_register, 35, 20, functioncode = '16') 
         self.assertRaises(TypeError, self.instrument.write_register, 35, 20, functioncode = [16]) 
         self.assertRaises(TypeError, self.instrument.write_register, 35, 20, functioncode = 16.0) 
         self.assertRaises(TypeError, self.instrument.write_register, 35, 20, functioncode = None) 
         
-    def testWriteRegisterWithWrongCrcResponse(self):    
+    def testWriteRegisterWithWrongCrcResponse(self):      
         self.assertRaises(ValueError, self.instrument.write_register, 51, 99) # Slave gives wrong CRC
         
     def testWriteRegisterWithWrongSlaveaddressResponse(self): 
         self.assertRaises(ValueError, self.instrument.write_register, 54, 99) # Slave gives wrong slaveaddress    
         
-    def testWriteRegisterWithWrongFunctioncodeResponse(self):
+    def testWriteRegisterWithWrongFunctioncodeResponse(self):  
         self.assertRaises(ValueError, self.instrument.write_register, 55, 99) # Slave gives wrong functioncode                   
         self.assertRaises(ValueError, self.instrument.write_register, 56, 99) # Slave indicates an error
             
@@ -1032,7 +1041,7 @@ class TestDummyCommunication(ExtendedTestCase):
     def testWriteRegisterWithWrongRegisternumbersResponse(self):     
         self.assertRaises(ValueError, self.instrument.write_register, 52, 99) # Slave gives wrong number of registers
 
-    def testWriteRegisterWithWrongWritedataResponse(self):   
+    def testWriteRegisterWithWrongWritedataResponse(self):  
         self.assertRaises(ValueError, self.instrument.write_register, 55, 99, functioncode = 6) # Functioncode 6. Slave gives wrong write data.
     
     ## Generic command ##
@@ -1041,40 +1050,40 @@ class TestDummyCommunication(ExtendedTestCase):
         self.assertEqual( self.instrument._genericCommand(3, 289), 770 ) # Read register 289
         self.assertEqual( self.instrument._genericCommand(2, 61),  1 ) # Read bit 61       
         
-    def testGenericCommandWrongFunctioncode(self):    
+    def testGenericCommandWrongFunctioncode(self):      
         self.assertRaises(ValueError, self.instrument._genericCommand, 35, 20)    
         self.assertRaises(ValueError, self.instrument._genericCommand, -1, 20)   
         self.assertRaises(ValueError, self.instrument._genericCommand, 128, 20)   
         
-    def testGenericCommandWrongFunctioncodeType(self):    
+    def testGenericCommandWrongFunctioncodeType(self):       
         self.assertRaises(TypeError, self.instrument._genericCommand, '3', 20)   
         self.assertRaises(TypeError, self.instrument._genericCommand, 3.0, 20)   
         self.assertRaises(TypeError, self.instrument._genericCommand, None, 20) 
         self.assertRaises(TypeError, self.instrument._genericCommand, [3], 20) 
 
-    def testGenericCommandWrongRegisteraddress(self):    
+    def testGenericCommandWrongRegisteraddress(self):      
         self.assertRaises(ValueError, self.instrument._genericCommand, 3, -1)  
         self.assertRaises(ValueError, self.instrument._genericCommand, 3, 65536)  
  
-    def testGenericCommandWrongRegisteraddressType(self):            
+    def testGenericCommandWrongRegisteraddressType(self):              
         self.assertRaises(TypeError, self.instrument._genericCommand, 3, '20')   
         self.assertRaises(TypeError, self.instrument._genericCommand, 3, 20.0)   
         self.assertRaises(TypeError, self.instrument._genericCommand, 3, [20])  
         self.assertRaises(TypeError, self.instrument._genericCommand, 3, None)  
     
-    def testGenericCommandWrongValue(self):    
+    def testGenericCommandWrongValue(self):      
         self.assertRaises(ValueError, self.instrument._genericCommand, 3, 20, -1.0)  
     
-    def testGenericCommandWrongValueType(self):    
+    def testGenericCommandWrongValueType(self):      
         self.assertRaises(TypeError, self.instrument._genericCommand, 3, 20, [1])  
         self.assertRaises(TypeError, self.instrument._genericCommand, 3, 20, [1.0])  
         self.assertRaises(TypeError, self.instrument._genericCommand, 3, 20, '1')  
         self.assertRaises(TypeError, self.instrument._genericCommand, 3, 20, '1.0')
     
-    def testGenericCommandWrongNumberofdecimals(self):    
+    def testGenericCommandWrongNumberofdecimals(self):      
         self.assertRaises(ValueError, self.instrument._genericCommand, 3, 20, numberOfDecimals=-1)  
         
-    def testGenericCommandWrongNumberofdecimalsType(self):            
+    def testGenericCommandWrongNumberofdecimalsType(self):              
         self.assertRaises(TypeError, self.instrument._genericCommand, 3, 20, numberOfDecimals=1.0) 
         self.assertRaises(TypeError, self.instrument._genericCommand, 3, 20, numberOfDecimals=[1]) 
         self.assertRaises(TypeError, self.instrument._genericCommand, 3, 20, numberOfDecimals='1') 
@@ -1085,17 +1094,17 @@ class TestDummyCommunication(ExtendedTestCase):
     def testPerformcommandKnownResponse(self):    
         self.assertEqual( self.instrument._performCommand(16, 'TESTCOMMAND'), 'TESTCOMMANDRESPONSE')
         
-    def testPerformcommandWrongFunctioncode(self):
+    def testPerformcommandWrongFunctioncode(self):   
         self.assertRaises(ValueError, self.instrument._performCommand, 35, 'TESTCOMMAND')        
         self.assertRaises(ValueError, self.instrument._performCommand, -1, 'TESTCOMMAND')  
         self.assertRaises(ValueError, self.instrument._performCommand, 128, 'TESTCOMMAND')  
         
-    def testPerformcommandWrongFunctioncodeType(self):
+    def testPerformcommandWrongFunctioncodeType(self):  
         self.assertRaises(TypeError, self.instrument._performCommand, 16.0, 'TESTCOMMAND')             
         self.assertRaises(TypeError, self.instrument._performCommand, [16], 'TESTCOMMAND')   
         self.assertRaises(TypeError, self.instrument._performCommand, None, 'TESTCOMMAND')   
 
-    def testPerformcommandWrongPayloadType(self):
+    def testPerformcommandWrongPayloadType(self):   
         self.assertRaises(TypeError, self.instrument._performCommand, 16, ['TESTCOMMAND'])  
         self.assertRaises(TypeError, self.instrument._performCommand, 16, 1) 
         self.assertRaises(TypeError, self.instrument._performCommand, 16, 1.0) 
@@ -1103,19 +1112,19 @@ class TestDummyCommunication(ExtendedTestCase):
         
     ## Communicate ##
 
-    def testCommunicateKnowResponse(self):
+    def testCommunicateKnownResponse(self):
         self.assertEqual( self.instrument._communicate('TESTMESSAGE'), 'TESTRESPONSE' ) 
 
-    def testCommunicateWrongType(self):
+    def testCommunicateWrongType(self):   
         self.assertRaises(TypeError, self.instrument._communicate, 1)    
         self.assertRaises(TypeError, self.instrument._communicate, 1.0)    
         self.assertRaises(TypeError, self.instrument._communicate, ['ABC'])    
         self.assertRaises(TypeError, self.instrument._communicate, None)    
         
-    def testCommunicateNoMessage(self):
+    def testCommunicateNoMessage(self):   
         self.assertRaises(ValueError, self.instrument._communicate, '')    
         
-    def testCommunicateNoResponse(self):
+    def testCommunicateNoResponse(self):   
         self.assertRaises(IOError, self.instrument._communicate, 'MessageForEmptyResponse')
             
     ## Tear down test fixture ##
@@ -1195,12 +1204,12 @@ class TestDummyCommunicationWithPortClosure(ExtendedTestCase):
         self.assertEqual( self.instrument.read_register(289), 770 )
         self.assertEqual( self.instrument.read_register(289), 770 )
         
-    def testPortAlreadyOpen(self):
+    def testPortAlreadyOpen(self):   
         self.assertEqual( self.instrument.read_register(289), 770 )
         self.instrument.serial.open()
         self.assertRaises(IOError, self.instrument.read_register, 289) 
    
-    def testPortAlreadyClosed(self):
+    def testPortAlreadyClosed(self):   
         self.assertEqual( self.instrument.read_register(289), 770 )
         self.assertRaises(IOError, self.instrument.serial.close)
  
@@ -1465,7 +1474,7 @@ RESPONSES['\n\x10\x10\x01\x00\x01\x02\x07\xd0\xc6\xdc'] ='\n\x10\x10\x01\x00\x01
 
 if __name__ == '__main__':
 
-    print repr( minimalmodbus._calculateCrcString( '\x01\x02' + '\x00\x40\x00\x01' ))
+    #print repr( minimalmodbus._calculateCrcString( '\x01\x02' + '\x00\x40\x00\x01' ))
     unittest.main(verbosity=VERBOSITY)
     
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestDummyCommunicationWithPortClosure)

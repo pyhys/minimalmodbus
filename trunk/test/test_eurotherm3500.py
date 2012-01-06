@@ -35,11 +35,11 @@ __license__ = "Apache License, Version 2.0"
 __revision__  = "$Rev$"
 __date__      = "$Date$"
 
-import eurotherm3500
 import unittest
+
+import eurotherm3500
 import dummy_serial
 
-    
 ###########################################
 # Communication using a dummy serial port #
 ###########################################
@@ -58,7 +58,6 @@ class TestDummyCommunication(unittest.TestCase):
         # Initialize a (dummy) instrument
         self.instrument = eurotherm3500.Eurotherm3500('DUMMYPORTNAME', 1)
         self.instrument._debug = False
-
 
     ## Read PV ##
 

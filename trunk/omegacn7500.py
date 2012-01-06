@@ -446,13 +446,15 @@ def _checkSetpointValue( setpointvalue, maxvalue ):
     """Check that the given setpointvalue is valid.
     
     Args:
-        * setpointvalue (numerical): The setpoint value to be checked.
-        * maxvalue (numerical): Upper limit for setpoint value.
+        * setpointvalue (numerical): The setpoint value to be checked. Must be positive.
+        * maxvalue (numerical): Upper limit for setpoint value. Must be positive.
         
     Raises:
         TypeError, ValueError
     
     """
+    if maxvalue is None:
+        raise TypeError('The maxvalue (for the setpoint) must not be None!')
     minimalmodbus._checkNumerical(setpointvalue, minvalue=0, maxvalue=maxvalue, description='setpoint value')   
 
 
@@ -460,20 +462,24 @@ def _checkTimeValue( timevalue, maxvalue ):
     """Check that the given timevalue is valid.
     
     Args:
-        * timevalue (numerical): The time value to be checked.
-        * maxvalue (numerical): Upper limit for time value.
+        * timevalue (numerical): The time value to be checked. Must be positive.
+        * maxvalue (numerical): Upper limit for time value. Must be positive.
         
     Raises:
         TypeError, ValueError
     
     """
+    if maxvalue is None:
+        raise TypeError('The maxvalue (for the time value) must not be None!')
     minimalmodbus._checkNumerical(timevalue, minvalue=0, maxvalue=maxvalue, description='time value')     
+    
     
 def _calculateRegisterAddress( registertype, patternnumber, stepnumber = None):
     """Calculate the register address for pattern related parameters.
     
     Args:
-        * registertype (string): The type of parameter, for example 'cycles'.
+        * registertype (string): The type of parameter, for example 'cycles'. 
+          Allowed are the keys from :data:`REGISTER_START`.
         * patternnumber (int): The pattern number.
         * stepnumber (int): The step number. Use None if it not should affect the calculation.
     
@@ -501,6 +507,7 @@ def _calculateRegisterAddress( registertype, patternnumber, stepnumber = None):
                 stepnumber * REGISTER_OFFSET_PER_STEP[registertype]
         
     return address
+    
     
 ########################
 ## Testing the module ##

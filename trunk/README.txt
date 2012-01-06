@@ -140,9 +140,9 @@ In Modbus RTU, the request message is sent from the master in this format::
     
     Slave address [1 Byte], Function code [1 Byte], Payload data [0 to 252 Bytes], CRC [2 Bytes].
 
-  * For the function code, the allowed range is 1 to 127 (in decimal). 
-  * The CRC is a cyclic redundacy check code, for error checking of the message. 
-  * The response from the client is similar, but with another payload data.
+* For the function code, the allowed range is 1 to 127 (in decimal). 
+* The CRC is a cyclic redundacy check code, for error checking of the message. 
+* The response from the client is similar, but with another payload data.
 
 ============================== ============================================================================================== ======================================================
 Function code (in decimal)     Payload data to slave (Request)                                                                Payload data from slave (Response)                  
