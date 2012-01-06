@@ -299,7 +299,7 @@ class Instrument():
 
         """
         _checkFunctioncode(functioncode, None )
-        _checkString(payloadToSlave)
+        _checkString(payloadToSlave, description='payload')
         
         message             = _embedPayload(self.address, functioncode, payloadToSlave)
         response            = self._communicate(message)
@@ -351,7 +351,7 @@ class Instrument():
         """
         MAX_NUMBER_OF_BYTES = 1000
                 
-        _checkString(message, minlength=1)
+        _checkString(message, minlength=1, description='message')
         
         if self.debug:
             _print_out( 'MinimalModbus debug mode. Writing to instrument: ' + repr(message) )           
@@ -397,7 +397,7 @@ def _embedPayload(slaveaddress, functioncode, payloaddata):
     """
     _checkSlaveaddress(slaveaddress)
     _checkFunctioncode(functioncode, None)
-    _checkString(payloaddata)
+    _checkString(payloaddata, description='payload')
         
     # Build message
     firstPart = _numToOneByteString(slaveaddress) + _numToOneByteString(functioncode) + payloaddata
@@ -432,7 +432,7 @@ def _extractPayload(response, slaveaddress, functioncode):
     BITNUMBER_FUNCTIONCODE_ERRORINDICATION = 7
     
     # Argument validity testing
-    _checkString(response)
+    _checkString(response, description='response')
     _checkSlaveaddress(slaveaddress) 
     _checkFunctioncode(functioncode, None)
 
@@ -522,7 +522,7 @@ def _numToTwoByteString(value, numberOfDecimals = 0, LsbFirst = False):
     _checkInt(numberOfDecimals, minvalue=0, description='number of decimals' )
 
     if not isinstance( LsbFirst, bool ):
-        raise TypeError( 'The LsbFirst must be a boolean. Given: {0}'.format(LsbFirst) )    
+        raise TypeError( 'The LsbFirst must be a boolean. Given: {0}'.format(repr(LsbFirst)) )    
         
     multiplier = 10 ** numberOfDecimals
     integer = int( float(value) * multiplier )
@@ -564,7 +564,7 @@ def _twoByteStringToNum(bytestring, numberOfDecimals = 0):
     multiplied by 255 instead of the correct value 256.
     
     """
-    _checkString(bytestring, minlength=2, maxlength=2)
+    _checkString(bytestring, minlength=2, maxlength=2, description='bytestring')
     _checkInt(numberOfDecimals, minvalue=0, description='number of decimals' )
         
     leastSignificantByte = ord(bytestring[1])
@@ -590,7 +590,7 @@ def _bitResponseToValue(bytestring):
         TypeError
     
     """
-    _checkString(bytestring)
+    _checkString(bytestring, description='bytestring')
     
     RESPONSE_ON  = '\x01'
     RESPONSE_OFF = '\x00'
@@ -709,7 +709,7 @@ def _calculateCrcString( inputstring ):
     Algorithm from the document 'MODBUS over serial line specification and implementation guide V1.02'.
     
     """
-    _checkString(inputstring)
+    _checkString(inputstring, description='input CRC string')
     
     # Constant for MODBUS CRC-16
     POLY = 0xA001
@@ -810,7 +810,7 @@ def _checkResponseByteCount(payload):
     POSITION = 0
     NUMBER_OF_BYTES_TO_SKIP = 1
     
-    _checkString(payload, minlength=1)
+    _checkString(payload, minlength=1, description='payload')
  
     givenNumberOfDatabytes = ord( payload[POSITION] )
     countedNumberOfDatabytes = len(payload) - NUMBER_OF_BYTES_TO_SKIP
@@ -835,7 +835,7 @@ def _checkResponseRegisterAddress(payload, registeraddress):
         TypeError, ValueError
     
     """ 
-    _checkString(payload, minlength=2)
+    _checkString(payload, minlength=2, description='payload')
     _checkRegisteraddress(registeraddress)
  
     BYTERANGE_FOR_STARTADDRESS = slice(0, 2)
@@ -844,8 +844,8 @@ def _checkResponseRegisterAddress(payload, registeraddress):
     receivedStartAddress = _twoByteStringToNum( bytesForStartAddress )
     
     if receivedStartAddress != registeraddress:
-        raise ValueError( 'Wrong given write start adress: {0}, but commanded is {1}'.format( \
-            receivedStartAddress, registeraddress))        
+        raise ValueError( 'Wrong given write start adress: {0}, but commanded is {1}. The data payload is: {2}'.format( \
+            receivedStartAddress, registeraddress, repr(payload)))        
 
             
 def _checkResponseNumberOfRegisters(payload, numberOfRegisters):
@@ -861,7 +861,7 @@ def _checkResponseNumberOfRegisters(payload, numberOfRegisters):
         TypeError, ValueError
     
     """ 
-    _checkString(payload, minlength=4)
+    _checkString(payload, minlength=4, description='payload')
     _checkInt(numberOfRegisters, minvalue=1, maxvalue=0xFFFF, description='numberOfRegisters' )
             
     BYTERANGE_FOR_NUMBER_OF_REGISTERS = slice(2, 4)
@@ -870,8 +870,8 @@ def _checkResponseNumberOfRegisters(payload, numberOfRegisters):
     receivedNumberOfWrittenReisters = _twoByteStringToNum( bytesForNumberOfRegisters )
     
     if receivedNumberOfWrittenReisters != numberOfRegisters:
-        raise ValueError( 'Wrong number of registers to write in the response: {0}, but commanded is {1}'.format( \
-            receivedNumberOfWrittenReisters, numberOfRegisters) )
+        raise ValueError( 'Wrong number of registers to write in the response: {0}, but commanded is {1}. The data payload is: {2}'.format( \
+            receivedNumberOfWrittenReisters, numberOfRegisters, repr(payload)) )
 
             
 def _checkResponseWriteData(payload, writedata):
@@ -895,18 +895,18 @@ def _checkResponseWriteData(payload, writedata):
     receivedWritedata = payload[BYTERANGE_FOR_WRITEDATA]
     
     if receivedWritedata != writedata:
-        raise ValueError( 'Wrong write data in the response: {0}, but commanded is {1}'.format( \
-            repr(receivedWritedata), repr(writedata)) )
+        raise ValueError( 'Wrong write data in the response: {0}, but commanded is {1}. The data payload is: {2}'.format( \
+            repr(receivedWritedata), repr(writedata), repr(payload)) )
 
             
-def _checkString(inputstring, minlength=0, maxlength=None, description='input string' ):
+def _checkString(inputstring, description, minlength=0, maxlength=None):
     """Check that the given string is valid.
 
     Args:
         * inputstring (string): The string to be checked
+        * description (string): Used in error messages for the checked inputstring
         * minlength (int): Minimum length of the string
         * maxlength (int or None): Maximum length of the string
-        * description (string): Used in error messages for the checked inputstring
     
     Raises:
         TypeError, ValueError
@@ -943,6 +943,7 @@ def _checkString(inputstring, minlength=0, maxlength=None, description='input st
             raise ValueError( 'The {0} is too long: {1}, but maximum value is {2}. Given: {3}'.format( \
                 description, len(inputstring), maxlength, repr(inputstring)))       
     
+    
 def _checkInt(inputvalue, minvalue=None, maxvalue=None, description='inputvalue'):
     """Check that the given integer is valid.
 
@@ -974,13 +975,14 @@ def _checkInt(inputvalue, minvalue=None, maxvalue=None, description='inputvalue'
     
     _checkNumerical(inputvalue, minvalue, maxvalue, description)           
 
+
 def _checkNumerical(inputvalue, minvalue=None, maxvalue=None, description='inputvalue'):
     """Check that the given numerical value is valid.
 
     Args:
         * inputvalue (numerical): The value to be checked.
-        * minvalue (numerical): Minimum value 
-        * maxvalue (numerical): Maximum value 
+        * minvalue (numerical): Minimum value  Use None to skip this part of the test.
+        * maxvalue (numerical): Maximum value. Use None to skip this part of the test.
         * description (string): Used in error messages for the checked inputvalue
     
     Raises:
@@ -1028,9 +1030,10 @@ def _checkNumerical(inputvalue, minvalue=None, maxvalue=None, description='input
         
 def _print_out( inputstring ):
     """Print the inputstring. To make it compatible with Python2 and Python3."""
-    _checkString(inputstring)
+    _checkString(inputstring, description='string to print')
     
     sys.stdout.write(inputstring + '\n')           
+        
         
 def _toPrintableString( inputstring ):
     """Make a descriptive string, showing the ord() numbers (in decimal) for the characters in the inputstring.
@@ -1047,7 +1050,7 @@ def _toPrintableString( inputstring ):
         'String length: 6 bytes. Values: 18, 2, 116, 65, 66, 67'
     
     """
-    _checkString(inputstring)
+    _checkString(inputstring, description='string to make printable')
     
     firstpart = 'String length: {0} bytes. Values: '.format( len(inputstring) )
 
@@ -1057,6 +1060,7 @@ def _toPrintableString( inputstring ):
     valuepart = ', '.join( valuestrings )
 
     return firstpart + valuepart
+
 
 def _getDiagnosticString():
     """Generate a diagnostic string, showing the module version, the platform, current directory etc.

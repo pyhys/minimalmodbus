@@ -194,6 +194,26 @@ On Windows machines, for example::
 
 The Windows installer also creates a :file:`.pyo` file (and also the :file:`.pyc` file).
 
+Using the pep8 tool
+-------------------
+This tool checks the coding style. See pypi.python.org/pypi/pep8/
+
+
+Install the pep8 checker tool:
+
+    sudo pip install pep8
+
+Run it:
+
+    pep8 minimalmodbus.py
+
+or: 
+
+    pep8 --statistics minimalmodbus.py
+    
+    pep8 --show-pep8  minimalmodbus.py
+    pep8 --show-source  minimalmodbus.py 
+    
 
 Sphinx usage
 ------------
@@ -266,8 +286,9 @@ Generate html report (ends up in trunk/test/htmlcov)::
     coverage html
     
 Or to exclude some third party modules (adapt to your file structure):
-    
+
     coverage html --omit=/usr/share/*
+
     
 
 Setting the PYTHONPATH
@@ -302,11 +323,12 @@ problematic. Set the value minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL=True instead
 TODO
 ----
 
-  * Write more unittests
-  * Check error codes
+
   * Write documentation with examples.
+  * adapt dummy_serial to python3
   * Test with Python3 and 2to3
   * Test the dependency of pySerial in setup.py
+  * Test run with process controller
   
   * Upload files with ``scp -r`` instead
 

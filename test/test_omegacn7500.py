@@ -35,10 +35,10 @@ __license__ = "Apache License, Version 2.0"
 __revision__  = "$Rev$"
 __date__      = "$Date$"
 
-import omegacn7500
 import unittest
-import dummy_serial
 
+import omegacn7500
+import dummy_serial
 
 class TestCalculateRegisterAddress(unittest.TestCase):
 
@@ -66,17 +66,17 @@ class TestCalculateRegisterAddress(unittest.TestCase):
             self.assertEqual(resultvalue, knownresult)      
 
     def testWrongValues(self):
-        self.assertRaises(ValueError, omegacn7500._calculateRegisterAddress, 0,             0, 0)
-        self.assertRaises(ValueError, omegacn7500._calculateRegisterAddress, 1.0,           0, 0)
         self.assertRaises(ValueError, omegacn7500._calculateRegisterAddress, 'ABC',         0, 0)
-        self.assertRaises(ValueError, omegacn7500._calculateRegisterAddress, None,          0, 0)
-        self.assertRaises(ValueError, omegacn7500._calculateRegisterAddress, ['setpoint'],  0, 0)
         self.assertRaises(ValueError, omegacn7500._calculateRegisterAddress, 'setpoint',    -1, 0)
         self.assertRaises(ValueError, omegacn7500._calculateRegisterAddress, 'setpoint',    8, 0)
         self.assertRaises(ValueError, omegacn7500._calculateRegisterAddress, 'setpoint',    0, -1)
         self.assertRaises(ValueError, omegacn7500._calculateRegisterAddress, 'setpoint',    0, 8)
           
     def testWrongType(self):
+        self.assertRaises(ValueError, omegacn7500._calculateRegisterAddress, 0,             0, 0) # Note: Raises value error
+        self.assertRaises(ValueError, omegacn7500._calculateRegisterAddress, 1.0,           0, 0)
+        self.assertRaises(ValueError, omegacn7500._calculateRegisterAddress, None,          0, 0)
+        self.assertRaises(ValueError, omegacn7500._calculateRegisterAddress, ['setpoint'],  0, 0)
         self.assertRaises(TypeError, omegacn7500._calculateRegisterAddress, 'setpoint', 0.0,  0)   
         self.assertRaises(TypeError, omegacn7500._calculateRegisterAddress, 'setpoint', [0],  0) 
         self.assertRaises(TypeError, omegacn7500._calculateRegisterAddress, 'setpoint', None, 0) 
@@ -97,7 +97,7 @@ class TestCheckPatternNumber(unittest.TestCase):
         self.assertRaises(ValueError, omegacn7500._checkPatternNumber, 99)
         self.assertRaises(ValueError, omegacn7500._checkPatternNumber, 12345)
 
-    def testNotIntegerInput(self):
+    def testWrongType(self):
         self.assertRaises(TypeError, omegacn7500._checkPatternNumber, '1')
         self.assertRaises(TypeError, omegacn7500._checkPatternNumber, 1.0)
         self.assertRaises(TypeError, omegacn7500._checkPatternNumber, [1])
@@ -117,7 +117,7 @@ class TestCheckStepNumber(unittest.TestCase):
         self.assertRaises(ValueError, omegacn7500._checkStepNumber, 99)
         self.assertRaises(ValueError, omegacn7500._checkStepNumber, 12345)
 
-    def testNotIntegerInput(self):
+    def testWrongType(self):
         self.assertRaises(TypeError, omegacn7500._checkStepNumber, '1')
         self.assertRaises(TypeError, omegacn7500._checkStepNumber, 1.0)
         self.assertRaises(TypeError, omegacn7500._checkStepNumber, [1])
@@ -126,19 +126,66 @@ class TestCheckStepNumber(unittest.TestCase):
 
 class TestCheckSetpointValue(unittest.TestCase):
     
-    pass
+    def testKnownResults(self):
+        omegacn7500._checkSetpointValue(900, 1000)
+        omegacn7500._checkSetpointValue(900.0, 1000.0)
+        
+    def testWrongValue(self):
+        self.assertRaises(ValueError, omegacn7500._checkSetpointValue, 900, 800)
+        self.assertRaises(ValueError, omegacn7500._checkSetpointValue, 900.0, 800.0)
+        self.assertRaises(ValueError, omegacn7500._checkSetpointValue, -100, 800)
+        self.assertRaises(ValueError, omegacn7500._checkSetpointValue, 900, -800)
+
+    def testWrongType(self):
+        self.assertRaises(TypeError, omegacn7500._checkSetpointValue, '900', 1000)
+        self.assertRaises(TypeError, omegacn7500._checkSetpointValue, [900], 1000)
+        self.assertRaises(TypeError, omegacn7500._checkSetpointValue, None, 1000)
+        self.assertRaises(TypeError, omegacn7500._checkSetpointValue, 900, '1000')
+        self.assertRaises(TypeError, omegacn7500._checkSetpointValue, 900, [1000])
+        self.assertRaises(TypeError, omegacn7500._checkSetpointValue, 900, None)
     
     
 class TestCheckTimeValue(unittest.TestCase):
     
-    pass    
-    
+    def testKnownResults(self):
+        omegacn7500._checkTimeValue(75, 99)
+        omegacn7500._checkTimeValue(75.0, 99.0)
+
+    def testWrongValue(self):
+        self.assertRaises(ValueError, omegacn7500._checkTimeValue, 75, 10)
+        self.assertRaises(ValueError, omegacn7500._checkTimeValue, -5, 10)
+        self.assertRaises(ValueError, omegacn7500._checkTimeValue, -75, 10)
+        self.assertRaises(ValueError, omegacn7500._checkTimeValue, 75.0, 10.0)
+        self.assertRaises(ValueError, omegacn7500._checkTimeValue, -5.0, 10.0)
+        self.assertRaises(ValueError, omegacn7500._checkTimeValue, -75.0, 10.0)
+        self.assertRaises(ValueError, omegacn7500._checkTimeValue, 5, -10)
+        self.assertRaises(ValueError, omegacn7500._checkTimeValue, 75, -10)
+        self.assertRaises(ValueError, omegacn7500._checkTimeValue, 5.0, -10.0)
+        self.assertRaises(ValueError, omegacn7500._checkTimeValue, 75.0, -10.0)        
+
+    def testWrongType(self):
+        self.assertRaises(TypeError, omegacn7500._checkTimeValue, '75', 99)
+        self.assertRaises(TypeError, omegacn7500._checkTimeValue, [75], 99)
+        self.assertRaises(TypeError, omegacn7500._checkTimeValue, None, 99)
+        self.assertRaises(TypeError, omegacn7500._checkTimeValue, 75, '99')
+        self.assertRaises(TypeError, omegacn7500._checkTimeValue, 75, [99])
+        self.assertRaises(TypeError, omegacn7500._checkTimeValue, 75, None)
+
 
 ###########################################
 # Communication using a dummy serial port #
 ###########################################
 
 class TestDummyCommunication_Slave1(unittest.TestCase):
+    """Testing using dummy communication, with data recorded for slaveaddress = 1
+    
+    Most of the tests are for making sure that the communication details are OK.
+    
+    For some examples of testing the methods for argument value errors or
+    argument type errors, see the testSetControlModeWithWrongValue() and 
+    testSetControlModeWithWrongValueType() methods.
+
+    """
 
     def setUp(self):   
     
@@ -179,12 +226,14 @@ class TestDummyCommunication_Slave1(unittest.TestCase):
         self.instrument.set_control_mode(3)
 
     def testSetControlModeWithWrongValue(self):   
-        pass
-        #self.instrument.set_control_mode(3)
+        self.assertRaises(ValueError, self.instrument.set_control_mode, 4)
+        self.assertRaises(ValueError, self.instrument.set_control_mode, -1)
 
     def testSetControlModeWithWrongValueType(self):   
-        pass
-        #self.instrument.set_control_mode(3)
+        self.assertRaises(TypeError, self.instrument.set_control_mode, 3.0)
+        self.assertRaises(TypeError, self.instrument.set_control_mode, [3])
+        self.assertRaises(TypeError, self.instrument.set_control_mode, '3')
+        self.assertRaises(TypeError, self.instrument.set_control_mode, None)
 
     def testGetStartPatternNo(self):       
         self.assertEqual( self.instrument.get_start_pattern_no(), 2)
@@ -242,7 +291,11 @@ class TestDummyCommunication_Slave1(unittest.TestCase):
             80, 80, 
             7, 4, 1)         
 
+
 class TestDummyCommunication_Slave10(unittest.TestCase):
+    """Testing using dummy communication, with data recorded for slaveaddress = 10
+
+    """
 
     def setUp(self):   
         dummy_serial.RESPONSES = RESPONSES
@@ -328,6 +381,7 @@ class TestDummyCommunication_Slave10(unittest.TestCase):
             70, 70, 
             80, 80, 
             7, 4, 1)         
+
         
 RESPONSES = {}
 """A dictionary of respones from a dummy Omega CN7500 instrument. 
