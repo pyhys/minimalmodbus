@@ -217,6 +217,12 @@ Python location on Linux machines::
 .
 
 
+
+python3.2 test_all.py
+python2.6 test_all.py
+python2.7 test_all.py
+
+
 which python
 /usr/bin/python
 

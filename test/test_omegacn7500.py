@@ -593,14 +593,11 @@ RESPONSES['\n\x10\x10@\x00\x01\x02\x00\x07\x8b\xa3'] = '\n\x10\x10@\x00\x01\x05\
 RESPONSES['\n\x10\x10P\x00\x01\x02\x00\x02I0']       = '\n\x10\x10P\x00\x01\x04c'    # Cycles, value 2 
 RESPONSES['\n\x10\x10`\x00\x01\x02\x00\x01\x0c\xc1'] = '\n\x10\x10`\x00\x01\x04l'    # Linked pattern
 
+
 def _print_out( inputstring ):
     """Print the inputstring. To make it compatible with Python2 and Python3."""    
     sys.stdout.write(inputstring + '\n')  
     
     
 if __name__ == '__main__':
-    unittest.main()  
-    
-    #suite = unittest.TestLoader().loadTestsFromTestCase(TestCalculateRegisterAddress)
-    #unittest.TextTestRunner(verbosity=0).run(suite)
-
+    unittest.main() 
