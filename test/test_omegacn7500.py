@@ -35,10 +35,12 @@ __license__ = "Apache License, Version 2.0"
 __revision__  = "$Rev$"
 __date__      = "$Date$"
 
+import sys
 import unittest
 
 import omegacn7500
 import dummy_serial
+
 
 class TestCalculateRegisterAddress(unittest.TestCase):
 
@@ -274,10 +276,9 @@ class TestDummyCommunication_Slave1(unittest.TestCase):
     def testSetPatternLinkToPattern(self): 
         self.instrument.set_pattern_link_topattern(0, 1)
         
-    def testGetAllPatternVariables(self):     
-        print '\nSlave address 1:'     
-        print self.instrument.get_all_pattern_variables(0) 
-        pass
+    def testGetAllPatternVariables(self):  # TODO: Change this to proper assertEqual   
+        _print_out( '\nSlave address 1:' )     
+        _print_out( self.instrument.get_all_pattern_variables(0) )
 
     def testSetAllPatternVariables(self):       
         self.instrument.set_all_pattern_variables(0,
@@ -366,9 +367,10 @@ class TestDummyCommunication_Slave10(unittest.TestCase):
     def testSetPatternLinkToPattern(self): 
         self.instrument.set_pattern_link_topattern(0, 1)
     
-    def testGetAllPatternVariables(self):   
-        print '\nSlave address 10:' 
-        self.instrument.get_all_pattern_variables(0) 
+    def testGetAllPatternVariables(self):   # TODO: Change this to proper assertEqual
+        _print_out( '\nSlave address 10:' )     
+        _print_out( self.instrument.get_all_pattern_variables(0) )
+        
         
     def testSetAllPatternVariables(self):       
         self.instrument.set_all_pattern_variables(0,
@@ -591,6 +593,10 @@ RESPONSES['\n\x10\x10@\x00\x01\x02\x00\x07\x8b\xa3'] = '\n\x10\x10@\x00\x01\x05\
 RESPONSES['\n\x10\x10P\x00\x01\x02\x00\x02I0']       = '\n\x10\x10P\x00\x01\x04c'    # Cycles, value 2 
 RESPONSES['\n\x10\x10`\x00\x01\x02\x00\x01\x0c\xc1'] = '\n\x10\x10`\x00\x01\x04l'    # Linked pattern
 
+def _print_out( inputstring ):
+    """Print the inputstring. To make it compatible with Python2 and Python3."""    
+    sys.stdout.write(inputstring + '\n')  
+    
     
 if __name__ == '__main__':
     unittest.main()  

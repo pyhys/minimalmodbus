@@ -746,7 +746,7 @@ def _checkFunctioncode(functioncode, listOfAllowedValues):
     """
     FUNCTIONCODE_MIN = 1
     FUNCTIONCODE_MAX = 127
-    ALL_ALLOWED_FUNCTIONCODES = range(1,7) + [15, 16]
+    ALL_ALLOWED_FUNCTIONCODES = list(range(1,7)) + [15, 16] # To comply with both Python2 and Python3
         
     _checkInt(functioncode, FUNCTIONCODE_MIN, FUNCTIONCODE_MAX, description='functioncode' )    
     

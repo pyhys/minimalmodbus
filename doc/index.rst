@@ -4,7 +4,7 @@
 Documentation for MinimalModbus
 ===============================
 
-Documentation built using Sphinx |today|, for MinimalModbus verion |version|.
+Documentation built using Sphinx |today|, for MinimalModbus version |version|.
 
 .. include:: ../README.txt
 
@@ -23,7 +23,7 @@ Additional resources available on home page
    internalminimalmodbus
    internalomegacn7500
    internaltestminimalmodbus
-   internaldummyserial
+   apidummyserial
    internaltesteurotherm3500
    internaltestomegacn7500
 

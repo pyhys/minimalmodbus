@@ -21,8 +21,8 @@
 
 dummy_serial: A dummy/mock implementation of a serial port for testing purposes.
 
-This Python file was changed (committed) at $Date$, 
-which was $Revision$.
+This Python file was changed (committed) at $Date: 2011-12-18 21:41:02 +0100 (Sun, 18 Dec 2011) $, 
+which was $Revision: 79 $.
 
 """
 
@@ -30,18 +30,15 @@ __author__  = "Jonas Berg"
 __email__   = "pyhys@users.sourceforge.net"
 __license__ = "Apache License, Version 2.0"
 
-__revision__  = "$Rev$"
-__date__      = "$Date$"
+__revision__  = "$Rev: 79 $"
+__date__      = "$Date: 2011-12-18 21:41:02 +0100 (Sun, 18 Dec 2011) $"
+
+import sys
 
 
 VERBOSE = False
 """Set this to True for printing the communication, and also details on the port initialization."""
 
-DEFAULT_RESPONSE = ''
-"""Response when no matching message (key) is found in the look-up dictionary.
-
-Might be monkey-patched in the calling test module.
-"""
 
 RESPONSES = {}
 """A dictionary of respones from the dummy serial port. 
@@ -55,13 +52,24 @@ Intended to be monkey-patched in the calling test module.
 RESPONSES['EXAMPLEMESSAGE'] = 'EXAMPLERESPONSE'
 
 
+DEFAULT_RESPONSE = ''
+"""Response when no matching message (key) is found in the look-up dictionary.
+
+Might be monkey-patched in the calling test module.
+
+"""
+
+
 class Serial():
     """Dummy serial port for testing purposes.
     
-    Instrument class for talking to instruments (slaves) via the Modbus RTU protocol (via RS485 or RS232).
-
+    Mimics the behavior of a serial port as defined by the `pySerial <http:/pyserial.sourceforge.net/>`_ module.
+    
     Args:
         (whatever): The arguments are not used.
+        
+    Note:
+    As the portname argument not is used, only one port on :mod:`dummy_serial` can be used simultaneously.
         
     """
     
@@ -69,71 +77,69 @@ class Serial():
         self.latestWrite = ''
         self.is_open = True
         
-        if VERBOSE:
-            print
-            print 'Initializing dummy_serial'
-            print 'args:'
-            print args
-            print 'kwargs:'
-            print kwargs        
-            print
-   
+        if VERBOSE: 
+            _print_out('\nInitializing dummy_serial')
+            _print_out('dummy_serial initialization args: ' + repr(args) )
+            _print_out('dummy_serial initialization kwargs: ' + repr(kwargs) + '\n')
+        
+        
     def open(self):
+        """Open a (previously initialized) port on dummy_serial."""
         if VERBOSE:
-            print 'Opening port dummy_serial'
+            _print_out('\nOpening port on dummy_serial\n')
         
         if self.is_open:
-            raise IOError('Port dummy_serial is already open')
+            raise IOError('The port on dummy_serial is already open')
         self.is_open = True
 
+
     def close(self):
+        """Close a port on dummy_serial."""
         if VERBOSE:
-            print 'Closing port dummy_serial'
+            _print_out('\nClosing port on dummy_serial\n')
             
         if not self.is_open:
-            raise IOError('Port dummy_serial is already closed')
+            raise IOError('The port on dummy_serial is already closed')
         self.is_open = False
 
    
     def write(self, inputstring):
-        """Write to the dummy_serial port.
+        """Write to a port on dummy_serial.
         
         Args:
-            inputstring (int): String for sending to the dummy serial port. Will affect the response.
+            inputstring (int): String for sending to the port on dummy_serial. Will affect the response.
             
         """
         self.latestWrite = inputstring
         
         if VERBOSE:
-            print
-            print 'Writing to dummy_serial:', repr(inputstring)
-            print 
+            _print_out('\nWriting to port on dummy_serial:' + repr(inputstring) + '\n')
             
             
     def read(self, numberOfBytes):
-        """Read from the dummy serial port.
+        """Read from a port on dummy_serial.
         
-        The response is dependent on what was written last to the dummy serial port, 
-        and what is defined in the RESPONSES dictionary.
+        The response is dependent on what was written last to the port on dummy_serial, 
+        and what is defined in the :data:`RESPONSES` dictionary.
         
         Args:
             numberOfBytes (int): For compability with the real function. Not used.
         
         """ 
+        
         try:
             returnvalue = RESPONSES[self.latestWrite]   
         except:
             returnvalue = DEFAULT_RESPONSE    
 
         if VERBOSE:    
-            print
-            print 'Reading from dummy_serial:'
-            print 'Max length:', numberOfBytes
-            print 'Latest written data:', repr(self.latestWrite)
-            print 'Return value:', repr(returnvalue)
-            print
+            _print_out('\nReading from port on dummy_serial (max length ' + str(numberOfBytes) + ' bytes)')
+            _print_out('dummy_serial latest written data:' + repr(self.latestWrite))
+            _print_out('dummy_serial read return data:' + repr(returnvalue) + '\n')
                   
         return returnvalue
 
-
+def _print_out( inputstring ):
+    """Print the inputstring. To make it compatible with Python2 and Python3."""    
+    sys.stdout.write(inputstring + '\n')    
 

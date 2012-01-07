@@ -184,7 +184,7 @@ class OmegaCN7500( minimalmodbus.Instrument ):
             return CONTROL_MODES[mode_value]
         except KeyError:
             raise ValueError( 'Could not parse the control mode value: {0}. Allowed values are: {1}'.format(
-                repr(mode_value), repr(CONTROL_MODES.keys() ) ))
+                repr(mode_value), repr(list(CONTROL_MODES.keys()) ) )) # To comply with both Python2 and Python3
 
     def set_control_mode(self, value):
         """Set the control method using the corresponding integer value.
@@ -497,9 +497,9 @@ def _calculateRegisterAddress( registertype, patternnumber, stepnumber = None):
     _checkPatternNumber( patternnumber )
     _checkStepNumber( stepnumber )
     
-    if not registertype in REGISTER_START.keys():
+    if not registertype in list(REGISTER_START.keys()): # To comply with both Python2 and Python3
         raise ValueError('Wrong register type: {0}. Allowed values: {1}'.format( 
-            repr(registertype), repr( REGISTER_START.keys() )))
+            repr(registertype), repr( list(REGISTER_START.keys()) )))
 
     # Calculate register address
     address = REGISTER_START[registertype] + \

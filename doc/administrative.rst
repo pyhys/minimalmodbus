@@ -182,6 +182,20 @@ Use::
 On a development machine, go to the minimalmodbus/trunk directory before running the command.
 
 
+
+Uninstall
+---------
+
+sudo pip uninstall minimalmodbus
+
+
+
+Show versions of all installed packages
+---------------------------------------
+
+pip freeze
+
+
 Installation target
 -------------------
 On Linux machines, for example::
@@ -193,6 +207,37 @@ On Windows machines, for example::
     C:\python27\Lib\site-packages
 
 The Windows installer also creates a :file:`.pyo` file (and also the :file:`.pyc` file).
+
+Python location on Linux machines::
+
+    /usr/lib/python2.7/
+
+    /usr/lib/python2.7/dist-packages
+
+.
+
+
+which python
+/usr/bin/python
+
+
+which python3.2
+/usr/bin/python3.2
+
+
+which pip
+
+
+/usr/bin/pip
+
+python test_all.py
+python3 test_all.py
+
+print( minimalmodbus._getDiagnosticString() )
+
+
+jonas@angsgardet:~/Skrivbord/pyserial-2.6$ sudo python3 setup.py install
+
 
 Using the pep8 tool
 -------------------
@@ -252,6 +297,8 @@ Next lower level: - (minus)
 
 A third level if necessary (avoid this): ` (backquote)
 
+
+Use ```Link text <http://example.com/>`_`` for inline web links.
 
 Sphinx build commands
 ---------------------
@@ -325,10 +372,7 @@ TODO
 
 
   * Write documentation with examples.
-  * adapt dummy_serial to python3
-  * Test with Python3 and 2to3
-  * Test the dependency of pySerial in setup.py
-  * Test run with process controller
+  * Test run with process controller, using python2 and python3
   
   * Upload files with ``scp -r`` instead
 
