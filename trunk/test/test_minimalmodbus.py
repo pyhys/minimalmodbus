@@ -62,10 +62,12 @@ __license__ = "Apache License, Version 2.0"
 __revision__  = "$Rev$"
 __date__      = "$Date$"
 
+
 import sys
 import unittest
 
 import minimalmodbus
+import dummy_serial
 
 ###########################################################
 # For showing the error messages caught by assertRaises() #
@@ -846,7 +848,6 @@ class TestDummyCommunication(ExtendedTestCase):
     def setUp(self):   
     
         # Prepare a dummy serial port to have proper responses
-        import dummy_serial
         dummy_serial.VERBOSE = False
         dummy_serial.RESPONSES = RESPONSES
         dummy_serial.DEFAULT_RESPONSE = 'NotFoundInDictionary'
@@ -1137,8 +1138,9 @@ class TestDummyCommunication(ExtendedTestCase):
 class TestDummyCommunicationOmegaSlave1(ExtendedTestCase):
 
     def setUp(self):   
-        import dummy_serial
+        dummy_serial.VERBOSE = False
         dummy_serial.RESPONSES = RESPONSES
+        dummy_serial.DEFAULT_RESPONSE = 'NotFoundInDictionary'
         minimalmodbus.serial.Serial = dummy_serial.Serial
         self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1) # port name, slave address (in decimal)
 
@@ -1164,8 +1166,9 @@ class TestDummyCommunicationOmegaSlave1(ExtendedTestCase):
 class TestDummyCommunicationOmegaSlave10(ExtendedTestCase):
 
     def setUp(self):   
-        import dummy_serial
+        dummy_serial.VERBOSE = False
         dummy_serial.RESPONSES = RESPONSES
+        dummy_serial.DEFAULT_RESPONSE = 'NotFoundInDictionary'
         minimalmodbus.serial.Serial = dummy_serial.Serial
         self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 10) # port name, slave address (in decimal)
 
@@ -1193,8 +1196,10 @@ class TestDummyCommunicationOmegaSlave10(ExtendedTestCase):
 class TestDummyCommunicationWithPortClosure(ExtendedTestCase):
 
     def setUp(self):   
-        import dummy_serial
+        dummy_serial.VERBOSE = False
         dummy_serial.RESPONSES = RESPONSES
+        dummy_serial.DEFAULT_RESPONSE = 'NotFoundInDictionary'
+
         minimalmodbus.serial.Serial = dummy_serial.Serial
         minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = True # Mimic a WindowsXP serial port
         self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1) # port name, slave address (in decimal)
@@ -1225,9 +1230,10 @@ class TestDummyCommunicationWithPortClosure(ExtendedTestCase):
 class TestVerboseDummyCommunicationWithPortClosure(ExtendedTestCase):
 
     def setUp(self):   
-        import dummy_serial
         dummy_serial.VERBOSE = True
         dummy_serial.RESPONSES = RESPONSES
+        dummy_serial.DEFAULT_RESPONSE = 'NotFoundInDictionary'
+        
         minimalmodbus.serial.Serial = dummy_serial.Serial
         minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = True # Mimic a WindowsXP serial port
         self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1) # port name, slave address (in decimal)
@@ -1247,8 +1253,10 @@ class TestVerboseDummyCommunicationWithPortClosure(ExtendedTestCase):
 class TestDummyCommunicationDebugmode(ExtendedTestCase):
 
     def setUp(self):   
-        import dummy_serial
+        dummy_serial.VERBOSE = False
         dummy_serial.RESPONSES = RESPONSES
+        dummy_serial.DEFAULT_RESPONSE = 'NotFoundInDictionary'
+
         minimalmodbus.serial.Serial = dummy_serial.Serial
         self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1) # port name, slave address (in decimal)
         self.instrument.debug = True
@@ -1473,6 +1481,7 @@ RESPONSES['\n\x10\x10\x01\x00\x01\x02\x07\xd0\xc6\xdc'] ='\n\x10\x10\x01\x00\x01
 #################
 
 if __name__ == '__main__':
+
 
     #print repr( minimalmodbus._calculateCrcString( '\x01\x02' + '\x00\x40\x00\x01' ))
     unittest.main(verbosity=VERBOSITY)
