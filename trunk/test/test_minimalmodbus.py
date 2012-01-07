@@ -74,7 +74,7 @@ import dummy_serial
 ###########################################################
 
 VERBOSITY = 0
-"""Verbosity level for the unit testing. Use value 0 or 2."""
+"""Verbosity level for the unit testing. Use value 0 or 2. Note that it only has an effect for Python 2.7 and above."""
 
 SHOW_ERROR_MESSAGES_FOR_ASSERTRAISES = False
 """Set this to True for printing the error messages caught by assertRaises().
@@ -1482,9 +1482,10 @@ RESPONSES['\n\x10\x10\x01\x00\x01\x02\x07\xd0\xc6\xdc'] ='\n\x10\x10\x01\x00\x01
 
 if __name__ == '__main__':
 
-
-    #print repr( minimalmodbus._calculateCrcString( '\x01\x02' + '\x00\x40\x00\x01' ))
-    unittest.main(verbosity=VERBOSITY)
+    try:
+        unittest.main(verbosity=VERBOSITY)
+    except:
+        unittest.main() # For compatibility with Python2.6
     
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestDummyCommunicationWithPortClosure)
     #unittest.TextTestRunner(verbosity=VERBOSITY).run(suite)
