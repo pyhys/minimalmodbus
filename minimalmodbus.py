@@ -325,7 +325,7 @@ class Instrument():
         
         Will block until timeout (or reaching a large number of bytes).
 
-        If the attribute .debug is True, the communication details are printed.
+        If the attribute :attr:`debug` is True, the communication details are printed.
 
         .. note::
             Some implementation details:
@@ -336,8 +336,7 @@ class Instrument():
 
             The data is stored internally in this driver as byte strings (representing byte values). 
             For example a byte with value 18 (dec) = 12 (hex) = 00010010 (bin) is stored in a string of length one.
-            This can be done using the function chr(18) or typing the string ``BACKSLASHx12``, where ``BACKSLASH`` 
-            should be replaced with the actual backslash sign. 
+            This can be done using the function chr(18) or typing the string ``\\x12``.
 
             Note that these strings can look pretty strange when printed, as values 0 to 31 (dec) are
             ASCII control signs. For example 'vertical tab' and 'line feed' are among those.
@@ -514,7 +513,7 @@ def _numToTwoByteString(value, numberOfDecimals = 0, LsbFirst = False):
         To store for example value=77.0, use numberOfDecimals=1 if the register will hold it as 770 internally.
         The value 770 (dec) is 0302 (hex), where the most significant byte is 03 (hex) and the
         least significant byte is 02 (hex). With LsbFirst = False, the most significant byte is given first
-        why the resulting string is ``BACKSLASHx03BACKSLASHx02``, which has the length 2.
+        why the resulting string is ``\\x03\\x02``, which has the length 2.
 
     """
     
@@ -557,7 +556,7 @@ def _twoByteStringToNum(bytestring, numberOfDecimals = 0):
         TypeError, ValueError
         
     For example:
-        A string ``BACKSLASHx03BACKSLASHx02`` (which has the length 2) corresponds to 0302 (hex) = 770 (dec). If
+        A string ``\\x03\\x02`` (which has the length 2) corresponds to 0302 (hex) = 770 (dec). If
         numberOfDecimals=1, then this is converted to 77.0 (float). 
 
     A bug was found on 2011-05-16: The most significant byte was 
@@ -581,7 +580,7 @@ def _bitResponseToValue(bytestring):
     """Convert a response string to a numerical value.
     
     Args:    
-        bytestring (str): A string of length 1. Can be for example ``BACKSLASHx01``.
+        bytestring (str): A string of length 1. Can be for example ``\\x01``.
         
     Returns:
         The converted value (int).     
@@ -1029,7 +1028,15 @@ def _checkNumerical(inputvalue, minvalue=None, maxvalue=None, description='input
 #####################
         
 def _print_out( inputstring ):
-    """Print the inputstring. To make it compatible with Python2 and Python3."""
+    """Print the inputstring. To make it compatible with Python2 and Python3.
+ 
+     Args:
+        inputstring (str): The string that should be printed.
+    
+    Raises:
+        TypeError
+        
+    """
     _checkString(inputstring, description='string to print')
     
     sys.stdout.write(inputstring + '\n')           
@@ -1044,8 +1051,11 @@ def _toPrintableString( inputstring ):
     Returns:
         A descriptive string.
 
+    Raises:
+        TypeError
+
     Use it for diagnostic printing of strings representing byte values (might have non-printing characters).
-    With an input string of ``BACKSLASHx12BACKSLASHx02BACKSLASHx74ABC`` (which is length 6), it will return the string:: 
+    With an input string of ``\\x12\\x02\\x74ABC`` (which is length 6), it will return the string:: 
 
         'String length: 6 bytes. Values: 18, 2, 116, 65, 66, 67'
     

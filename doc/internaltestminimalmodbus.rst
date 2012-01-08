@@ -1,3 +1,5 @@
+.. _testminimalmodbus:
+
 Internal documentation for unit testing of MinimalModbus 
 ========================================================
 

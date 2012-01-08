@@ -1,3 +1,5 @@
+.. _internalminimalmodbus:
+
 Internal documentation for MinimalModbus
 ========================================
 
