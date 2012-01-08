@@ -10,7 +10,7 @@ This is a major rewrite, but the API is backward compatible.
 * The error messages are made more informative.
 * The new example driver omegacn7500 is included.
 * Unit tests included in the distribution.
-* A dummy serial port for unit testing is provided.
+* A dummy serial port for unit testing is provided (including recorded communication data)
 * Updated documentation.
 
 

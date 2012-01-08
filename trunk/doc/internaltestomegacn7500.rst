@@ -1,3 +1,5 @@
+.. _testomegacn7500:
+
 Internal documentation for unit testing of omegacn7500
 ======================================================
 

@@ -111,12 +111,15 @@ From command line (if you have the *pip installer*, available at http://pypi.pyt
 
    pip install minimalmodbus
 
-or manually download the compressed source files from http://pypi.python.org/pypi/MinimalModbus/. There are compressed source files for Unix/Linux (.tar.gz) and Windows (.zip). Uncompress it, and run::
+or manually download the compressed source files from http://pypi.python.org/pypi/MinimalModbus/. (Then you first need to manually install pySerial from http://pypi.python.org/pypi/pyserial) 
+
+There are compressed source files for Unix/Linux (.tar.gz) and Windows (.zip). Uncompress it, and run::
 
    python setup.py install
 
 There is also a Windows installer (.win32.exe) available. Just start it and follow the instructions.
 
+For Python3 there might be problems with easy_install and pip. Then manually install pySerial and MinimalModbus.
 
 Implemented functions
 ---------------------
@@ -232,18 +235,24 @@ To switch on the debug mode, where the communication details are printed::
 
     instrument = minimalmodbus.Instrument('/dev/ttyUSB1', 1) # port name, slave address (in decimal)
     instrument.debug = True
-    print instrument.read_register( 289, 1 ) 
+    print instrument.read_register( 289, 1 )  # Remember to use print() for Python3
+
+With this you can easily see what is sent to and from your instrument, and immediately see what is wrong.
 
 The data is stored internally in this driver as byte strings (representing byte values). 
 For example a byte with value 18 (dec) = 12 (hex) = 00010010 (bin) is stored in a string of length one.
-This can be done using the function chr(18) or typing the string ``BACKSLASHx12``, where ``BACKSLASH`` 
-should be replaced with the actual backslash sign. 
+This can be done using the function chr(18) or typing the string ``\x12``.
+
+Note that the letter A has the hexadecimal ASCII code 41, why the string ``\x41`` prints 'A'. 
 
 Note that these strings can look pretty strange when printed, as values 0 to 31 (dec) are
-ASCII control signs. For example 'vertical tab' and 'line feed' are among those. To make the output easier to understand, use::
+ASCII control signs (not corresponding to any letter). For example 'vertical tab' 
+and 'line feed' are among those. To make the output easier to understand, use::
 
 	print repr(bytestringname)
-	
+
+Then you can find the value and use an ASCII table to see if it is correct.
+
 The details printed in debug mode (messages and responses) are very useful for using the dummy_serial port for unit testing purposes. For examples, see the file /test/test_minimalmodbus.py
 
 

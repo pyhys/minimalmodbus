@@ -19,7 +19,8 @@ Additional resources available on home page
    apiomegacn7500
    licence
    changes
-   administrative
+   usage
+   develop
    internalminimalmodbus
    internalomegacn7500
    internaltestminimalmodbus
