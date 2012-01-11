@@ -100,9 +100,9 @@ For details on the allowed parity values, see http://pyserial.sourceforge.net/py
 
 Dependencies
 ------------
-This module relies on pySerial to do the heavy lifting, and it is the only dependency. You can find it at the Python package index: http://pypi.python.org/pypi/pyserial
+Python versions 2.6 and higher are supported (including 3.x).
 
-Python version 2.6 and 2.7 have been used to develop this software, but it is **probably** compatible with Python 3 (according to the 2to3 tool).
+This module relies on pySerial to do the heavy lifting, and it is the only dependency. You can find it at the Python package index: http://pypi.python.org/pypi/pyserial
 
 
 Download and installation
@@ -113,18 +113,19 @@ From command line (if you have the *pip installer*, available at http://pypi.pyt
 
 or manually download the compressed source files from http://pypi.python.org/pypi/MinimalModbus/. (Then you first need to manually install pySerial from http://pypi.python.org/pypi/pyserial) 
 
-There are compressed source files for Unix/Linux (.tar.gz) and Windows (.zip). Uncompress it, and run::
+There are compressed source files for Unix/Linux (.tar.gz) and Windows (.zip). 
+To install a manually downloaded file, uncompress it and run (from within the directory)::
 
    python setup.py install
 
 There is also a Windows installer (.win32.exe) available. Just start it and follow the instructions.
 
-For Python3 there might be problems with easy_install and pip. Then manually install pySerial and MinimalModbus.
+For Python3 there might be problems with easy_install and pip. In that case, first manually install pySerial and then MinimalModbus.
 
 Implemented functions
 ---------------------
 These are the functions to use for reading and writing registers and bits of your instrument. Study the 
-documentation of your instrument to find which function code to use.
+documentation of your instrument to find which Modbus function code to use.
 
 +--------------+-----------------------------------------------------------------------+-------------------------------------------------------------------------+
 | Item         | Read                                                                  | Write                                                                   |
@@ -137,14 +138,14 @@ documentation of your instrument to find which function code to use.
 
 Modbus implementation details
 -----------------------------
-Note that the computer (master) actually is a client, and the slaves (instruments) are servers.
+Note that the computer (master) actually is a client, and the instruments (slaves) are servers.
 
 In Modbus RTU, the request message is sent from the master in this format::
     
     Slave address [1 Byte], Function code [1 Byte], Payload data [0 to 252 Bytes], CRC [2 Bytes].
 
 * For the function code, the allowed range is 1 to 127 (in decimal). 
-* The CRC is a cyclic redundacy check code, for error checking of the message. 
+* The CRC is a cyclic redundancy check code, for error checking of the message. 
 * The response from the client is similar, but with another payload data.
 
 ============================== ============================================================================================== ======================================================

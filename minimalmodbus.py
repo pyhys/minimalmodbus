@@ -99,6 +99,19 @@ class Instrument():
         if  self.close_port_after_each_call:
             self.serial.close()
 
+    def __repr__(self):
+        """String representation of the Instrument object."""
+        return "{0}.{1}<id=0x{2:x}, address={3}, close_port_after_each_call={4}, debug={5}, serial={6}>".format(
+            self.__module__,
+            self.__class__.__name__,
+            id(self),
+            self.address,
+            self.close_port_after_each_call,
+            self.debug,
+            self.serial,
+            )
+    
+
     ########################################
     ## Functions for talking to the slave ##
     ########################################
@@ -347,6 +360,9 @@ class Instrument():
             The **received message** should have the format: slaveaddress byte + functioncode byte + 
             data payload + CRC code (two bytes)
             
+            For Python3, the information sent to and from pySerial should be of the type bytes. 
+            This is taken care of automatically.
+            
         """
         MAX_NUMBER_OF_BYTES = 1000
                 
@@ -358,8 +374,14 @@ class Instrument():
         if self.close_port_after_each_call:
             self.serial.open()  
             
+        if sys.version_info[0] > 2:
+            message = bytes(message, encoding='latin1') # Convert types to make it python3 compatible
+            
         self.serial.write(message)
         answer =  self.serial.read(MAX_NUMBER_OF_BYTES)
+        
+        if sys.version_info[0] > 2:
+            answer = str(answer, encoding='latin1') # Convert types to make it python3 compatible
         
         if self.close_port_after_each_call:
             self.serial.close()

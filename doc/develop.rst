@@ -7,46 +7,51 @@ http://minimalmodbus.svn.sourceforge.net/viewvc/minimalmodbus/trunk/
 Design considerations
 -----------------------------------------------------------------------------
 
-My take on the design is that is should be as simple as possible, hence the name MinimalModbus, but it should implement the smallest number of functions needed for it to be useful. The target audience for this driver simply wants to talk to Modbus clients using serial interface (RTU is good enough), using some simple driver (preferably MinimalModbus).
+My take on the design is that is should be as simple as possible, hence the name MinimalModbus, but it should implement the smallest number of functions needed for it to be useful. The target audience for this driver simply wants to talk to Modbus clients using a serial interface (RTU is good enough), using some simple driver (preferably MinimalModbus).
 
-Only functions for reading/writing one register or bit are implemented. It is very easy to implement lots of (seldom used) functions, resulting in buggy code with large fractions of it almost not tested. It is instead much better to implement the features when needed/requested. There are many Modbus function codes, but I guess that most are not used.
+Only functions for reading/writing one register or bit are implemented. It is very easy to implement lots of (seldom used) functions, resulting in buggy code with large fractions of it almost never used. It is instead much better to implement the features when needed/requested. There are many Modbus function codes, but I guess that most are not used.
 
-It is a goal is that the same driver should be compatible for both python2 and python3 programs. Some suggestions for making this possible are found here:
+It is a goal that the same driver should be compatible for both Python2 and Python3 programs. Some suggestions for making this possible are found here:
 http://wiki.python.org/moin/PortingPythonToPy3k
 
 There should be unittests for all functions, and mock communication data.
 
+Errors should be caught as early as possible, and the error messages should be informative.
+
 Note that the term 'address' is ambigous, why it is better to use the terms 'register address' or 'slave address'
 
 
-General drive structure
+General driver structure
 -------------------------------------------------------------------------
 
+The general structure of the program is shown here:
 
-read_register()
-_genericCommand() Generates payload
-_performCommand() Embeds payload
-_communicate() Handles raw strings
+=================  =======================================================================
+Function           Description
+=================  =======================================================================
+read_register()    A facade for _genericCommand()
+_genericCommand()  Generates payload, then calls _performCommand()
+_performCommand()  Embeds payload into error-checking codes etc, then calls _communicate() 
+_communicate()     Handles raw strings for communication via pySerial
+=================  =======================================================================
 
+Most of the logic is located in separate (easy to test) functions on module level.
 
 
 Unittesting
 ------------------------------------------------------------------------------
 A brief introduction to unittesting is found here: http://docs.python.org/release/2.5.2/lib/minimal-example.html
 
-To run the unit tests::
+
+Inside the unpacked folder go to /test and run the unit tests with::
      
     python test_all.py
     python3 test_all.py
-
 
     python3.2 test_all.py
     python2.6 test_all.py
     python2.7 test_all.py
 
-Installing the module from  local svn files
---------------------------------------------
-Then try to install it on your computer (by first building a sourcedist
 
 Recording communication data for unittesting
 -------------------------------------------------------------------------
@@ -58,7 +63,7 @@ From this it is pretty easy to reshuffle it into unittest code.
 
 Here is an example how to record communication data, which then is pasted 
 into the test code (for use with a dummy serial port). See for example
-:ref:`testminimalmodbus` (click '[source]' on right side, see at end of the page). Do like this::
+:ref:`testminimalmodbus` (click '[source]' on right side, see RESPONSES at end of the page). Do like this::
 
    >>> import minimalmodbus
    >>> minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = True # Seems mandatory for Windows
@@ -90,7 +95,67 @@ into the test code (for use with a dummy serial port). See for example
 
 This is also very useful for debugging drivers built on top of MinimalModbus. See 
 for example the test code for omegacn7500 :ref:`testomegacn7500` (click '[source]', 
-see at end of the page).
+see RESPONSES at end of the page).
+
+
+Data encoding in Python2 and Python3
+------------------------------------------------------------------------------
+The string type has changed in Python3 compared to Python2. In Python3 the type 
+bytes is used when communicating via pySerial.
+
+Dependent on the Python version number, the data sent to pySerial has different types.
+
+String constants
+````````````````````
+This is a string constant both in Python2 and Python3::
+
+    st = 'abc\x69\xe6\x03'
+    
+This is a bytes constant in Python3, but a string constant in Python2 (allowed for 2.6 and higher)::
+
+    by = b'abc\x69\xe6\x03' 
+    
+Type conversion in Python3
+```````````````````````````
+To convert a string to bytes, use one of these::
+
+    bytes(st, 'latin1') # Note that 'ascii' encoding gives error for some values.
+    st.encode('latin1')
+ 
+To convert bytes to string, use one of these::    
+
+    str(by, encoding='latin1')
+    by.decode('latin1')
+    
+======== =============    
+Encoding Allowed range
+======== =============
+ascii    0-127
+latin-1  0-255
+======== =============
+
+Corresponding in Python2
+````````````````````````
+Ideally, we would like to use the same code for Python2. In python 2.6 and higher 
+there is the bytes() function for forward compatibility, but it is merely a 
+synonym for 'str'.
+
+To convert from 'bytes'(str) to str::
+
+    str(by) # not possible to give encoding    
+    by.decode('latin1') # Gives unicode
+
+To convert from str to 'bytes' (str)::
+
+    bytes(st) # not possible to give encoding   
+    st.encode('latin1') # Can not be used for values larger than 127
+
+
+It is thus not possible to use exactly the same code for both Python2 and Python3.
+Where it is unavoidable, use::
+
+    if sys.version_info[0] > 2:
+        whatever
 
 
 Webpage
@@ -103,13 +168,23 @@ The HTML theme on http://minimalmodbus.sourceforge.net/ is the Sphinx 'Default' 
 
 Notes on distribution
 -------------------------------------------------------------------------------
-??
 
-python setup.py register sdist --formats=gztar,zip upload
 
-How to generate a source distribution of the present development code
-`````````````````````````````````````````````````````````````````````
+Installing the module from local svn files
+````````````````````````````````````````````
+In the trunk directory::
 
+    sudo python setup.py install
+    
+If there are conditional ``__name__ == '__main__'`` clauses in the module, 
+these can be tested using (adapt path to your system)::
+
+    python /usr/local/lib/python2.6/dist-packages/eurotherm3500.py
+    python /usr/local/lib/python2.6/dist-packages/minimalmodbus.py    
+
+
+How to generate a source distribution from the present development code
+`````````````````````````````````````````````````````````````````````````
 This will create a subfolder **dist** with zipped or gztared source folders::
 
     python setup.py sdist
@@ -118,7 +193,6 @@ This will create a subfolder **dist** with zipped or gztared source folders::
 
 Notes on generating binary distributions
 ````````````````````````````````````````
-
 This will create the subfolders ``build`` and ``dist``::
 
     python setup.py bdist
@@ -128,15 +202,11 @@ This will create a subfolder ``dist`` with a Windows installer::
     python setup.py bdist --formats=wininst
 
 
-Test a distribution before installing it
-````````````````````````````````````````
-
+Build a distribution before installing it
+`````````````````````````````````````````
 This will create a subfolder ``build``::
 
     python setup.py build
-
-
-
 
 
 Preparation for release
@@ -144,14 +214,14 @@ Preparation for release
 
 Change version number etc
 `````````````````````````
-* Manually change the ``__version__`` and ``__status__`` fields in the :file:`.py` source files. setup.py ???
+* Manually change the ``__version__`` and ``__status__`` fields in the :file:`minimalmodbus.py` source file.
 * Manually change the release date in CHANGES.txt
+
+(Note that the version number in setup.py is changed automatically).
 
 
 Code style checking etc
 ```````````````````````
-
-(2to3 tool)
 
 Check the code::
 
@@ -159,31 +229,36 @@ Check the code::
     pychecker minimalmodbus.py 
     pychecker omegacn7500.py
 
+(The 2to3 tool is not necessary, as we run unittests under both Python2 and Python3).
 
 Unittesting
 ```````````
-Run unit tests (in the :file:`trunc/test` directory)::
+Run unit tests (in the :file:`trunk/test` directory)::
     
     python test_all.py
-
-
-
 
 
 Test the source distribution build (look in the PKG-INFO file)::
 
     python setup.py sdist
 
+Also make sure that the documentation generation and the test coverage report
+generation is functional (see below).
 
-
+Prepare subversion
+```````````````````
 
 Make sure the Subversion is updated::
 
+    svn update
     svn status -v --no-ignore
 
-Make a tag in Subversion::
+Make a tag in Subversion (adapt to version number)::
  
     svn copy https://minimalmodbus.svn.sourceforge.net/svnroot/minimalmodbus/trunk https://minimalmodbus.svn.sourceforge.net/svnroot/minimalmodbus/tags/0.20 -m "Release 0.20"
+
+Upload to PyPI
+``````````````
 
 Build the source distribution (as :file:`.gzip.tar` and :file:`.zip`) , and upload it to PYPI (will use the README.txt etc)::
 
@@ -191,8 +266,8 @@ Build the source distribution (as :file:`.gzip.tar` and :file:`.zip`) , and uplo
     python setup.py sdist --formats=gztar,zip upload
 
 
-Documentation
-``````````````
+Generate documentation
+``````````````````````
 Build the HTML and PDF documentation  ( in :file:`/doc` after making sure that ``PYTHONPATH`` is correct)::
 
     make html
@@ -204,8 +279,8 @@ Build the test coverage report::
 	coverage html
 	
 	
-Upload
-```````	
+Upload to Sourceforge
+``````````````````````
 	
 Upload the :file:`.gzip.tar` and :file:`.zip` files to Sourceforge by logging in and manually using the web form.
 
@@ -244,16 +319,11 @@ Upload the windows installer to PYPI by logging in, and uploading it manually.
 Upload the windows installer to Sourceforge.
 
 
-
-
-
 Downloading backups from the Sourceforge server
 -----------------------------------------------
 To download the svn repository in archive format, type this in the destination directory on your computer::
 
     rsync -av minimalmodbus.svn.sourceforge.net::svn/minimalmodbus/* .
-
-
 
 
 Useful development tools
@@ -282,15 +352,29 @@ Subversion provides an easy way to share code with each other. You can find all 
 
 Some usage instructions are found on http://sourceforge.net/scm/?type=svn&group_id=548418
 
+
+Install SVN on some Linux machines
+``````````````````````````````````
+Install it with::
+
+    sudo apt-get install subversion
+
 Download the files
 ```````````````````   
+The usage is::
+
+    svn checkout URL NewSubfolder
+
+where NewSubfolder is the name of a subfolder that will be created in present directory. You can also write ``svn co`` instead of ``svn checkout``.
+
 In a proper directory on your computer, download the files (not only the trunk subfolder) using::
 
   svn co https://minimalmodbus.svn.sourceforge.net/svnroot/minimalmodbus minimalmodbus   
    
+   
 Submit contributions
 ``````````````````````
-First run the ``svn update`` command to download the latest changes from the repository. Then make the changes in the files. Use the ``svn status`` command to see which files you have changed. Then upload your changes with the commit version of the command. Note that it easy to revert any changes in the svn, so feel free to test.
+First run the ``svn update`` command to download the latest changes from the repository. Then make the changes in the files. Use the ``svn status`` command to see which files you have changed. Then upload your changes with the ``svn commit -m 'comment'`` command. Note that it easy to revert any changes in the svn, so feel free to test.
 
    
 Shortlist of frequently used SVN commands
@@ -340,7 +424,7 @@ Sphinx usage
 -------------------------------------------------------------------------------
 The documentation is generated with the Sphinx tool: http://sphinx.pocoo.org/
 
-It is used to automatically generate HTML documentation from the source code.
+It is used to automatically generate HTML documentation from docstrings in the source code.
 See for example :ref:`internalminimalmodbus`.
 
 To install, use::
@@ -378,21 +462,22 @@ Then make an internal link to it using::
 
     :ref:`my-reference-label` 
 
+
 Sphinx build commands
 `````````````````````
-To build the documentation, go to the directory ../trunk/doc and then run::
+To build the documentation, go to the directory ``trunk/doc`` and then run::
 
    make html
 
-That should generate HTML files to the directory ../trunk/doc/build/html
+That should generate HTML files to the directory ``trunk/doc/build/html``
 
 To generate PDF::
 
    make latexpdf
 
-Note that the PYTHONPATH must be set properly, so that Sphinx can import the modules to document. See below.
+Note that the ``PYTHONPATH`` must be set properly, so that Sphinx can import the modules to document. See below.
 
-It is also possible to run without the ``make`` command. In the :file:`trunc/doc` directory::
+It is also possible to run without the ``make`` command. In the :file:`trunk/doc` directory::
 
     sphinx-build -b html -d build/doctrees  -a . build/html
     
@@ -444,7 +529,7 @@ or::
 
     coverage run test_all.py    
     
-Generate html report (ends up in trunk/test/htmlcov)::
+Generate html report (ends up in ``trunk/test/htmlcov``)::
 
     coverage html
     
@@ -477,8 +562,9 @@ or::
 
 TODO
 ----
-
-  * Write documentation with examples.
+  * Usage page
+  * README/Develop
+  * README/Unittest
   * Test run with process controller, using python2 and python3
   * Proofread and test aapi
   
