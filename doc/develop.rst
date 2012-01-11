@@ -158,6 +158,20 @@ Where it is unavoidable, use::
         whatever
 
 
+Extending MinimalModbus
+------------------------------------------------------------------------------
+It is straight-forward to extend MinimalModbus to handle mode Modbus functioncodes.
+Use the the method _performCommand(functioncode, payload) to send data to the 
+slave, and to receive the response. Note that the API might change, as this is 
+outside the official API.
+
+This is easily tested in interactive mode.
+
+INSERT USAGE EXAMPLE.
+
+There are several useful helper functions available in the :mod:`minimalmodbus` module. 
+See :ref:`internalminimalmodbus`. 
+
 Webpage
 ------------------------------------------------------------------------------
 The HTML theme on http://minimalmodbus.sourceforge.net/ is the Sphinx 'Default' theme. 

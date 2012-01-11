@@ -501,9 +501,11 @@ class TestCheckFunctioncode(ExtendedTestCase):
         
     def testCorrectFunctioncodeNoRange(self):
         minimalmodbus._checkFunctioncode( 4, None )    
+        minimalmodbus._checkFunctioncode( 75, None )  
         
     def testWrongFunctioncode(self):  
         self.assertRaises(ValueError, minimalmodbus._checkFunctioncode, 3, [4, 5])
+        self.assertRaises(ValueError, minimalmodbus._checkFunctioncode, 3, [])
 
     def testWrongFunctioncodeNoRange(self):     
         self.assertRaises(ValueError, minimalmodbus._checkFunctioncode, 1000, None)
@@ -1095,9 +1097,11 @@ class TestDummyCommunication(ExtendedTestCase):
     
     def testPerformcommandKnownResponse(self):    
         self.assertEqual( self.instrument._performCommand(16, 'TESTCOMMAND'), 'TESTCOMMANDRESPONSE')
+        self.assertEqual( self.instrument._performCommand(75, 'TESTCOMMAND2'), 'TESTCOMMANDRESPONSE2')
+        self.assertEqual( self.instrument._performCommand(2, '\x00\x3d\x00\x01'), '\x01\x01' ) # Read bit register 61 on slave 1 using function code 2. 
         
     def testPerformcommandWrongFunctioncode(self):   
-        self.assertRaises(ValueError, self.instrument._performCommand, 35, 'TESTCOMMAND')        
+        #self.assertRaises(ValueError, self.instrument._performCommand, 35, 'TESTCOMMAND') # Wrong ValueError message (CRC error = 'Not found in dictionary')       
         self.assertRaises(ValueError, self.instrument._performCommand, -1, 'TESTCOMMAND')  
         self.assertRaises(ValueError, self.instrument._performCommand, 128, 'TESTCOMMAND')  
         
@@ -1294,8 +1298,8 @@ from the dummy serial port.
 
 #                ##  READ BIT  ##  
 
-# Read bit register 61 on slave 1 using function code 2 #   
-# ----------------------------------------------------- #
+# Read bit register 61 on slave 1 using function code 2. Also for testing _performCommand() #   
+# ----------------------------------------------------------------------------------------- #
 # Message:  Slave address 1, function code 2. Register address 61, 1 coil. CRC. 
 # Response: Slave address 1, function code 2. 1 byte, value=1. CRC.
 RESPONSES['\x01\x02' + '\x00\x3d\x00\x01' + '(\x06'] = '\x01\x02' + '\x01\x01' + '`H'
@@ -1440,12 +1444,12 @@ RESPONSES['TESTMESSAGE'] = 'TESTRESPONSE'
 # Retrieve an known response (for testing the _performCommand method) #
 # ---------------------------------------------------------------- #
 RESPONSES['\x01\x10TESTCOMMAND\x08B'] = '\x01\x10TESTCOMMANDRESPONSE\xb4,'
-
+RESPONSES['\x01\x4bTESTCOMMAND2\x18\xc8'] = '\x01\x4bTESTCOMMANDRESPONSE2K\x8c'
 
 ## Recorded data from OmegaCN7500 ##
 ####################################
 
-# Slave address 1, read_bit(2068) Response value 1 
+# Slave address 1, read_bit(2068) Response value 1. 
 RESPONSES['\x01\x02\x08\x14\x00\x01\xfb\xae'] ='\x01\x02\x01\x01`H'
 
 # Slave address 1, write_bit(2068, 0)
@@ -1493,7 +1497,7 @@ RESPONSES['\n\x10\x10\x01\x00\x01\x02\x07\xd0\xc6\xdc'] ='\n\x10\x10\x01\x00\x01
 #################
 
 if __name__ == '__main__':
-
+    #print repr(minimalmodbus._calculateCrcString('\x01\x4bTESTCOMMAND2'))
     try:
         unittest.main(verbosity=VERBOSITY)
     except:

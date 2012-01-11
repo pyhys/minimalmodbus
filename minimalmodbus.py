@@ -220,8 +220,10 @@ class Instrument():
         NUMBER_OF_BYTES_FOR_ONE_BIT = 1
                         
         NUMBER_OF_BYTES_BEFORE_REGISTERDATA = 1
+        
+        ALL_ALLOWED_FUNCTIONCODES = list(range(1,7)) + [15, 16] # To comply with both Python2 and Python3
                         
-        _checkFunctioncode(functioncode, None)
+        _checkFunctioncode(functioncode, ALL_ALLOWED_FUNCTIONCODES)
         _checkRegisteraddress(registeraddress)
         
         if not isinstance(value, type(None)):
@@ -752,7 +754,7 @@ def _calculateCrcString( inputstring ):
     return _numToTwoByteString(register, LsbFirst = True)
 
 
-def _checkFunctioncode(functioncode, listOfAllowedValues):
+def _checkFunctioncode(functioncode, listOfAllowedValues = []):
     """Check that the given functioncode is in the listOfAllowedValues.
 
     Also verifies that 1 <= function code <= 127.
@@ -767,12 +769,11 @@ def _checkFunctioncode(functioncode, listOfAllowedValues):
     """
     FUNCTIONCODE_MIN = 1
     FUNCTIONCODE_MAX = 127
-    ALL_ALLOWED_FUNCTIONCODES = list(range(1,7)) + [15, 16] # To comply with both Python2 and Python3
-        
+            
     _checkInt(functioncode, FUNCTIONCODE_MIN, FUNCTIONCODE_MAX, description='functioncode' )    
     
     if listOfAllowedValues == None:
-        listOfAllowedValues = ALL_ALLOWED_FUNCTIONCODES
+        return
 
     if not isinstance(listOfAllowedValues, list):
         raise TypeError( 'The listOfAllowedValues should be a list. Given: {0}'.format(repr(listOfAllowedValues)) )
