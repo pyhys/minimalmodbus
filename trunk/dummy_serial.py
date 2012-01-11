@@ -74,8 +74,8 @@ class Serial():
     """
     
     def __init__(self, *args, **kwargs):
-        self.latestWrite = ''
-        self.is_open = True
+        self._latestWrite = ''
+        self._isOpen = True
         
         if VERBOSE: 
             _print_out('\nInitializing dummy_serial')
@@ -83,14 +83,25 @@ class Serial():
             _print_out('dummy_serial initialization kwargs: ' + repr(kwargs) + '\n')
         
         
+    def __repr__(self):
+        """String representation of the dummy_serial object"""
+        return "{0}.{1}<id=0x{2:x}, open={3}>(latestWrite={4})".format(
+            self.__module__,
+            self.__class__.__name__,
+            id(self),
+            self._isOpen,
+            self._latestWrite,
+        )
+        
+
     def open(self):
         """Open a (previously initialized) port on dummy_serial."""
         if VERBOSE:
             _print_out('\nOpening port on dummy_serial\n')
         
-        if self.is_open:
+        if self._isOpen:
             raise IOError('The port on dummy_serial is already open')
-        self.is_open = True
+        self._isOpen = True
 
 
     def close(self):
@@ -98,19 +109,27 @@ class Serial():
         if VERBOSE:
             _print_out('\nClosing port on dummy_serial\n')
             
-        if not self.is_open:
+        if not self._isOpen:
             raise IOError('The port on dummy_serial is already closed')
-        self.is_open = False
+        self._isOpen = False
 
    
-    def write(self, inputstring):
+    def write(self, inputdata):
         """Write to a port on dummy_serial.
         
         Args:
-            inputstring (int): String for sending to the port on dummy_serial. Will affect the response.
+            inputdata (string/bytes): data for sending to the port on dummy_serial. Will affect the response.
             
+            Note that for Python2, the inputdata should be a string. For Python3 of type bytes.
         """
-        self.latestWrite = inputstring
+        inputstring = inputdata
+        
+        if sys.version_info[0] > 2:
+            if not type(inputdata) == bytes:
+                raise TypeError('The input must be type bytes. Given:' + repr(inputdata))
+            inputstring = str(inputdata, encoding='latin1')
+        
+        self._latestWrite = inputstring
         
         if VERBOSE:
             _print_out('\nWriting to port on dummy_serial:' + repr(inputstring) + '\n')
@@ -125,19 +144,26 @@ class Serial():
         Args:
             numberOfBytes (int): For compability with the real function. Not used.
         
+        Returns a string for Python2 and bytes for Python3.
+        
         """ 
         
         try:
-            returnvalue = RESPONSES[self.latestWrite]   
+            returnstring = RESPONSES[self._latestWrite]   
         except:
-            returnvalue = DEFAULT_RESPONSE    
+            returnstring = DEFAULT_RESPONSE    
 
         if VERBOSE:    
             _print_out('\nReading from port on dummy_serial (max length ' + str(numberOfBytes) + ' bytes)')
-            _print_out('dummy_serial latest written data:' + repr(self.latestWrite))
-            _print_out('dummy_serial read return data:' + repr(returnvalue) + '\n')
+            _print_out('dummy_serial latest written data:' + repr(self._latestWrite))
+            _print_out('dummy_serial read return data:' + repr(returnstring) + '\n')
                   
-        return returnvalue
+        returndata = returnstring
+        
+        if sys.version_info[0] > 2: # Convert types to make it python3 compatible
+            returndata = bytes(returnstring, encoding='latin1')
+        
+        return returndata
 
 def _print_out( inputstring ):
     """Print the inputstring. To make it compatible with Python2 and Python3."""    

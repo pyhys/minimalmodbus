@@ -856,6 +856,7 @@ class TestDummyCommunication(ExtendedTestCase):
         minimalmodbus.serial.Serial = dummy_serial.Serial
         
         # Initialize a (dummy) instrument
+        minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = False
         self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1) # port name, slave address (in decimal)
         self.instrument.debug = False
 
@@ -1128,6 +1129,14 @@ class TestDummyCommunication(ExtendedTestCase):
     def testCommunicateNoResponse(self):   
         self.assertRaises(IOError, self.instrument._communicate, 'MessageForEmptyResponse')
             
+    ## __repr__ ##
+    
+    def testRepresentation(self):      
+        representation = repr(self.instrument)
+        self.assertTrue( 'minimalmodbus.Instrument<id=' in representation )
+        self.assertTrue( ', address=1, close_port_after_each_call=False, debug=False, serial=dummy_serial.Serial<id=' in representation )
+        self.assertTrue( ', open=True>(latestWrite=)>' in representation )
+            
     ## Tear down test fixture ##
         
     def tearDown(self):
@@ -1142,6 +1151,7 @@ class TestDummyCommunicationOmegaSlave1(ExtendedTestCase):
         dummy_serial.RESPONSES = RESPONSES
         dummy_serial.DEFAULT_RESPONSE = 'NotFoundInDictionary'
         minimalmodbus.serial.Serial = dummy_serial.Serial
+        minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = False
         self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1) # port name, slave address (in decimal)
 
     def testReadBit(self):  
@@ -1170,6 +1180,7 @@ class TestDummyCommunicationOmegaSlave10(ExtendedTestCase):
         dummy_serial.RESPONSES = RESPONSES
         dummy_serial.DEFAULT_RESPONSE = 'NotFoundInDictionary'
         minimalmodbus.serial.Serial = dummy_serial.Serial
+        minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = False
         self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 10) # port name, slave address (in decimal)
 
     def testReadBit(self):  
@@ -1258,6 +1269,7 @@ class TestDummyCommunicationDebugmode(ExtendedTestCase):
         dummy_serial.DEFAULT_RESPONSE = 'NotFoundInDictionary'
 
         minimalmodbus.serial.Serial = dummy_serial.Serial
+        minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = False
         self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1) # port name, slave address (in decimal)
         self.instrument.debug = True
 
