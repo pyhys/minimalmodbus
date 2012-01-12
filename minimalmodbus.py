@@ -772,7 +772,7 @@ def _checkFunctioncode(functioncode, listOfAllowedValues = []):
             
     _checkInt(functioncode, FUNCTIONCODE_MIN, FUNCTIONCODE_MAX, description='functioncode' )    
     
-    if listOfAllowedValues == None:
+    if listOfAllowedValues is None:
         return
 
     if not isinstance(listOfAllowedValues, list):
