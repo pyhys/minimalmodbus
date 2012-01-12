@@ -579,7 +579,6 @@ TODO
   * Usage page
   * README/Develop
   * README/Unittest
-  * Test run with process controller, using python2 and python3
   * Proofread and test aapi
   
   * Upload files with ``scp -r`` instead
