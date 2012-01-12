@@ -1104,8 +1104,9 @@ def _getDiagnosticString():
     """
     text = '\n## Diagnostic output from minimalmodbus ## \n\n'
     text += 'Minimalmodbus version: ' + __version__ + '\n'
+    text += 'Minimalmodbus status: ' + __status__ + '\n'
     text += 'Revision: ' + __revision__ + '\n'
-    text += 'Release date: ' + __date__ + '\n'
+    text += 'Revision date: ' + __date__ + '\n'
     text += 'File name (with relative path): ' + __file__ + '\n'
     text += 'Full file path: ' + os.path.abspath(__file__) + '\n\n'
     text += 'pySerial version: ' + serial.VERSION + '\n'
