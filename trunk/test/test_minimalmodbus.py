@@ -1497,7 +1497,8 @@ RESPONSES['\n\x10\x10\x01\x00\x01\x02\x07\xd0\xc6\xdc'] ='\n\x10\x10\x01\x00\x01
 #################
 
 if __name__ == '__main__':
-    #print repr(minimalmodbus._calculateCrcString('\x01\x4bTESTCOMMAND2'))
+    
+    #print repr(minimalmodbus._calculateCrcString('\x01\x4bTESTCOMMAND2'))S
     try:
         unittest.main(verbosity=VERBOSITY)
     except:
