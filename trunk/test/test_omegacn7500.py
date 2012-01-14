@@ -184,8 +184,8 @@ class TestDummyCommunication_Slave1(unittest.TestCase):
     Most of the tests are for making sure that the communication details are OK.
     
     For some examples of testing the methods for argument value errors or
-    argument type errors, see the testSetControlModeWithWrongValue() and 
-    testSetControlModeWithWrongValueType() methods.
+    argument type errors, see the :meth:`.testSetControlModeWithWrongValue` and 
+    :meth:`.testSetControlModeWithWrongValueType` methods.
 
     """
 

@@ -28,15 +28,15 @@ For each function are these tests performed:
   * Invalid input value
   * Invalid input type
 
-This unittest suite uses a dummy serial port from the module :mod:`dummy_serial`, 
+This unittest suite uses a mock/dummy serial port from the module :mod:`dummy_serial`, 
 so it is possible to test the functionality using previously recorded communication data.
 
 With the dummy responses, it is also possible to simulate errors in the communication 
-from the slave. A few different types of errors are tested, as seen in this table.
+from the slave. A few different types of communication errors are tested, as seen in this table.
 
-=====================================  ===================== ================================
-Simulated response error               Tested using function Tested using Modbus functioncode
-=====================================  ===================== ================================
+=====================================  ===================== =================================
+Simulated response error               Tested using function Tested using Modbus function code
+=====================================  ===================== =================================
 No response                            read_bit              2
 Wrong CRC in response                  write_register        16
 Wrong slave address in response        write_register        16
@@ -48,7 +48,7 @@ Wrong number of registers in response  write_bit             15
 Wrong number of registers in response  write_register        16
 Wrong write data in response           write_bit             5
 Wrong write data in response           write_register        6
-=====================================  ===================== ================================
+=====================================  ===================== =================================
 
 This Python file was changed (committed) at $Date$, 
 which was $Revision$.
@@ -77,9 +77,9 @@ VERBOSITY = 0
 """Verbosity level for the unit testing. Use value 0 or 2. Note that it only has an effect for Python 2.7 and above."""
 
 SHOW_ERROR_MESSAGES_FOR_ASSERTRAISES = False
-"""Set this to True for printing the error messages caught by assertRaises().
+"""Set this to :const:`True` for printing the error messages caught by assertRaises().
 
-If set to True, any unintentional error messages raised during the processing of the command in assertRaises() are also caught (not counted). It will be printed in the short form, and will show no traceback.
+If set to :const:`True`, any unintentional error messages raised during the processing of the command in :meth:`.assertRaises` are also caught (not counted). It will be printed in the short form, and will show no traceback.
 """
 
 class _NonexistantError(Exception):
@@ -94,7 +94,7 @@ class ExtendedTestCase(unittest.TestCase):
     """
 
     def assertRaises(self, excClass, callableObj, *args, **kwargs):
-        """Prints the caught error message (if :data:`SHOW_ERROR_MESSAGES_FOR_ASSERTRAISES` = True)."""
+        """Prints the caught error message (if :data:`SHOW_ERROR_MESSAGES_FOR_ASSERTRAISES` is :const:`True`)."""
         if SHOW_ERROR_MESSAGES_FOR_ASSERTRAISES:
             try:
                 unittest.TestCase.assertRaises(self, _NonexistantError, callableObj, *args, **kwargs)

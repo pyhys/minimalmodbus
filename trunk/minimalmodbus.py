@@ -61,7 +61,7 @@ class Instrument():
     """Instrument class for talking to instruments (slaves) via the Modbus RTU protocol (via RS485 or RS232).
 
     Args:
-        * port (str): The serial port name, for example ``/dev/ttyUSB0`` (linux), ``/dev/tty.usbserial`` (OS X) or ``/com3`` (Windows).
+        * port (str): The serial port name, for example ``/dev/ttyUSB0`` (Linux), ``/dev/tty.usbserial`` (OS X) or ``/com3`` (Windows).
         * slaveaddress (int): Slave address in the range 1 to 247 (use decimal numbers, not hex).
 
     """
@@ -77,7 +77,7 @@ class Instrument():
                 - Most often set by the constructor (see the class documentation).
             - baudrate (int):  Baudrate in Baud. 
                 - Defaults to :data:`BAUDRATE`.
-            - parity (int):    Parity. See the pySerial module for documentation. 
+            - parity (probably int): Parity. See the pySerial module for documentation. 
                 - Defaults to :data:`PARITY`.
             - bytesize (int):  Bytesize in bits. 
                 - Defaults to :data:`BYTESIZE`.
@@ -91,16 +91,16 @@ class Instrument():
         """Slave address (int). Most often set by the constructor (see the class documentation). """
 
         self.debug = False
-        """Set this to True to print the communication details. Defaults to False."""
+        """Set this to :const:`True` to print the communication details. Defaults to :const:`False`."""
         
         self.close_port_after_each_call = CLOSE_PORT_AFTER_EACH_CALL
-        """If this is True, the serial port will be closed after each call. Defaults to :data:`CLOSE_PORT_AFTER_EACH_CALL`. To change it, set the value minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL=True ."""      
+        """If this is :const:`True`, the serial port will be closed after each call. Defaults to :data:`CLOSE_PORT_AFTER_EACH_CALL`. To change it, set the value ``minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL=True`` ."""      
         
         if  self.close_port_after_each_call:
             self.serial.close()
 
     def __repr__(self):
-        """String representation of the Instrument object."""
+        """String representation of the :class:`.Instrument` object."""
         return "{0}.{1}<id=0x{2:x}, address={3}, close_port_after_each_call={4}, debug={5}, serial={6}>".format(
             self.__module__,
             self.__class__.__name__,
@@ -138,7 +138,7 @@ class Instrument():
         """Write one bit to the slave.
         
         Args:
-            * registeraddress (int): The register address  (use decimal numbers, not hex).
+            * registeraddress (int): The register address (use decimal numbers, not hex).
             * value (int): 0 or 1 
             * functioncode (int): Modbus function code. Can be 5 or 15.
 
@@ -161,7 +161,7 @@ class Instrument():
             * numberOfDecimals (int): The number of decimals for content conversion.
             * functioncode (int): Modbus function code. Can be 3 or 4.
 
-        If a value of 77.0 is stored internally in the slave register as 770, then use numberOfDecimals=1
+        If a value of 77.0 is stored internally in the slave register as 770, then use ``numberOfDecimals=1``.
 
         Returns:
             The register data in numerical value (int or float).
@@ -183,7 +183,7 @@ class Instrument():
             * numberOfDecimals (int): The number of decimals for content conversion.
             * functioncode (int): Modbus function code. Can be 6 or 16.
 
-        To store for example value=77.0, use numberOfDecimals=1 if the register will hold it as 770 internally.
+        To store for example ``value=77.0``, use ``numberOfDecimals=1`` if the register will hold it as 770 internally.
 
         Returns:
             None
@@ -206,7 +206,7 @@ class Instrument():
             * numberOfDecimals (int): The number of decimals for content conversion.
         
         Returns:
-            The register data in numerical value (int or float), or the bit value 0 or 1 (int), or None.
+            The register data in numerical value (int or float), or the bit value 0 or 1 (int), or ``None``.
         
         Raises:
             ValueError, TypeError, IOError
@@ -337,7 +337,7 @@ class Instrument():
         
         Will block until timeout (or reaching a large number of bytes).
 
-        If the attribute :attr:`debug` is True, the communication details are printed.
+        If the attribute :attr:`debug` is :const:`True`, the communication details are printed.
 
         .. note::
             Some implementation details:
@@ -348,7 +348,7 @@ class Instrument():
 
             The data is stored internally in this driver as byte strings (representing byte values). 
             For example a byte with value 18 (dec) = 12 (hex) = 00010010 (bin) is stored in a string of length one.
-            This can be done using the function chr(18) or typing the string ``\\x12``.
+            This can be done using the function ``chr(18)`` or typing the string ``\\x12``.
 
             Note that these strings can look pretty strange when printed, as values 0 to 31 (dec) are
             ASCII control signs. For example 'vertical tab' and 'line feed' are among those.
@@ -531,9 +531,9 @@ def _numToTwoByteString(value, numberOfDecimals = 0, LsbFirst = False):
         TypeError, ValueError
 
     For example:
-        To store for example value=77.0, use numberOfDecimals=1 if the register will hold it as 770 internally.
+        To store for example value=77.0, use ``numberOfDecimals = 1`` if the register will hold it as 770 internally.
         The value 770 (dec) is 0302 (hex), where the most significant byte is 03 (hex) and the
-        least significant byte is 02 (hex). With LsbFirst = False, the most significant byte is given first
+        least significant byte is 02 (hex). With ``LsbFirst = False``, the most significant byte is given first
         why the resulting string is ``\\x03\\x02``, which has the length 2.
 
     """
@@ -578,7 +578,7 @@ def _twoByteStringToNum(bytestring, numberOfDecimals = 0):
         
     For example:
         A string ``\\x03\\x02`` (which has the length 2) corresponds to 0302 (hex) = 770 (dec). If
-        numberOfDecimals=1, then this is converted to 77.0 (float). 
+        ``numberOfDecimals = 1``, then this is converted to 77.0 (float). 
 
     A bug was found on 2011-05-16: The most significant byte was 
     multiplied by 255 instead of the correct value 256.
@@ -699,12 +699,13 @@ def _rightshift(inputInteger):
         inputInteger (int): The value to be rightshifted. Should be positive.
 
     Returns:
-        The tuple (shifted, carrybit) where ``shifted`` is the rightshifted integer and ``carrybit`` is the
+        The tuple (*shifted*, *carrybit*) where *shifted* is the rightshifted integer and *carrybit* is the
         resulting carry bit.
 
     For example:
-        An inputInteger = 9 (dec) = 1001 (bin) will after a rightshift be 0100 (bin) = 4 and the carry bit is 1.
+        An *inputInteger* = 9 (dec) = 1001 (bin) will after a rightshift be 0100 (bin) = 4 and the carry bit is 1.
         The return value will then be the tuple (4, 1). 
+        
     """
     _checkInt(inputInteger, minvalue=0)
         
@@ -758,7 +759,7 @@ def _checkFunctioncode(functioncode, listOfAllowedValues = []):
 
     Args:
         * functioncode (int): The function code
-        * listOfAllowedValues (list of int): Allowed values. Use None to bypass this part of the checking.
+        * listOfAllowedValues (list of int): Allowed values. Use *None* to bypass this part of the checking.
     
     Raises:
         TypeError, ValueError
