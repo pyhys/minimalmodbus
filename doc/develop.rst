@@ -43,7 +43,7 @@ Unittesting
 A brief introduction to unittesting is found here: http://docs.python.org/release/2.5.2/lib/minimal-example.html
 
 
-Inside the unpacked folder go to :file:`/test` and run the unit tests with::
+Inside the unpacked folder go to :file:`test` and run the unit tests with::
      
     python test_all.py
     python3 test_all.py
@@ -316,7 +316,7 @@ Build the HTML and PDF documentation  (in :file:`doc` after making sure that :en
 Build the test coverage report::
    
     coverage run test_all.py
-    coverage html --omit=/usr/share/*
+    coverage html --omit=/usr/*
 	
 	
 Upload to Sourceforge
@@ -406,7 +406,7 @@ The usage is::
 
 where *NewSubfolder* is the name of a subfolder that will be created in present directory. You can also write ``svn co`` instead of ``svn checkout``.
 
-In a proper directory on your computer, download the files (not only the trunk subfolder) using::
+In a proper directory on your computer, download the files (not only the :file:`trunk` subfolder) using::
 
   svn co https://minimalmodbus.svn.sourceforge.net/svnroot/minimalmodbus minimalmodbus   
    
@@ -464,7 +464,7 @@ Sphinx usage
 This documentation is generated with the Sphinx tool: http://sphinx.pocoo.org/
 
 It is used to automatically generate HTML documentation from docstrings in the source code.
-See for example :ref:`internalminimalmodbus`. To see the source code of the python 
+See for example :ref:`internalminimalmodbus`. To see the source code of the Python 
 file, click [source] on the right part of that side. To see the source of the 
 Sphinx page definition file, click 'Show Source' in the left column.
 
@@ -557,7 +557,7 @@ It is also possible to run without the :command:`make` command. In the :file:`tr
 
     sphinx-build -b html -d build/doctrees  -a . build/html
     
-If the python source files not are updated in the html output, then remove the contents of :file:`trunk/doc/build/doctrees` and rebuild the documentation. (This has now been included in the :file:`Makefile`).
+If the python source files not are updated in the HTML output, then remove the contents of :file:`trunk/doc/build/doctrees` and rebuild the documentation. (This has now been included in the :file:`Makefile`).
 
 Remember that the :file:`Makefile` uses tabs for indentation, not spaces.
 
@@ -589,7 +589,7 @@ Generate html report (ends up in :file:`trunk/test/htmlcov`)::
     
 Or to exclude some third party modules (adapt to your file structure)::
 
-    coverage html --omit=/usr/share/*
+    coverage html --omit=/usr/*
 
 
 Using the pep8 style checker tool
@@ -617,8 +617,6 @@ or::
 TODO
 ----
   * Usage page
-  * README/Develop
-  * README/Unittest
   * Proofread and test aapi
   
   * Upload files with ``scp -r`` instead

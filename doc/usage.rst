@@ -6,7 +6,7 @@ The location of the code is seen in the _getDiagnosticString() output.
 
  sudo python3 setup.py install
 
-
+! !!!!!!!!!!!!!!!!
 
 
 Diagnostic output
@@ -14,6 +14,7 @@ Diagnostic output
 
 print( minimalmodbus._getDiagnosticString() )
 
+! !!!!
 
 
 Interactive usage
@@ -173,6 +174,10 @@ problematic. Set the value ``minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL=True`` imm
 
 Install or uninstalling a distribution
 --------------------------------------------------------------------------
+
+
+! !!!!!!!!!!!!!!!!!!!!!!
+
 Use::
 
     sudo python setup.py install

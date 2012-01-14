@@ -77,6 +77,8 @@ It is better to put the details in a driver for the specific instrument. An exam
     NEW_TEMPERATURE = 95.0
     heatercontroller.set_sp_loop1(NEW_TEMPERATURE)
 
+More on the usage of MinimalModbus is found on http://minimalmodbus.sourceforge.net/usage.html
+
 
 Default values
 --------------
@@ -111,7 +113,7 @@ From command line (if you have the *pip installer*, available at http://pypi.pyt
 
    pip install minimalmodbus
 
-or manually download the compressed source files from http://pypi.python.org/pypi/MinimalModbus/. (Then you first need to manually install pySerial from http://pypi.python.org/pypi/pyserial) 
+You can also manually download the compressed source files from http://pypi.python.org/pypi/MinimalModbus/ (see the end of that page). Then you first need to manually install pySerial from http://pypi.python.org/pypi/pyserial.
 
 There are compressed source files for Unix/Linux (:file:`.tar.gz`) and Windows (:file:`.zip`). 
 To install a manually downloaded file, uncompress it and run (from within the directory)::
@@ -179,7 +181,7 @@ when communicating with more than one instrument. It is possible to make Minimal
     minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = True
 	
     instrument = minimalmodbus.Instrument('/dev/ttyUSB1', 1) # port name, slave address (in decimal)
-    print instrument.read_register( 289, 1 ) 
+    print instrument.read_register(289, 1) 
 
 	
 Licence
@@ -192,7 +194,7 @@ Home page
 Home page with full API documentation 
     http://minimalmodbus.sourceforge.net/ (this page if viewed on sourceforge.net).
 
-Python package index
+Python package index with download 
     http://pypi.python.org/pypi/MinimalModbus/ (this page if viewed on python.org. Note that no API is available).
 
 The SourceForge project page
@@ -236,13 +238,13 @@ To switch on the debug mode, where the communication details are printed::
 
     instrument = minimalmodbus.Instrument('/dev/ttyUSB1', 1) # port name, slave address (in decimal)
     instrument.debug = True
-    print instrument.read_register( 289, 1 )  # Remember to use print() for Python3
+    print instrument.read_register(289, 1)  # Remember to use print() for Python3
 
 With this you can easily see what is sent to and from your instrument, and immediately see what is wrong.
 
 The data is stored internally in this driver as byte strings (representing byte values). 
 For example a byte with value 18 (dec) = 12 (hex) = 00010010 (bin) is stored in a string of length one.
-This can be done using the function chr(18) or typing the string ``\x12``.
+This can be done using the function ``chr(18)`` or typing the string ``\x12``.
 
 Note that the letter A has the hexadecimal ASCII code 41, why the string ``\x41`` prints 'A'. 
 
@@ -254,18 +256,18 @@ and 'line feed' are among those. To make the output easier to understand, use::
 
 Then you can find the value and use an ASCII table to see if it is correct.
 
-The details printed in debug mode (messages and responses) are very useful for using the dummy_serial port for unit testing purposes. For examples, see the file /test/test_minimalmodbus.py
-
-
-More implementation details ?? internalminimalmodbus.html
+The details printed in debug mode (messages and responses) are very useful for using the :mod:`dummy_serial` port for unit testing purposes. For examples, see the file :file:`test/test_minimalmodbus.py`
+	
+More implementation details are found on http://minimalmodbus.sourceforge.net/develop.html	
+	
 	
 Unit testing
 ------------
-Unit tests are provided in the /test subfolder. To run them::
+Unit tests are provided in the :file:`test` subfolder. To run them::
 
     python test_minimalmodbus.py
     
-Also a dummy/mock/stub for the serial port is provided for test purposes.
+Also a dummy/mock/stub for the serial port, :mod:`dummy_serial`, is provided for test purposes.
 
 The test coverage analysis is found at http://minimalmodbus.sourceforge.net/htmlcov/index.html. To see which parts of the code that have been tested, click the file name.	
 		

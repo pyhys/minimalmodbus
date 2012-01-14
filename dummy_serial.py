@@ -37,7 +37,7 @@ import sys
 
 
 VERBOSE = False
-"""Set this to True for printing the communication, and also details on the port initialization."""
+"""Set this to :const:`True` for printing the communication, and also details on the port initialization."""
 
 
 RESPONSES = {}
@@ -120,7 +120,7 @@ class Serial():
         Args:
             inputdata (string/bytes): data for sending to the port on dummy_serial. Will affect the response.
             
-            Note that for Python2, the inputdata should be a string. For Python3 of type bytes.
+        Note that for Python2, the inputdata should be a **string**. For Python3 it should be of type **bytes**.
         """
         inputstring = inputdata
         
@@ -144,7 +144,7 @@ class Serial():
         Args:
             numberOfBytes (int): For compability with the real function. Not used.
         
-        Returns a string for Python2 and bytes for Python3.
+        Returns a **string** for Python2 and **bytes** for Python3.
         
         """ 
         
