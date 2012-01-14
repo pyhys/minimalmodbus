@@ -18,7 +18,7 @@ There should be unittests for all functions, and mock communication data.
 
 Errors should be caught as early as possible, and the error messages should be informative.
 
-Note that the term 'address' is ambigous, why it is better to use the terms 'register address' or 'slave address'
+Note that the term 'address' is ambigous, why it is better to use the terms 'register address' or 'slave address'.
 
 
 General driver structure
@@ -26,14 +26,14 @@ General driver structure
 
 The general structure of the program is shown here:
 
-=================  =======================================================================
-Function           Description
-=================  =======================================================================
-read_register()    A facade for _genericCommand()
-_genericCommand()  Generates payload, then calls _performCommand()
-_performCommand()  Embeds payload into error-checking codes etc, then calls _communicate() 
-_communicate()     Handles raw strings for communication via pySerial
-=================  =======================================================================
+=========================== ================================================================================
+Function                    Description
+=========================== ================================================================================
+:meth:`.read_register`      One of the facades for :meth:`._genericCommand`.
+:meth:`._genericCommand`    Generates payload, then calls :meth:`._performCommand`.
+:meth:`._performCommand`    Embeds payload into error-checking codes etc, then calls :meth:`._communicate`.
+:meth:`._communicate`       Handles raw strings for communication via pySerial.
+=========================== ================================================================================
 
 Most of the logic is located in separate (easy to test) functions on module level.
 
@@ -43,7 +43,7 @@ Unittesting
 A brief introduction to unittesting is found here: http://docs.python.org/release/2.5.2/lib/minimal-example.html
 
 
-Inside the unpacked folder go to /test and run the unit tests with::
+Inside the unpacked folder go to :file:`/test` and run the unit tests with::
      
     python test_all.py
     python3 test_all.py
@@ -51,6 +51,13 @@ Inside the unpacked folder go to /test and run the unit tests with::
     python3.2 test_all.py
     python2.6 test_all.py
     python2.7 test_all.py
+
+
+It is also possible to run the individual test files::
+
+    python test_minimalmodbus.py
+    python test_eurotherm3500.py
+    python test_omegacn7500.py
 
 
 Recording communication data for unittesting
@@ -62,33 +69,28 @@ Use as many as possible of the commands, and paste all the output in a text docu
 From this it is pretty easy to reshuffle it into unittest code. 
 
 Here is an example how to record communication data, which then is pasted 
-into the test code (for use with a dummy serial port). See for example
+into the test code (for use with a mock/dummy serial port). See for example
 :ref:`testminimalmodbus` (click '[source]' on right side, see RESPONSES at end of the page). Do like this::
 
    >>> import minimalmodbus
    >>> minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = True # Seems mandatory for Windows
    >>> instrument_1 = minimalmodbus.Instrument('/dev/ttyUSB0',10)
    >>> instrument_1.debug = True
-
    >>> instrument_1.read_register(4097,1)
    MinimalModbus debug mode. Writing to instrument: '\n\x03\x10\x01\x00\x01\xd0q'
    MinimalModbus debug mode. Response from instrument: '\n\x03\x02\x07\xd0\x1e)'
    200.0
-
    >>> instrument_1.write_register(4097,325.8,1)
    MinimalModbus debug mode. Writing to instrument: '\n\x10\x10\x01\x00\x01\x02\x0c\xbaA\xc3'
    MinimalModbus debug mode. Response from instrument: '\n\x10\x10\x01\x00\x01U\xb2'
-
    >>> instrument_1.read_register(4097,1)
    MinimalModbus debug mode. Writing to instrument: '\n\x03\x10\x01\x00\x01\xd0q'
    MinimalModbus debug mode. Response from instrument: '\n\x03\x02\x0c\xba\x996'
    325.8
-
    >>> instrument_1.read_bit(2068)
    MinimalModbus debug mode. Writing to instrument: '\n\x02\x08\x14\x00\x01\xfa\xd5'
    MinimalModbus debug mode. Response from instrument: '\n\x02\x01\x00\xa3\xac'
    0
-
    >>> instrument_1.write_bit(2068,1)
    MinimalModbus debug mode. Writing to instrument: '\n\x05\x08\x14\xff\x00\xcf%'
    MinimalModbus debug mode. Response from instrument: '\n\x05\x08\x14\xff\x00\xcf%'
@@ -101,7 +103,7 @@ see RESPONSES at end of the page).
 Data encoding in Python2 and Python3
 ------------------------------------------------------------------------------
 The string type has changed in Python3 compared to Python2. In Python3 the type 
-bytes is used when communicating via pySerial.
+**bytes** is used when communicating via pySerial.
 
 Dependent on the Python version number, the data sent to pySerial has different types.
 
@@ -111,18 +113,18 @@ This is a string constant both in Python2 and Python3::
 
     st = 'abc\x69\xe6\x03'
     
-This is a bytes constant in Python3, but a string constant in Python2 (allowed for 2.6 and higher)::
+This is a **bytes** constant in Python3, but a **string** constant in Python2 (allowed for 2.6 and higher)::
 
     by = b'abc\x69\xe6\x03' 
     
 Type conversion in Python3
 ```````````````````````````
-To convert a string to bytes, use one of these::
+To convert a **string** to **bytes**, use one of these::
 
     bytes(st, 'latin1') # Note that 'ascii' encoding gives error for some values.
     st.encode('latin1')
  
-To convert bytes to string, use one of these::    
+To convert **bytes** to **string**, use one of these::    
 
     str(by, encoding='latin1')
     by.decode('latin1')
@@ -136,20 +138,19 @@ latin-1  0-255
 
 Corresponding in Python2
 ````````````````````````
-Ideally, we would like to use the same code for Python2. In python 2.6 and higher 
-there is the bytes() function for forward compatibility, but it is merely a 
-synonym for 'str'.
+Ideally, we would like to use the same source code for Python2. In Python 2.6 and higher 
+there is the :func:`bytes` function for forward compatibility, but it is merely a 
+synonym for :func:`str`.
 
-To convert from 'bytes'(str) to str::
+To convert from '**bytes**'(**string**) to **string**::
 
     str(by) # not possible to give encoding    
     by.decode('latin1') # Gives unicode
 
-To convert from str to 'bytes' (str)::
+To convert from **string** to '**bytes**'(**string**)::
 
     bytes(st) # not possible to give encoding   
     st.encode('latin1') # Can not be used for values larger than 127
-
 
 It is thus not possible to use exactly the same code for both Python2 and Python3.
 Where it is unavoidable, use::
@@ -161,28 +162,55 @@ Where it is unavoidable, use::
 Extending MinimalModbus
 ------------------------------------------------------------------------------
 It is straight-forward to extend MinimalModbus to handle mode Modbus functioncodes.
-Use the the method _performCommand(functioncode, payload) to send data to the 
+Use the the method 
+:meth:`_performCommand` to send data to the 
 slave, and to receive the response. Note that the API might change, as this is 
 outside the official API.
 
-This is easily tested in interactive mode.
+This is easily tested in interactive mode. For example the method :meth:`.read_register` 
+generates payload, which internally is sent to the instrument using :meth:`_performCommand`::
 
-INSERT USAGE EXAMPLE.
+    >>> instr.debug = True
+    >>> instr.read_register(5,1)
+    MinimalModbus debug mode. Writing to instrument: '\x01\x03\x00\x05\x00\x01\x94\x0b'
+    MinimalModbus debug mode. Response from instrument: '\x01\x03\x02\x00º9÷'
+    18.6
+
+It is possible to use this method directly. You can use any Modbus functioncode (1-127),
+but you need to generate the payload yourself. Note that the same data is sent::
+
+    >>> instr._performCommand(3, '\x00\x05\x00\x01')
+    MinimalModbus debug mode. Writing to instrument: '\x01\x03\x00\x05\x00\x01\x94\x0b'
+    MinimalModbus debug mode. Response from instrument: '\x01\x03\x02\x00º9÷'
+    '\x02\x00º'
+
+Use this if you are to implement other Modbus functioncodes, as it takes care of
+CRC generation etc.
 
 There are several useful helper functions available in the :mod:`minimalmodbus` module. 
 See :ref:`internalminimalmodbus`. 
+
+Found a bug?
+------------------------------------------------------------------------------
+Try to isolate the bug by running in interactive mode (Python interpreter) with debug mode activated. Send a mail to the mailing list with the output, and also the output from :meth:`._getDiagnosticString`.
+
+Of course it is appreciated if you can spend a few moments on trying to locate the 
+problem, as it might possibly be related to your particular instrument (and thus 
+difficult to reproduce without it). The source code is very readable, so 
+is should be straight-forward to work with. The please send your findings to 
+the mailing list.
+
 
 Webpage
 ------------------------------------------------------------------------------
 The HTML theme on http://minimalmodbus.sourceforge.net/ is the Sphinx 'Default' theme. 
 
-* The colors etc are adjusted in the doc/config.py file. 
-* Header sizes are adjusted in the doc/_static/default.css file.
+* The colors etc are adjusted in the :file:`doc/config.py` file. 
+* Header sizes are adjusted in the :file:`doc/_static/default.css` file.
 
 
 Notes on distribution
 -------------------------------------------------------------------------------
-
 
 Installing the module from local svn files
 ````````````````````````````````````````````
@@ -199,7 +227,7 @@ these can be tested using (adapt path to your system)::
 
 How to generate a source distribution from the present development code
 `````````````````````````````````````````````````````````````````````````
-This will create a subfolder **dist** with zipped or gztared source folders::
+This will create a subfolder :file:`dist` with zipped or gztared source folders::
 
     python setup.py sdist
     python setup.py sdist --formats=gztar,zip
@@ -207,18 +235,18 @@ This will create a subfolder **dist** with zipped or gztared source folders::
 
 Notes on generating binary distributions
 ````````````````````````````````````````
-This will create the subfolders ``build`` and ``dist``::
+This will create the subfolders :file:`build` and :file:`dist`::
 
     python setup.py bdist
 
-This will create a subfolder ``dist`` with a Windows installer::
+This will create a subfolder :file:`dist` with a Windows installer::
 
     python setup.py bdist --formats=wininst
 
 
 Build a distribution before installing it
 `````````````````````````````````````````
-This will create a subfolder ``build``::
+This will create a subfolder :file:`build`::
 
     python setup.py build
 
@@ -229,14 +257,14 @@ Preparation for release
 Change version number etc
 `````````````````````````
 * Manually change the ``__version__`` and ``__status__`` fields in the :file:`minimalmodbus.py` source file.
-* Manually change the release date in CHANGES.txt
+* Manually change the release date in :file:`CHANGES.txt`
 
-(Note that the version number in setup.py is changed automatically).
+(Note that the version number in :file:`setup.py` is changed automatically. This is true 
+also for the Sphinx configuration file :file:`doc/conf.py`).
 
 
 Code style checking etc
 ```````````````````````
-
 Check the code::
 
     pychecker eurotherm3500.py 
@@ -250,9 +278,9 @@ Unittesting
 Run unit tests (in the :file:`trunk/test` directory)::
     
     python test_all.py
+    python3 test_all.py
 
-
-Test the source distribution build (look in the PKG-INFO file)::
+Test the source distribution generation (look in the :file:`PKG-INFO` file)::
 
     python setup.py sdist
 
@@ -261,7 +289,6 @@ generation is functional (see below).
 
 Prepare subversion
 ```````````````````
-
 Make sure the Subversion is updated::
 
     svn update
@@ -273,8 +300,7 @@ Make a tag in Subversion (adapt to version number)::
 
 Upload to PyPI
 ``````````````
-
-Build the source distribution (as :file:`.gzip.tar` and :file:`.zip`) , and upload it to PYPI (will use the README.txt etc)::
+Build the source distribution (as :file:`.gzip.tar` and :file:`.zip`) , and upload it to PYPI (will use the :file:`README.txt` etc)::
 
     python setup.py register
     python setup.py sdist --formats=gztar,zip upload
@@ -282,23 +308,22 @@ Build the source distribution (as :file:`.gzip.tar` and :file:`.zip`) , and uplo
 
 Generate documentation
 ``````````````````````
-Build the HTML and PDF documentation  ( in :file:`/doc` after making sure that ``PYTHONPATH`` is correct)::
+Build the HTML and PDF documentation  (in :file:`doc` after making sure that :envvar:`PYTHONPATH` is correct)::
 
     make html
     make latexpdf
 
 Build the test coverage report::
-
+   
     coverage run test_all.py
-	coverage html
+    coverage html --omit=/usr/share/*
 	
 	
 Upload to Sourceforge
 ``````````````````````
-	
 Upload the :file:`.gzip.tar` and :file:`.zip` files to Sourceforge by logging in and manually using the web form.
 
-Upload the generated documentation to Sourceforge. In directory trunk/doc/build/html::
+Upload the generated documentation to Sourceforge. In directory :file:`trunk/doc/build/html`::
 
     sftp pyhys@web.sourceforge.net
     cd /home/project-web/minimalmodbus/htdocs
@@ -328,9 +353,9 @@ On a Windows machine, build the windows installer::
 
     python setup.py bdist_wininst
 
-Upload the windows installer to PYPI by logging in, and uploading it manually.
+Upload the Windows installer to PYPI by logging in, and uploading it manually.
 
-Upload the windows installer to Sourceforge.
+Upload the Windows installer to Sourceforge by manually using the web form.
 
 
 Downloading backups from the Sourceforge server
@@ -379,7 +404,7 @@ The usage is::
 
     svn checkout URL NewSubfolder
 
-where NewSubfolder is the name of a subfolder that will be created in present directory. You can also write ``svn co`` instead of ``svn checkout``.
+where *NewSubfolder* is the name of a subfolder that will be created in present directory. You can also write ``svn co`` instead of ``svn checkout``.
 
 In a proper directory on your computer, download the files (not only the trunk subfolder) using::
 
@@ -388,7 +413,7 @@ In a proper directory on your computer, download the files (not only the trunk s
    
 Submit contributions
 ``````````````````````
-First run the ``svn update`` command to download the latest changes from the repository. Then make the changes in the files. Use the ``svn status`` command to see which files you have changed. Then upload your changes with the ``svn commit -m 'comment'`` command. Note that it easy to revert any changes in the svn, so feel free to test.
+First run the ``svn update`` command to download the latest changes from the repository. Then make the changes in the files. Use the ``svn status`` command to see which files you have changed. Then upload your changes with the ``svn commit -m 'comment'`` command. Note that it easy to revert any changes in SVN, so feel free to test.
 
    
 Shortlist of frequently used SVN commands
@@ -436,10 +461,12 @@ Language settings::
 
 Sphinx usage
 -------------------------------------------------------------------------------
-The documentation is generated with the Sphinx tool: http://sphinx.pocoo.org/
+This documentation is generated with the Sphinx tool: http://sphinx.pocoo.org/
 
 It is used to automatically generate HTML documentation from docstrings in the source code.
-See for example :ref:`internalminimalmodbus`.
+See for example :ref:`internalminimalmodbus`. To see the source code of the python 
+file, click [source] on the right part of that side. To see the source of the 
+Sphinx page definition file, click 'Show Source' in the left column.
 
 To install, use::
 
@@ -453,61 +480,46 @@ Check installed version by typing::
 
     sphinx-build   
 
-
-
 Spinx formatting conventions
 ````````````````````````````
-There is a good introduction to the formatting used (reStructuredText):
-http://sphinx.pocoo.org/rest.html
+=================== =============================================== =====================================
+What                Usage                                           Result
+=================== =============================================== =====================================
+Inline web link     ```Link text <http://example.com/>`_``          `Link text <http://example.com/>`_
+Internal link       ``:ref:`testminimalmodbus```                    :ref:`testminimalmodbus`
+Inline code         ````code text````                               ``code text``
+Environment var     ``:envvar:`PYTHONPATH```                        :envvar:`PYTHONPATH`
+OS-level command    ``:command:`make```                             :command:`make`
+File                ``:file:`minimalmodbus.py```                    :file:`minimalmodbus.py`
+Path                ``:file:`path/to/myfile.txt```                  :file:`path/to/myfile.txt` 
+Type                ``**bytes**``                                   **bytes**
+Module              ``:mod:`minimalmodbus```                        :mod:`minimalmodbus`     
+Data                ``:data:`.BAUDRATE```                           :data:`.BAUDRATE`
+Data (full)         ``:data:`minimalmodbus.BAUDRATE```              :data:`minimalmodbus.BAUDRATE`
+Constant            ``:const:`False```                              :const:`False`
+Function            ``:func:`._checkInt```                          :func:`._checkInt` 
+Function (full)     ``:func:`minimalmodbus._checkInt```             :func:`minimalmodbus._checkInt` 
+Argument            ``*payload*``                                   *payload*
+Class               ``:class:`.Instrument```                        :class:`.Instrument`   
+Class (full)        ``:class:`minimalmodbus.Instrument```           :class:`minimalmodbus.Instrument`  
+Method              ``:meth:`.read_bit```                           :meth:`.read_bit`
+Method (full)       ``:meth:`minimalmodbus.Instrument.read_bit```   :meth:`minimalmodbus.Instrument.read_bit`
+=================== =============================================== =====================================
 
-Top level heading underlining symbol: = (equals)
+Note that only the functions and methods that are listed in the index will show as links.
 
-Next lower level: - (minus)
+Headings
+  * Top level heading underlining symbol: = (equals)
+  * Next lower level: - (minus)
+  * A third level if necessary (avoid this): ` (backquote)
 
-A third level if necessary (avoid this): ` (backquote)
-
-
-Use ```Link text <http://example.com/>`_`` for inline web links.
-
-Use backquotes ````text```` for code samples.
-
-Add an internal marker ``.. _my-reference-label:`` before a heading.
-Then make an internal link to it using::
-
-    :ref:`my-reference-label` 
-
-
-Sphinx build commands
-`````````````````````
-To build the documentation, go to the directory ``trunk/doc`` and then run::
-
-   make html
-
-That should generate HTML files to the directory ``trunk/doc/build/html``
-
-To generate PDF::
-
-   make latexpdf
-
-Note that the ``PYTHONPATH`` must be set properly, so that Sphinx can import the modules to document. See below.
-
-It is also possible to run without the ``make`` command. In the :file:`trunk/doc` directory::
-
-    sphinx-build -b html -d build/doctrees  -a . build/html
-    
-If the python source files not are updated in the html output, then remove the contents of :file:`trunk/doc/build/doctrees` and rebuild the documentation. (This has now been included in the :file:`Makefile`).
-
-Remember that the :file:`Makefile` uses tabs for indentation, not spaces.
-
-Sometimes there are warnings and errors when  generating the HTML pages. They can appear different, but are most often related to problems importing files. In that case start the Python interpreter and try to import the module, for example::
-
-   >>> import test_minimalmodbus
- 
-From there you can most often solve the problem.
-
+Internal links
+  * Add an internal marker ``.. _my-reference-label:`` before a heading.
+  * Then make an internal link to it using ``:ref:`my-reference-label```.
 
 Useful Sphinx-related links
 ```````````````````````````
+Online resources for the formatting used (reStructuredText):
 
 Sphinx reStructuredText Primer
     http://sphinx.pocoo.org/rest.html
@@ -527,11 +539,39 @@ Sphinx syntax shortlist
 reStructuredText Markup Specification 
     http://docutils.sourceforge.net/docs/ref/rst/restructuredtext.html
 
+Sphinx build commands
+`````````````````````
+To build the documentation, go to the directory :file:`trunk/doc` and then run::
+
+   make html
+
+That should generate HTML files to the directory :file:`trunk/doc/build/html`. 
+
+To generate PDF::
+
+   make latexpdf
+
+Note that the :envvar:`PYTHONPATH` must be set properly, so that Sphinx can import the modules to document. See below.
+
+It is also possible to run without the :command:`make` command. In the :file:`trunk/doc` directory::
+
+    sphinx-build -b html -d build/doctrees  -a . build/html
+    
+If the python source files not are updated in the html output, then remove the contents of :file:`trunk/doc/build/doctrees` and rebuild the documentation. (This has now been included in the :file:`Makefile`).
+
+Remember that the :file:`Makefile` uses tabs for indentation, not spaces.
+
+Sometimes there are warnings and errors when  generating the HTML pages. They can appear different, but are most often related to problems importing files. In that case start the Python interpreter and try to import the module, for example::
+
+   >>> import test_minimalmodbus
+ 
+From there you can most often solve the problem.
+
 
 Unittest coverage measurement using coverage.py
 -----------------------------------------------------------------------------
 
-Install the script coverage.py::
+Install the script :file:`coverage.py`::
 
     sudo easy_install coverage
 
@@ -543,7 +583,7 @@ or::
 
     coverage run test_all.py    
     
-Generate html report (ends up in ``trunk/test/htmlcov``)::
+Generate html report (ends up in :file:`trunk/test/htmlcov`)::
 
     coverage html
     

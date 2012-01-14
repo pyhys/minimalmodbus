@@ -176,7 +176,7 @@ if __name__ == '__main__':
     minimalmodbus._print_out( 'TESTING EUROTHERM 3500 MODBUS MODULE')
 
     a = Eurotherm3500('/dev/cvdHeatercontroller', 1)
-    a._debug = False
+    a.debug = False
     
     minimalmodbus._print_out( 'SP1:                    {0}'.format(  a.get_sp_loop1()             ))
     minimalmodbus._print_out( 'SP1 target:             {0}'.format(  a.get_sptarget_loop1()       ))
