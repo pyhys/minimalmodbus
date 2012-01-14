@@ -30,7 +30,7 @@ __author__  = "Jonas Berg"
 __email__   = "pyhys@users.sourceforge.net"
 __license__ = "Apache License, Version 2.0"
 
-__version__   = "0.27"
+__version__   = "0.28"
 __status__    = "Alpha"
 __revision__  = "$Rev$"
 __date__      = "$Date$"
@@ -135,7 +135,7 @@ class Instrument():
 
 
     def write_bit(self, registeraddress, value, functioncode=5):
-        """Write one bit in the slave.
+        """Write one bit to the slave.
         
         Args:
             * registeraddress (int): The register address  (use decimal numbers, not hex).
@@ -218,14 +218,11 @@ class Instrument():
         numberOfRegisterBytes = NUMBER_OF_REGISTERS * NUMBER_OF_BYTES_PER_REGISTER
         NUMBER_OF_BITS = 1
         NUMBER_OF_BYTES_FOR_ONE_BIT = 1
-                        
         NUMBER_OF_BYTES_BEFORE_REGISTERDATA = 1
-        
         ALL_ALLOWED_FUNCTIONCODES = list(range(1,7)) + [15, 16] # To comply with both Python2 and Python3
                         
         _checkFunctioncode(functioncode, ALL_ALLOWED_FUNCTIONCODES)
         _checkRegisteraddress(registeraddress)
-        
         if not isinstance(value, type(None)):
             _checkNumerical(value, minvalue=0, description='input value')
         _checkInt(numberOfDecimals, minvalue=0, description='number of decimals' )
@@ -265,24 +262,24 @@ class Instrument():
 
         ## Check the contents in the response payload  
         if functioncode in [1, 2, 3, 4]:
-            _checkResponseByteCount(payloadFromSlave)   # given byte count
+            _checkResponseByteCount(payloadFromSlave)   # response byte count
     
         if functioncode == 5:
-            _checkResponseWriteData(payloadFromSlave, _createBitpattern(functioncode, value)) # given write data
+            _checkResponseWriteData(payloadFromSlave, _createBitpattern(functioncode, value)) # response write data
     
         if functioncode == 6:
-            _checkResponseWriteData(payloadFromSlave, _numToTwoByteString(value, numberOfDecimals)) # given write data
+            _checkResponseWriteData(payloadFromSlave, _numToTwoByteString(value, numberOfDecimals)) # response write data
         
         if functioncode in [5, 6, 15, 16]:
-            _checkResponseRegisterAddress(payloadFromSlave, registeraddress)  # given register address        
+            _checkResponseRegisterAddress(payloadFromSlave, registeraddress)  # response register address        
             
         if functioncode == 15:
-            _checkResponseNumberOfRegisters(payloadFromSlave, NUMBER_OF_BITS) # given number of bits    
+            _checkResponseNumberOfRegisters(payloadFromSlave, NUMBER_OF_BITS) # response number of bits    
         
         if functioncode == 16:
-            _checkResponseNumberOfRegisters(payloadFromSlave, NUMBER_OF_REGISTERS) # given number of registers    
+            _checkResponseNumberOfRegisters(payloadFromSlave, NUMBER_OF_REGISTERS) # response number of registers    
         
-        ## Calculate response value
+        ## Calculate return value
         if functioncode in [1, 2]:   
             registerdata = payloadFromSlave[NUMBER_OF_BYTES_BEFORE_REGISTERDATA:]
             assert len(registerdata) == NUMBER_OF_BYTES_FOR_ONE_BIT
@@ -377,13 +374,13 @@ class Instrument():
             self.serial.open()  
             
         if sys.version_info[0] > 2:
-            message = bytes(message, encoding='latin1') # Convert types to make it python3 compatible
+            message = bytes(message, encoding='latin1') # Convert types to make it Python3 compatible
             
         self.serial.write(message)
         answer =  self.serial.read(MAX_NUMBER_OF_BYTES)
         
         if sys.version_info[0] > 2:
-            answer = str(answer, encoding='latin1') # Convert types to make it python3 compatible
+            answer = str(answer, encoding='latin1') # Convert types to make it Python3 compatible
         
         if self.close_port_after_each_call:
             self.serial.close()
