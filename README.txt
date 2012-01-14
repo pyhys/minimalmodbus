@@ -80,7 +80,7 @@ It is better to put the details in a driver for the specific instrument. An exam
 
 Default values
 --------------
-Most of the serial port parameters have the default values which are defined in the Modbus standard::
+Most of the serial port parameters have the default values defined in the Modbus standard::
 
     instrument.serial.port          # this is the serial port name
     instrument.serial.baudrate = 19200   # Baud
@@ -102,7 +102,7 @@ Dependencies
 ------------
 Python versions 2.6 and higher are supported (including 3.x). Tested with Python2.6, Python2.7 and Python3.2.
 
-This module relies on pySerial to do the heavy lifting, and it is the only dependency. You can find it at the Python package index: http://pypi.python.org/pypi/pyserial
+This module relies on `pySerial <http:/pyserial.sourceforge.net/>`_ to do the heavy lifting, and it is the only dependency. You can find it at the Python package index: http://pypi.python.org/pypi/pyserial
 
 
 Download and installation
@@ -113,14 +113,14 @@ From command line (if you have the *pip installer*, available at http://pypi.pyt
 
 or manually download the compressed source files from http://pypi.python.org/pypi/MinimalModbus/. (Then you first need to manually install pySerial from http://pypi.python.org/pypi/pyserial) 
 
-There are compressed source files for Unix/Linux (.tar.gz) and Windows (.zip). 
+There are compressed source files for Unix/Linux (:file:`.tar.gz`) and Windows (:file:`.zip`). 
 To install a manually downloaded file, uncompress it and run (from within the directory)::
 
    python setup.py install
 
-There is also a Windows installer (.win32.exe) available. Just start it and follow the instructions.
+There is also a Windows installer (:file:`.win32.exe`) available. Just start it and follow the instructions.
 
-For Python3 there might be problems with easy_install and pip. In that case, first manually install pySerial and then MinimalModbus.
+For Python3 there might be problems with *easy_install* and *pip*. In that case, first manually install pySerial and then manually install MinimalModbus.
 
 Implemented functions
 ---------------------
