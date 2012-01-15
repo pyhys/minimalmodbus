@@ -5,7 +5,7 @@ Introduction
 ------------
 MinimalModbus is an easy-to-use Python module for talking to instruments (slaves) from a computer (master) using the Modbus protocol. Example code includes drivers for Eurotherm process controllers. The only dependence is the pySerial module. 
 
-This software supports the 'Modbus RTU' serial communication version of the protocol, and is intended for use on Linux, OS X and Windows platforms. It is open source, and has the Apache License, Version 2.0.
+This software supports the 'Modbus RTU' serial communication version of the protocol, and is intended for use on Linux, OS X and Windows platforms. It is open source, and has the Apache License, Version 2.0. Tested with Python2.6, Python2.7 and Python3.2.
 
 
 Home page
