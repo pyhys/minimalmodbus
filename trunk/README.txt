@@ -7,6 +7,19 @@ MinimalModbus is an easy-to-use Python module for talking to instruments (slaves
 
 This software supports the 'Modbus RTU' serial communication version of the protocol, and is intended for use on Linux, OS X and Windows platforms. It is open source, and has the Apache License, Version 2.0.
 
+
+Home page
+---------
+Home page with full API documentation 
+    http://minimalmodbus.sourceforge.net/ (this page if viewed on sourceforge.net).
+
+Python package index with download 
+    http://pypi.python.org/pypi/MinimalModbus/ (this page if viewed on python.org. Note that no API is available). The  download section is at the end of the page.
+
+The SourceForge project page
+    http://sourceforge.net/projects/minimalmodbus/ with mailing list and subversion repository ( http://minimalmodbus.svn.sourceforge.net/viewvc/minimalmodbus/trunk/ ).
+
+
 General on Modbus protocol
 --------------------------
 Modbus is a serial communications protocol published by Modicon in 1979, according to http://en.wikipedia.org/wiki/Modbus. It is often used to communicate with industrial electronic devices. 
@@ -188,17 +201,6 @@ Licence
 -------
 Apache License, Version 2.0.
 
-
-Home page
----------
-Home page with full API documentation 
-    http://minimalmodbus.sourceforge.net/ (this page if viewed on sourceforge.net).
-
-Python package index with download 
-    http://pypi.python.org/pypi/MinimalModbus/ (this page if viewed on python.org. Note that no API is available). The  download section is at the end of the page.
-
-The SourceForge project page
-    http://sourceforge.net/projects/minimalmodbus/ with bug tracker, mailing list and subversion repository ( http://minimalmodbus.svn.sourceforge.net/viewvc/minimalmodbus/trunk/ ).
 
 Support
 -------
