@@ -195,7 +195,7 @@ Home page with full API documentation
     http://minimalmodbus.sourceforge.net/ (this page if viewed on sourceforge.net).
 
 Python package index with download 
-    http://pypi.python.org/pypi/MinimalModbus/ (this page if viewed on python.org. Note that no API is available).
+    http://pypi.python.org/pypi/MinimalModbus/ (this page if viewed on python.org. Note that no API is available). The  download section is at the end of the page.
 
 The SourceForge project page
     http://sourceforge.net/projects/minimalmodbus/ with bug tracker, mailing list and subversion repository ( http://minimalmodbus.svn.sourceforge.net/viewvc/minimalmodbus/trunk/ ).
