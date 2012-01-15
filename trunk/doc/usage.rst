@@ -1,25 +1,9 @@
 Detailed usage documentation
 =============================
 
-The location of the code is seen in the _getDiagnosticString() output.
-
-
- sudo python3 setup.py install
-
-! !!!!!!!!!!!!!!!!
-
-
-Diagnostic output
--------------------------------------------------------------------------------
-
-print( minimalmodbus._getDiagnosticString() )
-
-! !!!!
-
 
 Interactive usage
 --------------------------------------------------------------------------------
-
 To use interactive mode, start the Python interpreter and import minimalmodbus::
 
     >>> import minimalmodbus
@@ -40,6 +24,7 @@ communication details::
     MinimalModbus debug mode. Writing to instrument: '\x01\x03\x00\x18\x00\x01\x04\r'
     MinimalModbus debug mode. Response from instrument: '\x01\x03\x02\x11\x94µ»'
     450.0
+
 
 Making drivers for specific instruments
 ------------------------------------------------------------------------------
@@ -174,32 +159,38 @@ problematic. Set the value ``minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL=True`` imm
 
 Install or uninstalling a distribution
 --------------------------------------------------------------------------
-
-
-! !!!!!!!!!!!!!!!!!!!!!!
-
-Use::
+To install a python (downloaded) package, uncompress it and use::
 
     sudo python setup.py install
 
-On a development machine, go to the minimalmodbus/trunk directory before running the command.
+or::
+
+    sudo python3 setup.py install
+
+On a development machine, go to the :file:`trunk` directory before running the command.
 
 
 Uninstall
 ``````````
+Pip-installed packages can be unistalled with::
 
-sudo pip uninstall minimalmodbus
-
+    sudo pip uninstall minimalmodbus
 
 
 Show versions of all installed packages
 ```````````````````````````````````````
+Use::
 
-pip freeze
+    pip freeze
 
 
 Installation target
 ``````````````````````
+The location of the installed files is seen in the :meth:`._getDiagnosticString` output::
+
+    import minimalmodbus
+    print minimalmodbus._getDiagnosticString() 
+
 On Linux machines, for example::
 
    /usr/local/lib/python2.6/dist-packages
@@ -208,9 +199,8 @@ On OS X it might end up in for example::
 
    /Library/Python/2.6/site-packages/minimalmodbus.py
 
-Note that .pyc is a byte compiled version. Make the changes in the .py file, and delete the .pyc file (When available, .pyc files are used instead of .py files).
+Note that :file:`.pyc` is a byte compiled version. Make the changes in the :file:`.py` file, and delete the :file:`.pyc` file (When available, :file:`.pyc` files are used instead of :file:`.py` files).
 You might need root privileges to edit the file in this location. Otherwise it is better to uninstall it, put it instead in your home folder and add it to sys.path
-
 
 On Windows machines, for example::
 
@@ -220,32 +210,26 @@ The Windows installer also creates a :file:`.pyo` file (and also the :file:`.pyc
 
 Python location
 `````````````````
-
 Python location on Linux machines::
 
     /usr/lib/python2.7/
 
     /usr/lib/python2.7/dist-packages
     
+To find locations::
  
-which python
-/usr/bin/python
-
-
-which python3.2
-/usr/bin/python3.2
-
-
-which pip
-
-
-/usr/bin/pip   
-    
+    ~$ which python
+    /usr/bin/python
+    ~$ which python3
+    /usr/bin/python3
+    ~$ which python2.7
+    /usr/bin/python2.7
+    ~$ which python3.2
+    /usr/bin/python3.2
 
 
 Setting the PYTHONPATH
 ----------------------------------------------------------------------------
-
 To set the path::
     
     echo $PYTHONPATH
@@ -256,8 +240,4 @@ or::
     export PYTHONPATH=$PYTHONPATH:/home/jonas/pythonprogrammering/minimalmodbus/trunk
 
 It is better to set the path in the :file:`.basrc` file.
-
-
-
-
 
