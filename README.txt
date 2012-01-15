@@ -248,7 +248,7 @@ This can be done using the function ``chr(18)`` or typing the string ``\x12``.
 
 Note that the letter A has the hexadecimal ASCII code 41, why the string ``\x41`` prints 'A'. 
 
-Note that these strings can look pretty strange when printed, as values 0 to 31 (dec) are
+These strings can look pretty strange when printed, as values 0 to 31 (dec) are
 ASCII control signs (not corresponding to any letter). For example 'vertical tab' 
 and 'line feed' are among those. To make the output easier to understand, use::
 

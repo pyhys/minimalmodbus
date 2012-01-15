@@ -1,7 +1,7 @@
 Developer documentation
 =======================
 
-Follow the coding progress on this page (click on the revision number to see the actual file content):
+Follow the coding progress in the SVN repository (click on the revision number to see the actual file content):
 http://minimalmodbus.svn.sourceforge.net/viewvc/minimalmodbus/trunk/
 
 Design considerations
@@ -161,7 +161,7 @@ Where it is unavoidable, use::
 
 Extending MinimalModbus
 ------------------------------------------------------------------------------
-It is straight-forward to extend MinimalModbus to handle mode Modbus functioncodes.
+It is straight-forward to extend MinimalModbus to handle mode Modbus function codes.
 Use the the method 
 :meth:`_performCommand` to send data to the 
 slave, and to receive the response. Note that the API might change, as this is 
@@ -176,7 +176,7 @@ generates payload, which internally is sent to the instrument using :meth:`_perf
     MinimalModbus debug mode. Response from instrument: '\x01\x03\x02\x00º9÷'
     18.6
 
-It is possible to use this method directly. You can use any Modbus functioncode (1-127),
+It is possible to use :meth:`_performCommand` directly. You can use any Modbus function code (1-127),
 but you need to generate the payload yourself. Note that the same data is sent::
 
     >>> instr._performCommand(3, '\x00\x05\x00\x01')
@@ -184,7 +184,7 @@ but you need to generate the payload yourself. Note that the same data is sent::
     MinimalModbus debug mode. Response from instrument: '\x01\x03\x02\x00º9÷'
     '\x02\x00º'
 
-Use this if you are to implement other Modbus functioncodes, as it takes care of
+Use this if you are to implement other Modbus function codes, as it takes care of
 CRC generation etc.
 
 There are several useful helper functions available in the :mod:`minimalmodbus` module. 
@@ -194,7 +194,7 @@ Found a bug?
 ------------------------------------------------------------------------------
 Try to isolate the bug by running in interactive mode (Python interpreter) with debug mode activated. Send a mail to the mailing list with the output, and also the output from :meth:`._getDiagnosticString`.
 
-Of course it is appreciated if you can spend a few moments on trying to locate the 
+Of course it is appreciated if you can spend a few moments trying to locate the 
 problem, as it might possibly be related to your particular instrument (and thus 
 difficult to reproduce without it). The source code is very readable, so 
 is should be straight-forward to work with. The please send your findings to 
@@ -348,7 +348,6 @@ Upload the documentation PDF by (in proper directory)::
 
 Generate Windows installer
 ``````````````````````````
-
 On a Windows machine, build the windows installer:: 
 
     python setup.py bdist_wininst
@@ -449,7 +448,6 @@ Automatic keyword substitution::
 
 SVN settings
 `````````````
-
 SVN uses the computer ``locale`` settings for selecting the language (including keyword substitution). 
 
 Language settings::
@@ -570,7 +568,6 @@ From there you can most often solve the problem.
 
 Unittest coverage measurement using coverage.py
 -----------------------------------------------------------------------------
-
 Install the script :file:`coverage.py`::
 
     sudo easy_install coverage
@@ -594,7 +591,6 @@ Or to exclude some third party modules (adapt to your file structure)::
 
 Using the pep8 style checker tool
 ------------------------------------------------------------------------------
-
 This tool checks the coding style. See http://pypi.python.org/pypi/pep8/
 
 Install the pep8 checker tool::
@@ -616,8 +612,7 @@ or::
 
 TODO
 ----
-  * Usage page
-  * Proofread and test aapi
+  * Proofread and test api
   
   * Upload files with ``scp -r`` instead
 
