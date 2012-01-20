@@ -135,9 +135,9 @@ class OmegaCN7500( minimalmodbus.Instrument ):
    
     ## Output signal
     
-    #def get_output1(self):
-    #    """Return the output value (OP) for output1 [in %]."""
-    #    return self.read_register( 0x1012, 1)
+    def get_output1(self):
+        """Return the output value (OP) for output1 [in %]."""
+        return self.read_register( 0x1012, 1)
    
    
     ## Run and stop the controller
@@ -517,14 +517,14 @@ if __name__ == '__main__':
 
     minimalmodbus._print_out('TESTING OMEGA CN7500 MODBUS MODULE')
 
-    PORTNAME = '/dev/tty.usbserial-FTF6AS6V'
+    PORTNAME = '/dev/tty.usbserial-FTFO1057'
     ADDRESS = 10
     
     minimalmodbus._print_out( 'Port: ' +  str(PORTNAME) + ', Address: ' + str(ADDRESS) )
     
     instr = OmegaCN7500(PORTNAME, ADDRESS)
     
-    minimalmodbus._print_out( 'Control:                {0}'.format(  instr.get_operation_mode()    ))
+    minimalmodbus._print_out( 'Control:                {0}'.format(  instr.get_control_mode()    ))
     minimalmodbus._print_out( 'SP:                     {0}'.format(  instr.get_setpoint() ))
     minimalmodbus._print_out( 'PV:                     {0}'.format(  instr.get_pv()       ))
     minimalmodbus._print_out( 'OP1:                    {0}'.format(  instr.get_output1()  ))   
