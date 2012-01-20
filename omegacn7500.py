@@ -177,7 +177,7 @@ class OmegaCN7500( minimalmodbus.Instrument ):
     ## Control Mode
 
     def get_control_mode(self):
-        """Return the integer value ??????????????  corresponding to the current operation mode."""
+        """Return the name of the current operation mode."""
         mode_value = self.read_register(4101)
         
         try:
@@ -190,7 +190,7 @@ class OmegaCN7500( minimalmodbus.Instrument ):
         """Set the control method using the corresponding integer value.
                 
         Args:
-            value (float ????): PID-0, ON/OFF-1, Tuning-2, Program-3
+            value: PID-0, ON/OFF-1, Tuning-2, Program-3
         """
         minimalmodbus._checkInt(value, minvalue=0, maxvalue=3, description='control mode') 
         self.write_register(4101, value)
