@@ -35,7 +35,10 @@ Modbus ASCII
 Modbus TCP/IP and variants
     A protocol for communication over TCP/IP networks. Not supported by this software.
 
-For full documentation on the Modbus protocol, see http://www.modbus.com/. Two important documents are:
+For full documentation on the Modbus protocol, see `www.modbus.com <http://www.modbus.com/>`_.
+
+
+Two important documents are:
   * `Modbus application protocol V1.1b <http://www.modbus.com/docs/Modbus_Application_Protocol_V1_1b.pdf>`_ 
   * `Modbus over serial line specification and implementation guide V1.02 <http://www.modbus.com/docs/Modbus_over_serial_line_V1_02.pdf>`_ 
 
@@ -44,7 +47,7 @@ Typical hardware
 ----------------
 The application for which I wrote this software is to read and write data from Eurotherm process controllers. These come with different types of communication protocols, but the controllers I prefer use the Modbus RTU protocol. MinimalModbus is intended for general communication using the Modbus RTU protocol (using a serial link), so there should be lots of applications.
 
-As an example on the usage of MinimialModbus, the driver I use for an Eurotherm 3504 process controller is included. It uses the MinimalModbus Python module for its communication.
+As an example on the usage of MinimialModbus, the driver I use for an Eurotherm 3504 process controller is included. It uses the MinimalModbus Python module for its communication. Also a driver for Omega CN7500 is included. For hardware details on these process controllers, see `Eurotherm 3500 <http://www.eurotherm.com/products/controllers/multi-loop/>`_ and `Omega CN7500 <http://www.omega.com/ppt/pptsc.asp?ref=CN7500/>`_.
 
 There can be several instruments (slaves) on a single bus, and the slaves have addresses in the range 1 to 247. In the Modbus RTU protocol, only the master can initiate communication. The physical layer is most often the serial bus RS485, which is described at http://en.wikipedia.org/wiki/Rs485.
 
@@ -70,7 +73,7 @@ For example, consider an instrument (slave) with address number 1 to which we ar
     NEW_TEMPERATURE = 95
     instrument.write_register(24, NEW_TEMPERATURE, 1) # Registernumber, value, number of decimals for storage
 
-The full API for minimalmodbus is available on http://minimalmodbus.sourceforge.net/apiminimalmodbus.html, and the documentation in PDF format is found on http://minimalmodbus.sourceforge.net/minimalmodbus.pdf
+The full API for MinimalModbus is available on http://minimalmodbus.sourceforge.net/apiminimalmodbus.html, and the documentation in PDF format is found on http://minimalmodbus.sourceforge.net/minimalmodbus.pdf
 
 
 Subclassing
@@ -110,7 +113,7 @@ These can be overridden::
     
     instrument.serial.timeout = 0.2
 
-For details on the allowed parity values, see http://pyserial.sourceforge.net/pyserial_api.html#serial.PARITY_NONE.
+For details on the allowed parity values, see http://pyserial.sourceforge.net/pyserial_api.html#constants 
 
 
 Dependencies
@@ -132,6 +135,14 @@ There are compressed source files for Unix/Linux (:file:`.tar.gz`) and Windows (
 To install a manually downloaded file, uncompress it and run (from within the directory)::
 
    python setup.py install
+
+or possibly::
+
+   sudo python setup.py install
+
+If using Python 3, then install with::
+
+   sudo python3 setup.py install
 
 There is also a Windows installer (:file:`.win32.exe`) available. Just start it and follow the instructions.
 
@@ -282,7 +293,7 @@ pyModbus
     From http://code.google.com/p/pymodbus/: 'Pymodbus is a full Modbus protocol implementation using twisted for its asynchronous communications core.'
 
 modbus-tk
-    From the page http://code.google.com/p/modbus-tk/: 'Make possible to write modbus TCP and RTU master and slave mainly for testing purpose. It is shipped with slave simulator and a master with a web-based hmi. It is a full-stack implementation and as a consequence could also be used on real-world project. '
+    From http://code.google.com/p/modbus-tk/: 'Make possible to write modbus TCP and RTU master and slave mainly for testing purpose. It is shipped with slave simulator and a master with a web-based hmi. It is a full-stack implementation and as a consequence could also be used on real-world project. '
 
 
 References

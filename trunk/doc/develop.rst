@@ -35,13 +35,12 @@ Function                    Description
 :meth:`._communicate`       Handles raw strings for communication via pySerial.
 =========================== ================================================================================
 
-Most of the logic is located in separate (easy to test) functions on module level.
+Most of the logic is located in separate (easy to test) functions on module level. For a desctription of them, see :ref:`internalminimalmodbus`. 
 
 
 Unittesting
 ------------------------------------------------------------------------------
 A brief introduction to unittesting is found here: http://docs.python.org/release/2.5.2/lib/minimal-example.html
-
 
 Inside the unpacked folder go to :file:`test` and run the unit tests with::
      
@@ -52,13 +51,62 @@ Inside the unpacked folder go to :file:`test` and run the unit tests with::
     python2.6 test_all.py
     python2.7 test_all.py
 
-
 It is also possible to run the individual test files::
 
     python test_minimalmodbus.py
     python test_eurotherm3500.py
     python test_omegacn7500.py
 
+
+Making sure that error messages are informative for the end user
+--------------------------------------------------------------------------
+To have a look on the error messages raised during unit testing of :mod:`minimalmodbus`, 
+monkey-patch :data:`test_minimalmodbus.SHOW_ERROR_MESSAGES_FOR_ASSERTRAISES` as seen here::
+
+    >>> import unittest
+    >>> import test_minimalmodbus
+    >>> test_minimalmodbus.SHOW_ERROR_MESSAGES_FOR_ASSERTRAISES = True
+    >>> suite = unittest.TestLoader().loadTestsFromModule(test_minimalmodbus)
+    >>> unittest.TextTestRunner(verbosity=2).run(suite)
+
+This is part of the output::
+
+    testFunctioncodeNotInteger (test_minimalmodbus.TestEmbedPayload) ... 
+        TypeError('The functioncode must be an integer. Given: 1.0',)
+
+        TypeError("The functioncode must be an integer. Given: '1'",)
+
+        TypeError('The functioncode must be an integer. Given: [1]',)
+
+        TypeError('The functioncode must be an integer. Given: None',)
+    ok
+    testKnownValues (test_minimalmodbus.TestEmbedPayload) ... ok
+    testPayloadNotString (test_minimalmodbus.TestEmbedPayload) ... 
+        TypeError('The payload should be a string. Given: 1',)
+
+        TypeError('The payload should be a string. Given: 1.0',)
+
+        TypeError("The payload should be a string. Given: ['ABC']",)
+
+        TypeError('The payload should be a string. Given: None',)
+    ok
+    testSlaveaddressNotInteger (test_minimalmodbus.TestEmbedPayload) ... 
+        TypeError('The slaveaddress must be an integer. Given: 1.0',)
+
+        TypeError("The slaveaddress must be an integer. Given: 'DEF'",)
+    ok
+    testWrongFunctioncodeValue (test_minimalmodbus.TestEmbedPayload) ... 
+        ValueError('The functioncode is too large: 222, but maximum value is 127.',)
+
+        ValueError('The functioncode is too small: -1, but minimum value is 1.',)
+    ok
+    testWrongSlaveaddressValue (test_minimalmodbus.TestEmbedPayload) ... 
+        ValueError('The slaveaddress is too large: 248, but maximum value is 247.',)
+
+        ValueError('The slaveaddress is too small: -1, but minimum value is 0.',)
+    ok
+
+See :mod:`test_minimalmodbus` for details on how this is implemented.
 
 Recording communication data for unittesting
 -------------------------------------------------------------------------
@@ -102,14 +150,14 @@ see RESPONSES at end of the page).
 
 Data encoding in Python2 and Python3
 ------------------------------------------------------------------------------
-The string type has changed in Python3 compared to Python2. In Python3 the type 
+The **string** type has changed in Python3 compared to Python2. In Python3 the type 
 **bytes** is used when communicating via pySerial.
 
-Dependent on the Python version number, the data sent to pySerial has different types.
+Dependent on the Python version number, the data sent from MinimalModbus to pySerial has different types.
 
 String constants
 ````````````````````
-This is a string constant both in Python2 and Python3::
+This is a **string** constant both in Python2 and Python3::
 
     st = 'abc\x69\xe6\x03'
     
@@ -197,7 +245,7 @@ Try to isolate the bug by running in interactive mode (Python interpreter) with 
 Of course it is appreciated if you can spend a few moments trying to locate the 
 problem, as it might possibly be related to your particular instrument (and thus 
 difficult to reproduce without it). The source code is very readable, so 
-is should be straight-forward to work with. The please send your findings to 
+is should be straight-forward to work with. Then please send your findings to 
 the mailing list.
 
 
@@ -208,6 +256,7 @@ The HTML theme on http://minimalmodbus.sourceforge.net/ is the Sphinx 'Default' 
 * The colors etc are adjusted in the :file:`doc/config.py` file. 
 * Header sizes are adjusted in the :file:`doc/_static/default.css` file.
 
+Note that Sphinx version 1.1.2 or later is required to build the documentation.
 
 Notes on distribution
 -------------------------------------------------------------------------------
@@ -612,12 +661,12 @@ or::
 
 TODO
 ----
-  * Proofread and test api
-  
+ 
   * Upload files with ``scp -r`` instead
 
 For next release:
   * Bug tracker settings
+  * Remove  _toPrintableString()
   * dummy_serial: Use isOpen() to make sure opening and closing works fine.
 
 .

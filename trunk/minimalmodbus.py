@@ -337,8 +337,11 @@ class Instrument():
         
         Will block until timeout (or reaching a large number of bytes).
 
-        If the attribute :attr:`debug` is :const:`True`, the communication details are printed.
-
+        If the attribute :attr:`Instrument.debug` is :const:`True`, the communication details are printed.
+        
+        If the attribute :attr:`Instrument.close_port_after_each_call` is :const:`True` the 
+        serial port is closed after each call.
+        
         .. note::
             Some implementation details:
 
