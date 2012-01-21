@@ -31,7 +31,7 @@ For each function are these tests performed:
 This unittest suite uses a mock/dummy serial port from the module :mod:`dummy_serial`, 
 so it is possible to test the functionality using previously recorded communication data.
 
-With the dummy responses, it is also possible to simulate errors in the communication 
+With dummy responses, it is also possible to simulate errors in the communication 
 from the slave. A few different types of communication errors are tested, as seen in this table.
 
 =====================================  ===================== =================================
@@ -79,7 +79,7 @@ VERBOSITY = 0
 SHOW_ERROR_MESSAGES_FOR_ASSERTRAISES = False
 """Set this to :const:`True` for printing the error messages caught by assertRaises().
 
-If set to :const:`True`, any unintentional error messages raised during the processing of the command in :meth:`.assertRaises` are also caught (not counted). It will be printed in the short form, and will show no traceback.
+If set to :const:`True`, any unintentional error messages raised during the processing of the command in :meth:`.assertRaises` are also caught (not counted). It will be printed in the short form, and will show no traceback.  It can also be useful to set :data:`VERBOSITY` = 2.
 """
 
 class _NonexistantError(Exception):
@@ -88,8 +88,8 @@ class _NonexistantError(Exception):
 class ExtendedTestCase(unittest.TestCase):
     """Overriding the assertRaises() method to be able to print the error message.
     
-    Use :data:`SHOW_ERROR_MESSAGES_FOR_ASSERTRAISES` = True in order to use this option. It can also be useful 
-    to set :data:`VERBOSITY` = 2.
+    Use :data:`test_minimalmodbus.SHOW_ERROR_MESSAGES_FOR_ASSERTRAISES` = :const:`True` 
+    in order to use this option. It can also be useful to set :data:`test_minimalmodbus.VERBOSITY` = 2.
     
     """
 
@@ -1497,13 +1497,14 @@ RESPONSES['\n\x10\x10\x01\x00\x01\x02\x07\xd0\xc6\xdc'] ='\n\x10\x10\x01\x00\x01
 #################
 
 if __name__ == '__main__':
-    
-    #print repr(minimalmodbus._calculateCrcString('\x01\x4bTESTCOMMAND2'))S
     try:
         unittest.main(verbosity=VERBOSITY)
-    except:
+    except TypeError:
         unittest.main() # For compatibility with Python2.6
-    
-    #suite = unittest.TestLoader().loadTestsFromTestCase(TestDummyCommunicationWithPortClosure)
-    #unittest.TextTestRunner(verbosity=VERBOSITY).run(suite)
 
+    # suite = unittest.TestLoader().loadTestsFromTestCase(TestDummyCommunicationWithPortClosure)
+    # unittest.TextTestRunner(verbosity=VERBOSITY).run(suite)
+    
+    # print repr(minimalmodbus._calculateCrcString('\x01\x4bTESTCOMMAND2'))
+    
+    
