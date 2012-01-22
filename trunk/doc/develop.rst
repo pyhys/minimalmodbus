@@ -20,6 +20,8 @@ Errors should be caught as early as possible, and the error messages should be i
 
 Note that the term 'address' is ambigous, why it is better to use the terms 'register address' or 'slave address'.
 
+Use only external links in the README.txt, otherwise they will not work on Python Package Index (PyPI).
+
 
 General driver structure
 -------------------------------------------------------------------------
@@ -58,8 +60,8 @@ It is also possible to run the individual test files::
     python test_omegacn7500.py
 
 
-Making sure that error messages are informative for the end user
---------------------------------------------------------------------------
+Making sure that error messages are informative for the user
+------------------------------------------------------------------------------
 To have a look on the error messages raised during unit testing of :mod:`minimalmodbus`, 
 monkey-patch :data:`test_minimalmodbus.SHOW_ERROR_MESSAGES_FOR_ASSERTRAISES` as seen here::
 
@@ -238,6 +240,7 @@ CRC generation etc.
 There are several useful helper functions available in the :mod:`minimalmodbus` module. 
 See :ref:`internalminimalmodbus`. 
 
+
 Found a bug?
 ------------------------------------------------------------------------------
 Try to isolate the bug by running in interactive mode (Python interpreter) with debug mode activated. Send a mail to the mailing list with the output, and also the output from :meth:`._getDiagnosticString`.
@@ -257,6 +260,7 @@ The HTML theme on http://minimalmodbus.sourceforge.net/ is the Sphinx 'Default' 
 * Header sizes are adjusted in the :file:`doc/_static/default.css` file.
 
 Note that Sphinx version 1.1.2 or later is required to build the documentation.
+
 
 Notes on distribution
 -------------------------------------------------------------------------------
@@ -333,8 +337,9 @@ Test the source distribution generation (look in the :file:`PKG-INFO` file)::
 
     python setup.py sdist
 
-Also make sure that the documentation generation and the test coverage report
-generation is functional (see below).
+Also make sure that these are functional (see sections below):
+  * Documentation generation 
+  * Test coverage report generation
 
 Prepare subversion
 ```````````````````
@@ -362,11 +367,11 @@ Build the HTML and PDF documentation  (in :file:`doc` after making sure that :en
     make html
     make latexpdf
 
-Build the test coverage report::
+Build the test coverage report (first manually clear the directory :file:`htmlcov`)::
    
-    coverage run test_all.py
+    coverage run ./test/test_all.py
     coverage html --omit=/usr/*
-	
+    
 	
 Upload to Sourceforge
 ``````````````````````
@@ -394,6 +399,9 @@ Upload the documentation PDF by (in proper directory)::
 
     put *.pdf
 
+Test documentation
+`````````````````````
+Test links on the Sourceforge and PyPi pages.
 
 Generate Windows installer
 ``````````````````````````
@@ -404,6 +412,20 @@ On a Windows machine, build the windows installer::
 Upload the Windows installer to PYPI by logging in, and uploading it manually.
 
 Upload the Windows installer to Sourceforge by manually using the web form.
+
+
+Test installer
+``````````````
+Make sure that the installer works, and the dependencies are handled correctly.
+Try at least Linux and Windows.
+
+
+Marketing
+````````````
+  * Mailing list
+  * Sourceforge project news
+  * Freecode (former Freshmeat)
+  * Facebook
 
 
 Downloading backups from the Sourceforge server
@@ -666,7 +688,7 @@ TODO
 
 For next release:
   * Bug tracker settings
-  * Remove  _toPrintableString()
+  * Finetune coding style (pep8.py)
   * dummy_serial: Use isOpen() to make sure opening and closing works fine.
 
 .

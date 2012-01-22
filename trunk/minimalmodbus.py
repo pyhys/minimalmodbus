@@ -30,7 +30,7 @@ __author__  = "Jonas Berg"
 __email__   = "pyhys@users.sourceforge.net"
 __license__ = "Apache License, Version 2.0"
 
-__version__   = "0.28"
+__version__   = "0.29"
 __status__    = "Alpha"
 __revision__  = "$Rev$"
 __date__      = "$Date$"
@@ -1064,36 +1064,6 @@ def _print_out( inputstring ):
     _checkString(inputstring, description='string to print')
     
     sys.stdout.write(inputstring + '\n')           
-        
-        
-def _toPrintableString( inputstring ):
-    """Make a descriptive string, showing the ord() numbers (in decimal) for the characters in the inputstring.
-    
-    Args:
-        inputstring (str): The string that should be converted to something printable.
-
-    Returns:
-        A descriptive string.
-
-    Raises:
-        TypeError
-
-    Use it for diagnostic printing of strings representing byte values (might have non-printing characters).
-    With an input string of ``\\x12\\x02\\x74ABC`` (which is length 6), it will return the string:: 
-
-        'String length: 6 bytes. Values: 18, 2, 116, 65, 66, 67'
-    
-    """
-    _checkString(inputstring, description='string to make printable')
-    
-    firstpart = 'String length: {0} bytes. Values: '.format( len(inputstring) )
-
-    valuestrings = []
-    for character in inputstring:
-        valuestrings.append( str(ord(character)) )
-    valuepart = ', '.join( valuestrings )
-
-    return firstpart + valuepart
 
 
 def _getDiagnosticString():
