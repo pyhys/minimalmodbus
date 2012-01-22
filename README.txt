@@ -3,7 +3,7 @@ MinimalModbus
 
 Introduction
 ------------
-MinimalModbus is an easy-to-use Python module for talking to instruments (slaves) from a computer (master) using the Modbus protocol. Example code includes drivers for Eurotherm process controllers. The only dependence is the pySerial module. 
+MinimalModbus is an easy-to-use Python module for talking to instruments (slaves) from a computer (master) using the Modbus protocol. Example code includes drivers for Eurotherm and Omega process controllers. The only dependence is the pySerial module. 
 
 This software supports the 'Modbus RTU' serial communication version of the protocol, and is intended for use on Linux, OS X and Windows platforms. It is open source, and has the Apache License, Version 2.0. Tested with Python2.6, Python2.7 and Python3.2.
 
@@ -13,7 +13,7 @@ Home page
 Home page with full API documentation 
     http://minimalmodbus.sourceforge.net/ (this page if viewed on sourceforge.net).
 
-Python package index with download 
+Python package index (PyPI) with download 
     http://pypi.python.org/pypi/MinimalModbus/ (this page if viewed on python.org. Note that no API is available). The  download section is at the end of the page.
 
 The SourceForge project page
@@ -93,6 +93,15 @@ It is better to put the details in a driver for the specific instrument. An exam
     NEW_TEMPERATURE = 95.0
     heatercontroller.set_sp_loop1(NEW_TEMPERATURE)
 
+Correspondingly, to use the driver for Omega CN7500::
+
+    #!/usr/bin/env python 
+    import omegacn7500
+
+    instrument = omegacn7500.OmegaCN7500('/dev/ttyUSB1', 1) # port name, slave address
+    
+    print instrument.get_pv() # print temperature
+
 More on the usage of MinimalModbus is found on http://minimalmodbus.sourceforge.net/usage.html
 
 
@@ -129,7 +138,7 @@ From command line (if you have the *pip installer*, available at http://pypi.pyt
 
    pip install minimalmodbus
 
-You can also manually download the compressed source files from http://pypi.python.org/pypi/MinimalModbus/ (see the end of that page). Then you first need to manually install pySerial from http://pypi.python.org/pypi/pyserial.
+You can also manually download the compressed source files from http://pypi.python.org/pypi/MinimalModbus/ (see the end of that page). In that case you first need to manually install pySerial from http://pypi.python.org/pypi/pyserial.
 
 There are compressed source files for Unix/Linux (:file:`.tar.gz`) and Windows (:file:`.zip`). 
 To install a manually downloaded file, uncompress it and run (from within the directory)::
@@ -144,9 +153,11 @@ If using Python 3, then install with::
 
    sudo python3 setup.py install
 
-There is also a Windows installer (:file:`.win32.exe`) available. Just start it and follow the instructions.
+There is also a Windows installer (:file:`.exe`) available. Just start it and follow the instructions.
 
 For Python3 there might be problems with *easy_install* and *pip*. In that case, first manually install pySerial and then manually install MinimalModbus.
+
+To make sure it is installed properly, print the _getDiagnosticString() message. See the support section below for instructions.
 
 Implemented functions
 ---------------------
@@ -161,6 +172,7 @@ documentation of your instrument to find which Modbus function code to use.
 | **Register** | :meth:`minimalmodbus.Instrument.read_register` Function code 3 [or 4] | :meth:`minimalmodbus.Instrument.write_register` Function code 16 [or 6] |
 +--------------+-----------------------------------------------------------------------+-------------------------------------------------------------------------+
 
+Note that these links are functional only from http://minimalmodbus.sourceforge.net/ and in the PDF documentation.
 
 Modbus implementation details
 -----------------------------
@@ -237,7 +249,7 @@ Significant contributions by Aaron LaLonde.
 
 Feedback
 --------
-If you find this software useful, then please leave a review on the SourceForge project page (Log-in is required).
+If you find this software useful, then please leave a review on the SourceForge project page (Log-in is required). http://sourceforge.net/projects/minimalmodbus/ 
 
 Please also subscribe to the (low volume) mailing list minimalmodbus-list@lists.sourceforge.net (see https://lists.sourceforge.net/lists/listinfo/minimalmodbus-list) so you can help other users getting started.
 	
@@ -269,7 +281,7 @@ and 'line feed' are among those. To make the output easier to understand, use::
 
 Then you can find the value and use an ASCII table to see if it is correct.
 
-The details printed in debug mode (messages and responses) are very useful for using the :mod:`dummy_serial` port for unit testing purposes. For examples, see the file :file:`test/test_minimalmodbus.py`
+The details printed in debug mode (messages and responses) are very useful for using the included dummy_serial port for unit testing purposes. For examples, see the file :file:`test/test_minimalmodbus.py`.
 	
 More implementation details are found on http://minimalmodbus.sourceforge.net/develop.html	
 	
@@ -280,9 +292,9 @@ Unit tests are provided in the :file:`test` subfolder. To run them::
 
     python test_minimalmodbus.py
     
-Also a dummy/mock/stub for the serial port, :mod:`dummy_serial`, is provided for test purposes.
+Also a dummy/mock/stub for the serial port, dummy_serial, is provided for test purposes. See http://minimalmodbus.sourceforge.net/apidummyserial.html
 
-The test coverage analysis is found at http://minimalmodbus.sourceforge.net/htmlcov/index.html. To see which parts of the code that have been tested, click the file name.	
+The test coverage analysis is found at http://minimalmodbus.sourceforge.net/htmlcov/index.html. To see which parts of the code that have been tested, click the corresponding file name.	
 		
 
 Related software

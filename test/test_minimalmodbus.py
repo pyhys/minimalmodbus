@@ -91,6 +91,8 @@ class ExtendedTestCase(unittest.TestCase):
     Use :data:`test_minimalmodbus.SHOW_ERROR_MESSAGES_FOR_ASSERTRAISES` = :const:`True` 
     in order to use this option. It can also be useful to set :data:`test_minimalmodbus.VERBOSITY` = 2.
     
+    Based on http://stackoverflow.com/questions/8672754/how-to-show-the-error-messages-caught-by-assertraises-in-unittest-in-python2-7
+    
     """
 
     def assertRaises(self, excClass, callableObj, *args, **kwargs):
@@ -820,24 +822,15 @@ class TestGetDiagnosticString(ExtendedTestCase):
         resultstring = minimalmodbus._getDiagnosticString()
         self.assertTrue( len(resultstring) > 100) # For Python 2.6 compatibility
 
+class TestPrintOut(ExtendedTestCase):
 
-class TestToPrintableString(ExtendedTestCase):
+    def testKnownValues(self):
+        minimalmodbus._print_out('ABCDEFGHIJKL')
 
-    def testReturnsPrintable(self):
-        allASCII = ''.join( [chr(x) for x in range(256)] )
-        
-        response = minimalmodbus._toPrintableString(allASCII)
-        
-        responseCharacterValues = [ord(x) for x in response]
-        self.assertTrue( min(responseCharacterValues) > 31 )
-        self.assertTrue( max(responseCharacterValues) < 128 )
-
-    def testInputNotString(self): 
-        self.assertRaises(TypeError, minimalmodbus._toPrintableString, 47) 
-        self.assertRaises(TypeError, minimalmodbus._toPrintableString, 47.0)
-        self.assertRaises(TypeError, minimalmodbus._toPrintableString, ['ABC'])
-        self.assertRaises(TypeError, minimalmodbus._toPrintableString, None)
-
+    def testInputNotString(self):  
+        self.assertRaises(TypeError, minimalmodbus._print_out, 1)
+        self.assertRaises(TypeError, minimalmodbus._print_out, 1.0)
+        self.assertRaises(TypeError, minimalmodbus._print_out, ['ABC'])
 
 ###########################################
 # Communication using a dummy serial port #
