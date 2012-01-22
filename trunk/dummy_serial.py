@@ -85,7 +85,7 @@ class Serial():
         
     def __repr__(self):
         """String representation of the dummy_serial object"""
-        return "{0}.{1}<id=0x{2:x}, open={3}>(latestWrite={4})".format(
+        return "{0}.{1}<id=0x{2:x}, open={3}>(latestWrite={4!r})".format(
             self.__module__,
             self.__class__.__name__,
             id(self),

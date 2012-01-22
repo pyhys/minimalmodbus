@@ -150,6 +150,47 @@ for example the test code for omegacn7500 :ref:`testomegacn7500` (click '[source
 see RESPONSES at end of the page).
 
 
+Using the dummy serial port
+-------------------------------------------------------------------------------
+A dummy serial port is included for testing purposes, see :mod:`dummy_serial`. Use it like this::
+
+    >>> import dummy_serial
+    >>> import test_minimalmodbus
+    >>> dummy_serial.RESPONSES = test_minimalmodbus.RESPONSES # Load previously recorded responses
+    >>> import minimalmodbus
+    >>> minimalmodbus.serial.Serial = dummy_serial.Serial # Monkey-patch a dummy serial port
+    >>> instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1) # port name, slave address (in decimal)
+    >>> instrument.read_register(4097, 1)
+    823.6
+
+In the example above there is recorded data available for ``read_register(4097, 1)``. If no 
+recorded data is available, an error message is displayed::
+
+    >>> instrument.read_register(4098, 1)
+    Traceback (most recent call last):
+      File "<stdin>", line 1, in <module>
+      File "/home/jonas/pythonprogrammering/minimalmodbus/trunk/minimalmodbus.py", line 174, in read_register
+        return self._genericCommand(functioncode, registeraddress, numberOfDecimals=numberOfDecimals)
+      File "/home/jonas/pythonprogrammering/minimalmodbus/trunk/minimalmodbus.py", line 261, in _genericCommand
+        payloadFromSlave = self._performCommand(functioncode, payloadToSlave)
+      File "/home/jonas/pythonprogrammering/minimalmodbus/trunk/minimalmodbus.py", line 317, in _performCommand
+        response            = self._communicate(message)
+      File "/home/jonas/pythonprogrammering/minimalmodbus/trunk/minimalmodbus.py", line 395, in _communicate
+        raise IOError('No communication with the instrument (no answer)')
+    IOError: No communication with the instrument (no answer)
+
+The dummy serial port can be used also with instrument drivers built on top of MinimalModbus::
+
+    >>> import dummy_serial
+    >>> import test_omegacn7500
+    >>> dummy_serial.RESPONSES = test_omegacn7500.RESPONSES # Load previously recorded responses
+    >>> import omegacn7500
+    >>> omegacn7500.minimalmodbus.serial.Serial = dummy_serial.Serial # Monkey-patch a dummy serial port
+    >>> instrument = omegacn7500.OmegaCN7500('DUMMYPORTNAME', 1) # port name, slave address
+    >>> instrument.get_pv()
+    24.6
+
+
 Data encoding in Python2 and Python3
 ------------------------------------------------------------------------------
 The **string** type has changed in Python3 compared to Python2. In Python3 the type 
