@@ -1,4 +1,4 @@
-Release 0.3 (2012-01-??)
+Release 0.3 (2012-01-23)
 ------------------------
 This is a major rewrite, but the API is backward compatible.
 
