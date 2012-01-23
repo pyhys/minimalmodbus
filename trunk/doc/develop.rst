@@ -20,7 +20,7 @@ Errors should be caught as early as possible, and the error messages should be i
 
 Note that the term 'address' is ambigous, why it is better to use the terms 'register address' or 'slave address'.
 
-Use only external links in the README.txt, otherwise they will not work on Python Package Index (PyPI).
+Use only external links in the README.txt, otherwise they will not work on Python Package Index (PyPI). No Sphinx-specific constructs are allowed in that file.
 
 
 General driver structure
@@ -390,8 +390,8 @@ Make sure the Subversion is updated::
     svn status -v --no-ignore
 
 Make a tag in Subversion (adapt to version number)::
- 
-    svn copy https://minimalmodbus.svn.sourceforge.net/svnroot/minimalmodbus/trunk https://minimalmodbus.svn.sourceforge.net/svnroot/minimalmodbus/tags/0.20 -m "Release 0.20"
+     
+    svn copy https://minimalmodbus.svn.sourceforge.net/svnroot/minimalmodbus/trunk https://minimalmodbus.svn.sourceforge.net/svnroot/minimalmodbus/tags/0.3 -m "Release 0.3"
 
 Upload to PyPI
 ``````````````
@@ -420,29 +420,21 @@ Upload the :file:`.gzip.tar` and :file:`.zip` files to Sourceforge by logging in
 
 Upload the generated documentation to Sourceforge. In directory :file:`trunk/doc/build/html`::
 
-    sftp pyhys@web.sourceforge.net
-    cd /home/project-web/minimalmodbus/htdocs
-    put *.*     
+    scp -r * pyhys,minimalmodbus@web.sourceforge.net:htdocs
 
-    mkdir _modules
-    cd _modules/
-    lcd _modules/
-    lls
-    put *.*
+Upload the documentation PDF. In directory :file:`trunk/doc/build/latex`::
 
-    etc
+    scp minimalmodbus.pdf pyhys,minimalmodbus@web.sourceforge.net:htdocs
 
-Upload the test coverage report::
+Upload the test coverage report. In directory :file:`trunk`::
 
-    ?	
-	
-Upload the documentation PDF by (in proper directory)::
+    scp -r htmlcov pyhys,minimalmodbus@web.sourceforge.net:htdocs
 
-    put *.pdf
 
 Test documentation
 `````````````````````
-Test links on the Sourceforge and PyPi pages.
+Test links on the Sourceforge and PyPI pages. If adjustments are required on the PyPI page, log in and manually adjust the text. This might be for exampe parsing problems with the ReSTR text (allows no Sphinx-specific constructs).
+
 
 Generate Windows installer
 ``````````````````````````
@@ -725,8 +717,6 @@ or::
 TODO
 ----
  
-  * Upload files with ``scp -r`` instead
-
 For next release:
   * Bug tracker settings
   * Finetune coding style (pep8.py)

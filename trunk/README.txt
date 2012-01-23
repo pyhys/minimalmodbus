@@ -129,7 +129,7 @@ Dependencies
 ------------
 Python versions 2.6 and higher are supported (including 3.x). Tested with Python2.6, Python2.7 and Python3.2.
 
-This module relies on `pySerial <http:/pyserial.sourceforge.net/>`_ to do the heavy lifting, and it is the only dependency. You can find it at the Python package index: http://pypi.python.org/pypi/pyserial
+This module relies on `pySerial <http://pyserial.sourceforge.net/>`_ to do the heavy lifting, and it is the only dependency. You can find it at the Python package index: http://pypi.python.org/pypi/pyserial
 
 
 Download and installation
