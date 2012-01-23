@@ -1,0 +1,27 @@
+Release 0.3 (2012-01-23)
+------------------------
+This is a major rewrite, but the API is backward compatible.
+
+* Extended functionality to support more Modbus function codes.
+* Option to close the serial port after each call (useful for Windows XP etc).
+* Diagnostic string output available (for support).
+* Debug mode available.
+* Improved __repr__ for Instrument instances.
+* Improved Python3 compatibility.
+* Improved validity checking for function arguments.
+* The error messages are made more informative.
+* The new example driver omegacn7500 is included.
+* Unit tests included in the distribution.
+* A dummy serial port for unit testing is provided (including recorded communication data).
+* Updated documentation.
+
+
+Release 0.2 (2011-08-19)
+------------------------
+* Changes in how to reference the serial port. 
+* Updated documentation.
+
+
+Release 0.1 (2011-06-16)
+------------------------
+* First public release.

@@ -1,0 +1,7 @@
+include *.txt
+include *.in
+include doc/Makefile
+recursive-include test *.py
+recursive-include doc *.rst *.py
+recursive-include doc/_static *
+recursive-include doc/_templates *
