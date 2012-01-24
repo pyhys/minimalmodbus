@@ -136,11 +136,11 @@ Download and installation
 -------------------------
 From command line (if you have the *pip installer*, available at http://pypi.python.org/pypi/pip)::
 
-   pip install minimalmodbus
+   pip install -U minimalmodbus
 
 You can also manually download the compressed source files from http://pypi.python.org/pypi/MinimalModbus/ (see the end of that page). In that case you first need to manually install pySerial from http://pypi.python.org/pypi/pyserial.
 
-There are compressed source files for Unix/Linux (:file:`.tar.gz`) and Windows (:file:`.zip`). 
+There are compressed source files for Unix/Linux (.tar.gz) and Windows (.zip). 
 To install a manually downloaded file, uncompress it and run (from within the directory)::
 
    python setup.py install
@@ -153,7 +153,7 @@ If using Python 3, then install with::
 
    sudo python3 setup.py install
 
-There is also a Windows installer (:file:`.exe`) available. Just start it and follow the instructions.
+There is also a Windows installer (.exe) available. Just start it and follow the instructions.
 
 For Python3 there might be problems with *easy_install* and *pip*. In that case, first manually install pySerial and then manually install MinimalModbus.
 
@@ -164,15 +164,14 @@ Implemented functions
 These are the functions to use for reading and writing registers and bits of your instrument. Study the 
 documentation of your instrument to find which Modbus function code to use.
 
-+--------------+-----------------------------------------------------------------------+-------------------------------------------------------------------------+
-| Item         | Read                                                                  | Write                                                                   |
-+==============+=======================================================================+=========================================================================+
-| **Bit**      | :meth:`minimalmodbus.Instrument.read_bit` Function code 2 [or 1]      | :meth:`minimalmodbus.Instrument.write_bit`  Function code 5 [or 15]     |
-+--------------+-----------------------------------------------------------------------+-------------------------------------------------------------------------+
-| **Register** | :meth:`minimalmodbus.Instrument.read_register` Function code 3 [or 4] | :meth:`minimalmodbus.Instrument.write_register` Function code 16 [or 6] |
-+--------------+-----------------------------------------------------------------------+-------------------------------------------------------------------------+
++--------------+----------------------------------------+------------------------------------------+
+| Item         | Read                                   | Write                                    |
++==============+========================================+==========================================+
+| **Bit**      | read_bit() Function code 2 [or 1]      | write_bit()  Function code 5 [or 15]     |
++--------------+----------------------------------------+------------------------------------------+
+| **Register** | read_register() Function code 3 [or 4] | write_register() Function code 16 [or 6] |
++--------------+----------------------------------------+------------------------------------------+
 
-Note that these links are functional only from http://minimalmodbus.sourceforge.net/ and in the PDF documentation.
 
 Modbus implementation details
 -----------------------------
@@ -281,14 +280,14 @@ and 'line feed' are among those. To make the output easier to understand, use::
 
 Then you can find the value and use an ASCII table to see if it is correct.
 
-The details printed in debug mode (messages and responses) are very useful for using the included dummy_serial port for unit testing purposes. For examples, see the file :file:`test/test_minimalmodbus.py`.
+The details printed in debug mode (messages and responses) are very useful for using the included dummy_serial port for unit testing purposes. For examples, see the file test/test_minimalmodbus.py.
 	
 More implementation details are found on http://minimalmodbus.sourceforge.net/develop.html	
 	
 	
 Unit testing
 ------------
-Unit tests are provided in the :file:`test` subfolder. To run them::
+Unit tests are provided in the test subfolder. To run them::
 
     python test_minimalmodbus.py
     
