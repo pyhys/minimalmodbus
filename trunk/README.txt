@@ -137,6 +137,11 @@ Download and installation
 From command line (if you have the *pip installer*, available at http://pypi.python.org/pypi/pip)::
 
    pip install -U minimalmodbus
+   
+or possibly::
+
+   pip install -U pyserial
+   pip install -U minimalmodbus
 
 You can also manually download the compressed source files from http://pypi.python.org/pypi/MinimalModbus/ (see the end of that page). In that case you first need to manually install pySerial from http://pypi.python.org/pypi/pyserial.
 
