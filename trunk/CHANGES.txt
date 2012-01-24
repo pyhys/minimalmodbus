@@ -1,5 +1,5 @@
 Release 0.3.1 (2012-01-24)
-------------------------
+--------------------------
 * Improved requirements handling in setup.py
 * Adjusted MANIFEST.in not to include doc/_templates
 * Adjusted RST text formatting in README.txt
