@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
 from distutils.core import setup
-import minimalmodbus
+# Do not import other modules here, as it will mess up the installation in clients.
 
 with open('README.txt') as file:
     long_description = file.read()
 
 setup(name='MinimalModbus',
-    version = minimalmodbus.__version__,
+    version = '0.3.2',
     description = 'Easy-to-use Modbus RTU implementation for Python',
     long_description = long_description,
     keywords = 'modbus serial RTU',

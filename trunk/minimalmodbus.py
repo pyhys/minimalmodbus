@@ -30,7 +30,7 @@ __author__  = "Jonas Berg"
 __email__   = "pyhys@users.sourceforge.net"
 __license__ = "Apache License, Version 2.0"
 
-__version__   = "0.3.1"
+__version__   = "0.3.2"
 __status__    = "Alpha"
 __revision__  = "$Rev$"
 __date__      = "$Date$"
