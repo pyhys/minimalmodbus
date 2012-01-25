@@ -353,7 +353,7 @@ Change version number etc
 * Manually change the ``version`` field in the :file:`setup.py` file.
 * Manually change the release date in :file:`CHANGES.txt`
 
-(Note that the version number in the Sphinx configuration file :file:`doc/conf.py` is changed automatically. Unfortunately this is not yet valid :file:`setup.py`).
+(Note that the version number in the Sphinx configuration file :file:`doc/conf.py` is changed automatically. Unfortunately this is not yet valid for :file:`setup.py`).
 
 
 Code style checking etc
@@ -566,7 +566,7 @@ This documentation is generated with the Sphinx tool: http://sphinx.pocoo.org/
 
 It is used to automatically generate HTML documentation from docstrings in the source code.
 See for example :ref:`internalminimalmodbus`. To see the source code of the Python 
-file, click [source] on the right part of that side. To see the source of the 
+file, click [source] on the right part of that page. To see the source of the 
 Sphinx page definition file, click 'Show Source' in the left column.
 
 To install, use::
