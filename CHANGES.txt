@@ -1,3 +1,9 @@
+
+Release 0.3.2 (2012-01-25)
+--------------------------
+* Fine-tuned setup.py for smoother installation.
+* Improved documentation.
+
 Release 0.3.1 (2012-01-24)
 --------------------------
 * Improved requirements handling in setup.py

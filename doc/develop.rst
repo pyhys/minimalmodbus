@@ -229,7 +229,7 @@ latin-1  0-255
 
 Corresponding in Python2
 ````````````````````````
-Ideally, we would like to use the same source code for Python2. In Python 2.6 and higher 
+Ideally, we would like to use the same source code for Python2 and Python3. In Python 2.6 and higher 
 there is the :func:`bytes` function for forward compatibility, but it is merely a 
 synonym for :func:`str`.
 
@@ -252,9 +252,8 @@ Where it is unavoidable, use::
 
 Extending MinimalModbus
 ------------------------------------------------------------------------------
-It is straight-forward to extend MinimalModbus to handle mode Modbus function codes.
-Use the the method 
-:meth:`_performCommand` to send data to the 
+It is straight-forward to extend MinimalModbus to handle more Modbus function codes.
+Use the the method :meth:`_performCommand` to send data to the 
 slave, and to receive the response. Note that the API might change, as this is 
 outside the official API.
 
@@ -351,10 +350,10 @@ Preparation for release
 Change version number etc
 `````````````````````````
 * Manually change the ``__version__`` and ``__status__`` fields in the :file:`minimalmodbus.py` source file.
+* Manually change the ``version`` field in the :file:`setup.py` file.
 * Manually change the release date in :file:`CHANGES.txt`
 
-(Note that the version number in :file:`setup.py` is changed automatically. This is true 
-also for the Sphinx configuration file :file:`doc/conf.py`).
+(Note that the version number in the Sphinx configuration file :file:`doc/conf.py` is changed automatically. Unfortunately this is not yet valid :file:`setup.py`).
 
 
 Code style checking etc
@@ -718,6 +717,7 @@ TODO
 ----
  
 For next release:
+  * Read ``version`` from minimalmodbus to setup.py 
   * Bug tracker settings
   * Finetune coding style (pep8.py)
   * dummy_serial: Use isOpen() to make sure opening and closing works fine.

@@ -127,9 +127,9 @@ For details on the allowed parity values, see http://pyserial.sourceforge.net/py
 
 Dependencies
 ------------
-Python versions 2.6 and higher are supported (including 3.x). Tested with Python2.6, Python2.7 and Python3.2.
+Python versions 2.6 and higher are supported (including 3.x). Tested with Python2.6, Python2.7 and Python3.2. This module is pure Python.
 
-This module relies on `pySerial <http://pyserial.sourceforge.net/>`_ to do the heavy lifting, and it is the only dependency. You can find it at the Python package index: http://pypi.python.org/pypi/pyserial
+This module relies on `pySerial <http://pyserial.sourceforge.net/>`_ (also pure Python) to do the heavy lifting, and it is the only dependency. You can find it at the Python package index: http://pypi.python.org/pypi/pyserial
 
 
 Download and installation
@@ -140,8 +140,8 @@ From command line (if you have the *pip installer*, available at http://pypi.pyt
    
 or possibly::
 
-   pip install -U pyserial
-   pip install -U minimalmodbus
+   sudo pip install -U pyserial
+   sudo pip install -U minimalmodbus
 
 You can also manually download the compressed source files from http://pypi.python.org/pypi/MinimalModbus/ (see the end of that page). In that case you first need to manually install pySerial from http://pypi.python.org/pypi/pyserial.
 
