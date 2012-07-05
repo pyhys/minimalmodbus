@@ -154,14 +154,19 @@ class Instrument():
         
 
     def read_register(self, registeraddress, numberOfDecimals=0, functioncode=3):
-        """Read one register from the slave.
+        """Read an integer from one 16-bit register in the slave, possibly scaling it.
+        
+        The slave register can hold integer values in the range 0-65535. 
 
         Args:
             * registeraddress (int): The register address (use decimal numbers, not hex).  
             * numberOfDecimals (int): The number of decimals for content conversion.
             * functioncode (int): Modbus function code. Can be 3 or 4.
 
-        If a value of 77.0 is stored internally in the slave register as 770, then use ``numberOfDecimals=1``.
+        If a value of 77.0 is stored internally in the slave register as 770, then use ``numberOfDecimals=1``
+        which will divide the received data by 10 before returning the value.
+        
+        Similarly ``numberOfDecimals=2`` will divide the received data by 100 before returning the value.
 
         Returns:
             The register data in numerical value (int or float).
@@ -175,15 +180,20 @@ class Instrument():
 
 
     def write_register(self, registeraddress, value, numberOfDecimals=0, functioncode=16):
-        """Write to one register in the slave.
+        """Write an integer to one 16-bit register in the slave, possibly scaling it.
+        
+        The slave register can hold integer values in the range 0-65535. 
         
         Args:
             * registeraddress (int): The register address  (use decimal numbers, not hex).
-            * value (float): The value to store in the register. 
+            * value (int or float): The value to store in the slave (might be scaled before sending). 
             * numberOfDecimals (int): The number of decimals for content conversion.
             * functioncode (int): Modbus function code. Can be 6 or 16.
 
-        To store for example ``value=77.0``, use ``numberOfDecimals=1`` if the register will hold it as 770 internally.
+        To store for example ``value=77.0``, use ``numberOfDecimals=1`` if the register will hold it as 770 internally. 
+        This will multiply ``value`` by 10 before sending it to the slave.
+        
+        Similarly ``numberOfDecimals=2`` will multiply ``value`` by 100 before sending it to the slave.
 
         Returns:
             None
