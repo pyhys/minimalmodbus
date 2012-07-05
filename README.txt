@@ -164,6 +164,28 @@ For Python3 there might be problems with *easy_install* and *pip*. In that case,
 
 To make sure it is installed properly, print the _getDiagnosticString() message. See the support section below for instructions.
 
+Modbus data types
+-----------------
+In the Modbus standard are registers and bits for storage described. The registers are 16-bit, and can hold integers in the range 0-65000?.
+
+Some variations from the official standard:
+
+Scaling of register values
+    A temperature of 77.0 C might be stored as 770 in the register (to allow one decimal).
+
+Negative numbers
+    Some manufacturers allow negative values for some registers. Instead of an allowed integer range 0-65000, a range -32000 to 32000 is allowed. This is implemented as the upper range (32000-65500?) is interpreted as negative values. This is two's complement and is described at wikipedia... Help function to calculate the two's complement value and back.
+    
+Floats (single precision) 
+    Single precion floats are defined by 32 bits, and are implemented as two consecutive 16-bit registers. Unfortunately the byte order might differ between manufacturers. IEEE ?? wikipedia
+    
+Long integers
+    These require 32 bits, and are implemented as two consecutive 16-bit registers. ?
+    
+Strings
+    Each register holds ? characters. Often 16 consecutive registers are used, allowing ? characters in the string. ?
+
+
 Implemented functions
 ---------------------
 These are the functions to use for reading and writing registers and bits of your instrument. Study the 
