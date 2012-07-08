@@ -166,23 +166,23 @@ To make sure it is installed properly, print the _getDiagnosticString() message.
 
 Modbus data types
 -----------------
-In the Modbus standard are registers and bits for storage described. The registers are 16-bit, and can hold integers in the range 0-65000?.
+In the Modbus standard are registers and bits for storage described. The registers are 16-bit, and can hold integers in the range 0 to 65535 (dec). This is 0 to ffff (hex).
 
-Some variations from the official standard:
+Some deviations from the official standard:
 
-Scaling of register values
-    A temperature of 77.0 C might be stored as 770 in the register (to allow one decimal).
+**Scaling of register values**
+    Some manufacturers store a temperature value of 77.0 C as 770 in the register, to allow room for one decimal.
 
-Negative numbers
-    Some manufacturers allow negative values for some registers. Instead of an allowed integer range 0-65000, a range -32000 to 32000 is allowed. This is implemented as the upper range (32000-65500?) is interpreted as negative values. This is two's complement and is described at wikipedia... Help function to calculate the two's complement value and back.
+**Negative numbers**
+    Some manufacturers allow negative values for some registers. Instead of an allowed integer range 0-65535, a range -32768 to 32767 is allowed. This is implemented as any received value in the upper range (32768-65535) is interpreted as negative value (in the range -32768 to -1). This is two's complement and is described at http://en.wikipedia.org/wiki/Two%27s_complement. Help functions to calculate the two's complement value (and back) are provided in MinimalModbus.
     
-Floats (single precision) 
-    Single precion floats are defined by 32 bits, and are implemented as two consecutive 16-bit registers. Unfortunately the byte order might differ between manufacturers. IEEE ?? wikipedia
+**Floats (single precision)** 
+    Single precision floating point values are defined by 32 bits, and are implemented as two consecutive 16-bit registers.  How to convert from the bit values to the floating point value is described in the standard IEEE 754, as seen in http://en.wikipedia.org/wiki/Floating_point. Unfortunately the byte order might differ between manufacturers of Modbus instruments.
     
-Long integers
+**Long integers**
     These require 32 bits, and are implemented as two consecutive 16-bit registers. ?
     
-Strings
+**Strings**
     Each register holds ? characters. Often 16 consecutive registers are used, allowing ? characters in the string. ?
 
 
@@ -232,6 +232,16 @@ can be said about function code 5 and 6, and also about 15 and 16.
 
 For finding how the k Bytes for the value relates to the number of registers etc (n), see the Modbus documents referred to above.
 
+
+Using multiple instruments
+--------------------------
+Use a single script talking to all your instruments. Create several instruments like::
+
+    instrumentA = minimalmodbus.Instrument('/dev/ttyUSB1', 1)
+    instrumentB = minimalmodbus.Instrument('/dev/ttyUSB1', 2)
+
+Running several scripts using the same port will give problems. 
+	
 	
 Issues when running under Windows
 ---------------------------------
@@ -245,7 +255,7 @@ when communicating with more than one instrument. It is possible to make Minimal
     instrument = minimalmodbus.Instrument('/dev/ttyUSB1', 1) # port name, slave address (in decimal)
     print instrument.read_register(289, 1) 
 
-	
+
 Licence
 -------
 Apache License, Version 2.0.
@@ -261,7 +271,9 @@ Describe the problem in detail, and include any error messsages. Please also inc
   >>> print minimalmodbus._getDiagnosticString()
 
 Note that it can be very helpful to switch on the debug mode, where the communication 
-details are printed. See the 'Develop' section below.
+details are printed. See the 'Debug mode' section.
+
+It can be helpful to describe which instrument model you are using, and possibly a link to online PDF documentation for it.
 
 Author
 ------
@@ -279,8 +291,8 @@ If you find this software useful, then please leave a review on the SourceForge 
 
 Please also subscribe to the (low volume) mailing list minimalmodbus-list@lists.sourceforge.net (see https://lists.sourceforge.net/lists/listinfo/minimalmodbus-list) so you can help other users getting started.
 	
-Develop
--------
+Debug mode
+----------
 
 To switch on the debug mode, where the communication details are printed::
 
@@ -295,17 +307,89 @@ With this you can easily see what is sent to and from your instrument, and immed
 
 The data is stored internally in this driver as byte strings (representing byte values). 
 For example a byte with value 18 (dec) = 12 (hex) = 00010010 (bin) is stored in a string of length one.
-This can be done using the function ``chr(18)`` or typing the string ``\x12``.
+This can be created using the function ``chr(18)``, or by simply typing the string ``'\x12'`` (which is a string of length 1). See http://docs.python.org/reference/lexical_analysis.html#string-literals for details on escape sequences.
 
-Note that the letter A has the hexadecimal ASCII code 41, why the string ``\x41`` prints 'A'. 
+For more information about hexadecimal numbers, see http://en.wikipedia.org/wiki/Hexadecimal.
 
-These strings can look pretty strange when printed, as values 0 to 31 (dec) are
+Note that the letter A has the hexadecimal ASCII code 41, why the string ``'\x41'`` prints ``'A'``. 
+The Latin-1 encoding is used (on most installations?), and the conversion table is found on 
+http://en.wikipedia.org/wiki/Latin_1.
+
+The byte strings can look pretty strange when printed, as values 0 to 31 (dec) are
 ASCII control signs (not corresponding to any letter). For example 'vertical tab' 
 and 'line feed' are among those. To make the output easier to understand, use::
 
 	print repr(bytestringname)
 
-Then you can find the value and use an ASCII table to see if it is correct.
+Registers are 16 bit wide (2 bytes), and the data is sent with the most significant byte (MSB) before the least significant byte (LSB). This is called big-endian byte order. To find the register data value, multiply the MSB by 256 (dec) and add the LSB.
+
+Example
+````````
+
+We use this example in debug mode. It reads one register (number 5), using MODBUS function code 3::
+
+    >>> instr.read_register(5,1)
+    
+This will be displayed::
+
+    MinimalModbus debug mode. Writing to instrument: '\x01\x03\x00\x05\x00\x01\x94\x0b'
+
+In the section 'Modbus implementation details' above, the request message structure is described. See the table entry for function code 3.
+
+Interpret the request message (8 bytes) as:
+
+======== ==== ==== ============
+Written  Hex  Dec  Description
+======== ==== ==== ============
+``\x01`` 1    1    Slave address (here 1)
+``\x03`` 3    3    Function code (here 3 = read registers)
+``\x00`` 0    0    Start address MSB
+``\x05`` 5    5    Start address LSB
+``\x00`` 0    0    Number of registers MSB
+``\x01`` 1    1    Number of registers LSB
+``\x94`` 94   148  CRC LSB
+``\x0b`` b    11   CRC MSB
+======== ==== ==== ============
+
+So the data in the request is:
+  * Start address: 0*256 + 5 = 5 (dec)
+  * Number of registers: 0*256 + 1 = 1 (dec)
+
+The response will be displayed as::
+
+    MinimalModbus debug mode. Response from instrument: '\x01\x03\x02\x00º9÷'
+
+Interpret the response message (7 bytes) as:
+
+======== ==== ==== ============
+Written  Hex  Dec  Description
+======== ==== ==== ============
+``\x01`` 1    1    Slave address (here 1)
+``\x03`` 3    3    Function code (here 3 = read registers)
+``\x02`` 2    2    Byte count
+``\x00`` 0    0    Value MSB
+``º``    ba   186  Value LSB
+``9``    37   57   CRC LSB
+``÷``    f7   247  CRC MSB
+======== ==== ==== ============
+
+Out of the response, this is the payload part: ``\x02\x00º`` (3 bytes)
+
+So the data in the request is:
+  * Byte count: 2 (dec)
+  * Register value: 0*256 + 186 = 186 (dec)
+
+We know since earlier that this instrument stores a temperature of 18.6 C as 186. 
+We provide this information as the second argument in the function call ``read_register(5,1)``, 
+why it automatically divides the register data by 10 and returns ``18.6``.
+
+
+
+Develop
+-------
+
+
+
 
 The details printed in debug mode (messages and responses) are very useful for using the included dummy_serial port for unit testing purposes. For examples, see the file test/test_minimalmodbus.py.
 	
