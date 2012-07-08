@@ -110,7 +110,7 @@ Note that I have one additional driver layer on top of :mod:`eurotherm3500` (whi
 I use this process controller to run a heater, so I have a driver :file:`heater.py` in which all my settings are done.
 
 The idea is that :mod:`minimalmodbus` should be useful to most Modbus users, and :mod:`eurotherm3500` should be useful to most users of that controller type. 
-So my :file:`heater.py` driver has functions like ``get_center_temperature()`` and ``get_edge_temperature()``, and there I also define resistance values etc.
+So my :file:`heater.py` driver has functions like ``getTemperatureCenter()`` and ``getTemperatureEdge()``, and there I also define resistance values etc.
 
 Here is a part of :file:`heater.py`::
      
@@ -163,7 +163,7 @@ Using this module as part of a measurement system
 ----------------------------------------------------------------------------
 It is very useful to make a graphical user interface (GUI) for your control/measurement program. 
 
-One library for making GUIs is wxPython, found on http://www.wxpython.org/. One good tutorial (it start from the basics) is: http://www.zetcode.com/wxpython/
+One library for making GUIs is wxPython, found on http://www.wxpython.org/. One good tutorial (it starts from the basics) is: http://www.zetcode.com/wxpython/
 
 I strongly suggest that your measurement program should be possible to run without any GUI, as it then is much easier to actually get the GUI version of it to work. Your program should have some function like ``setTemperature(255)``.
 

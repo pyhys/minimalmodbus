@@ -37,7 +37,7 @@ Function                    Description
 :meth:`._communicate`       Handles raw strings for communication via pySerial.
 =========================== ================================================================================
 
-Most of the logic is located in separate (easy to test) functions on module level. For a desctription of them, see :ref:`internalminimalmodbus`. 
+Most of the logic is located in separate (easy to test) functions on module level. For a description of them, see :ref:`internalminimalmodbus`. 
 
 
 Unittesting
