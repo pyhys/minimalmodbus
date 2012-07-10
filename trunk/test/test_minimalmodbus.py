@@ -367,10 +367,99 @@ class TestCreateBitPattern(ExtendedTestCase):
         self.assertRaises(TypeError, minimalmodbus._createBitpattern, 5, None) 
         
         
+############################    
+# Test number manipulation #
+############################    
+   
+class TestTwosComplement(ExtendedTestCase):
+
+    knownValues=[
+    (0,       8, 0),
+    (1,       8, 1),
+    (127,     8, 127),
+    (-128,    8, 128),
+    (-127,    8, 129),
+    (-1,      8, 255),
+    (0,      16, 0),    
+    (1,      16, 1),   
+    (32767,  16, 32767),   
+    (-32768, 16, 32768), 
+    (-32767, 16, 32769), 
+    (-1,     16, 65535), 
+    ]
+
+    def testKnownValues(self):
+        for x, bits, knownresult in self.knownValues:
+            
+            result = minimalmodbus._twosComplement(x, bits)
+            self.assertEqual(result, knownresult)
+
+    def testNotIntegerInput(self):   
+        self.assertRaises(TypeError, minimalmodbus._twosComplement, 1.0,  8)
+        self.assertRaises(TypeError, minimalmodbus._twosComplement, '1',  8)
+        self.assertRaises(TypeError, minimalmodbus._twosComplement, [1],  8)
+        self.assertRaises(TypeError, minimalmodbus._twosComplement, None, 8)
+        self.assertRaises(TypeError, minimalmodbus._twosComplement, 1,    8.0)
+        self.assertRaises(TypeError, minimalmodbus._twosComplement, 1,    '8')
+        self.assertRaises(TypeError, minimalmodbus._twosComplement, 1,    [8])
+        self.assertRaises(TypeError, minimalmodbus._twosComplement, 1,    None)
+
+    def testOutOfRange(self):   
+        self.assertRaises(ValueError, minimalmodbus._twosComplement, 128,     8)     
+        self.assertRaises(ValueError, minimalmodbus._twosComplement, 1000000, 8)    
+        self.assertRaises(ValueError, minimalmodbus._twosComplement, -129,    8)  
+        self.assertRaises(ValueError, minimalmodbus._twosComplement, 32768,   16)     
+        self.assertRaises(ValueError, minimalmodbus._twosComplement, 1000000, 16)    
+        self.assertRaises(ValueError, minimalmodbus._twosComplement, -32769,  16)  
+        self.assertRaises(ValueError, minimalmodbus._twosComplement, 1,       0) 
+        self.assertRaises(ValueError, minimalmodbus._twosComplement, 1,       -1) 
+        self.assertRaises(ValueError, minimalmodbus._twosComplement, 1,       -2) 
+        self.assertRaises(ValueError, minimalmodbus._twosComplement, 1,       -100)         
+        
+class TestFromTwosComplement(ExtendedTestCase):
+    
+    knownValues=TestTwosComplement.knownValues
+
+    def testKnownValues(self):
+        for knownresult, bits, x in self.knownValues:
+            
+            result = minimalmodbus._fromTwosComplement(x, bits)
+            self.assertEqual(result, knownresult)
+    
+    def testNotIntegerInput(self):   
+        self.assertRaises(TypeError, minimalmodbus._fromTwosComplement, 1.0,  8)
+        self.assertRaises(TypeError, minimalmodbus._fromTwosComplement, '1',  8)
+        self.assertRaises(TypeError, minimalmodbus._fromTwosComplement, [1],  8)
+        self.assertRaises(TypeError, minimalmodbus._fromTwosComplement, None, 8)
+        self.assertRaises(TypeError, minimalmodbus._fromTwosComplement, 1,    8.0)
+        self.assertRaises(TypeError, minimalmodbus._fromTwosComplement, 1,    '8')
+        self.assertRaises(TypeError, minimalmodbus._fromTwosComplement, 1,    [8])
+        self.assertRaises(TypeError, minimalmodbus._fromTwosComplement, 1,    None)
+    
+    def testOutOfRange(self):   
+        self.assertRaises(ValueError, minimalmodbus._fromTwosComplement, 256,     8)  
+        self.assertRaises(ValueError, minimalmodbus._fromTwosComplement, 1000000, 8)     
+        self.assertRaises(ValueError, minimalmodbus._fromTwosComplement, -1,      8)    
+        self.assertRaises(ValueError, minimalmodbus._fromTwosComplement, 65536,   16)  
+        self.assertRaises(ValueError, minimalmodbus._fromTwosComplement, 1000000, 16)     
+        self.assertRaises(ValueError, minimalmodbus._fromTwosComplement, -1,      16)    
+        self.assertRaises(ValueError, minimalmodbus._fromTwosComplement, 1,       0) 
+        self.assertRaises(ValueError, minimalmodbus._fromTwosComplement, 1,       -1)
+        self.assertRaises(ValueError, minimalmodbus._fromTwosComplement, 1,       -2)
+        self.assertRaises(ValueError, minimalmodbus._fromTwosComplement, 1,       -100)   
+    
+class TestSanityTwosComplement(ExtendedTestCase):
+
+    def testKnownValuesLoop(self):
+        for bits in [1, 2, 4, 8, 12, 16]:
+            for x in range(2**bits):
+                resultvalue = minimalmodbus._twosComplement( minimalmodbus._fromTwosComplement(x, bits), bits )
+                self.assertEqual(resultvalue, x)         
+        
 #########################    
 # Test bit manipulation #
 #########################    
-    
+   
 class TestSetBitOn(ExtendedTestCase):
 
     knownValues=[

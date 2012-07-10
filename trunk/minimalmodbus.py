@@ -665,6 +665,92 @@ def _createBitpattern(functioncode, value):
             return '\x01' # Is this correct??
 
 
+#######################    
+# Number manipulation #
+#######################
+
+def _twosComplement(x, bits=16):
+    """Calculate the two's complement of an integer.
+   
+    Then also negative values can be represented by an upper range of positive values.
+    See http://en.wikipedia.org/wiki/Two%27s_complement
+   
+    Args:
+        * x (int): input integer.
+        * bits (int): number of bits, must be > 0.
+   
+    Returns:
+        An int, that represents the two's complement of the input.
+   
+    Example for bits=8:
+    
+    ==== =======
+    x    returns
+    ==== =======
+    0    0
+    1    1
+    127  127
+    -128 128
+    -127 129
+    -1   255
+    ==== =======
+       
+    """
+    _checkInt(bits, minvalue=0, description='number of bits')
+    
+    _checkInt(x, description='input')
+    upperlimit = 2**(bits - 1) - 1
+    lowerlimit = -2**(bits - 1)
+    if x > upperlimit or x < lowerlimit:
+        raise ValueError('The input value is out of range. Given value is {0}, but allowed range is {1} to {2} when using {3} bits.' \
+            .format(x, lowerlimit, upperlimit, bits) )
+  
+    # Calculate two'2 complement
+    if x >= 0:
+        return x
+    return x + 2**bits
+
+
+def _fromTwosComplement(x, bits=16):
+    """Calculate the inverse(?) of a two's complement of an integer.
+      
+    Args:
+        * x (int): input integer.
+        * bits (int): number of bits, must be > 0.
+   
+    Returns:
+        An int, that represents the inverse(?) of two's complement of the input.
+   
+    Example for bits=8:
+    
+    === =======
+    x   returns
+    === =======
+    0   0
+    1   1
+    127 127
+    128 -128
+    129 -127
+    255 -1
+    === =======
+   
+    """
+    _checkInt(bits, minvalue=0, description='number of bits')
+    
+    _checkInt(x, description='input')
+    upperlimit = 2**(bits) - 1
+    lowerlimit = 0
+    if x > upperlimit or x < lowerlimit:
+        raise ValueError('The input value is out of range. Given value is {0}, but allowed range is {1} to {2} when using {3} bits.' \
+            .format(x, lowerlimit, upperlimit, bits) )
+  
+    # Calculate inverse(?) of two'2 complement
+    limit = 2**(bits - 1) - 1
+    if x <= limit:
+        return x
+    return x - 2**bits
+
+
 ####################    
 # Bit manipulation #
 ####################
