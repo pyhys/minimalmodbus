@@ -175,8 +175,6 @@ This way it is easy to test the measurement program and the GUI separately.
 
 Known issues
 -----------------------------------------------------------------------------
-Sending negative values to the slave is not yet implemented. If this is an issue for you, please provide the manual for your instrument.
-
 Changing `close_port_after_each_call` after instantiation of :class:`.Instrument` might be 
 problematic. Set the value ``minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL=True`` immediately after ``import minimalmodbus`` instead.
 

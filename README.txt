@@ -42,6 +42,7 @@ Two important documents are:
   * `Modbus application protocol V1.1b <http://www.modbus.com/docs/Modbus_Application_Protocol_V1_1b.pdf>`_ 
   * `Modbus over serial line specification and implementation guide V1.02 <http://www.modbus.com/docs/Modbus_over_serial_line_V1_02.pdf>`_ 
 
+Note that the computer (master) actually is a client, and the instruments (slaves) are servers.
 
 Typical hardware
 ----------------
@@ -199,43 +200,12 @@ documentation of your instrument to find which Modbus function code to use.
 | **Register** | read_register() Function code 3 [or 4] | write_register() Function code 16 [or 6] |
 +--------------+----------------------------------------+------------------------------------------+
 
-
-Modbus implementation details
------------------------------
-Note that the computer (master) actually is a client, and the instruments (slaves) are servers.
-
-In Modbus RTU, the request message is sent from the master in this format::
-    
-    Slave address [1 Byte], Function code [1 Byte], Payload data [0 to 252 Bytes], CRC [2 Bytes].
-
-* For the function code, the allowed range is 1 to 127 (in decimal). 
-* The CRC is a cyclic redundancy check code, for error checking of the message. 
-* The response from the client is similar, but with another payload data.
-
-============================== ============================================================================================== ======================================================
-Function code (in decimal)     Payload data to slave (Request)                                                                Payload data from slave (Response)                  
-============================== ============================================================================================== ====================================================== 
-1 Read bits (coils)            Start address [2 Bytes], Number of coils [2 Bytes]                                             Byte count [1 Byte], Value [k Bytes] 
-2 Read discrete inputs         Start address [2 Bytes], Number of inputs [2 Bytes]                                            Byte count [1 Byte], Value [k Bytes]         
-3 Read holding registers       Start address [2 Bytes], Number of registers [2 Bytes]                                         Byte count [1 Byte], Value [n*2 Bytes]
-4 Read input registers         Start address [2 Bytes], Number of registers [2 Bytes]                                         Byte count [1 Byte], Value [n*2 Bytes]
-5 Write single bit (coil)      Output address [2 Bytes], Value [2 Bytes]                                                      Output address [2 Bytes], Value [2 Bytes]           
-6 Write single register        Register address [2 Bytes], Value [2 Bytes]                                                    Register address [2 Bytes], Value [2 Bytes] 
-15 Write multiple bits (coils) Start address [2 Bytes], Number of outputs [2 Bytes], Byte count [1 Byte], Value [k Bytes]     Start address [2 Bytes], Number of outputs [2 Bytes]
-16 Write multiple registers    Start address [2 Bytes], Number of registers [2 Bytes], Byte count [1 Byte], Value [n*2 Bytes] Start address [2 Bytes], Number of registers [2 Bytes]
-============================== ============================================================================================== ====================================================== 
-
-For function code 5, the only valid values are 0000 (hex) or FF00 (hex), representing OFF and ON respectively.
-
-It is seen in the table above that the request and response messages are similar for function code 1 to 4. The same 
-can be said about function code 5 and 6, and also about 15 and 16. 
-
-For finding how the k Bytes for the value relates to the number of registers etc (n), see the Modbus documents referred to above.
+See the API for MinimalModbus on http://minimalmodbus.sourceforge.net/apiminimalmodbus.html
 
 
 Using multiple instruments
 --------------------------
-Use a single script talking to all your instruments. Create several instruments like::
+Use a single script for talking to all your instruments. Create several instrument objects like::
 
     instrumentA = minimalmodbus.Instrument('/dev/ttyUSB1', 1)
     instrumentB = minimalmodbus.Instrument('/dev/ttyUSB1', 2)
@@ -290,6 +260,38 @@ Feedback
 If you find this software useful, then please leave a review on the SourceForge project page (Log-in is required). http://sourceforge.net/projects/minimalmodbus/ 
 
 Please also subscribe to the (low volume) mailing list minimalmodbus-list@lists.sourceforge.net (see https://lists.sourceforge.net/lists/listinfo/minimalmodbus-list) so you can help other users getting started.
+	
+	
+Modbus implementation details
+-----------------------------
+In Modbus RTU, the request message is sent from the master in this format::
+    
+    Slave address [1 Byte], Function code [1 Byte], Payload data [0 to 252 Bytes], CRC [2 Bytes].
+
+* For the function code, the allowed range is 1 to 127 (in decimal). 
+* The CRC is a cyclic redundancy check code, for error checking of the message. 
+* The response from the client is similar, but with another payload data.
+
+============================== ============================================================================================== ======================================================
+Function code (in decimal)     Payload data to slave (Request)                                                                Payload data from slave (Response)                  
+============================== ============================================================================================== ====================================================== 
+1 Read bits (coils)            Start address [2 Bytes], Number of coils [2 Bytes]                                             Byte count [1 Byte], Value [k Bytes] 
+2 Read discrete inputs         Start address [2 Bytes], Number of inputs [2 Bytes]                                            Byte count [1 Byte], Value [k Bytes]         
+3 Read holding registers       Start address [2 Bytes], Number of registers [2 Bytes]                                         Byte count [1 Byte], Value [n*2 Bytes]
+4 Read input registers         Start address [2 Bytes], Number of registers [2 Bytes]                                         Byte count [1 Byte], Value [n*2 Bytes]
+5 Write single bit (coil)      Output address [2 Bytes], Value [2 Bytes]                                                      Output address [2 Bytes], Value [2 Bytes]           
+6 Write single register        Register address [2 Bytes], Value [2 Bytes]                                                    Register address [2 Bytes], Value [2 Bytes] 
+15 Write multiple bits (coils) Start address [2 Bytes], Number of outputs [2 Bytes], Byte count [1 Byte], Value [k Bytes]     Start address [2 Bytes], Number of outputs [2 Bytes]
+16 Write multiple registers    Start address [2 Bytes], Number of registers [2 Bytes], Byte count [1 Byte], Value [n*2 Bytes] Start address [2 Bytes], Number of registers [2 Bytes]
+============================== ============================================================================================== ====================================================== 
+
+For function code 5, the only valid values are 0000 (hex) or FF00 (hex), representing OFF and ON respectively.
+
+It is seen in the table above that the request and response messages are similar for function code 1 to 4. The same 
+can be said about function code 5 and 6, and also about 15 and 16. 
+
+For finding how the k Bytes for the value relates to the number of registers etc (n), see the Modbus documents referred to above.
+	
 	
 Debug mode
 ----------
@@ -384,13 +386,8 @@ We provide this information as the second argument in the function call ``read_r
 why it automatically divides the register data by 10 and returns ``18.6``.
 
 
-
 Develop
 -------
-
-
-
-
 The details printed in debug mode (messages and responses) are very useful for using the included dummy_serial port for unit testing purposes. For examples, see the file test/test_minimalmodbus.py.
 	
 More implementation details are found on http://minimalmodbus.sourceforge.net/develop.html	
