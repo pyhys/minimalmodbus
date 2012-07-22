@@ -50,7 +50,7 @@ The application for which I wrote this software is to read and write data from E
 
 As an example on the usage of MinimialModbus, the driver I use for an Eurotherm 3504 process controller is included. It uses the MinimalModbus Python module for its communication. Also a driver for Omega CN7500 is included. For hardware details on these process controllers, see `Eurotherm 3500 <http://www.eurotherm.com/products/controllers/multi-loop/>`_ and `Omega CN7500 <http://www.omega.com/ppt/pptsc.asp?ref=CN7500/>`_.
 
-There can be several instruments (slaves) on a single bus, and the slaves have addresses in the range 1 to 247. In the Modbus RTU protocol, only the master can initiate communication. The physical layer is most often the serial bus RS485, which is described at http://en.wikipedia.org/wiki/Rs485.
+There can be several instruments (slaves, nodes) on a single bus, and the slaves have addresses in the range 1 to 247. In the Modbus RTU protocol, only the master can initiate communication. The physical layer is most often the serial bus RS485, which is described at http://en.wikipedia.org/wiki/Rs485.
 
 To connect your computer to the RS485 bus, a serial port is required. There are direct USB-to-RS485 converters, but I use a USB-to-RS232 converter together with an industrial RS232-to-RS485 converter. This has the advantage that the latter is galvanically isolated using opto-couplers, and has transient supression. This software has been tested using a Westermo MDW-45 RS232-to-RS485 converter.
 
@@ -59,7 +59,7 @@ Typical usage
 -------------
 The instrument is typically connected via a serial port, and a USB-to-serial adaptor should be used on most modern computers. How to configure such a serial port is described on the pySerial page: http://pyserial.sourceforge.net/
 
-For example, consider an instrument (slave) with address number 1 to which we are to communicate via a serial port with the name ``/dev/ttyUSB1``. The instrument stores the measured temperature in register 289. For this instrument a temperature of 77.2 C is stored as 772, why we use 1 decimal. To read this data from the instrument::
+For example, consider an instrument (slave) with address number 1 to which we are to communicate via a serial port with the name ``/dev/ttyUSB1``. The instrument stores the measured temperature in register 289. For this instrument a temperature of 77.2 C is stored as (the integer) 772, why we use 1 decimal. To read this data from the instrument::
 
     #!/usr/bin/env python
     import minimalmodbus
@@ -167,24 +167,27 @@ To make sure it is installed properly, print the _getDiagnosticString() message.
 
 Modbus data types
 -----------------
-In the Modbus standard are registers and bits for storage described. The registers are 16-bit, and can hold integers in the range 0 to 65535 (dec). This is 0 to ffff (hex).
+The Modbus standard defines storage in:
+
+* Bits
+* Registers (16-bit). Can hold integers in the range 0 to 65535 (dec), which is 0 to ffff (hex). Also called 'unsigned INT16' or 'unsigned short'.
 
 Some deviations from the official standard:
 
 **Scaling of register values**
     Some manufacturers store a temperature value of 77.0 C as 770 in the register, to allow room for one decimal.
 
-**Negative numbers**
+**Negative numbers (INT16 = short)**
     Some manufacturers allow negative values for some registers. Instead of an allowed integer range 0-65535, a range -32768 to 32767 is allowed. This is implemented as any received value in the upper range (32768-65535) is interpreted as negative value (in the range -32768 to -1). This is two's complement and is described at http://en.wikipedia.org/wiki/Two%27s_complement. Help functions to calculate the two's complement value (and back) are provided in MinimalModbus.
     
-**Floats (single precision)** 
-    Single precision floating point values are defined by 32 bits, and are implemented as two consecutive 16-bit registers.  How to convert from the bit values to the floating point value is described in the standard IEEE 754, as seen in http://en.wikipedia.org/wiki/Floating_point. Unfortunately the byte order might differ between manufacturers of Modbus instruments.
+**Floats (single or double precision)**
+    Single precision floating point values are defined by 32 bits (4 bytes), and are implemented as two consecutive 16-bit registers. Correspondingly, double precision floating point values use 64 bits (8 bytes) and are implemented as four consecutive 16-bit registers. How to convert from the bit values to the floating point value is described in the standard IEEE 754, as seen in http://en.wikipedia.org/wiki/Floating_point. Unfortunately the byte order might differ between manufacturers of Modbus instruments.
     
-**Long integers**
-    These require 32 bits, and are implemented as two consecutive 16-bit registers. ?
+**Long integers ('Unsigned INT32' or 'INT32')**
+    These require 32 bits, and are implemented as two consecutive 16-bit registers. The range is 0 to 4294967295, which is called 'unsigned INT32'. Alternatively negative values can be stored if the instrument is defined that way, and is then called 'INT32' which has the range -2147483648 to 2147483647.
     
 **Strings**
-    Each register holds ? characters. Often 16 consecutive registers are used, allowing ? characters in the string. ?
+    Each register (16 bits) is interpreted as two characters (1 byte = 8 bits). Often 16 consecutive registers are used, allowing 32 characters in the string. 
 
 
 Implemented functions
@@ -192,13 +195,21 @@ Implemented functions
 These are the functions to use for reading and writing registers and bits of your instrument. Study the 
 documentation of your instrument to find which Modbus function code to use.
 
-+--------------+----------------------------------------+------------------------------------------+
-| Item         | Read                                   | Write                                    |
-+==============+========================================+==========================================+
-| **Bit**      | read_bit() Function code 2 [or 1]      | write_bit()  Function code 5 [or 15]     |
-+--------------+----------------------------------------+------------------------------------------+
-| **Register** | read_register() Function code 3 [or 4] | write_register() Function code 16 [or 6] |
-+--------------+----------------------------------------+------------------------------------------+
++---------------------------------------+------------------+---------------+-------------------+---------------+
+| Data type in slave                    | Read             | Function code | Write             | Function code |
++=======================================+==================+===============+===================+===============+
+| **Bit**                               | read_bit()       | 2 [or 1]      | write_bit()       | 5 [or 15]     |
++---------------------------------------+------------------+---------------+-------------------+---------------+
+| **Register** Integer, possibly scaled | read_register()  | 3 [or 4]      | write_register()  | 16 [or 6]     |
++---------------------------------------+------------------+---------------+-------------------+---------------+
+| **Long** (32 bits = 2 registers)      | read_long()      | 3 [or 4]      | write_long()      | 16            |
++---------------------------------------+------------------+---------------+-------------------+---------------+
+| **Float** (32 or 64 bits)             | read_float()     | 3 [or 4]      | write_float()     | 16            |
++---------------------------------------+------------------+---------------+-------------------+---------------+
+| **String**                            | read_string()    | 3 [or 4]      | write_string()    | 16            |
++---------------------------------------+------------------+---------------+-------------------+---------------+
+| **Registers** Integers                | read_registers() | 3 [or 4]      | write_registers() | 16            |
++---------------------------------------+------------------+---------------+-------------------+---------------+
 
 See the API for MinimalModbus on http://minimalmodbus.sourceforge.net/apiminimalmodbus.html
 
@@ -211,8 +222,8 @@ Use a single script for talking to all your instruments. Create several instrume
     instrumentB = minimalmodbus.Instrument('/dev/ttyUSB1', 2)
 
 Running several scripts using the same port will give problems. 
-	
-	
+
+
 Issues when running under Windows
 ---------------------------------
 When running under Windows, the underlying pySerial may complain that the serial port is already open. This seems to occur especially 
@@ -221,47 +232,11 @@ when communicating with more than one instrument. It is possible to make Minimal
     #!/usr/bin/env python
     import minimalmodbus
     minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = True
-	
+    
     instrument = minimalmodbus.Instrument('/dev/ttyUSB1', 1) # port name, slave address (in decimal)
     print instrument.read_register(289, 1) 
 
-
-Licence
--------
-Apache License, Version 2.0.
-
-
-Support
--------
-Send a mail to minimalmodbus-list@lists.sourceforge.net
-
-Describe the problem in detail, and include any error messsages. Please also include the output after running::
-
-  >>> import minimalmodbus 
-  >>> print minimalmodbus._getDiagnosticString()
-
-Note that it can be very helpful to switch on the debug mode, where the communication 
-details are printed. See the 'Debug mode' section.
-
-It can be helpful to describe which instrument model you are using, and possibly a link to online PDF documentation for it.
-
-Author
-------
-Jonas Berg, pyhys@users.sourceforge.net
-
-
-Credits
--------
-Significant contributions by Aaron LaLonde.
-
-
-Feedback
---------
-If you find this software useful, then please leave a review on the SourceForge project page (Log-in is required). http://sourceforge.net/projects/minimalmodbus/ 
-
-Please also subscribe to the (low volume) mailing list minimalmodbus-list@lists.sourceforge.net (see https://lists.sourceforge.net/lists/listinfo/minimalmodbus-list) so you can help other users getting started.
-	
-	
+    
 Modbus implementation details
 -----------------------------
 In Modbus RTU, the request message is sent from the master in this format::
@@ -270,7 +245,7 @@ In Modbus RTU, the request message is sent from the master in this format::
 
 * For the function code, the allowed range is 1 to 127 (in decimal). 
 * The CRC is a cyclic redundancy check code, for error checking of the message. 
-* The response from the client is similar, but with another payload data.
+* The response from the client is similar, but with other payload data.
 
 ============================== ============================================================================================== ======================================================
 Function code (in decimal)     Payload data to slave (Request)                                                                Payload data from slave (Response)                  
@@ -291,11 +266,10 @@ It is seen in the table above that the request and response messages are similar
 can be said about function code 5 and 6, and also about 15 and 16. 
 
 For finding how the k Bytes for the value relates to the number of registers etc (n), see the Modbus documents referred to above.
-	
-	
+    
+    
 Debug mode
 ----------
-
 To switch on the debug mode, where the communication details are printed::
 
     #!/usr/bin/env python
@@ -305,7 +279,12 @@ To switch on the debug mode, where the communication details are printed::
     instrument.debug = True
     print instrument.read_register(289, 1)  # Remember to use print() for Python3
 
-With this you can easily see what is sent to and from your instrument, and immediately see what is wrong.
+With this you can easily see what is sent to and from your instrument, and immediately see what is wrong. Similar in interactive mode::
+
+    >>> instrument_1.read_register(4097,1)
+    MinimalModbus debug mode. Writing to instrument: '\n\x03\x10\x01\x00\x01\xd0q'
+    MinimalModbus debug mode. Response from instrument: '\n\x03\x02\x07\xd0\x1e)'
+    200.0
 
 The data is stored internally in this driver as byte strings (representing byte values). 
 For example a byte with value 18 (dec) = 12 (hex) = 00010010 (bin) is stored in a string of length one.
@@ -321,14 +300,13 @@ The byte strings can look pretty strange when printed, as values 0 to 31 (dec) a
 ASCII control signs (not corresponding to any letter). For example 'vertical tab' 
 and 'line feed' are among those. To make the output easier to understand, use::
 
-	print repr(bytestringname)
+    print repr(bytestringname)
 
 Registers are 16 bit wide (2 bytes), and the data is sent with the most significant byte (MSB) before the least significant byte (LSB). This is called big-endian byte order. To find the register data value, multiply the MSB by 256 (dec) and add the LSB.
 
 Example
 ````````
-
-We use this example in debug mode. It reads one register (number 5), using MODBUS function code 3::
+We use this example in debug mode. It reads one register (number 5) in the slave with address 1, using MODBUS function code 3::
 
     >>> instr.read_register(5,1)
     
@@ -340,18 +318,18 @@ In the section 'Modbus implementation details' above, the request message struct
 
 Interpret the request message (8 bytes) as:
 
-======== ==== ==== ============
-Written  Hex  Dec  Description
-======== ==== ==== ============
-``\x01`` 1    1    Slave address (here 1)
-``\x03`` 3    3    Function code (here 3 = read registers)
-``\x00`` 0    0    Start address MSB
-``\x05`` 5    5    Start address LSB
-``\x00`` 0    0    Number of registers MSB
-``\x01`` 1    1    Number of registers LSB
-``\x94`` 94   148  CRC LSB
-``\x0b`` b    11   CRC MSB
-======== ==== ==== ============
+========= ==== ==== ============
+Displayed  Hex  Dec  Description
+========= ==== ==== ============
+``\x01``  1    1    Slave address (here 1)
+``\x03``  3    3    Function code (here 3 = read registers)
+``\x00``  0    0    Start address MSB
+``\x05``  5    5    Start address LSB
+``\x00``  0    0    Number of registers MSB
+``\x01``  1    1    Number of registers LSB
+``\x94``  94   148  CRC LSB
+``\x0b``  b    11   CRC MSB
+========= ==== ==== ============
 
 So the data in the request is:
   * Start address: 0*256 + 5 = 5 (dec)
@@ -363,17 +341,17 @@ The response will be displayed as::
 
 Interpret the response message (7 bytes) as:
 
-======== ==== ==== ============
-Written  Hex  Dec  Description
-======== ==== ==== ============
-``\x01`` 1    1    Slave address (here 1)
-``\x03`` 3    3    Function code (here 3 = read registers)
-``\x02`` 2    2    Byte count
-``\x00`` 0    0    Value MSB
-``º``    ba   186  Value LSB
-``9``    37   57   CRC LSB
-``÷``    f7   247  CRC MSB
-======== ==== ==== ============
+========= ==== ==== ============
+Displayed  Hex  Dec  Description
+========= ==== ==== ============
+``\x01``  1    1    Slave address (here 1)
+``\x03``  3    3    Function code (here 3 = read registers)
+``\x02``  2    2    Byte count
+``\x00``  0    0    Value MSB
+``º``     ba   186  Value LSB
+``9``     37   57   CRC LSB
+``÷``     f7   247  CRC MSB
+========= ==== ==== ============
 
 Out of the response, this is the payload part: ``\x02\x00º`` (3 bytes)
 
@@ -386,13 +364,51 @@ We provide this information as the second argument in the function call ``read_r
 why it automatically divides the register data by 10 and returns ``18.6``.
 
 
+Trouble shooting
+----------------
+If there is no communication, make sure that the settings on your instrument are OK:
+
+* Wiring is correct
+* Communication module is set for digital communication
+* Correct protocol (Modbus)
+* Baud rate
+* Parity 
+* Delay (most often not necessary)
+* Address
+
+The corresponding settings should also be used in MinimalModbus. Check also your:
+
+* Port name
+
+For troubleshooting, it is recommended to use interactive mode with debug enabled. See http://minimalmodbus.sourceforge.net/usage.html#interactive-usage
+
+If there is no response from your instrument, you can try using a lower baud rate.
+
+See also the pySerial pages: http://pyserial.sourceforge.net/
+
+
+Support
+-------
+Send a mail to minimalmodbus-list@lists.sourceforge.net
+
+Describe the problem in detail, and include any error messsages. Please also include the output after running::
+
+  >>> import minimalmodbus 
+  >>> print minimalmodbus._getDiagnosticString()
+
+Note that it can be very helpful to switch on the debug mode, where the communication 
+details are printed. See the 'Debug mode' section.
+
+It can be helpful to describe which instrument model you are using, and possibly a link to online PDF documentation for it.
+
+
 Develop
 -------
 The details printed in debug mode (messages and responses) are very useful for using the included dummy_serial port for unit testing purposes. For examples, see the file test/test_minimalmodbus.py.
-	
-More implementation details are found on http://minimalmodbus.sourceforge.net/develop.html	
-	
-	
+    
+More implementation details are found on http://minimalmodbus.sourceforge.net/develop.html  
+    
+    
 Unit testing
 ------------
 Unit tests are provided in the test subfolder. To run them::
@@ -401,8 +417,8 @@ Unit tests are provided in the test subfolder. To run them::
     
 Also a dummy/mock/stub for the serial port, dummy_serial, is provided for test purposes. See http://minimalmodbus.sourceforge.net/apidummyserial.html
 
-The test coverage analysis is found at http://minimalmodbus.sourceforge.net/htmlcov/index.html. To see which parts of the code that have been tested, click the corresponding file name.	
-		
+The test coverage analysis is found at http://minimalmodbus.sourceforge.net/htmlcov/index.html. To see which parts of the code that have been tested, click the corresponding file name.    
+        
 
 Related software
 ----------------
@@ -412,7 +428,29 @@ pyModbus
     From http://code.google.com/p/pymodbus/: 'Pymodbus is a full Modbus protocol implementation using twisted for its asynchronous communications core.'
 
 modbus-tk
-    From http://code.google.com/p/modbus-tk/: 'Make possible to write modbus TCP and RTU master and slave mainly for testing purpose. It is shipped with slave simulator and a master with a web-based hmi. It is a full-stack implementation and as a consequence could also be used on real-world project. '
+    From http://code.google.com/p/modbus-tk/: 'Make possible to write modbus TCP and RTU master and slave mainly for testing purpose. It is shipped with slave simulator and a master with a web-based hmi. It is a full-stack implementation and as a consequence could also be used on real-world project.'
+
+
+Licence
+-------
+Apache License, Version 2.0.
+
+
+Author
+------
+Jonas Berg, pyhys@users.sourceforge.net
+
+
+Credits
+-------
+Significant contributions by Aaron LaLonde.
+
+
+Feedback
+--------
+If you find this software useful, then please leave a review on the SourceForge project page (Log-in is required). http://sourceforge.net/projects/minimalmodbus/ 
+
+Please also subscribe to the (low volume) mailing list minimalmodbus-list@lists.sourceforge.net (see https://lists.sourceforge.net/lists/listinfo/minimalmodbus-list) so you can help other users getting started.
 
 
 References
