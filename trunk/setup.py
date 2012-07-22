@@ -7,7 +7,7 @@ with open('README.txt') as file:
     long_description = file.read()
 
 setup(name='MinimalModbus',
-    version = '0.3.2',
+    version = '0.4a1',
     description = 'Easy-to-use Modbus RTU implementation for Python',
     long_description = long_description,
     keywords = 'modbus serial RTU',
@@ -42,6 +42,8 @@ setup(name='MinimalModbus',
         
         ],
     )
+
+# See PEP396 how to derive the version number from the source file: http://www.python.org/dev/peps/pep-0396/#deriving
 
 # Note that additional files for inclusion are defined in MANIFEST.in
 

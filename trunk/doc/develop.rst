@@ -40,6 +40,26 @@ Function                    Description
 Most of the logic is located in separate (easy to test) functions on module level. For a description of them, see :ref:`internalminimalmodbus`. 
 
 
+Number conversion to and from bytestrings
+-----------------------------------------------
+The Python module struct is used for conversion. See http://docs.python.org/library/struct.html
+
+Several wrapper functions are defined for easy use of the conversion. These functions also do argument validity checking.
+
+=========================== =================================== ================================
+Data type                   To bytestring                       From bytestring
+=========================== =================================== ================================
+(internal usage)            :meth:`._numToOneByteString`
+Bit                         :meth:`._createBitpattern`          :meth:`._bitResponseToValue`
+Integer (char, short)       :meth:`._numToTwoByteString`        :meth:`._twoByteStringToNum`
+Several registers           :meth:`._valuelistToBytestring`     :meth:`._bytestringToValuelist`
+Long integer                :meth:`._longToBytestring`          :meth:`._bytestringToLong`
+Floating point number       :meth:`._floatToBytestring`         :meth:`._bytestringToFloat`
+String                      :meth:`._textstringToBytestring`    :meth:`._bytestringToTextstring`
+=========================== =================================== ================================
+
+For a description of them, see :ref:`internalminimalmodbus`. 
+
 Unittesting
 ------------------------------------------------------------------------------
 A brief introduction to unittesting is found here: http://docs.python.org/release/2.5.2/lib/minimal-example.html
@@ -189,6 +209,19 @@ The dummy serial port can be used also with instrument drivers built on top of M
     >>> instrument = omegacn7500.OmegaCN7500('DUMMYPORTNAME', 1) # port name, slave address
     >>> instrument.get_pv()
     24.6
+
+To see the generated request data (without bothering about the response)::
+
+    >>> import dummy_serial
+    >>> import minimalmodbus
+    >>> minimalmodbus.serial.Serial = dummy_serial.Serial # Monkey-patch a dummy serial port
+    >>> instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1)
+    >>> instrument.debug = True
+    >>> instrument.read_bit(2068)
+    MinimalModbus debug mode. Writing to instrument: '\x01\x02\x08\x14\x00\x01\xfb\xae'
+    MinimalModbus debug mode. Response from instrument: ''
+
+(Then an error message appears)
 
 
 Data encoding in Python2 and Python3
@@ -451,6 +484,16 @@ Test installer
 Make sure that the installer works, and the dependencies are handled correctly.
 Try at least Linux and Windows.
 
+
+Backup
+``````
+Burn a CD/DVD with these items:
+
+* source tree
+* source distribution
+* Windows installer
+* generated HTML files
+* PDF documentation
 
 Marketing
 ````````````

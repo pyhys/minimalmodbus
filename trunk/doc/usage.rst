@@ -16,7 +16,7 @@ To use interactive mode, start the Python interpreter and import minimalmodbus::
     >>> instr.read_register(24, 1)
     450.0
 
-Note that when you call a function, in interactive mode the representation of the return value is printed. The representation is kind of a debug information, like seen here for the returned string::
+Note that when you call a function, in interactive mode the representation of the return value is printed. The representation is kind of a debug information, like seen here for the returned string (example from Omega CN7500 driver)::
 
     >>> instrument.get_all_pattern_variables(0)
     'SP0: 10.0  Time0: 10\nSP1: 20.0  Time1: 20\nSP2: 30.0  Time2: 30\nSP3: 333.3  Time3: 45\nSP4: 50.0  Time4: 50\nSP5: 60.0  Time5: 60\nSP6: 70.0  Time6: 70\nSP7: 80.0  Time7: 80\nActual step:        7\nAdditional cycles:  4\nLinked pattern:     1\n'
