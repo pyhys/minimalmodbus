@@ -1260,6 +1260,47 @@ def _bytestringToTextstring(bytestring, numberOfRegisters=16):
     return textstring
     
     
+def _valuelistToBytestring(valuelist, numberOfRegisters):
+    """Convert a list of numerical values to a bytestring.
+
+    Each element is 'unsigned INT16'.
+
+    Args:
+        * valuelist (list of int): The input list. The elements should be in the range 0 to 65535.
+        * numberOfRegisters (int): The number of registers. For error checking.
+       
+    Returns:
+        A bytestring (str). Length = 2*numberOfRegisters
+
+    Raises:
+        TypeError, ValueError
+        
+    """  
+    MINVALUE = 0
+    MAXVALUE = 65535
+    
+    _checkInt(numberOfRegisters, minvalue=1, description='number of registers')
+    
+    if not isinstance(valuelist, list):
+        raise TypeError('The valuelist parameter must be a list. Given {0}.'.format( repr(valuelist) ))
+    
+    for value in valuelist:
+        _checkInt(value, minvalue=MINVALUE, maxvalue=MAXVALUE, description='elements in the input value list' )
+    
+    _checkInt(len(valuelist), minvalue=numberOfRegisters, maxvalue=numberOfRegisters, \
+        description='length of the list')
+
+    numberOfBytes = _NUMBER_OF_BYTES_PER_REGISTER*numberOfRegisters
+
+    bytestring =''
+    for value in valuelist:
+        bytestring += _numToTwoByteString(value, signed=False)
+    
+    assert len(bytestring) == numberOfBytes
+    
+    return bytestring
+    
+    
 def _bytestringToValuelist(bytestring, numberOfRegisters):
     """Convert a bytestring to a list of numerical values.
 
@@ -1286,44 +1327,6 @@ def _bytestringToValuelist(bytestring, numberOfRegisters):
 
     return values   
     
-def _valuelistToBytestring(valuelist, numberOfRegisters):
-    """Convert a list of numerical values to a bytestring.
-
-    Each element is 'unsigned INT16'.
-
-    Args:
-        * valuelist (list of int): The input list. The elements should be in the range 0 to 65535.
-        * numberOfRegisters (int): The number of registers. For error checking.
-       
-    Returns:
-        A bytestring (str). Length = 2*numberOfRegisters
-
-    Raises:
-        TypeError, ValueError
-        
-    """  
-    MINVALUE = 0
-    MAXVALUE = 65535
-    
-    _checkInt(numberOfRegisters, minvalue=1, description='number of registers')
-    
-    if not isinstance(valuelist, list):
-        raise TypeError('The valuelist parameter must be a list. Given {0}.'.format( repr(valuelist) ))
-    
-    _checkInt(len(valuelist), minvalue=numberOfRegisters, maxvalue=numberOfRegisters, \
-        description='length of the list')
-
-    numberOfBytes = _NUMBER_OF_BYTES_PER_REGISTER*numberOfRegisters
-
-    bytestring =''
-    for value in valuelist:
-        _checkInt(value, minvalue=MINVALUE, maxvalue=MAXVALUE, description='elements in the input value list' )
-        bytestring += _numToTwoByteString(value, signed=False)
-    
-    assert len(bytestring) == numberOfBytes
-    
-    return bytestring
-
 
 def _pack(formatstring, value):
     """Pack a value into a bytestring.
