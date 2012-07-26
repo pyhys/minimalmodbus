@@ -348,6 +348,7 @@ class Instrument():
         _checkInt(numberOfRegisters, minvalue=2, maxvalue=4, description='number of registers') 
         return self._genericCommand(functioncode, registeraddress, numberOfRegisters=numberOfRegisters, payloadformat='float')
     
+    
     def write_float(self, registeraddress, value, numberOfRegisters=2):
         """Write a floating point number to the slave.
         
@@ -945,7 +946,8 @@ def _numToTwoByteString(value, numberOfDecimals = 0, LsbFirst = False, signed=Fa
         A two-byte string.
 
     Raises:
-        TypeError, ValueError
+        TypeError, ValueError. Gives DeprecationWarning instead of ValueError 
+        for some values in Python 2.6.
 
     # TODO: DISCUSS big-endian
 
@@ -979,13 +981,7 @@ def _numToTwoByteString(value, numberOfDecimals = 0, LsbFirst = False, signed=Fa
     else:
         formatcode += 'H' # Unsigned short (2 bytes)
         
-    try:    
-        outstring = struct.pack(formatcode, integer)    
-    except:
-        errortext = 'The resulting integer to send is probably out of range, as the num-to-bytestring conversion failed.'
-        errortext += ' Resulting integer: {0} (given value: {1} and numberOfDecimals: {2}). Struct format code is: {3}'  
-        formattedError = errortext.format(integer, value, numberOfDecimals, formatcode)
-        raise ValueError(formattedError)    
+    outstring = _pack(formatcode, integer)    
         
     assert len(outstring) == 2
         
@@ -1027,7 +1023,7 @@ def _twoByteStringToNum(bytestring, numberOfDecimals = 0, signed=False):
     else:
         formatcode += 'H' # Unsigned short (2 bytes)       
     
-    fullregister = struct.unpack(formatcode, bytestring)[0]
+    fullregister = _unpack(formatcode, bytestring)
     
     if numberOfDecimals == 0:
         return fullregister
@@ -1054,7 +1050,6 @@ def _longToBytestring(value, signed=False, numberOfRegisters=2):
 
     """
     # TODO: Include more tests for range etc
-    # TODO: Better error message!!! try/except
     
     _checkInt(value, description='inputvalue')
     _checkBool(signed, description='signed parameter')
@@ -1066,7 +1061,7 @@ def _longToBytestring(value, signed=False, numberOfRegisters=2):
     else:
         formatcode += 'L' # Unsigned long (4 bytes)       
            
-    outstring = struct.pack(formatcode, value) 
+    outstring = _pack(formatcode, value) 
     
     assert len(outstring) == 4
         
@@ -1099,7 +1094,7 @@ def _bytestringToLong(bytestring, signed=False, numberOfRegisters=2):
     else:
         formatcode += 'L' # Unsigned long (4 bytes)       
            
-    return struct.unpack(formatcode, bytestring)[0]
+    return _unpack(formatcode, bytestring)
 
 
 def _floatToBytestring(value, numberOfRegisters=2):
@@ -1145,9 +1140,9 @@ def _floatToBytestring(value, numberOfRegisters=2):
         formatcode += 'd' # Double (8 bytes)
         lengthtarget = 8
     else:
-        raise ValueError('Wrong number of registers! Given value is {0}'.format(repr(numbernumberOfRegisters)))
+        raise ValueError('Wrong number of registers! Given value is {0}'.format(repr(numberOfRegisters)))
     
-    outstring = struct.pack(formatcode, value) 
+    outstring = _pack(formatcode, value) 
     
     assert len(outstring) == lengthtarget
         
@@ -1203,7 +1198,7 @@ def _bytestringToFloat(bytestring, numberOfRegisters=2):
         raise ValueError('Wrong length of the byte string! Given value is {0}, and numberOfRegisters is {1}.'.\
             format(repr(bytestring), repr(numberOfRegisters)))
     
-    return struct.unpack(formatcode, bytestring)[0]
+    return _unpack(formatcode, bytestring)
 
 
 def _textstringToBytestring(inputstring, numberOfRegisters=16):
@@ -1328,6 +1323,79 @@ def _valuelistToBytestring(valuelist, numberOfRegisters):
     assert len(bytestring) == numberOfBytes
     
     return bytestring
+
+
+def _pack(formatstring, value):
+    """Pack a value into a bytestring.
+
+    Uses the built-in ``struct`` Python module.
+
+    Args:
+        * formatstring (str): String for the packing. See the ``struct`` module for details.
+        * value (depends on formatstring): The value to be packed
+       
+    Returns:
+        A bytestring (str).
+
+    Raises:
+        ValueError
+    
+        
+    Note that the :mod:`struct` module produces byte buffers for Python3, 
+    but bytestrings for Python2. This is compensated for automatically.
+        
+    """  
+    _checkString(formatstring, description='formatstring', minlength=1)
+
+    try:
+        result = struct.pack(formatstring, value)
+    except:
+        errortext = 'The value to send is probably out of range, as the num-to-bytestring conversion failed.'
+        errortext += ' Value: {0} Struct format code is: {1}'  
+        formattedError = errortext.format(repr(value), formatstring)
+        raise ValueError(formattedError) 
+    
+    if sys.version_info[0] > 2:
+                return str(result, encoding='latin1')  # Convert types to make it Python3 compatible
+    
+    return result
+    
+    
+def _unpack(formatstring, packed):
+    """Unpack a bytestring into a value.
+
+    Uses the built-in ``struct`` Python module.
+
+    Args:
+        * formatstring (str): String for the packing. See the ``struct`` module for details.
+        * packed (str): The bytestring to be unpacked.
+       
+    Returns:
+        A value. The type depends on the formatstring.
+
+    Raises:
+        ValueError
+    
+    Note that the :mod:`struct` module wants byte buffers for Python3, 
+    but bytestrings for Python2. This is compensated for automatically.
+    
+    """  
+    _checkString(formatstring, description='formatstring', minlength=1)
+    _checkString(packed, description='packed string', minlength=1)
+    
+    if sys.version_info[0] > 2:
+            packed = bytes(packed, encoding='latin1') # Convert types to make it Python3 compatible
+
+    try:
+        value = struct.unpack(formatstring, packed)[0]
+    except:
+        errortext = 'The received bytestring is probably wrong  as the bytestring-to-num conversion failed.'
+        errortext += ' Bytestring: {0} Struct format code is: {1}'  
+        formattedError = errortext.format(repr(packed), formatstring)
+        raise ValueError(formattedError) 
+    
+    return value    
+    
 
 def _bitResponseToValue(bytestring):
     """Convert a response string to a numerical value.
@@ -1790,8 +1858,8 @@ def _checkInt(inputvalue, minvalue=None, maxvalue=None, description='inputvalue'
 
     Args:
         * inputvalue (int or long): The integer to be checked
-        * minvalue (int or long): Minimum value of the integer
-        * maxvalue (int or long): Maximum value of the integer
+        * minvalue (int or long, or None): Minimum value of the integer
+        * maxvalue (int or long, or None): Maximum value of the integer
         * description (string): Used in error messages for the checked inputvalue
     
     Raises:
@@ -1928,9 +1996,14 @@ def _getDiagnosticString():
     text += 'Python prefix: ' + repr(sys.prefix) + '\n'
     text += 'Python exec prefix: ' + repr(sys.exec_prefix) + '\n'
     text += 'Python executable: ' + repr(sys.executable) + '\n'
-    text += 'Long info: ' + repr(sys.long_info) + '\n'
-    text += 'Float info: ' + repr(sys.float_info) + '\n'
-    text += 'Float repr style: ' + repr(sys.float_repr_style) + '\n\n'
+    try:    
+        text += 'Long info: ' + repr(sys.long_info) + '\n'
+    except:
+        text += 'Long info: (none)\n' # For Python3 compatibility
+    try:
+        text += 'Float repr style: ' + repr(sys.float_repr_style) + '\n\n'
+    except:
+        text += 'Float repr style: (none) \n\n'  # For Python 2.6 compatibility
     text += 'Variable __name__: ' + __name__ + '\n'
     text += 'Current directory: ' + os.getcwd() + '\n\n'
     text += 'Python path: \n' 
