@@ -443,7 +443,7 @@ Jonas Berg, pyhys@users.sourceforge.net
 
 Credits
 -------
-Significant contributions by Aaron LaLonde.
+Significant contributions by Aaron LaLonde and Asier Abalos.
 
 
 Feedback
