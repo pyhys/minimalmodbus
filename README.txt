@@ -306,7 +306,7 @@ Registers are 16 bit wide (2 bytes), and the data is sent with the most signific
 
 Example
 ````````
-We use this example in debug mode. It reads one register (number 5) and interpret it having 1 decimal. The slave has address 1 (as set when creating the ``instrument`` instance), and we are using MODBUS function code 3 (the default value for ``read_register()``::
+We use this example in debug mode. It reads one register (number 5) and interpret the data as having 1 decimal. The slave has address 1 (as set when creating the ``instrument`` instance), and we are using MODBUS function code 3 (the default value for ``read_register()``)::
 
     >>> instrument.read_register(5,1)
     
