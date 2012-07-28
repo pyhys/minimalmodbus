@@ -1,22 +1,20 @@
 Developer documentation
 =======================
-
 Follow the coding progress in the SVN repository (click on the revision number to see the actual file content):
 http://minimalmodbus.svn.sourceforge.net/viewvc/minimalmodbus/trunk/
 
 Design considerations
 -----------------------------------------------------------------------------
-
 My take on the design is that is should be as simple as possible, hence the name MinimalModbus, but it should implement the smallest number of functions needed for it to be useful. The target audience for this driver simply wants to talk to Modbus clients using a serial interface (RTU is good enough), using some simple driver (preferably MinimalModbus).
 
-Only functions for reading/writing one register or bit are implemented. It is very easy to implement lots of (seldom used) functions, resulting in buggy code with large fractions of it almost never used. It is instead much better to implement the features when needed/requested. There are many Modbus function codes, but I guess that most are not used.
+Only a few functions are implemented. It is very easy to implement lots of (seldom used) functions, resulting in buggy code with large fractions of it almost never used. It is instead much better to implement the features when needed/requested. There are many Modbus function codes, but I guess that most are not used.
 
 It is a goal that the same driver should be compatible for both Python2 and Python3 programs. Some suggestions for making this possible are found here:
 http://wiki.python.org/moin/PortingPythonToPy3k
 
 There should be unittests for all functions, and mock communication data.
 
-Errors should be caught as early as possible, and the error messages should be informative.
+Errors should be caught as early as possible, and the error messages should be informative. For this reason there is type checking for for the parameters in most functions. This is rather un-pythonic, but is intended to give more clear error messages (for easier remote support).
 
 Note that the term 'address' is ambigous, why it is better to use the terms 'register address' or 'slave address'.
 
@@ -25,7 +23,6 @@ Use only external links in the README.txt, otherwise they will not work on Pytho
 
 General driver structure
 -------------------------------------------------------------------------
-
 The general structure of the program is shown here:
 
 =========================== ================================================================================
@@ -285,10 +282,7 @@ Where it is unavoidable, use::
 
 Extending MinimalModbus
 ------------------------------------------------------------------------------
-It is straight-forward to extend MinimalModbus to handle more Modbus function codes.
-Use the the method :meth:`_performCommand` to send data to the 
-slave, and to receive the response. Note that the API might change, as this is 
-outside the official API.
+It is straight-forward to extend MinimalModbus to handle more Modbus function codes. Use the the method :meth:`_performCommand` to send data to the slave, and to receive the response. Note that the API might change, as this is outside the official API.
 
 This is easily tested in interactive mode. For example the method :meth:`.read_register` 
 generates payload, which internally is sent to the instrument using :meth:`_performCommand`::
@@ -307,8 +301,7 @@ but you need to generate the payload yourself. Note that the same data is sent::
     MinimalModbus debug mode. Response from instrument: '\x01\x03\x02\x00º9÷'
     '\x02\x00º'
 
-Use this if you are to implement other Modbus function codes, as it takes care of
-CRC generation etc.
+Use this if you are to implement other Modbus function codes, as it takes care of CRC generation etc.
 
 There are several useful helper functions available in the :mod:`minimalmodbus` module. 
 See :ref:`internalminimalmodbus`. 
@@ -318,11 +311,7 @@ Found a bug?
 ------------------------------------------------------------------------------
 Try to isolate the bug by running in interactive mode (Python interpreter) with debug mode activated. Send a mail to the mailing list with the output, and also the output from :meth:`._getDiagnosticString`.
 
-Of course it is appreciated if you can spend a few moments trying to locate the 
-problem, as it might possibly be related to your particular instrument (and thus 
-difficult to reproduce without it). The source code is very readable, so 
-is should be straight-forward to work with. Then please send your findings to 
-the mailing list.
+Of course it is appreciated if you can spend a few moments trying to locate the problem, as it might possibly be related to your particular instrument (and thus difficult to reproduce without it). The source code is very readable, so is should be straight-forward to work with. Then please send your findings to the mailing list.
 
 
 Webpage
@@ -445,7 +434,7 @@ Build the test coverage report (first manually clear the directory :file:`htmlco
     coverage run ./test/test_all.py
     coverage html --omit=/usr/*
     
-	
+
 Upload to Sourceforge
 ``````````````````````
 Upload the :file:`.gzip.tar` and :file:`.zip` files to Sourceforge by logging in and manually using the web form.
@@ -489,10 +478,10 @@ Backup
 ``````
 Burn a CD/DVD with these items:
 
-* source tree
-* source distribution
+* Source tree
+* Source distributions
 * Windows installer
-* generated HTML files
+* Generated HTML files
 * PDF documentation
 
 Marketing

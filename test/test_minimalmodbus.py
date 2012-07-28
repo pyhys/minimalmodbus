@@ -105,6 +105,10 @@ class ExtendedTestCase(unittest.TestCase):
         else:
             unittest.TestCase.assertRaises(self, excClass, callableObj, *args, **kwargs)
 
+##############################
+# Constants for type testing #
+##############################
+
 _NOT_INTERGERS = [0.0, 1.0, '1', ['1'], [1], None]
 
 _NOT_NUMERICALS = ['1', ['1'], [1], None, ['\x00\x2d\x00\x58'], ['A', 'B', 'C']]
@@ -153,6 +157,7 @@ class TestEmbedPayload(ExtendedTestCase):
         for value in _NOT_STRINGS:
             self.assertRaises(TypeError, minimalmodbus._embedPayload, 1, 16, value) 
 
+
 class TestExtractPayload(ExtendedTestCase):
 
     knownValues=TestEmbedPayload.knownValues
@@ -191,6 +196,7 @@ class TestExtractPayload(ExtendedTestCase):
     def testWrongCrc(self):   
         self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc3', 2, 2) 
     
+    
 ##############################
 # String and num conversions #
 ##############################
@@ -205,15 +211,13 @@ class TestNumToOneByteString(ExtendedTestCase):
 
     def testKnownValues(self):
         for inputvalue, knownstring in self.knownValues:
-            
             resultstring = minimalmodbus._numToOneByteString( inputvalue )
             self.assertEqual(resultstring, knownstring)     
 
     def testKnownLoop(self):
-        for x in range(256):
-            knownstring = chr(x)
-            resultstring = minimalmodbus._numToOneByteString( x )
-            
+        for value in range(256):
+            knownstring = chr(value)
+            resultstring = minimalmodbus._numToOneByteString(value)
             self.assertEqual(resultstring, knownstring)       
 
     def testWrongInput(self):  
@@ -224,6 +228,7 @@ class TestNumToOneByteString(ExtendedTestCase):
         for value in _NOT_INTERGERS:
             self.assertRaises(TypeError, minimalmodbus._numToOneByteString, value)
 
+
 class TestNumToTwoByteString(ExtendedTestCase):
 
     knownValues=[
@@ -232,8 +237,11 @@ class TestNumToTwoByteString(ExtendedTestCase):
     (77.0, 1, True,  False, '\x02\x03' ), 
     (770,  0, False, False, '\x03\x02' ), 
     (770,  0, True,  False, '\x02\x03' ), 
+    (770,  0, False,  True, '\x03\x02' ), 
+    (-1,   0, False,  True, '\xff\xff' ), 
+    (-1,   1, False,  True, '\xff\xf6' ), 
     ]
-    #TODO: More! Also negative values, and positive when signed
+    #TODO: More! 
 
     def testKnownValues(self):
         for inputvalue, numberOfDecimals, LsbFirst, signed, knownstring in self.knownValues:
@@ -241,9 +249,10 @@ class TestNumToTwoByteString(ExtendedTestCase):
             self.assertEqual(resultstring, knownstring)      
 
     def testWrongInputValue(self):  
-        #TODO: More! Also for twos complement
+        #TODO: More! 
         self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, 77000, 0, False) # Gives DeprecationWarning instead of ValueError for Python 2.6
         self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, -77, 1, False) 
+        self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, -77, 10, False, True)
         self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, 77, 4, False)
         self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, 77, -1, False)
 
@@ -288,7 +297,9 @@ class TestSanityTwoByteString(ExtendedTestCase):
     def testSanity(self):
         for value, numberOfDecimals, LsbFirst, signed, bytestring in self.knownValues:
             if not LsbFirst:
-                resultvalue = minimalmodbus._twoByteStringToNum( minimalmodbus._numToTwoByteString(value) )
+                resultvalue = minimalmodbus._twoByteStringToNum( \
+                    minimalmodbus._numToTwoByteString(value, numberOfDecimals, LsbFirst, signed), \
+                    numberOfDecimals, signed )
                 self.assertEqual(resultvalue, value)   
         
         return #TODO This part is pretty time consuming
@@ -299,7 +310,7 @@ class TestSanityTwoByteString(ExtendedTestCase):
 
 class TestLongToBytestring(ExtendedTestCase):
    
-    # TODO: More, also negative
+    # TODO: More
     knownValues=[
     (0,  False, 2, '\x00\x00\x00\x00'), 
     (0,  True,  2, '\x00\x00\x00\x00'), 
@@ -369,9 +380,17 @@ class TestSanityLong(ExtendedTestCase):
 
 class TestFloatToBytestring(ExtendedTestCase):
 
-    #TODO:  also INT values
+    # Use this online calculator:
+    # http://babbage.cs.qc.cuny.edu/IEEE-754/index.xhtml 
+    
+    #TODO:  more. Range?
     knownValues=[
-    (1.0,  2, '?\x80\x00\x00'), # TODO correct?
+    (1.0,     2, '?\x80\x00\x00'),
+    (1,       2, '\x3f\x80\x00\x00'),
+    (1.0,     2, '\x3f\x80\x00\x00'),    
+    (100.0,   2, '\x42\xc8\x00\x00'),
+    (1.0e5,   2, '\x47\xc3\x50\x00'),
+    (1.0,     4, '\x3f\xf0\x00\x00\x00\x00\x00\x00'),             
     ] 
         
     def testKnownValues(self):
@@ -390,6 +409,7 @@ class TestFloatToBytestring(ExtendedTestCase):
         for value in _NOT_INTERGERS:
             self.assertRaises(TypeError, minimalmodbus._floatToBytestring, 1.1, value)
 
+
 class TestBytestringToFloat(ExtendedTestCase):
 
     knownValues=TestFloatToBytestring.knownValues
@@ -397,7 +417,7 @@ class TestBytestringToFloat(ExtendedTestCase):
     def testKnownValues(self):
         for knownvalue, numberOfRegisters, bytestring in self.knownValues:
             resultvalue = minimalmodbus._bytestringToFloat(bytestring, numberOfRegisters)
-            self.assertEqual(resultvalue, knownvalue)      
+            self.assertAlmostEqual(resultvalue, knownvalue)      
 
     def testWrongInputValue(self):  
         self.assertRaises(ValueError, minimalmodbus._bytestringToFloat, 'A',  2) # TODO more
@@ -436,11 +456,11 @@ class TestSanityFloat(ExtendedTestCase):
 
 class TestValuelistToBytestring(ExtendedTestCase):
 
-    # TODO: More
     knownValues=[
     ([1],             1, '\x00\x01'), 
     ([0, 0],          2, '\x00\x00\x00\x00'), 
     ([1, 2],          2, '\x00\x01\x00\x02'),
+    ([1, 256],        2, '\x00\x01\x01\x00'),
     ([1, 2, 3, 4],    4, '\x00\x01\x00\x02\x00\x03\x00\x04'),
     ([1, 2, 3, 4, 5], 5, '\x00\x01\x00\x02\x00\x03\x00\x04\x00\x05'),
     ]
@@ -504,7 +524,6 @@ class TestTextstringToBytestring(ExtendedTestCase):
         ('A',    16, 'A'+' '*31),   
         ('A',    32, 'A'+' '*63),
         ]
-        #TODO: More values
     
     def testKnownValues(self):
         for textstring, numberOfRegisters, knownstring in self.knownValues:
@@ -533,7 +552,6 @@ class TestBytestringToTextstring(ExtendedTestCase):
             self.assertEqual(resultstring.strip(), knownstring)   
 
     def testWrongInputValue(self):  
-        # TODO: More (no loop)
         self.assertRaises(ValueError, minimalmodbus._bytestringToTextstring, 'A', 1)
         self.assertRaises(ValueError, minimalmodbus._bytestringToTextstring, '', 1)
         self.assertRaises(ValueError, minimalmodbus._bytestringToTextstring, '', 0)
@@ -557,6 +575,7 @@ class TestSanityTextstring(ExtendedTestCase):
             resultstring = minimalmodbus._bytestringToTextstring( \
                 minimalmodbus._textstringToBytestring(textstring, numberOfRegisters), numberOfRegisters)
             self.assertEqual( resultstring.strip(), textstring )  
+        
         
 class TestBitResponseToValue(ExtendedTestCase):            
 
@@ -652,6 +671,7 @@ class TestTwosComplement(ExtendedTestCase):
         self.assertRaises(ValueError, minimalmodbus._twosComplement, 1,       -2) 
         self.assertRaises(ValueError, minimalmodbus._twosComplement, 1,       -100)         
         
+        
 class TestFromTwosComplement(ExtendedTestCase):
     
     knownValues=TestTwosComplement.knownValues
@@ -678,6 +698,7 @@ class TestFromTwosComplement(ExtendedTestCase):
         self.assertRaises(ValueError, minimalmodbus._fromTwosComplement, 1,       -1)
         self.assertRaises(ValueError, minimalmodbus._fromTwosComplement, 1,       -2)
         self.assertRaises(ValueError, minimalmodbus._fromTwosComplement, 1,       -100)   
+    
     
 class TestSanityTwosComplement(ExtendedTestCase):
 
@@ -1151,22 +1172,17 @@ class TestDummyCommunication(ExtendedTestCase):
         self.assertEqual( self.instrument.read_bit(62, functioncode=1), 0 ) # Functioncode 1
         self.assertEqual( self.instrument.read_bit(62, 1),              0 )  
     
-    def testReadBitWrongRegisterAddress(self):  
-        self.assertRaises(ValueError, self.instrument.read_bit, -1)
-        self.assertRaises(ValueError, self.instrument.read_bit, 65536 )
-            
-    def testReadBitWrongAddressType(self):   
+    def testReadBitWrongValue(self):  
+        self.assertRaises(ValueError, self.instrument.read_bit, -1) # Wrong address
+        self.assertRaises(ValueError, self.instrument.read_bit, 65536)
+        self.assertRaises(ValueError, self.instrument.read_bit, 62,   0) # Wrong function code
+        self.assertRaises(ValueError, self.instrument.read_bit, 62,   -1)
+        self.assertRaises(ValueError, self.instrument.read_bit, 62,   128)
+    
+    def testReadBitWrongType(self):   
         for value in _NOT_INTERGERS:
             self.assertRaises(TypeError, self.instrument.read_bit, value)
-        
-    def testReadBitWrongFunctioncode(self):  
-        self.assertRaises(ValueError, self.instrument.read_bit, 62, 0)
-        self.assertRaises(ValueError, self.instrument.read_bit, 62, -1)
-        self.assertRaises(ValueError, self.instrument.read_bit, 62, 128)
-    
-    def testReadBitWrongFunctioncodeType(self):   
-        for value in _NOT_INTERGERS:
-            self.assertRaises(TypeError, self.instrument.read_bit, 62, value)
+            self.assertRaises(TypeError, self.instrument.read_bit, 62,   value)          
                     
     def testReadBitWithWrongByteCountResponse(self):   
         self.assertRaises(ValueError, self.instrument.read_bit, 63) # Functioncode 2. Slave gives wrong byte count.
@@ -1181,35 +1197,25 @@ class TestDummyCommunication(ExtendedTestCase):
         self.instrument.write_bit(71, 1, 5)
         self.instrument.write_bit(71, 1, functioncode=5)
         self.instrument.write_bit(72, 1, 15)
-        self.instrument.write_bit(72, 1, functioncode=15)
-
-    def testWriteBitWrongAddressValueS(self):  
-        self.assertRaises(ValueError, self.instrument.write_bit, 65536, 1)
-        self.assertRaises(ValueError, self.instrument.write_bit, -1, 1)
-
-    def testWriteBitWrongAddressType(self):   
-        for value in _NOT_INTERGERS:
-            self.assertRaises(TypeError, self.instrument.write_bit, value, 1)
+        self.instrument.write_bit(72, 1, functioncode=15)     
 
     def testWriteBitWrongValue(self):  
-        self.assertRaises(ValueError, self.instrument.write_bit, 71, 10)
-        self.assertRaises(ValueError, self.instrument.write_bit, 71, -5)
-        self.assertRaises(ValueError, self.instrument.write_bit, 71, 10, 5)
+        self.assertRaises(ValueError, self.instrument.write_bit, 65536, 1) # Wrong address
+        self.assertRaises(ValueError, self.instrument.write_bit, -1,    1)
+        self.assertRaises(ValueError, self.instrument.write_bit, 71,    10) # Wrong bit value
+        self.assertRaises(ValueError, self.instrument.write_bit, 71,    -5)
+        self.assertRaises(ValueError, self.instrument.write_bit, 71,    10, 5)
+        self.assertRaises(ValueError, self.instrument.write_bit, 71,    1,  6) # Wrong function code
+        self.assertRaises(ValueError, self.instrument.write_bit, 71,    1,  -1)
+        self.assertRaises(ValueError, self.instrument.write_bit, 71,    1,  0)
+        self.assertRaises(ValueError, self.instrument.write_bit, 71,    1,  128)
     
-    def testWriteBitWrongValueType(self):   
+    def testWriteBitWrongType(self):   
         for value in _NOT_INTERGERS:
-            self.assertRaises(TypeError, self.instrument.write_bit, 71, value)
-    
-    def testWriteBitWrongFunctioncode(self):   
-        self.assertRaises(ValueError, self.instrument.write_bit, 71, 1, 6)
-        self.assertRaises(ValueError, self.instrument.write_bit, 71, 1, -1)
-        self.assertRaises(ValueError, self.instrument.write_bit, 71, 1, 0)
-        self.assertRaises(ValueError, self.instrument.write_bit, 71, 1, 128)
-    
-    def testWriteBitWrongFunctioncodeType(self):   
-        for value in _NOT_INTERGERS:
-            self.assertRaises(TypeError, self.instrument.write_bit, 71, 1, value)
-
+            self.assertRaises(TypeError, self.instrument.write_bit, value, 1)
+            self.assertRaises(TypeError, self.instrument.write_bit, 71,    value)
+            self.assertRaises(TypeError, self.instrument.write_bit, 71,    1,     value)
+            
     def testWriteBitWithWrongRegisternumbersResponse(self):    
         self.assertRaises(ValueError, self.instrument.write_bit, 73, 1, functioncode=15) # Slave gives wrong number of registers
     
@@ -1218,46 +1224,36 @@ class TestDummyCommunication(ExtendedTestCase):
 
     ## Read register ##
     
-    #TODO: Change!!
+    #TODO: Also negative values!
 
     def testReadRegister(self):
-        self.assertEqual( self.instrument.read_register(289), 770 )
-        self.assertEqual( self.instrument.read_register(5), 184 )
-        self.assertEqual( self.instrument.read_register(289, 0), 770 )
-        self.assertEqual( self.instrument.read_register(289, 0, 3), 770 ) # functioncode 3
-        self.assertEqual( self.instrument.read_register(14, 0, 4), 880 ) # functioncode 4
+        self.assertEqual(       self.instrument.read_register(289),       770)
+        self.assertEqual(       self.instrument.read_register(5),         184)
+        self.assertEqual(       self.instrument.read_register(289, 0),    770)
+        self.assertEqual(       self.instrument.read_register(289, 0, 3), 770) # functioncode 3
+        self.assertEqual(       self.instrument.read_register(14,  0, 4), 880) # functioncode 4
+        self.assertAlmostEqual( self.instrument.read_register(289, 1),    77.0)
+        self.assertAlmostEqual( self.instrument.read_register(289, 2),    7.7)
         
-    def testReadRegisterWithDecimals(self):
-        self.assertAlmostEqual( self.instrument.read_register(289, 1), 77.0 )
-        self.assertAlmostEqual( self.instrument.read_register(289, 2), 7.7  )
-        
-    def testReadRegisterWrongAddress(self):     
-        self.assertRaises(ValueError, self.instrument.read_register, -1) 
-        self.assertRaises(ValueError, self.instrument.read_register, -1, 0, 3) 
+    def testReadRegisterWrongValue(self):     
+        self.assertRaises(ValueError, self.instrument.read_register, -1) # Wrong address
+        self.assertRaises(ValueError, self.instrument.read_register, -1,   0,  3) 
         self.assertRaises(ValueError, self.instrument.read_register, 65536) 
+        self.assertRaises(ValueError, self.instrument.read_register, 289,  -1)    # Wrong number of decimals
+        self.assertRaises(ValueError, self.instrument.read_register, 289,  100)    
+        self.assertRaises(ValueError, self.instrument.read_register, 289,  0,  5) # Wrong function code
+        self.assertRaises(ValueError, self.instrument.read_register, 289,  0,  -4)
         
-    def testReadRegisterWrongAddressType(self): 
+    def testReadRegisterWrongType(self):      
         for value in _NOT_INTERGERS:
-            self.assertRaises(TypeError, self.instrument.read_register, value, 0, 3) 
+            self.assertRaises(TypeError, self.instrument.read_register, value, 0,    3) 
+            self.assertRaises(TypeError, self.instrument.read_register, 289,   value) 
+            self.assertRaises(TypeError, self.instrument.read_register, 289,   0,    value) 
         
-    def testReadRegisterWithNegativeNumberofdecimals(self):   
-        self.assertRaises(ValueError, self.instrument.read_register, 289, -1) 
-        
-    def testReadRegisterNumberofdecimalsNotInteger(self):  
-        for value in _NOT_INTERGERS:
-            self.assertRaises(TypeError, self.instrument.read_register, 289, value) 
-        
-    def testReadRegisterWrongFunctioncode(self):   
-        self.assertRaises(ValueError, self.instrument.read_register, 289, 0, 5 )
-        self.assertRaises(ValueError, self.instrument.read_register, 289, 0, -4 )
-        
-    def testReadRegisterWrongFunctioncodeType(self):      
-        for value in _NOT_INTERGERS:
-            self.assertRaises(TypeError, self.instrument.read_register, 289, 0, value) 
         
     ## Write register ##    
     
-    #TODO: Change!!
+    #TODO: Also negative values!
         
     def testWriteRegister(self):    
         self.instrument.write_register(35, 20)    
@@ -1270,29 +1266,23 @@ class TestDummyCommunication(ExtendedTestCase):
         self.instrument.write_register(35, 2.0, 1)    
         self.instrument.write_register(45, 8.8, 1, functioncode = 6)       
 
-    def testWriteRegisterWithWrongValue(self):   
-        self.assertRaises(ValueError, self.instrument.write_register, 35, -1) 
-        self.assertRaises(ValueError, self.instrument.write_register, 35, 65536)
+    def testWriteRegisterWrongValue(self):   
+        self.assertRaises(ValueError, self.instrument.write_register, -1,    20) # Wrong address
+        self.assertRaises(ValueError, self.instrument.write_register, 65536, 20) 
+        self.assertRaises(ValueError, self.instrument.write_register, 35,    -1)  # Wrong register value
+        self.assertRaises(ValueError, self.instrument.write_register, 35,    65536)
+        self.assertRaises(ValueError, self.instrument.write_register, 35,    20, -1) # Wrong number of decimals
+        self.assertRaises(ValueError, self.instrument.write_register, 35,    20, 100)
+        self.assertRaises(ValueError, self.instrument.write_register, 35,    20,     functioncode = 12 ) # Wrong function code
+        self.assertRaises(ValueError, self.instrument.write_register, 35,    20,     functioncode = -4 ) 
+        self.assertRaises(ValueError, self.instrument.write_register, 35,    20,     functioncode = 129 ) 
         
-    def testWriteRegisterWithWrongValueType(self):  
+    def testWriteRegisterWrongType(self):  
         for value in _NOT_NUMERICALS:
-            self.assertRaises(TypeError, self.instrument.write_register, 35, value) 
-        
-    def testWriteRegisterWithNegativeNumberofdecimals(self):  
-        self.assertRaises(ValueError, self.instrument.write_register, 35, 20, -1)     
-        
-    def testWriteRegisterWithNumberofdecimalsNotInteger(self):     
-        for value in _NOT_INTERGERS:
-            self.assertRaises(TypeError, self.instrument.write_register, 35, 20, value) 
-        
-    def testWriteRegisterWithWrongFunctioncode(self):
-        self.assertRaises(ValueError, self.instrument.write_register, 35, 20, functioncode = 12 )    
-        self.assertRaises(ValueError, self.instrument.write_register, 35, 20, functioncode = -4 ) 
-        self.assertRaises(ValueError, self.instrument.write_register, 35, 20, functioncode = 129 ) 
-        
-    def testWriteRegisterWithWrongFunctioncodeType(self):   
-        for value in _NOT_INTERGERS:
-            self.assertRaises(TypeError, self.instrument.write_register, 35, 20, functioncode = value) 
+            self.assertRaises(TypeError, self.instrument.write_register, value, 20) 
+            self.assertRaises(TypeError, self.instrument.write_register, 35,    value) 
+            self.assertRaises(TypeError, self.instrument.write_register, 35,    20,    value) 
+            self.assertRaises(TypeError, self.instrument.write_register, 35,    20,    functioncode = value) 
         
     def testWriteRegisterWithWrongCrcResponse(self):      
         self.assertRaises(ValueError, self.instrument.write_register, 51, 99) # Slave gives wrong CRC
@@ -1316,7 +1306,7 @@ class TestDummyCommunication(ExtendedTestCase):
     ## Read Long ##
     # TODO!
     
-    
+    #addr 102
     
     ## Write Long ##
     # TODO!
@@ -1335,61 +1325,44 @@ class TestDummyCommunication(ExtendedTestCase):
         self.instrument.write_float(103, 1.1)  
         self.instrument.write_float(103, 1.1, 4)
 
-    def testWriteFloatWrongAddress(self):     
-        self.assertRaises(ValueError, self.instrument.write_float, -1, 1.1) 
-        self.assertRaises(ValueError, self.instrument.write_float, 65536, 1.1) 
+    def testWriteFloatWrongValue(self):     
+        self.assertRaises(ValueError, self.instrument.write_float, -1,     1.1) # Wrong address
+        self.assertRaises(ValueError, self.instrument.write_float, 65536,  1.1) 
+        for value in [-1, 0, 1, 3, 5, 6, 7, 8, 16]: 
+            self.assertRaises(ValueError, self.instrument.write_float, 103, 1.1, value) # Wrong number of registers
 
-    def testWriteFloatWrongAddressType(self): 
+    def testWriteFloatWrongType(self): 
         for value in _NOT_INTERGERS:
             self.assertRaises(TypeError, self.instrument.write_float, value, 1.1) 
-    
-    def testWriteFloatWrongValueType(self): 
+            self.assertRaises(TypeError, self.instrument.write_float, 103, 1.1, value) 
         for value in _NOT_NUMERICALS:
             self.assertRaises(TypeError, self.instrument.write_float, 103, value) 
-    
-    def testWriteFloatWrongNumberOfRegisters(self): 
-        for value in [-1, 0, 1, 3, 5, 6, 7, 8, 16]:
-            self.assertRaises(ValueError, self.instrument.write_float, 103, 1.1, value) 
-
-    def testWriteFloatWrongNumberOfRegistersType(self): 
-        for value in _NOT_INTERGERS:
-            self.assertRaises(TypeError, self.instrument.write_float, 103, 1.1, value) 
 
 
     ## Read String ##
     
     def testReadString(self):    
-        self.assertEqual( self.instrument.read_string(104, 1), 'AB')
-        self.assertEqual( self.instrument.read_string(104, 4), 'ABCDEFGH')
+        self.assertEqual( self.instrument.read_string(104, 1),    'AB')
+        self.assertEqual( self.instrument.read_string(104, 4),    'ABCDEFGH')
         self.assertEqual( self.instrument.read_string(104, 4, 3), 'ABCDEFGH')
     
-    def testReadStringWrongAddress(self):     
-        self.assertRaises(ValueError, self.instrument.read_string, -1) 
+    def testReadStringWrongValue(self):     
+        self.assertRaises(ValueError, self.instrument.read_string, -1) # Wrong address
         self.assertRaises(ValueError, self.instrument.read_string, 65536) 
+        self.assertRaises(ValueError, self.instrument.read_string, 104,  -1) # Wrong number of registers
+        self.assertRaises(ValueError, self.instrument.read_string, 104,  256) 
+        self.assertRaises(ValueError, self.instrument.read_string, 104,  4,  1)  # Wrong function code
+        self.assertRaises(ValueError, self.instrument.read_string, 104,  4,  -1) 
+        self.assertRaises(ValueError, self.instrument.read_string, 104,  4,  256) 
     
-    def testReadStringWrongAddressType(self): 
+    def testReadStringWrongType(self): 
         for value in _NOT_INTERGERS:
             self.assertRaises(TypeError, self.instrument.read_string, value, 1) 
             self.assertRaises(TypeError, self.instrument.read_string, value, 4)  
+            self.assertRaises(TypeError, self.instrument.read_string, 104,   value) 
+            self.assertRaises(TypeError, self.instrument.read_string, 104,   4,     value)
             
-    def testReadStringWrongNumberOfRegisters(self): 
-        self.assertRaises(ValueError, self.instrument.read_string, 104, -1) 
-        self.assertRaises(ValueError, self.instrument.read_string, 104, 256) 
-    
-    def testReadStringWrongNumberOfRegistersType(self): 
-        for value in _NOT_INTERGERS:
-            self.assertRaises(TypeError, self.instrument.read_string, 104, value) 
-    
-    def testReadStringWrongFunctionCode(self): 
-        self.assertRaises(ValueError, self.instrument.read_string, 104, 4, 1) 
-        self.assertRaises(ValueError, self.instrument.read_string, 104, 4, -1) 
-        self.assertRaises(ValueError, self.instrument.read_string, 104, 4, 256) 
-    
-    def testReadStringWrongFunctionCodeType(self): 
-        for value in _NOT_INTERGERS:
-            self.assertRaises(TypeError, self.instrument.read_string, 104, 4, value)
-    
-    
+            
     ## Write String ##
     
     def testWriteString(self):    
@@ -1397,29 +1370,20 @@ class TestDummyCommunication(ExtendedTestCase):
         self.instrument.write_string(104, 'A', 4)
         self.instrument.write_string(104, 'ABCDEFGH', 4)
         
-    def testWriteStringWrongAddress(self):     
-        self.assertRaises(ValueError, self.instrument.write_string, -1,    'A') 
-        self.assertRaises(ValueError, self.instrument.write_string, 65536, 'A')         
+    def testWriteStringWrongValue(self):     
+        self.assertRaises(ValueError, self.instrument.write_string, -1,    'A') # Wrong address
+        self.assertRaises(ValueError, self.instrument.write_string, 65536, 'A')        
+        self.assertRaises(ValueError, self.instrument.write_string, 104,   'AAA',       1) # Too long string
+        self.assertRaises(ValueError, self.instrument.write_string, 104,   'ABCDEFGHI', 4)  
+        self.assertRaises(ValueError, self.instrument.write_string, 104,   'A',         -1) # Wrong number of registers
+        self.assertRaises(ValueError, self.instrument.write_string, 104,   'A',         256) 
         
-    def testWriteStringWrongAddressType(self): 
+    def testWriteStringWrongType(self): 
         for value in _NOT_INTERGERS:
             self.assertRaises(TypeError, self.instrument.write_string, value, 'A') 
-
-    def testWriteStringWrongValueType(self): 
+            self.assertRaises(TypeError, self.instrument.write_string, 104,   'A',   value) 
         for value in _NOT_STRINGS:
-            self.assertRaises(TypeError, self.instrument.write_string, 104, value, 4) 
-
-    def testWriteStringTooLongString(self): 
-        self.assertRaises(ValueError, self.instrument.write_string, 104, 'AAA', 1) 
-        self.assertRaises(ValueError, self.instrument.write_string, 104, 'ABCDEFGHI', 4) 
-
-    def testWriteStringWrongNumberOfRegisters(self): 
-        self.assertRaises(ValueError, self.instrument.write_string, 104, 'A', -1) 
-        self.assertRaises(ValueError, self.instrument.write_string, 104, 'A', 256) 
-    
-    def testWriteStringWrongNumberOfRegistersType(self): 
-        for value in _NOT_INTERGERS:
-            self.assertRaises(TypeError, self.instrument.write_string, 104, 'A', value) 
+            self.assertRaises(TypeError, self.instrument.write_string, 104,   value, 4) 
     
     
     ## Read Registers ##    
@@ -1428,31 +1392,21 @@ class TestDummyCommunication(ExtendedTestCase):
         self.assertEqual( self.instrument.read_registers(105, 1), [16] )
         self.assertEqual( self.instrument.read_registers(105, 3), [16, 32, 64] )
         
-    def testReadRegistersWrongAddress(self):     
-        self.assertRaises(ValueError, self.instrument.read_registers, -1, 1) 
+    def testReadRegistersWrongValue(self):     
+        self.assertRaises(ValueError, self.instrument.read_registers, -1,    1) # Wrong address
         self.assertRaises(ValueError, self.instrument.read_registers, 65536, 1) 
+        self.assertRaises(ValueError, self.instrument.read_registers, 105,   -1) # Wrong number of registers
+        self.assertRaises(ValueError, self.instrument.read_registers, 105,   256) 
+        self.assertRaises(ValueError, self.instrument.read_registers, 105,   1,  1) # Wrong function code
+        self.assertRaises(ValueError, self.instrument.read_registers, 105,   1,  256) 
+        self.assertRaises(ValueError, self.instrument.read_registers, 105,   1,  -1) 
 
     def testReadRegistersWrongAddressType(self): 
         for value in _NOT_INTERGERS:
             self.assertRaises(TypeError, self.instrument.read_registers, value, 1) 
-        
-    def testReadRegistersWrongNumberOfRegisters(self): 
-        self.assertRaises(ValueError, self.instrument.read_registers, 105, -1) 
-        self.assertRaises(ValueError, self.instrument.read_registers, 105, 256) 
-    
-    def testReadRegistersWrongNumberOfRegistersType(self): 
-        for value in _NOT_INTERGERS:
             self.assertRaises(TypeError, self.instrument.read_registers, 105, value) 
-    
-    def testReadRegistersWrongFunctionCode(self): 
-        self.assertRaises(ValueError, self.instrument.read_registers, 105, 1, 1) 
-        self.assertRaises(ValueError, self.instrument.read_registers, 105, 1, 256) 
-        self.assertRaises(ValueError, self.instrument.read_registers, 105, 1, -1) 
-    
-    def testReadRegistersWrongFunctionCodeType(self): 
-        for value in _NOT_INTERGERS:
             self.assertRaises(TypeError, self.instrument.read_registers, 105, 1, value)
-    
+
     
     ## Write Registers ## 
     
@@ -1460,27 +1414,24 @@ class TestDummyCommunication(ExtendedTestCase):
         self.instrument.write_registers(105, [2])
         self.instrument.write_registers(105, [2, 4, 8])
         
-    def testWriteRegistersWrongAddress(self):     
-        self.assertRaises(ValueError, self.instrument.write_registers, -1, [2]) 
-        self.assertRaises(ValueError, self.instrument.write_registers, 65536, [2]) 
-
-    def testWriteRegistersWrongAddressType(self): 
-        for value in _NOT_INTERGERS:
-            self.assertRaises(TypeError, self.instrument.write_registers, value, [2])  
-        
     def testWriteRegistersWrongValue(self): 
-        self.assertRaises(ValueError, self.instrument.write_registers, 105, [])
+        self.assertRaises(ValueError, self.instrument.write_registers, -1,    [2]) # Wrong address
+        self.assertRaises(ValueError, self.instrument.write_registers, 65536, [2]) 
+        self.assertRaises(ValueError, self.instrument.write_registers, 105,   []) # Wrong list value
+        self.assertRaises(ValueError, self.instrument.write_registers, 105,   [-1])
 
-    def testWriteRegistersWrongValueType(self): 
-        self.assertRaises(TypeError, self.instrument.write_registers, 105, 1)  
-        self.assertRaises(TypeError, self.instrument.write_registers, 105, 1.0)  
-        self.assertRaises(TypeError, self.instrument.write_registers, 105, '[2]')  
-        self.assertRaises(TypeError, self.instrument.write_registers, 105, ['2'])  
+    def testWriteRegistersWrongType(self): 
+        for value in _NOT_INTERGERS:
+            self.assertRaises(TypeError, self.instrument.write_registers, value, [2]) 
+        self.assertRaises(TypeError, self.instrument.write_registers,     105,   1)  
+        self.assertRaises(TypeError, self.instrument.write_registers,     105,   1.0)  
+        self.assertRaises(TypeError, self.instrument.write_registers,     105,   '[2]')  
+        self.assertRaises(TypeError, self.instrument.write_registers,     105,   ['2'])  
 
     
     ## Generic command ##
     
-    # TODO: Change
+    # TODO: Change a lot. Negative values, payload
     
     def testGenericCommand(self):    
         self.assertEqual( self.instrument._genericCommand(3, 289), 770 ) # Read register 289
@@ -1858,10 +1809,16 @@ RESPONSES['\x01\x06' + '\x00\x37\x00\x63' + 'x-'] = '\x01\x06' + '\x00\x37\x00\x
 
 #                ##  READ LONG ##  
 # TODO: More!
+#instrument.read_long(102) # '\x01\x03\x00f\x00\x02$\x14'
+RESPONSES['\x01\x03' + '\x00\f\x00\x02' + '$\x14'] = ''#'\x01\x06' + '\x00\x37\x00\x62' + '\xb9\xed'
 
 
 #                ##  WRITE LONG ##  
 # TODO: More!
+#instrument.write_long(102, 3, False) '\x01\x10\x00f\x00\x02\x04\x00\x00\x00\x035\xac'
+#instrument.write_long(102, -3, True) '\x01\x10\x00f\x00\x02\x04\xff\xff\xff\xfd\xf5\xf8'
+
+
 
 #                ##  READ FLOAT ##  
 # TODO: More!
