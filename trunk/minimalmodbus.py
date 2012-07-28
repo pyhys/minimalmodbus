@@ -330,12 +330,12 @@ class Instrument():
             * functioncode (int): Modbus function code. Can be 3 or 4.
             * numberOfRegisters (int): The number of registers allocated for the float. Can be 2 or 4.
 
-        ====================================== ================= ===========
-        Data type in slave                     Size              Registers
-        ====================================== ================= ===========
-        Single precision floating point number 32 bits (4 bytes) 2 registers
-        Double precision floating point number 64 bits (8 bytes) 4 registers
-        ====================================== ================= ===========
+        ====================================== ================= =========== =============
+        Type of floating point number in slave Size              Registers   Range
+        ====================================== ================= =========== =============
+        Single precision (binary32)            32 bits (4 bytes) 2 registers ?E? to ?E?
+        Double precision (binary64)            64 bits (8 bytes) 4 registers
+        ====================================== ================= =========== =============
 
         Returns:
             The numerical value (float).
@@ -362,13 +362,14 @@ class Instrument():
             * registeraddress (int): The slave register start address (use decimal numbers, not hex).
             * value (float or int): The value to store in the slave
             * numberOfRegisters (int): The number of registers allocated for the float. Can be 2 or 4.
+                        
+        ====================================== ================= =========== =============
+        Type of floating point number in slave Size              Registers   Range
+        ====================================== ================= =========== =============
+        Single precision (binary32)            32 bits (4 bytes) 2 registers ?E? to ?E?
+        Double precision (binary64)            64 bits (8 bytes) 4 registers
+        ====================================== ================= =========== =============
             
-        ====================================== ================= ===========
-        Data type in slave                     Size              Registers
-        ====================================== ================= ===========
-        Single precision floating point number 32 bits (4 bytes) 2 registers
-        Double precision floating point number 64 bits (8 bytes) 4 registers
-        ====================================== ================= ===========    
             
         Returns:
             None
@@ -1102,12 +1103,12 @@ def _floatToBytestring(value, numberOfRegisters=2):
 
     Floats are stored in two or more consecutive 16-bit registers in the slave.
 
-    ====================================== ================= ===========
-    Type                                   Size              Registers
-    ====================================== ================= ===========
-    Single precision floating point number 32 bits (4 bytes) 2 registers
-    Double precision floating point number 64 bits (8 bytes) 4 registers
-    ====================================== ================= ===========
+    ====================================== ================= =========== =============
+    Type of floating point number in slave Size              Registers   Range
+    ====================================== ================= =========== =============
+    Single precision (binary32)            32 bits (4 bytes) 2 registers ?E? to ?E?
+    Double precision (binary64)            64 bits (8 bytes) 4 registers
+    ====================================== ================= =========== =============
 
     Args:
         * value (float or int): The numerical value to be converted.
@@ -1127,7 +1128,7 @@ def _floatToBytestring(value, numberOfRegisters=2):
 
 
     """
-    # TODO: Include more tests 
+    # TODO: Include more tests Range?
     
     _checkNumerical(value, description='inputvalue')
     _checkInt(numberOfRegisters, minvalue=2, maxvalue=4, description='number of registers' )
@@ -1154,12 +1155,12 @@ def _bytestringToFloat(bytestring, numberOfRegisters=2):
 
     Floats are stored in two or more consecutive 16-bit registers in the slave.
 
-    ====================================== ================= ===========
-    Type                                   Size              Registers
-    ====================================== ================= ===========
-    Single precision floating point number 32 bits (4 bytes) 2 registers
-    Double precision floating point number 64 bits (8 bytes) 4 registers
-    ====================================== ================= ===========
+    ====================================== ================= =========== =============
+    Type of floating point number in slave Size              Registers   Range
+    ====================================== ================= =========== =============
+    Single precision (binary32)            32 bits (4 bytes) 2 registers ?E? to ?E?
+    Double precision (binary64)            64 bits (8 bytes) 4 registers
+    ====================================== ================= =========== =============
 
     Args:
         * bytestring (str): A string of length 4 or 8.

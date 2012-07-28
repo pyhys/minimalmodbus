@@ -180,14 +180,14 @@ Some deviations from the official standard:
 **Negative numbers (INT16 = short)**
     Some manufacturers allow negative values for some registers. Instead of an allowed integer range 0-65535, a range -32768 to 32767 is allowed. This is implemented as any received value in the upper range (32768-65535) is interpreted as negative value (in the range -32768 to -1). This is two's complement and is described at http://en.wikipedia.org/wiki/Two%27s_complement. Help functions to calculate the two's complement value (and back) are provided in MinimalModbus.
     
-**Floats (single or double precision)**
-    Single precision floating point values are defined by 32 bits (4 bytes), and are implemented as two consecutive 16-bit registers. Correspondingly, double precision floating point values use 64 bits (8 bytes) and are implemented as four consecutive 16-bit registers. How to convert from the bit values to the floating point value is described in the standard IEEE 754, as seen in http://en.wikipedia.org/wiki/Floating_point. Unfortunately the byte order might differ between manufacturers of Modbus instruments.
-    
 **Long integers ('Unsigned INT32' or 'INT32')**
     These require 32 bits, and are implemented as two consecutive 16-bit registers. The range is 0 to 4294967295, which is called 'unsigned INT32'. Alternatively negative values can be stored if the instrument is defined that way, and is then called 'INT32' which has the range -2147483648 to 2147483647.
     
+**Floats (single or double precision)**
+    Single precision floating point values (binary32) are defined by 32 bits (4 bytes), and are implemented as two consecutive 16-bit registers. Correspondingly, double precision floating point values (binary64) use 64 bits (8 bytes) and are implemented as four consecutive 16-bit registers. How to convert from the bit values to the floating point value is described in the standard IEEE 754, as seen in http://en.wikipedia.org/wiki/Floating_point. Unfortunately the byte order might differ between manufacturers of Modbus instruments.    
+    
 **Strings**
-    Each register (16 bits) is interpreted as two characters (1 byte = 8 bits). Often 16 consecutive registers are used, allowing 32 characters in the string. 
+    Each register (16 bits) is interpreted as two characters (each 1 byte = 8 bits). Often 16 consecutive registers are used, allowing 32 characters in the string. 
 
 
 Implemented functions
@@ -226,8 +226,8 @@ Running several scripts using the same port will give problems.
 
 Issues when running under Windows
 ---------------------------------
-When running under Windows, the underlying pySerial may complain that the serial port is already open. This seems to occur especially 
-when communicating with more than one instrument. It is possible to make MinimalModbus close the serial port after each call. Use it like::
+When running under Windows, the underlying pySerial may complain that the serial port is already open. This seems to occur especially when communicating with more than one instrument. 
+It is possible to make MinimalModbus close the serial port after each call. Use it like::
 
     #!/usr/bin/env python
     import minimalmodbus
@@ -281,7 +281,7 @@ To switch on the debug mode, where the communication details are printed::
 
 With this you can easily see what is sent to and from your instrument, and immediately see what is wrong. Similar in interactive mode::
 
-    >>> instrument_1.read_register(4097,1)
+    >>> instrument.read_register(4097,1)
     MinimalModbus debug mode. Writing to instrument: '\n\x03\x10\x01\x00\x01\xd0q'
     MinimalModbus debug mode. Response from instrument: '\n\x03\x02\x07\xd0\x1e)'
     200.0
@@ -306,9 +306,9 @@ Registers are 16 bit wide (2 bytes), and the data is sent with the most signific
 
 Example
 ````````
-We use this example in debug mode. It reads one register (number 5) in the slave with address 1, using MODBUS function code 3::
+We use this example in debug mode. It reads one register (number 5) and interpret it having 1 decimal. The slave has address 1 (as set when creating the ``instrument`` instance), and we are using MODBUS function code 3 (the default value for ``read_register()``::
 
-    >>> instr.read_register(5,1)
+    >>> instrument.read_register(5,1)
     
 This will be displayed::
 
