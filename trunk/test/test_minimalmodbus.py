@@ -1312,6 +1312,14 @@ class TestDummyCommunication(ExtendedTestCase):
     # TODO!
     
     
+#instrument.read_long(102) # '\x01\x03\x00f\x00\x02$\x14'
+#instrument.write_long(102, 3, False) '\x01\x10\x00f\x00\x02\x04\x00\x00\x00\x035\xac'
+#instrument.write_long(102, -3, True) '\x01\x10\x00f\x00\x02\x04\xff\xff\xff\xfd\xf5\xf8'
+
+
+#print( repr(minimalmodbus._numToTwoByteString( -7, 0, True)))
+
+    
     
     ## Read Float ##
     # TODO!
