@@ -21,7 +21,6 @@
 
 test_minimalmodbus: Unittests for the :mod:`minimalmodbus` module.
 
-
 For each function are these tests performed:
 
   * Known results
@@ -61,7 +60,6 @@ __license__ = "Apache License, Version 2.0"
 
 __revision__  = "$Rev$"
 __date__      = "$Date$"
-
 
 import sys
 import unittest
@@ -1125,8 +1123,6 @@ class TestCheckBool(ExtendedTestCase):
     def testWrongType(self):
         for value in _NOT_BOOLEANS:
             self.assertRaises(TypeError, minimalmodbus._checkBool, value, description='ABC')
-
-    def testDescriptionNotString(self):
         for value in _NOT_STRINGS:
             self.assertRaises(TypeError, minimalmodbus._checkBool, True, description=value)
 
@@ -1326,6 +1322,7 @@ class TestDummyCommunication(ExtendedTestCase):
     def testWriteRegisterWithWrongWritedataResponse(self):
         self.assertRaises(ValueError, self.instrument.write_register, 55, 99, functioncode = 6) # Functioncode 6. Slave gives wrong write data.
 
+
     ## Read Long ##
 
     #instrument.read_long(102) # '\x01\x03\x00f\x00\x02$\x14'
@@ -1501,6 +1498,7 @@ class TestDummyCommunication(ExtendedTestCase):
         for value in _NOT_INTERGERS:
             self.assertRaises(TypeError, self.instrument._genericCommand, 3, 20, numberOfDecimals=value)
 
+
     ## Perform command ##
 
     def testPerformcommandKnownResponse(self):
@@ -1521,6 +1519,7 @@ class TestDummyCommunication(ExtendedTestCase):
         for value in _NOT_STRINGS:
             self.assertRaises(TypeError, self.instrument._performCommand, 16, value)
 
+
     ## Communicate ##
 
     def testCommunicateKnownResponse(self):
@@ -1536,6 +1535,7 @@ class TestDummyCommunication(ExtendedTestCase):
     def testCommunicateNoResponse(self):
         self.assertRaises(IOError, self.instrument._communicate, 'MessageForEmptyResponse')
 
+
     ## __repr__ ##
 
     def testRepresentation(self):
@@ -1543,6 +1543,7 @@ class TestDummyCommunication(ExtendedTestCase):
         self.assertTrue( 'minimalmodbus.Instrument<id=' in representation )
         self.assertTrue( ', address=1, close_port_after_each_call=False, debug=False, serial=dummy_serial.Serial<id=' in representation )
         self.assertTrue( ", open=True>(latestWrite='')>" in representation )
+
 
     ## Tear down test fixture ##
 
@@ -1835,6 +1836,7 @@ RESPONSES['\x01\x10' + '\x00\x38\x00\x01' + '\x02\x00\x63' + '\xe2\xc1'] = '\x01
 # Message:  Slave address 1, function code 6. Register address 55, value=99. CRC.
 # Response: Slave address 1, function code 6. Register address 55, value=98 (wrong). CRC.
 RESPONSES['\x01\x06' + '\x00\x37\x00\x63' + 'x-'] = '\x01\x06' + '\x00\x37\x00\x62' + '\xb9\xed'
+
 
 #                ##  READ LONG ##
 # TODO: More!

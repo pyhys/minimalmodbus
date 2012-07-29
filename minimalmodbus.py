@@ -311,9 +311,9 @@ class Instrument():
         encoding is according to the standard IEEE 754.
 
         There are differences in the byte order used by different manufacturers. A floating
-        point value of 1.0 is encoded (in single precision) as 3f800000 (hex). This will be sent as
-        '\x3f\x80' and '\x00\x00' to two consecutetive registers in this implementation. Make
-        sure to test that it makes sense for your instrument.
+        point value of 1.0 is encoded (in single precision) as 3f800000 (hex). In this 
+        implementation the data will be sent as ``'\\x3f\\x80'`` and ``'\\x00\\x00'`` 
+        to two consecutetive registers . Make sure to test that it makes sense for your instrument.
         It is pretty straight-forward to change this code if some other byte order is
         required by anyone (see support section).
 
@@ -1093,7 +1093,7 @@ def _floatToBytestring(value, numberOfRegisters=2):
     ====================================== ================= =========== =================
 
     A floating  point value of 1.0 is encoded (in single precision) as 3f800000 (hex).
-    This will give a byte string '\x3f\x80\x00\x00' (big endian).
+    This will give a byte string ``'\\x3f\\x80\\x00\\x00'`` (big endian).
 
     Args:
         * value (float or int): The numerical value to be converted.
