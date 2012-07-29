@@ -1154,6 +1154,7 @@ class TestPrintOut(ExtendedTestCase):
 
 class TestDummyCommunication(ExtendedTestCase):
 
+
     ## Test fixture ##
 
     def setUp(self):
@@ -1170,6 +1171,7 @@ class TestDummyCommunication(ExtendedTestCase):
         minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = False
         self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1) # port name, slave address (in decimal)
         self.instrument.debug = False
+
 
     ## Read bit ##
 
@@ -1197,6 +1199,7 @@ class TestDummyCommunication(ExtendedTestCase):
 
     def testReadBitWithNoResponse(self):
         self.assertRaises(IOError, self.instrument.read_bit, 64) # Functioncode 2. Slave gives no response.
+
 
     ## Write bit ##
 
@@ -1230,22 +1233,19 @@ class TestDummyCommunication(ExtendedTestCase):
     def testWriteBitWithWrongWritedataResponse(self):
         self.assertRaises(ValueError, self.instrument.write_bit, 74, 1) # Slave gives wrong write data
 
+
     ## Read register ##
 
-    #TODO: Also negative values!
-
     def testReadRegister(self):
-        self.assertEqual(       self.instrument.read_register(289),       770)
-        self.assertEqual(       self.instrument.read_register(5),         184)
-        self.assertEqual(       self.instrument.read_register(289, 0),    770)
-        self.assertEqual(       self.instrument.read_register(289, 0, 3), 770) # functioncode 3
-        self.assertEqual(       self.instrument.read_register(14,  0, 4), 880) # functioncode 4
-        self.assertAlmostEqual( self.instrument.read_register(289, 1),    77.0)
-        self.assertAlmostEqual( self.instrument.read_register(289, 2),    7.7)
-
-    #instrument.read_register(101, signed=True) # '\x01\x03\x00e\x00\x01\x94\x15'
-#instrument.read_register(101) # '\x01\x03\x00e\x00\x01\x94\x15' (same)
-
+        self.assertEqual(       self.instrument.read_register(289),              770)
+        self.assertEqual(       self.instrument.read_register(5),                184)
+        self.assertEqual(       self.instrument.read_register(289, 0),           770)
+        self.assertEqual(       self.instrument.read_register(289, 0, 3),        770) # functioncode 3
+        self.assertEqual(       self.instrument.read_register(14,  0, 4),        880) # functioncode 4
+        self.assertAlmostEqual( self.instrument.read_register(289, 1),           77.0)
+        self.assertAlmostEqual( self.instrument.read_register(289, 2),           7.7)
+        self.assertEqual(       self.instrument.read_register(101),              65531) 
+        self.assertEqual(       self.instrument.read_register(101, signed=True), -5) 
 
     def testReadRegisterWrongValue(self):
         self.assertRaises(ValueError, self.instrument.read_register, -1) # Wrong address
@@ -1265,21 +1265,17 @@ class TestDummyCommunication(ExtendedTestCase):
 
     ## Write register ##
 
-    #TODO: Also negative values!
-
     def testWriteRegister(self):
         self.instrument.write_register(35, 20)
         self.instrument.write_register(35, 20, functioncode = 16)
         self.instrument.write_register(35, 20.0)
         self.instrument.write_register(24, 50)
         self.instrument.write_register(45, 88, functioncode = 6)
-
-        #instrument.write_register(101, 5) # '\x01\x10\x00e\x00\x01\x02\x00\x05o\xa6'
-        #instrument.write_register(101, 5, 1) # '\x01\x10\x00e\x00\x01\x02\x002.p'
-        #instrument.write_register(101, 5, signed=True) # '\x01\x10\x00e\x00\x01\x02\x00\x05o\xa6' (same)
-        #instrument.write_register(101, -5, signed=True)   # '\x01\x10\x00e\x00\x01\x02\xff\xfb\xaf\xd6'
-        #instrument.write_register(101, -5, 1, signed=True) # '\x01\x10\x00e\x00\x01\x02\xff\xceo\xc1'
-
+        self.instrument.write_register(101, 5) 
+        self.instrument.write_register(101, 5, signed=True) 
+        self.instrument.write_register(101, 5, 1) 
+        self.instrument.write_register(101, -5, signed=True)  
+        self.instrument.write_register(101, -5, 1, signed=True) 
 
     def testWriteRegisterWithDecimals(self):
         self.instrument.write_register(35, 2.0, 1)
@@ -1324,24 +1320,73 @@ class TestDummyCommunication(ExtendedTestCase):
 
 
     ## Read Long ##
+    
+    def testReadLong(self):
+        self.assertEqual( self.instrument.read_long(102),              4294967295)
+        self.assertEqual( self.instrument.read_long(102, signed=True), -1)
 
-    #instrument.read_long(102) # '\x01\x03\x00f\x00\x02$\x14'
-    #instrument.read_long(102, signed=True) #'\x01\x03\x00f\x00\x02$\x14' (same)
+    def testReadLongWrongValue(self):
+        self.assertRaises(ValueError, self.instrument.read_long, -1) # Wrong address
+        self.assertRaises(ValueError, self.instrument.read_long, 65536)
+        self.assertRaises(ValueError, self.instrument.read_long, 102,  1)  # Wrong function code
+        self.assertRaises(ValueError, self.instrument.read_long, 102,  -1)  
+        self.assertRaises(ValueError, self.instrument.read_long, 102,  256)  
 
+    def testReadLongWrongType(self):
+        for value in _NOT_INTERGERS:
+            self.assertRaises(TypeError, self.instrument.read_long, value)
+            self.assertRaises(TypeError, self.instrument.read_long, 102,   value)
+        for value in _NOT_BOOLEANS:
+            self.assertRaises(TypeError, self.instrument.read_long, 102,   signed=value)
 
 
     ## Write Long ##
 
-    #instrument.write_long(102, 5) # '\x01\x10\x00f\x00\x02\x04\x00\x00\x00\x05\xb5\xae'
-    #instrument.write_long(102, -5, signed=True) # '\x01\x10\x00f\x00\x02\x04\xff\xff\xff\xfbu\xfa'
-    #instrument.write_long(102, 3, False) '\x01\x10\x00f\x00\x02\x04\x00\x00\x00\x035\xac'
-    #instrument.write_long(102, -3, True) '\x01\x10\x00f\x00\x02\x04\xff\xff\xff\xfd\xf5\xf8'
+    def testWriteLong(self):
+        self.instrument.write_long(102, 5)
+        self.instrument.write_long(102, 5, signed=True)
+        self.instrument.write_long(102, -5, signed=True)
+        self.instrument.write_long(102, 3, False)
+        self.instrument.write_long(102, -3, True)
 
+    def testWriteLongWrongValue(self):
+        self.assertRaises(ValueError, self.instrument.write_long, -1,    5) # Wrong address
+        self.assertRaises(ValueError, self.instrument.write_long, 65536, 5)
+        self.assertRaises(ValueError, self.instrument.write_long, 102,   -5, signed=False)  # Wrong value
+        self.assertRaises(ValueError, self.instrument.write_long, 102,   888888888888888888888)  
+
+    def testWriteLongWrongType(self):
+        for value in _NOT_INTERGERS:
+            self.assertRaises(TypeError, self.instrument.write_long, value, 5)
+            self.assertRaises(TypeError, self.instrument.write_long, 102,   value)
+        for value in _NOT_BOOLEANS:
+            self.assertRaises(TypeError, self.instrument.write_long, 102,   5,     signed=value)
+            
 
     ## Read Float ##
 
-    #instrument.read_float(103, 3, 2) # '\x01\x03\x00g\x00\x02u\xd4'
-    #instrument.read_float(103, 3, 4) # '\x01\x03\x00g\x00\x04\xf5\xd6'
+    def testReadFloat(self):
+        self.assertEqual( self.instrument.read_float(103),       1.0 )
+        self.assertEqual( self.instrument.read_float(103, 3),    1.0 )
+        self.assertEqual( self.instrument.read_float(103, 3, 2), 1.0 )
+        self.assertEqual( self.instrument.read_float(103, 3, 4), -2.0 )
+
+    def testReadFloatWrongValue(self):
+        self.assertRaises(ValueError, self.instrument.read_float, -1) # Wrong address
+        self.assertRaises(ValueError, self.instrument.read_float, -1,    3) 
+        self.assertRaises(ValueError, self.instrument.read_float, -1,    3,  2) 
+        self.assertRaises(ValueError, self.instrument.read_float, 65536)
+        self.assertRaises(ValueError, self.instrument.read_float, 103,   1)  # Wrong function code
+        self.assertRaises(ValueError, self.instrument.read_float, 103,   -1)  
+        self.assertRaises(ValueError, self.instrument.read_float, 103,   256)  
+        for value in [-1, 0, 1, 3, 5, 6, 7, 8, 16]:
+            self.assertRaises(ValueError, self.instrument.read_float, 103, 3,  value) # Wrong number of registers
+
+    def testReadFloatWrongType(self):
+        for value in _NOT_INTERGERS:
+            self.assertRaises(TypeError, self.instrument.read_float, value, 3,     2)
+            self.assertRaises(TypeError, self.instrument.read_float, 103,   value, 2)
+            self.assertRaises(TypeError, self.instrument.read_float, 103,   3,     value)
 
 
     ## Write Float ##
@@ -1774,6 +1819,12 @@ RESPONSES['\x01\x03' + '\x00\x05\x00\x01' + '\x94\x0b'] = '\x01\x03' + '\x02\x00
 # Response: Slave address 1, function code 4. 2 bytes, value=880. CRC.
 RESPONSES['\x01\x04' + '\x00\x0e\x00\x01' + 'P\t'] = '\x01\x04' + '\x02\x03\x70' + '\xb8$'
 
+# Read register 101 on slave 1 using function code 3 #
+# ---------------------------------------------------#
+# Message: Slave address 1, function code 3. Register address 101, 1 register. CRC.
+# Response: Slave address 1, function code 3. 2 bytes, value=-5 or 65531 (depending on interpretation). CRC
+RESPONSES['\x01\x03' + '\x00e\x00\x01' + '\x94\x15'] = '\x01\x03' + '\x02\xff\xfb' + '\xb87'
+
 
 #                ##  WRITE REGISTER  ##
 
@@ -1781,7 +1832,7 @@ RESPONSES['\x01\x04' + '\x00\x0e\x00\x01' + 'P\t'] = '\x01\x04' + '\x02\x03\x70'
 # ----------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 24, 1 register, 2 bytes, value=50. CRC.
 # Response: Slave address 1, function code 16. Register address 24, 1 register. CRC.
-RESPONSES['\x01\x10' + '\x00\x18\x00\x01\x02\x002' + '$]']       = '\x01\x10' + '\x00\x18\x00\x01' + '\x81\xce'
+RESPONSES['\x01\x10' + '\x00\x18\x00\x01\x02\x002' + '$]'] = '\x01\x10' + '\x00\x18\x00\x01' + '\x81\xce'
 
 # Write value 20 in register 35 on slave 1 using function code 16 #
 # ----------------------------------------------------------------#
@@ -1794,6 +1845,30 @@ RESPONSES['\x01\x10' + '\x00#\x00\x01' + '\x02\x00\x14' + '\xa1\x0c'] = '\x01\x1
 # Message:  Slave address 1, function code 6. Register address 45, value=88. CRC.
 # Response: Slave address 1, function code 6. Register address 45, value=88. CRC.
 RESPONSES['\x01\x06' + '\x00\x2d\x00\x58' + '\x189'] = '\x01\x06' + '\x00\x2d\x00\x58' + '\x189'
+
+# Write value 5 in register 101 on slave 1 using function code 16 #
+# ----------------------------------------------------------------#
+# Message:  Slave address 1, function code 16. Register address 101, 1 register, 2 bytes, value=5. CRC.
+# Response: Slave address 1, function code 16. Register address 101, 1 register. CRC.
+RESPONSES['\x01\x10' + '\x00e\x00\x01\x02\x00\x05' + 'o\xa6'] = '\x01\x10' + '\x00e\x00\x01' + '\x11\xd6'
+
+# Write value 50 in register 101 on slave 1 using function code 16 #
+# ----------------------------------------------------------------#
+# Message:  Slave address 1, function code 16. Register address 101, 1 register, 2 bytes, value=5. CRC.
+# Response: Slave address 1, function code 16. Register address 101, 1 register. CRC.
+RESPONSES['\x01\x10' + '\x00e\x00\x01\x02\x002' + '.p'] = '\x01\x10' + '\x00e\x00\x01' + '\x11\xd6'
+
+# Write value -5 in register 101 on slave 1 using function code 16 #
+# ----------------------------------------------------------------#
+# Message:  Slave address 1, function code 16. Register address 101, 1 register, 2 bytes, value=-5. CRC.
+# Response: Slave address 1, function code 16. Register address 101, 1 register. CRC.
+RESPONSES['\x01\x10' + '\x00e\x00\x01\x02\xff\xfb' + '\xaf\xd6'] = '\x01\x10' + '\x00e\x00\x01' + '\x11\xd6'
+
+# Write value -50 in register 101 on slave 1 using function code 16 #
+# ----------------------------------------------------------------#
+# Message:  Slave address 1, function code 16. Register address 101, 1 register, 2 bytes, value=-50. CRC.
+# Response: Slave address 1, function code 16. Register address 101, 1 register. CRC.
+RESPONSES['\x01\x10' + '\x00e\x00\x01\x02\xff\xce' + 'o\xc1'] = '\x01\x10' + '\x00e\x00\x01' + '\x11\xd6'
 
 # Write value 99 in register 51 on slave 1 using function code 16, slave gives wrong CRC #
 # ---------------------------------------------------------------------------------------#
@@ -1839,79 +1914,108 @@ RESPONSES['\x01\x06' + '\x00\x37\x00\x63' + 'x-'] = '\x01\x06' + '\x00\x37\x00\x
 
 
 #                ##  READ LONG ##
-# TODO: More!
-#instrument.read_long(102) # '\x01\x03\x00f\x00\x02$\x14'
-RESPONSES['\x01\x03' + '\x00\f\x00\x02' + '$\x14'] = ''#'\x01\x06' + '\x00\x37\x00\x62' + '\xb9\xed'
+
+# Read long (2 registers, starting at 102) on slave 1 using function code 3 #
+# --------------------------------------------------------------------------#
+# Message: Slave address 1, function code 3. Register address 289, 2 registers. CRC.
+# Response: Slave address 1, function code 3. 4 bytes, value=-1 or 4294967295 (depending on interpretation). CRC
+RESPONSES['\x01\x03' + '\x00f\x00\x02' + '$\x14'] = '\x01\x03' + '\x04\xff\xff\xff\xff' + '\xfb\xa7'
 
 
 #                ##  WRITE LONG ##
-# TODO: More!
-#instrument.write_long(102, 3, False) '\x01\x10\x00f\x00\x02\x04\x00\x00\x00\x035\xac'
-#instrument.write_long(102, -3, True) '\x01\x10\x00f\x00\x02\x04\xff\xff\xff\xfd\xf5\xf8'
 
+# Write long (2 registers, starting at 102) on slave 1 using function code 16, with value 5. #
+# -------------------------------------------------------------------------------------------#
+# Message: Slave address 1, function code 16. Register address 102, 2 registers, 4 bytes, value=5. CRC.
+# Response: Slave address 1, function code 16. Register address 102, 2 registers. CRC
+RESPONSES['\x01\x10' + '\x00f\x00\x02\x04\x00\x00\x00\x05' + '\xb5\xae'] = '\x01\x10' + '\x00f\x00\x02' + '\xa1\xd7'
+
+# Write long (2 registers, starting at 102) on slave 1 using function code 16, with value -5. #
+# --------------------------------------------------------------------------------------------#
+# Message: Slave address 1, function code 16. Register address 102, 2 registers, 4 bytes, value=-5. CRC.
+# Response: Slave address 1, function code 16. Register address 102, 2 registers. CRC
+RESPONSES['\x01\x10' + '\x00f\x00\x02\x04\xff\xff\xff\xfb' + 'u\xfa'] = '\x01\x10' + '\x00f\x00\x02' + '\xa1\xd7'
+
+# Write long (2 registers, starting at 102) on slave 1 using function code 16, with value 3. #
+# -------------------------------------------------------------------------------------------#
+# Message: Slave address 1, function code 16. Register address 102, 2 registers, 4 bytes, value=3. CRC.
+# Response: Slave address 1, function code 16. Register address 102, 2 registers. CRC
+RESPONSES['\x01\x10' + '\x00f\x00\x02\x04\x00\x00\x00\x03' + '5\xac'] = '\x01\x10' + '\x00f\x00\x02' + '\xa1\xd7'
+
+# Write long (2 registers, starting at 102) on slave 1 using function code 16, with value -3. #
+# --------------------------------------------------------------------------------------------#
+# Message: Slave address 1, function code 16. Register address 102, 2 registers, 4 bytes, value=-3. CRC.
+# Response: Slave address 1, function code 16. Register address 102, 2 registers. CRC
+RESPONSES['\x01\x10' + '\x00f\x00\x02\x04\xff\xff\xff\xfd' + '\xf5\xf8'] = '\x01\x10' + '\x00f\x00\x02' + '\xa1\xd7'
 
 
 #                ##  READ FLOAT ##
-# TODO: More!
+
+# Read float from address 103 (2 registers) on slave 1 using function code 3 #
+# ---------------------------------------------------------------------------#
+# Message:  Slave address 1, function code 3. Register address 103, 2 registers. CRC.
+# Response: Slave address 1, function code 3. 4 bytes, value=1.0. CRC.
+RESPONSES['\x01\x03' + '\x00g\x00\x02' + 'u\xd4'] = '\x01\x03' + '\x04\x3f\x80\x00\x00' + '\xf7\xcf'
+
+# Read float from address 103 (4 registers) on slave 1 using function code 3 #
+# ---------------------------------------------------------------------------#
+# Message:  Slave address 1, function code 3. Register address 103, 4 registers. CRC.
+# Response: Slave address 1, function code 3. 8 bytes, value=-2.0 CRC.
+RESPONSES['\x01\x03' + '\x00g\x00\x04' + '\xf5\xd6'] = '\x01\x03' + '\x08\xc0\x00\x00\x00\x00\x00\x00\x00' + '\x99\x87'
 
 
 #                ##  WRITE FLOAT ##
-# TODO: More!
 
-# Write value 1.1 to address 103 (2 registers) on slave 1 using function code 16 #
+# Write float 1.1 to address 103 (2 registers) on slave 1 using function code 16 #
 # -------------------------------------------------------------------------------#
-# Message:  Slave address 1, function code 16. Register address 103, 2 registers, 4 bytes, value=? . CRC.
+# Message:  Slave address 1, function code 16. Register address 103, 2 registers, 4 bytes, value=1.1 . CRC.
 # Response: Slave address 1, function code 16. Register address 103, 2 registers. CRC.
 RESPONSES['\x01\x10' + '\x00g\x00\x02\x04?\x8c\xcc\xcd' + '\xed\x0b'] = '\x01\x10' + '\x00g\x00\x02' + '\xf0\x17'
 
-# Write value 1.1 to address 103 (4 registers) on slave 1 using function code 16 #
+# Write float 1.1 to address 103 (4 registers) on slave 1 using function code 16 #
 # -------------------------------------------------------------------------------#
-# Message:  Slave address 1, function code 16. Register address 103, 4 registers, 8 bytes, value=? . CRC.
+# Message:  Slave address 1, function code 16. Register address 103, 4 registers, 8 bytes, value=1.1 . CRC.
 # Response: Slave address 1, function code 16. Register address 103, 4 registers. CRC.
 RESPONSES['\x01\x10' + '\x00g\x00\x04\x08?\xf1\x99\x99\x99\x99\x99\x9a' + 'u\xf7'] = '\x01\x10' + '\x00g\x00\x04' + 'p\x15'
 
 
 #                ##  READ STRING  ##
-# TODO: More!
 
-# Read from address 104 (1 register) on slave 1 using function code 3 #
-# ------------------------------------------------------------------------------#
+# Read string from address 104 (1 register) on slave 1 using function code 3 #
+# ---------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 3. Register address 104, 1 register. CRC.
 # Response: Slave address 1, function code 3. 2 bytes, value = 'AB'.  CRC.
 RESPONSES['\x01\x03' + '\x00h\x00\x01' + '\x05\xd6'] = '\x01\x03' + '\x02AB' + '\x08%'
 
-
-# Read from address 104 (4 registers) on slave 1 using function code 3 #
-# ------------------------------------------------------------------------------#
+# Read string from address 104 (4 registers) on slave 1 using function code 3 #
+# ----------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 3. Register address 104, 4 registers. CRC.
 # Response: Slave address 1, function code 3.  8 bytes, value = 'ABCDEFGH'.  CRC.
 RESPONSES['\x01\x03' + '\x00h\x00\x04' + '\xc5\xd5'] = '\x01\x03' + '\x08ABCDEFGH' + '\x0b\xcc'
 
 
 #                ##  WRITE STRING  ##
-# TODO: More!
 
-# Write value 'A' to address 104 (1 register) on slave 1 using function code 16 #
-# ------------------------------------------------------------------------------#
+# Write string 'A' to address 104 (1 register) on slave 1 using function code 16 #
+# -------------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 104, 1 register, 2 bytes, value='A ' . CRC.
 # Response: Slave address 1, function code 16. Register address 104, 1 register. CRC.
 RESPONSES['\x01\x10' + '\x00h\x00\x01\x02A ' + '\x9f0'] = '\x01\x10' + '\x00h\x00\x01' + '\x80\x15'
 
-# Write value 'A' to address 104 (4 registers) on slave 1 using function code 16 #
-# -------------------------------------------------------------------------------#
+# Write string 'A' to address 104 (4 registers) on slave 1 using function code 16 #
+# --------------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 104, 4 registers, 8 bytes, value='A       ' . CRC.
 # Response: Slave address 1, function code 16. Register address 104, 2 registers. CRC.
 RESPONSES['\x01\x10' + '\x00h\x00\x04\x08A       ' + '\xa7\xae'] = '\x01\x10' + '\x00h\x00\x04' + '@\x16'
 
-# Write value 'ABCDEFGH' to address 104 (4 registers) on slave 1 using function code 16 #
-# --------------------------------------------------------------------------------------#
+# Write string 'ABCDEFGH' to address 104 (4 registers) on slave 1 using function code 16 #
+# ---------------------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 104, 4 registers, 8 bytes, value='ABCDEFGH' . CRC.
 # Response: Slave address 1, function code 16. Register address 104, 4 registers. CRC.
 RESPONSES['\x01\x10' + '\x00h\x00\x04\x08ABCDEFGH' + 'I>'] = '\x01\x10' + '\x00h\x00\x04' + '@\x16'
 
 
 #                ##  READ REGISTERS  ##
-# TODO: More!
 
 # Read from address 105 (1 register) on slave 1 using function code 3 #
 # --------------------------------------------------------------------#

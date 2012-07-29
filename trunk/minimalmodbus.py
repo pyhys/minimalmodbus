@@ -658,14 +658,19 @@ class Instrument():
 
         ## Calculate return value ##
         if functioncode in [1, 2]:
-            registerdata = payloadFromSlave[NUMBER_OF_BYTES_BEFORE_REGISTERDATA:]
-            assert len(registerdata) == NUMBER_OF_BYTES_FOR_ONE_BIT
+            registerdata = payloadFromSlave[NUMBER_OF_BYTES_BEFORE_REGISTERDATA:]            
+            if len(registerdata) != NUMBER_OF_BYTES_FOR_ONE_BIT:
+                raise ValueError('The registerdata length does not match NUMBER_OF_BYTES_FOR_ONE_BIT. Given {0}.'.format( \
+                    repr(len(registerdata)) ))
+
             return _bitResponseToValue(registerdata)
 
         if functioncode in [3, 4]:
             registerdata = payloadFromSlave[NUMBER_OF_BYTES_BEFORE_REGISTERDATA:]
-            assert len(registerdata) == numberOfRegisterBytes
-
+            if len(registerdata) != numberOfRegisterBytes:
+                raise ValueError('The registerdata length does not match number of register bytes. Given {0} and {1}.'.format( \
+                    repr(len(registerdata)), repr(numberOfRegisterBytes) ))
+            
             if payloadformat == PAYLOADFORMAT_STRING:
                 return _bytestringToTextstring(registerdata, numberOfRegisters)
 
@@ -683,6 +688,7 @@ class Instrument():
 
             raise ValueError('Wrong payloadformat for return value generation. Given {0}'.format( \
                 repr(payloadformat) ))
+
 
     ##########################################
     ## Communication implementation details ##
@@ -1048,6 +1054,7 @@ def _longToBytestring(value, signed=False, numberOfRegisters=2):
     outstring = _pack(formatcode, value)
     assert len(outstring) == 4
     return outstring
+
 
 def _bytestringToLong(bytestring, signed=False, numberOfRegisters=2):
     """Convert a bytestring to a long integer.
