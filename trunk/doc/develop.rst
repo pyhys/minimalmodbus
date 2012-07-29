@@ -621,6 +621,9 @@ What                Usage                                           Result
 Inline web link     ```Link text <http://example.com/>`_``          `Link text <http://example.com/>`_
 Internal link       ``:ref:`testminimalmodbus```                    :ref:`testminimalmodbus`
 Inline code         ````code text````                               ``code text``
+String w escape ch. (string within inline code)                     ``'ABC\x00'``
+(less good)         (string within inline code, double backslash)   ``'ABC\\x00'`` Differnt somtimes! Why?
+(less good)         (string with double backslash)                  'ABC\\x00'
 Environment var     ``:envvar:`PYTHONPATH```                        :envvar:`PYTHONPATH`
 OS-level command    ``:command:`make```                             :command:`make`
 File                ``:file:`minimalmodbus.py```                    :file:`minimalmodbus.py`
