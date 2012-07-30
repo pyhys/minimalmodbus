@@ -1,10 +1,12 @@
 
 Release 0.4.0 (2012-0?-?)
 --------------------------
-* read and write multiple registers
-* read and write floating point values
-* read and write strings
-* Use of the struct module instead of own bit-tweaking internally
+* Read and write multiple registers
+* Read and write floating point values
+* Read and write long integers
+* Read and write strings
+* Support for negative numbers
+* Use of the Python struct module instead of own bit-tweaking internally
 
 Release 0.3.2 (2012-01-25)
 --------------------------
