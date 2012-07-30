@@ -377,6 +377,7 @@ Change version number etc
 
 (Note that the version number in the Sphinx configuration file :file:`doc/conf.py` is changed automatically. Unfortunately this is not yet valid for :file:`setup.py`).
 
+How to number releases are described in :pep:`386`.
 
 Code style checking etc
 ```````````````````````
@@ -386,7 +387,7 @@ Check the code::
     pychecker minimalmodbus.py 
     pychecker omegacn7500.py
 
-(The 2to3 tool is not necessary, as we run unittests under both Python2 and Python3).
+(The 2to3 tool is not necessary, as we run the unittests under both Python2 and Python3).
 
 Unittesting
 ```````````
@@ -424,12 +425,12 @@ Build the source distribution (as :file:`.gzip.tar` and :file:`.zip`) , and uplo
 
 Generate documentation
 ``````````````````````
-Build the HTML and PDF documentation  (in :file:`doc` after making sure that :envvar:`PYTHONPATH` is correct)::
+Build the HTML and PDF documentation  (in directory :file:`doc` after making sure that :envvar:`PYTHONPATH` is correct)::
 
     make html
     make latexpdf
 
-Build the test coverage report (first manually clear the directory :file:`htmlcov`)::
+Build the test coverage report (in directory :file:`trunk`). First manually clear the directory :file:`htmlcov`::
    
     coverage run ./test/test_all.py
     coverage html --omit=/usr/*

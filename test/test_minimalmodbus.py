@@ -302,7 +302,7 @@ class TestSanityTwoByteString(ExtendedTestCase):
                     numberOfDecimals, signed )
                 self.assertEqual(resultvalue, value)
 
-        return #TODO This part is pretty time consuming
+        #return # This part is pretty time consuming!
         for value in range(0x10000):
             resultvalue = minimalmodbus._twoByteStringToNum( minimalmodbus._numToTwoByteString(value) )
             self.assertEqual(resultvalue, value)
@@ -715,7 +715,7 @@ class TestSanityTwosComplement(ExtendedTestCase):
 
     def testSanity(self):
 
-        return #TODO
+        #return # This part is pretty time consuming!
 
         for bits in self.knownValues:
             for x in range(2**bits):
