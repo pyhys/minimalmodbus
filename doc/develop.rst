@@ -756,7 +756,7 @@ For next release:
   * Read ``version`` from minimalmodbus to setup.py 
   * Bug tracker settings
   * Finetune coding style (pep8.py)
-  * dummy_serial: Use isOpen() to make sure opening and closing works fine.
+  * dummy_serial: Use _isOpen to make sure opening and closing works fine.
 
 .
 
