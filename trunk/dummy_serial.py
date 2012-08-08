@@ -26,12 +26,12 @@ which was $Revision: 79 $.
 
 """
 
-__author__  = "Jonas Berg"
-__email__   = "pyhys@users.sourceforge.net"
-__license__ = "Apache License, Version 2.0"
+__author__  = 'Jonas Berg'
+__email__   = 'pyhys@users.sourceforge.net'
+__license__ = 'Apache License, Version 2.0'
 
-__revision__  = "$Rev: 79 $"
-__date__      = "$Date: 2011-12-18 21:41:02 +0100 (Sun, 18 Dec 2011) $"
+__revision__  = '$Rev: 79 $'
+__date__      = '$Date: 2011-12-18 21:41:02 +0100 (Sun, 18 Dec 2011) $'
 
 import sys
 

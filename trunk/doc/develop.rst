@@ -371,11 +371,10 @@ Preparation for release
 
 Change version number etc
 `````````````````````````
-* Manually change the ``__version__`` and ``__status__`` fields in the :file:`minimalmodbus.py` source file.
-* Manually change the ``version`` field in the :file:`setup.py` file.
+* Manually change the ``__version__`` field in the :file:`minimalmodbus.py` source file.
 * Manually change the release date in :file:`CHANGES.txt`
 
-(Note that the version number in the Sphinx configuration file :file:`doc/conf.py` is changed automatically. Unfortunately this is not yet valid for :file:`setup.py`).
+(Note that the version number in the Sphinx configuration file :file:`doc/conf.py` and in the file :file:`setup.py` are changed automatically).
 
 How to number releases are described in :pep:`386`.
 

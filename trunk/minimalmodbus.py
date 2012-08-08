@@ -26,14 +26,15 @@ which was $Revision$.
 
 """
 
-__author__ = 'Jonas Berg'
-__email__ = 'pyhys@users.sourceforge.net'
-__license__ = 'Apache License, Version 2.0'
+__author__   = 'Jonas Berg'
+__email__    = 'pyhys@users.sourceforge.net'
+__url__      = 'http://minimalmodbus.sourceforge.net/'
+__license__  = 'Apache License, Version 2.0'
 
-__version__ = '0.4a1'
-__status__ = 'Alpha'
+__version__  = '0.4a1'
+__status__   = 'Beta'
 __revision__ = '$Rev$'
-__date__ = '$Date$'
+__date__     = '$Date$'
 
 import os
 import serial
