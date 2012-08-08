@@ -1,29 +1,30 @@
 #!/usr/bin/env python
 
+# Do not import non-standars modules here, as it will mess up the installation in clients.
 import re
 from distutils.core import setup
-# Do not import other modules here, as it will mess up the installation in clients.
 
 with open('README.txt') as readmefile:
     long_description = readmefile.read()
 
+# Read version number etc from other file
 # http://stackoverflow.com/questions/2058802/how-can-i-get-the-version-defined-in-setup-py-setuptools-in-my-package
 with open('minimalmodbus.py') as mainfile:
     main_py = mainfile.read()
-metadata = dict( re.findall("__([a-z]+)__ = '([^']+)'", main_py) )
+metadata = dict( re.findall("__([a-z]+)__ += +'([^']+)'", main_py) )
 
-setup(name='MinimalModbus',
-    version = metadata['version'],
-    license = metadata['license'],
-    author = metadata['author'],
+setup(name       = 'MinimalModbus',
+    version      = metadata['version'],
+    license      = metadata['license'],
+    author       = metadata['author'],
     author_email = metadata['email'],
-    description = 'Easy-to-use Modbus RTU implementation for Python',
+    url          = metadata['url'],
+    keywords     = 'modbus serial RTU',
+    description  = 'Easy-to-use Modbus RTU implementation for Python',
     long_description = long_description,
-    keywords = 'modbus serial RTU',
-    url='http://minimalmodbus.sourceforge.net/',
-    py_modules=['minimalmodbus', 'eurotherm3500', 'omegacn7500', 'dummy_serial'],
+    py_modules = ['minimalmodbus', 'eurotherm3500', 'omegacn7500', 'dummy_serial'],
     install_requires = ['pyserial'],
-    classifiers=[ 
+    classifiers = [ 
         'Intended Audience :: Developers',
         'Intended Audience :: Information Technology',
         'Intended Audience :: Science/Research',
@@ -45,7 +46,6 @@ setup(name='MinimalModbus',
         'Topic :: Software Development :: Libraries :: Python Modules',
         'Topic :: System :: Hardware :: Hardware Drivers',
         'Topic :: Terminals :: Serial',
-        
         ],
     )
 
