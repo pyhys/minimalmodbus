@@ -282,7 +282,7 @@ Where it is unavoidable, use::
 
 Extending MinimalModbus
 ------------------------------------------------------------------------------
-It is straight-forward to extend MinimalModbus to handle more Modbus function codes. Use the the method :meth:`_performCommand` to send data to the slave, and to receive the response. Note that the API might change, as this is outside the official API.
+It is straight-forward to extend MinimalModbus to handle more Modbus function codes. Use the method :meth:`_performCommand` to send data to the slave, and to receive the response. Note that the API might change, as this is outside the official API.
 
 This is easily tested in interactive mode. For example the method :meth:`.read_register` 
 generates payload, which internally is sent to the instrument using :meth:`_performCommand`::
@@ -753,7 +753,6 @@ TODO
 ----
  
 For next release:
-  * Read ``version`` from minimalmodbus to setup.py 
   * Bug tracker settings
   * Finetune coding style (pep8.py)
   * dummy_serial: Use _isOpen to make sure opening and closing works fine.
