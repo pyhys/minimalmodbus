@@ -1,21 +1,27 @@
 #!/usr/bin/env python
 
+import re
 from distutils.core import setup
 # Do not import other modules here, as it will mess up the installation in clients.
 
-with open('README.txt') as file:
-    long_description = file.read()
+with open('README.txt') as readmefile:
+    long_description = readmefile.read()
+
+# http://stackoverflow.com/questions/2058802/how-can-i-get-the-version-defined-in-setup-py-setuptools-in-my-package
+with open('minimalmodbus.py') as mainfile:
+    main_py = mainfile.read()
+metadata = dict( re.findall("__([a-z]+)__ = '([^']+)'", main_py) )
 
 setup(name='MinimalModbus',
-    version = '0.4a1',
+    version = metadata['version'],
+    license = metadata['license'],
+    author = metadata['author'],
+    author_email = metadata['email'],
     description = 'Easy-to-use Modbus RTU implementation for Python',
     long_description = long_description,
     keywords = 'modbus serial RTU',
-    author='Jonas Berg',
-    author_email='pyhys@users.sourceforge.net',
     url='http://minimalmodbus.sourceforge.net/',
     py_modules=['minimalmodbus', 'eurotherm3500', 'omegacn7500', 'dummy_serial'],
-    license = 'Apache License, Version 2.0',
     install_requires = ['pyserial'],
     classifiers=[ 
         'Intended Audience :: Developers',
