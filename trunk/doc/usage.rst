@@ -249,6 +249,10 @@ To find locations::
     ~$ which python3.2
     /usr/bin/python3.2
 
+To see which python version that is used::
+
+    python --version
+
 
 Setting the PYTHONPATH
 ----------------------------------------------------------------------------
