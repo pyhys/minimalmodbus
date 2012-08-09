@@ -11,7 +11,7 @@ with open('README.txt') as readmefile:
 # http://stackoverflow.com/questions/2058802/how-can-i-get-the-version-defined-in-setup-py-setuptools-in-my-package
 with open('minimalmodbus.py') as mainfile:
     main_py = mainfile.read()
-metadata = dict( re.findall("__([a-z]+)__ += +'([^']+)'", main_py) )
+metadata = dict( re.findall(r"__([a-z]+)__ *= *'([^']+)'", main_py) )
 
 setup(name       = 'MinimalModbus',
     version      = metadata['version'],

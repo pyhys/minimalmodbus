@@ -483,6 +483,7 @@ Burn a CD/DVD with these items:
 * Windows installer
 * Generated HTML files
 * PDF documentation
+* svn repository in archive format
 
 Marketing
 ````````````
@@ -590,6 +591,21 @@ Language settings::
     locale      # Shows present locale settings
     locale -a   # Shows available locales
     export LC_ALL="en_US.utf8"
+
+
+Installing MinimalModbus from repository
+`````````````````````````````````````````
+Update your local copy by::
+
+   svn update
+
+Go to the minimalmodbus/trunk directory::
+
+   sudo python setup.py install
+
+Test it using (adapt path to your system)::
+
+   python /usr/local/lib/python2.6/dist-packages/minimalmodbus.py
 
 
 Sphinx usage
