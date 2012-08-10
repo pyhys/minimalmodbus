@@ -71,6 +71,9 @@ import dummy_serial
 # For showing the error messages caught by assertRaises() #
 ###########################################################
 
+ALSO_TIME_CONSUMING_TESTS = False
+"""Set this to :const:`False` to skip the most time consuming tests"""
+
 VERBOSITY = 0
 """Verbosity level for the unit testing. Use value 0 or 2. Note that it only has an effect for Python 2.7 and above."""
 
@@ -302,10 +305,10 @@ class TestSanityTwoByteString(ExtendedTestCase):
                     numberOfDecimals, signed )
                 self.assertEqual(resultvalue, value)
 
-        #return # This part is pretty time consuming!
-        for value in range(0x10000):
-            resultvalue = minimalmodbus._twoByteStringToNum( minimalmodbus._numToTwoByteString(value) )
-            self.assertEqual(resultvalue, value)
+        if ALSO_TIME_CONSUMING_TESTS:
+            for value in range(0x10000):
+                resultvalue = minimalmodbus._twoByteStringToNum( minimalmodbus._numToTwoByteString(value) )
+                self.assertEqual(resultvalue, value)
 
 
 class TestLongToBytestring(ExtendedTestCase):
@@ -715,12 +718,11 @@ class TestSanityTwosComplement(ExtendedTestCase):
 
     def testSanity(self):
 
-        #return # This part is pretty time consuming!
-
-        for bits in self.knownValues:
-            for x in range(2**bits):
-                resultvalue = minimalmodbus._twosComplement( minimalmodbus._fromTwosComplement(x, bits), bits )
-                self.assertEqual(resultvalue, x)
+        if ALSO_TIME_CONSUMING_TESTS:
+            for bits in self.knownValues:
+                for x in range(2**bits):
+                    resultvalue = minimalmodbus._twosComplement( minimalmodbus._fromTwosComplement(x, bits), bits )
+                    self.assertEqual(resultvalue, x)
 
 
 #########################
