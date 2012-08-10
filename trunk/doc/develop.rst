@@ -768,6 +768,7 @@ TODO
 ----
  
 For next release:
+  * More tests in test_minimalmodbus
   * Finetune coding style (pep8.py)
   
 
