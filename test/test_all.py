@@ -21,8 +21,8 @@
 
 test_all: Run all the unit tests
 
-This Python file was changed (committed) at $Date: 2011-12-20 11:37:59 +0100 (Tue, 20 Dec 2011) $, 
-which was $Revision: 83 $.
+This Python file was changed (committed) at $Date$, 
+which was $Revision$.
 
 """
 
@@ -30,8 +30,8 @@ __author__  = "Jonas Berg"
 __email__   = "pyhys@users.sourceforge.net"
 __license__ = "Apache License, Version 2.0"
 
-__revision__  = "$Rev: 83 $"
-__date__      = "$Date: 2011-12-20 11:37:59 +0100 (Tue, 20 Dec 2011) $"
+__revision__  = "$Rev$"
+__date__      = "$Date$"
 
 import unittest
 

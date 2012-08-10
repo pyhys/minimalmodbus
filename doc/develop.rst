@@ -769,6 +769,7 @@ TODO
  
 For next release:
   * Finetune coding style (pep8.py)
+  
 
 .
 
