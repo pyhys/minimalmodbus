@@ -61,7 +61,7 @@ Might be monkey-patched in the calling test module.
 
 
 class Serial():
-    """Dummy serial port for testing purposes.
+    """Dummy (mock) serial port for testing purposes.
 
     Mimics the behavior of a serial port as defined by the `pySerial <http:/pyserial.sourceforge.net/>`_ module.
 
