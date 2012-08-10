@@ -768,9 +768,7 @@ TODO
 ----
  
 For next release:
-  * Bug tracker settings
   * Finetune coding style (pep8.py)
-  * dummy_serial: Use _isOpen to make sure opening and closing works fine.
 
 .
 

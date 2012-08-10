@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Do not import non-standars modules here, as it will mess up the installation in clients.
+# Do not import non-standard modules here, as it will mess up the installation in clients.
 import re
 from distutils.core import setup
 

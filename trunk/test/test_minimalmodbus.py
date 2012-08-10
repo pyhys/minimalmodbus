@@ -1590,6 +1590,24 @@ class TestDummyCommunication(ExtendedTestCase):
         self.assertTrue( ", open=True>(latestWrite='')>" in representation )
 
 
+    ## Test the dummy serial port itself ##
+    
+    def testReadPortClosed(self):
+        self.instrument.serial.close()
+        self.assertRaises(IOError, self.instrument.serial.read, 1000)
+
+    def testWritePortClosed(self):
+        self.instrument.serial.close()
+        self.assertRaises(IOError, self.instrument.write_bit, 71, 1)
+
+    def testPortAlreadyOpen(self):
+        self.assertRaises(IOError, self.instrument.serial.open)
+
+    def testPortAlreadyClosed(self):
+        self.instrument.serial.close()
+        self.assertRaises(IOError, self.instrument.serial.close)
+
+
     ## Tear down test fixture ##
 
     def tearDown(self):
