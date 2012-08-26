@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#   Copyright 2011 Jonas Berg
+#   Copyright 2012 Jonas Berg
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -140,25 +140,18 @@ class TestEmbedPayload(ExtendedTestCase):
             result = minimalmodbus._embedPayload(slaveaddress, functioncode, inputstring)
             self.assertEqual(result, knownresult)
 
-    def testWrongSlaveaddressValue(self):
-        self.assertRaises(ValueError, minimalmodbus._embedPayload, 248, 16, 'ABC')
-        self.assertRaises(ValueError, minimalmodbus._embedPayload, -1, 16, 'ABC')
+    def testWrongInputValue(self):
+        self.assertRaises(ValueError, minimalmodbus._embedPayload, 248, 16,  'ABC') # Wrong slave address
+        self.assertRaises(ValueError, minimalmodbus._embedPayload, -1,  16,  'ABC')
+        self.assertRaises(ValueError, minimalmodbus._embedPayload, 1,   222, 'ABC') # Wrong function code
+        self.assertRaises(ValueError, minimalmodbus._embedPayload, 1,   -1,  'ABC')
 
-    def testSlaveaddressNotInteger(self):
+    def testWrongInputType(self):
         for value in _NOT_INTERGERS:
-            self.assertRaises(TypeError, minimalmodbus._embedPayload, value, 16, 'ABC')
-
-    def testWrongFunctioncodeValue(self):
-        self.assertRaises(ValueError, minimalmodbus._embedPayload, 1, 222, 'ABC')
-        self.assertRaises(ValueError, minimalmodbus._embedPayload, 1, -1, 'ABC')
-
-    def testFunctioncodeNotInteger(self):
-        for value in _NOT_INTERGERS:
-            self.assertRaises(TypeError, minimalmodbus._embedPayload, 1, value, 'ABC')
-
-    def testPayloadNotString(self):
+            self.assertRaises(TypeError, minimalmodbus._embedPayload, value, 16,    'ABC')
+            self.assertRaises(TypeError, minimalmodbus._embedPayload, 1,     value, 'ABC')
         for value in _NOT_STRINGS:
-            self.assertRaises(TypeError, minimalmodbus._embedPayload, 1, 16, value)
+            self.assertRaises(TypeError, minimalmodbus._embedPayload, 1,     16,    value)
 
 
 class TestExtractPayload(ExtendedTestCase):
@@ -171,34 +164,19 @@ class TestExtractPayload(ExtendedTestCase):
             result = minimalmodbus._extractPayload(inputstring, address, functioncode )
             self.assertEqual(result, knownresult)
 
-    def testTooShortMessage(self):
-        self.assertRaises(ValueError, minimalmodbus._extractPayload, 'A', 2, 2)
+    def testWrongInputValue(self):
+        self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc3',    2,      2) # Wrong CRC
+        self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x82123q\x02',    2,      2) # Error indication from slave
+        self.assertRaises(ValueError, minimalmodbus._extractPayload, 'A',                   2,      2) # Too short message
+        self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x72123B\x02',    2,      2) # Other value in response
+        for value in [3, 95, 128, 248, -1]:
+            self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', value, 2) # Wrong slave address
+            self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 2,     value) # Wrong functioncode
 
-    def testWrongSlaveAddress(self):
-        for value in [3, 248, -1]:
-            self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', value, 2)
-
-    def testSlaveaddressNotInteger(self):
+    def testWrongInputType(self):
         for value in _NOT_INTERGERS:
-            self.assertRaises(TypeError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', value, 2)
-
-    def testErrorindicationFromSlave(self):
-        self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x82123q\x02', 2, 2)
-
-    def testWrongFunctionCode(self):
-        self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 2, 3)
-        self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x72123B\x02', 2, 2) # Other value in response
-        self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 2, 95)
-        self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 2, -1)
-        self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 2, 128)
-
-    def testFunctionCodeNotInteger(self):
-        for value in _NOT_INTERGERS:
-            self.assertRaises(TypeError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 2, value)
-
-    def testWrongCrc(self):
-        self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc3', 2, 2)
-
+            self.assertRaises(TypeError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', value,  2)
+            self.assertRaises(TypeError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 2,      value)
 
 ##############################
 # String and num conversions #
@@ -235,16 +213,27 @@ class TestNumToOneByteString(ExtendedTestCase):
 class TestNumToTwoByteString(ExtendedTestCase):
 
     knownValues=[
-    (0.0,  0, False, False, '\x00\x00' ),
-    (77.0, 1, False, False, '\x03\x02' ),
-    (77.0, 1, True,  False, '\x02\x03' ),
-    (770,  0, False, False, '\x03\x02' ),
-    (770,  0, True,  False, '\x02\x03' ),
-    (770,  0, False,  True, '\x03\x02' ),
-    (-1,   0, False,  True, '\xff\xff' ),
-    (-1,   1, False,  True, '\xff\xf6' ),
+    (0.0,    0, False, False, '\x00\x00'), # Range 0-65535
+    (0,      0, False, False, '\x00\x00'), 
+    (0,      0, True,  False, '\x00\x00'), 
+    (77.0,   1, False, False, '\x03\x02'),
+    (77.0,   1, True,  False, '\x02\x03'),
+    (770,    0, False, False, '\x03\x02'),
+    (770,    0, True,  False, '\x02\x03'),
+    (65535,  0, False, False, '\xff\xff'),
+    (65535,  0, True,  False, '\xff\xff'),
+    (770,    0, False, True,  '\x03\x02'), # Range -32768 to 32767 
+    (77.0,   1, False, True,  '\x03\x02'),
+    (0.0,    0, False, True,  '\x00\x00'),
+    (0.0,    3, False, True,  '\x00\x00'),
+    (-1,     0, False, True,  '\xff\xff'),
+    (-1,     1, False, True,  '\xff\xf6'),
+    (-77,    0, False, True,  '\xff\xb3'),
+    (-770,   0, False, True,  '\xfc\xfe'),
+    (-77,    1, False, True,  '\xfc\xfe'),
+    (-32768, 0, False, True,  '\x80\x00'),
+    (32767,  0, False, True,  '\x7f\xff'),
     ]
-    #TODO: More! (out of range, negative values etc)
 
     def testKnownValues(self):
         for inputvalue, numberOfDecimals, LsbFirst, signed, knownstring in self.knownValues:
@@ -252,21 +241,32 @@ class TestNumToTwoByteString(ExtendedTestCase):
             self.assertEqual(resultstring, knownstring)
 
     def testWrongInputValue(self):
-        #TODO: More!
-        self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, 77000, 0, False) # Gives DeprecationWarning instead of ValueError for Python 2.6
-        self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, -77, 1, False)
-        self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, -77, 10, False, True)
-        self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, 77, 4, False)
-        self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, 77, -1, False)
+        for LsbFirst in [False, True]:
+            # Range 0-65535
+            self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, 77000, 0,  LsbFirst) # Gives DeprecationWarning instead of ValueError for Python 2.6
+            self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, 65536, 0,  LsbFirst)
+            self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, 77,    4,  LsbFirst)
+            self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, -1,    0,  LsbFirst)
+            self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, -77,   1,  LsbFirst)
+            self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, 77,    -1, LsbFirst)
+            
+            # Range -32768 to 32767 
+            self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, -77000, 0,  LsbFirst, True)
+            self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, -32769, 0,  LsbFirst, True)
+            self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, 32768,  0,  LsbFirst, True)
+            self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, 77000,  0,  LsbFirst, True)
+            self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, 77,     4,  LsbFirst, True)
+            self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, -77,    4,  LsbFirst, True)
+            self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, 77,     -1, LsbFirst, True)
 
     def testWrongInputType(self):
         for value in _NOT_NUMERICALS:
-            self.assertRaises(TypeError, minimalmodbus._numToTwoByteString, value,  1, False, False)
+            self.assertRaises(TypeError, minimalmodbus._numToTwoByteString, value, 1,     False, False)
         for value in _NOT_INTERGERS:
-            self.assertRaises(TypeError, minimalmodbus._numToTwoByteString, 77, value, False, False)
+            self.assertRaises(TypeError, minimalmodbus._numToTwoByteString, 77,    value, False, False)
         for value in _NOT_BOOLEANS:
-            self.assertRaises(TypeError, minimalmodbus._numToTwoByteString, 77,     1, value, False)
-            self.assertRaises(TypeError, minimalmodbus._numToTwoByteString, 77,     1, False, value)
+            self.assertRaises(TypeError, minimalmodbus._numToTwoByteString, 77,    1,     value, False)
+            self.assertRaises(TypeError, minimalmodbus._numToTwoByteString, 77,    1,     False, value)
 
 
 class TestTwoByteStringToNum(ExtendedTestCase):
@@ -281,16 +281,16 @@ class TestTwoByteStringToNum(ExtendedTestCase):
 
     def testWrongInputValue(self):
         self.assertRaises(ValueError, minimalmodbus._twoByteStringToNum, 'ABC', 1)
-        self.assertRaises(ValueError, minimalmodbus._twoByteStringToNum, 'A', 1)
-        self.assertRaises(ValueError, minimalmodbus._twoByteStringToNum, 'AB', -1)
+        self.assertRaises(ValueError, minimalmodbus._twoByteStringToNum, 'A',   1)
+        self.assertRaises(ValueError, minimalmodbus._twoByteStringToNum, 'AB',  -1)
 
     def testWrongInputType(self):
         for value in _NOT_STRINGS:
-            self.assertRaises(TypeError, minimalmodbus._twoByteStringToNum, value, 1)
+            self.assertRaises(TypeError, minimalmodbus._twoByteStringToNum, value,      1)
         for value in _NOT_INTERGERS:
-            self.assertRaises(TypeError, minimalmodbus._twoByteStringToNum, 'AB', value)
+            self.assertRaises(TypeError, minimalmodbus._twoByteStringToNum, 'AB',       value)
         for value in _NOT_BOOLEANS:
-            self.assertRaises(TypeError, minimalmodbus._twoByteStringToNum, '\x03\x02', 1, value)
+            self.assertRaises(TypeError, minimalmodbus._twoByteStringToNum, '\x03\x02', 1,     value)
 
 
 class TestSanityTwoByteString(ExtendedTestCase):
@@ -313,19 +313,25 @@ class TestSanityTwoByteString(ExtendedTestCase):
 
 class TestLongToBytestring(ExtendedTestCase):
 
-    # TODO: Include more tests for range etc
-    # TODO: More
     knownValues=[
-    (0,  False, 2, '\x00\x00\x00\x00'),
-    (0,  True,  2, '\x00\x00\x00\x00'),
-    (1,  False, 2, '\x00\x00\x00\x01'),
-    (2,  False, 2, '\x00\x00\x00\x02'),
-    (-1, True,  2, '\xff\xff\xff\xff'),
+    (0,           False, 2, '\x00\x00\x00\x00'),
+    (0,           True,  2, '\x00\x00\x00\x00'),
+    (1,           False, 2, '\x00\x00\x00\x01'),
+    (1,           True,  2, '\x00\x00\x00\x01'),
+    (2,           False, 2, '\x00\x00\x00\x02'),
+    (2,           True,  2, '\x00\x00\x00\x02'),
+    (75000,       False, 2, '\x00\x01\x24\xf8'),
+    (75000,       True,  2, '\x00\x01\x24\xf8'),    
+    (1000000,     False, 2, '\x00\x0f\x42\x40'),
+    (1000000,     True,  2, '\x00\x0f\x42\x40'),
+    (2147483647,  False, 2, '\x7f\xff\xff\xff'),
+    (2147483647,  True,  2, '\x7f\xff\xff\xff'),
+    (2147483648,  False, 2, '\x80\x00\x00\x00'),
+    (4294967295,  False, 2, '\xff\xff\xff\xff'),
+    (-1,          True,  2, '\xff\xff\xff\xff'),
+    (-2147483648, True,  2, '\x80\x00\x00\x00'),
+    (-200000000,  True,  2, '\xf4\x14\x3e\x00'),
     ]
-    #(1000000,    False, 2),
-    #(-200000000, True, 2),
-    #(75000,      False, 2),
-    #]
 
     def testKnownValues(self):
         for value, signed, numberOfRegisters, knownstring in self.knownValues:
@@ -333,17 +339,20 @@ class TestLongToBytestring(ExtendedTestCase):
             self.assertEqual(resultstring, knownstring)
 
     def testWrongInputValue(self):
+        self.assertRaises(ValueError, minimalmodbus._longToBytestring, -1,              False, 2) # Range 0 to 4294967295
+        self.assertRaises(ValueError, minimalmodbus._longToBytestring, 4294967296,      False, 2)
+        self.assertRaises(ValueError, minimalmodbus._longToBytestring, -2147483649,     True,  2) # Range -2147483648 to 2147483647
+        self.assertRaises(ValueError, minimalmodbus._longToBytestring, 2147483648,      True,  2)
         self.assertRaises(ValueError, minimalmodbus._longToBytestring, 222222222222222, True,  2)
-        self.assertRaises(ValueError, minimalmodbus._longToBytestring, -1,              False, 2)
         for numberOfRegisters in [0, 1, 3, 4, 5, 6, 7, 8, 16]:
-            self.assertRaises(ValueError, minimalmodbus._longToBytestring, 1, True, numberOfRegisters)
+            self.assertRaises(ValueError, minimalmodbus._longToBytestring, 1,           True,  numberOfRegisters)
 
     def testWrongInputType(self):
         for value in _NOT_INTERGERS:
             self.assertRaises(TypeError, minimalmodbus._longToBytestring, value, True, 2)
             self.assertRaises(TypeError, minimalmodbus._longToBytestring, 1,     True, value)
         for value in _NOT_BOOLEANS:
-            self.assertRaises(TypeError, minimalmodbus._longToBytestring, 1, value, 2)
+            self.assertRaises(TypeError, minimalmodbus._longToBytestring, 1,     value, 2)
 
 
 class TestBytestringToLong(ExtendedTestCase):
@@ -357,18 +366,17 @@ class TestBytestringToLong(ExtendedTestCase):
 
     def testWrongInputValue(self):
         for inputstring in ['', 'A', 'AA', 'AAA', 'AAAAA']:
-            self.assertRaises(ValueError, minimalmodbus._bytestringToLong, inputstring, True, 2)
-
+            self.assertRaises(ValueError, minimalmodbus._bytestringToLong, inputstring, True,  2)
         for numberOfRegisters in [0, 1, 3, 4, 5, 6, 7, 8, 16]:
-            self.assertRaises(ValueError, minimalmodbus._bytestringToLong, 'AAAA', True, numberOfRegisters)
+            self.assertRaises(ValueError, minimalmodbus._bytestringToLong, 'AAAA',      True,  numberOfRegisters)
 
     def testWrongInputType(self):
         for value in _NOT_STRINGS:
-            self.assertRaises(TypeError, minimalmodbus._bytestringToLong, value, True, 2)
+            self.assertRaises(TypeError, minimalmodbus._bytestringToLong, value,        True,  2)
         for value in _NOT_BOOLEANS:
-            self.assertRaises(TypeError, minimalmodbus._bytestringToLong, 'AAAA', value, 2)
+            self.assertRaises(TypeError, minimalmodbus._bytestringToLong, 'AAAA',       value, 2)
         for value in _NOT_INTERGERS:
-            self.assertRaises(TypeError, minimalmodbus._bytestringToLong, 'AAAA', True, value)
+            self.assertRaises(TypeError, minimalmodbus._bytestringToLong, 'AAAA',       True,  value)
 
 
 class TestSanityLong(ExtendedTestCase):
@@ -419,7 +427,7 @@ class TestFloatToBytestring(ExtendedTestCase):
         for value in _NOT_NUMERICALS:
             self.assertRaises(TypeError, minimalmodbus._floatToBytestring, value, 2)
         for value in _NOT_INTERGERS:
-            self.assertRaises(TypeError, minimalmodbus._floatToBytestring, 1.1, value)
+            self.assertRaises(TypeError, minimalmodbus._floatToBytestring, 1.1,   value)
 
 
 class TestBytestringToFloat(ExtendedTestCase):
@@ -432,15 +440,15 @@ class TestBytestringToFloat(ExtendedTestCase):
             self.assertAlmostEqual(resultvalue, knownvalue)
 
     def testWrongInputValue(self):
-        self.assertRaises(ValueError, minimalmodbus._bytestringToFloat, 'A',  2) # TODO more
+        self.assertRaises(ValueError, minimalmodbus._bytestringToFloat,     'A',    2) # TODO more
         for numberOfRegisters in [0, 1, 3, 5, 6, 7, 8, 16]:
             self.assertRaises(ValueError, minimalmodbus._bytestringToFloat, 'ABCD', numberOfRegisters)
 
     def testWrongInputType(self):
         for value in _NOT_STRINGS:
-            self.assertRaises(TypeError, minimalmodbus._bytestringToFloat, value, 2)
+            self.assertRaises(TypeError, minimalmodbus._bytestringToFloat, value,   2)
         for value in _NOT_INTERGERS:
-            self.assertRaises(TypeError, minimalmodbus._bytestringToFloat, 1.1, value)
+            self.assertRaises(TypeError, minimalmodbus._bytestringToFloat, 1.1,     value)
 
 
 class TestSanityFloat(ExtendedTestCase):
@@ -488,7 +496,7 @@ class TestValuelistToBytestring(ExtendedTestCase):
 
     def testWrongInputType(self):
         for value in _NOT_INTLISTS:
-            self.assertRaises(TypeError, minimalmodbus._valuelistToBytestring, value, 4)
+            self.assertRaises(TypeError, minimalmodbus._valuelistToBytestring, value,        4)
         for value in _NOT_INTERGERS:
             self.assertRaises(TypeError, minimalmodbus._valuelistToBytestring, [1, 2, 3, 4], value)
 
@@ -504,15 +512,15 @@ class TestBytestringToValuelist(ExtendedTestCase):
 
     def testWrongInputValue(self):
         self.assertRaises(ValueError, minimalmodbus._bytestringToValuelist, '\x00\x01\x00\x02', 1)
-        self.assertRaises(ValueError, minimalmodbus._bytestringToValuelist, '', 1)
-        self.assertRaises(ValueError, minimalmodbus._bytestringToValuelist, '\x00\x01', 0)
-        self.assertRaises(ValueError, minimalmodbus._bytestringToValuelist, '\x00\x01', -1)
+        self.assertRaises(ValueError, minimalmodbus._bytestringToValuelist, '',                 1)
+        self.assertRaises(ValueError, minimalmodbus._bytestringToValuelist, '\x00\x01',         0)
+        self.assertRaises(ValueError, minimalmodbus._bytestringToValuelist, '\x00\x01',         -1)
 
     def testWrongInputType(self):
         for value in _NOT_STRINGS:
             self.assertRaises(TypeError, minimalmodbus._bytestringToValuelist, value, 1)
         for value in _NOT_INTERGERS:
-            self.assertRaises(TypeError, minimalmodbus._bytestringToValuelist, 'A', value)
+            self.assertRaises(TypeError, minimalmodbus._bytestringToValuelist, 'A',   value)
 
 
 class TestSanityValuelist(ExtendedTestCase):
@@ -523,8 +531,7 @@ class TestSanityValuelist(ExtendedTestCase):
         for valuelist, numberOfRegisters, bytestring in self.knownValues:
             resultlist = minimalmodbus._bytestringToValuelist( \
                 minimalmodbus._valuelistToBytestring(valuelist, numberOfRegisters), numberOfRegisters)
-            self.assertEqual(resultlist, valuelist)  #TODO: Is this really functional?
-
+            self.assertEqual(resultlist, valuelist)
 
 class TestTextstringToBytestring(ExtendedTestCase):
 
@@ -544,14 +551,14 @@ class TestTextstringToBytestring(ExtendedTestCase):
 
     def testWrongInputValue(self):
         self.assertRaises(ValueError, minimalmodbus._textstringToBytestring, 'ABC', 1)
-        self.assertRaises(ValueError, minimalmodbus._textstringToBytestring, '', 1)
-        self.assertRaises(ValueError, minimalmodbus._textstringToBytestring, 'A', -1)
+        self.assertRaises(ValueError, minimalmodbus._textstringToBytestring, '',    1)
+        self.assertRaises(ValueError, minimalmodbus._textstringToBytestring, 'A',   -1)
 
     def testWrongInputType(self):
         for value in _NOT_STRINGS:
             self.assertRaises(TypeError, minimalmodbus._textstringToBytestring, value, 1)
         for value in _NOT_INTERGERS:
-            self.assertRaises(TypeError, minimalmodbus._textstringToBytestring, 'AB', value)
+            self.assertRaises(TypeError, minimalmodbus._textstringToBytestring, 'AB',  value)
 
 
 class TestBytestringToTextstring(ExtendedTestCase):
@@ -564,18 +571,18 @@ class TestBytestringToTextstring(ExtendedTestCase):
             self.assertEqual(resultstring.strip(), knownstring)
 
     def testWrongInputValue(self):
-        self.assertRaises(ValueError, minimalmodbus._bytestringToTextstring, 'A', 1)
-        self.assertRaises(ValueError, minimalmodbus._bytestringToTextstring, '', 1)
-        self.assertRaises(ValueError, minimalmodbus._bytestringToTextstring, '', 0)
+        self.assertRaises(ValueError, minimalmodbus._bytestringToTextstring, 'A',   1)
+        self.assertRaises(ValueError, minimalmodbus._bytestringToTextstring, '',    1)
+        self.assertRaises(ValueError, minimalmodbus._bytestringToTextstring, '',    0)
         self.assertRaises(ValueError, minimalmodbus._bytestringToTextstring, 'ABC', 1)
-        self.assertRaises(ValueError, minimalmodbus._bytestringToTextstring, 'AB', 0)
-        self.assertRaises(ValueError, minimalmodbus._bytestringToTextstring, 'AB', -1)
+        self.assertRaises(ValueError, minimalmodbus._bytestringToTextstring, 'AB',  0)
+        self.assertRaises(ValueError, minimalmodbus._bytestringToTextstring, 'AB',  -1)
 
     def testWrongInputType(self):
         for value in _NOT_STRINGS:
             self.assertRaises(TypeError, minimalmodbus._bytestringToTextstring, value, 1)
         for value in _NOT_INTERGERS:
-            self.assertRaises(TypeError, minimalmodbus._bytestringToTextstring, 'AB', value)
+            self.assertRaises(TypeError, minimalmodbus._bytestringToTextstring, 'AB',  value)
 
 
 class TestSanityTextstring(ExtendedTestCase):
@@ -618,8 +625,8 @@ class TestCreateBitPattern(ExtendedTestCase):
             self.assertEqual(resultvalue, knownresult)
 
     def testWrongFunctionCode(self):
-        self.assertRaises(ValueError, minimalmodbus._createBitpattern, 16, 1)
-        self.assertRaises(ValueError, minimalmodbus._createBitpattern, -1, 1)
+        self.assertRaises(ValueError, minimalmodbus._createBitpattern, 16,  1)
+        self.assertRaises(ValueError, minimalmodbus._createBitpattern, -1,  1)
         self.assertRaises(ValueError, minimalmodbus._createBitpattern, 128, 1)
 
     def testFunctionCodeNotInteger(self):
@@ -627,16 +634,16 @@ class TestCreateBitPattern(ExtendedTestCase):
             self.assertRaises(TypeError, minimalmodbus._createBitpattern, value, 1)
 
     def testWrongValue(self):
-        self.assertRaises(ValueError, minimalmodbus._createBitpattern, 5, 2)
-        self.assertRaises(ValueError, minimalmodbus._createBitpattern, 5, 222)
-        self.assertRaises(ValueError, minimalmodbus._createBitpattern, 5, -1)
+        self.assertRaises(ValueError, minimalmodbus._createBitpattern, 5,  2)
+        self.assertRaises(ValueError, minimalmodbus._createBitpattern, 5,  222)
+        self.assertRaises(ValueError, minimalmodbus._createBitpattern, 5,  -1)
         self.assertRaises(ValueError, minimalmodbus._createBitpattern, 15, 2)
         self.assertRaises(ValueError, minimalmodbus._createBitpattern, 15, 222)
         self.assertRaises(ValueError, minimalmodbus._createBitpattern, 15, -1)
 
     def testValueNotInteger(self):
         for value in _NOT_INTERGERS:
-            self.assertRaises(TypeError, minimalmodbus._createBitpattern, 5, value)
+            self.assertRaises(TypeError, minimalmodbus._createBitpattern, 5,  value)
             self.assertRaises(TypeError, minimalmodbus._createBitpattern, 15, value)
 
 
@@ -667,10 +674,6 @@ class TestTwosComplement(ExtendedTestCase):
             result = minimalmodbus._twosComplement(x, bits)
             self.assertEqual(result, knownresult)
 
-    def testNotIntegerInput(self):
-        for value in _NOT_INTERGERS:
-            self.assertRaises(TypeError, minimalmodbus._twosComplement, value, 8)
-
     def testOutOfRange(self):
         self.assertRaises(ValueError, minimalmodbus._twosComplement, 128,     8)
         self.assertRaises(ValueError, minimalmodbus._twosComplement, 1000000, 8)
@@ -683,6 +686,9 @@ class TestTwosComplement(ExtendedTestCase):
         self.assertRaises(ValueError, minimalmodbus._twosComplement, 1,       -2)
         self.assertRaises(ValueError, minimalmodbus._twosComplement, 1,       -100)
 
+    def wrongInputType(self):
+        for value in _NOT_INTERGERS:
+            self.assertRaises(TypeError, minimalmodbus._twosComplement, value, 8)
 
 class TestFromTwosComplement(ExtendedTestCase):
 
@@ -693,11 +699,6 @@ class TestFromTwosComplement(ExtendedTestCase):
 
             result = minimalmodbus._fromTwosComplement(x, bits)
             self.assertEqual(result, knownresult)
-
-    def testNotIntegerInput(self):
-        for value in _NOT_INTERGERS:
-            self.assertRaises(TypeError, minimalmodbus._fromTwosComplement, value, 8)
-            self.assertRaises(TypeError, minimalmodbus._fromTwosComplement, 1, value)
 
     def testOutOfRange(self):
         self.assertRaises(ValueError, minimalmodbus._fromTwosComplement, 256,     8)
@@ -711,6 +712,10 @@ class TestFromTwosComplement(ExtendedTestCase):
         self.assertRaises(ValueError, minimalmodbus._fromTwosComplement, 1,       -2)
         self.assertRaises(ValueError, minimalmodbus._fromTwosComplement, 1,       -100)
 
+    def wrongInputType(self):
+        for value in _NOT_INTERGERS:
+            self.assertRaises(TypeError, minimalmodbus._fromTwosComplement, value, 8)
+            self.assertRaises(TypeError, minimalmodbus._fromTwosComplement, 1,     value)
 
 class TestSanityTwosComplement(ExtendedTestCase):
 
@@ -743,14 +748,14 @@ class TestSetBitOn(ExtendedTestCase):
             result = minimalmodbus._setBitOn(x, bitnum)
             self.assertEqual(result, knownresult)
 
-    def testNotIntegerInput(self):
+    def testWrongInputValue(self):
+        self.assertRaises(ValueError, minimalmodbus._setBitOn, 1,  -1)
+        self.assertRaises(ValueError, minimalmodbus._setBitOn, -2, 1)
+
+    def testWrongInputType(self):
         for value in _NOT_INTERGERS:
             self.assertRaises(TypeError, minimalmodbus._setBitOn, value, 1)
-            self.assertRaises(TypeError, minimalmodbus._setBitOn, 1, value)
-
-    def testNegativeInput(self):
-        self.assertRaises(ValueError, minimalmodbus._setBitOn, 1, -1)
-        self.assertRaises(ValueError, minimalmodbus._setBitOn, -2, 1)
+            self.assertRaises(TypeError, minimalmodbus._setBitOn, 1,     value)
 
 
 class TestXOR(ExtendedTestCase):
@@ -763,27 +768,24 @@ class TestXOR(ExtendedTestCase):
 
     def testKnownValues(self):
         for int1, int2, knownresult in self.knownValues:
-
             result = minimalmodbus._XOR(int1, int2)
             self.assertEqual(result, knownresult)
 
     def testKnownLoop(self):
         for i in range(10):
             for k in range(10):
-
                 knownresult = i ^ k
                 result = minimalmodbus._XOR(i, k)
                 self.assertEqual(result, knownresult)
 
-    def testNotIntegerInput(self):
-        for value in _NOT_INTERGERS:
-            self.assertRaises(TypeError, minimalmodbus._XOR, value, 1)
-            self.assertRaises(TypeError, minimalmodbus._XOR, 1, value)
-
-    def testNegativeInput(self):
-        self.assertRaises(ValueError, minimalmodbus._XOR, 1, -1)
+    def testWrongInputValue(self):
+        self.assertRaises(ValueError, minimalmodbus._XOR, 1,  -1)
         self.assertRaises(ValueError, minimalmodbus._XOR, -1, 1)
 
+    def testWrongInputType(self):
+        for value in _NOT_INTERGERS:
+            self.assertRaises(TypeError, minimalmodbus._XOR, value, 1)
+            self.assertRaises(TypeError, minimalmodbus._XOR, 1,     value)
 
 class TestRightshift(ExtendedTestCase):
 
@@ -795,29 +797,25 @@ class TestRightshift(ExtendedTestCase):
 
     def testKnownValues(self):
         for x, knownshifted, knowncarry in self.knownValues:
-
             resultshifted, resultcarry = minimalmodbus._rightshift(x)
-
             self.assertEqual(resultshifted, knownshifted)
             self.assertEqual(resultcarry, knowncarry)
 
     def testKnownLoop(self):
         for x in range(256):
-
             knownshifted = x >> 1
             knowncarry = x & 1
             resultshifted, resultcarry = minimalmodbus._rightshift(x)
-
             self.assertEqual(resultshifted, knownshifted)
-            self.assertEqual(resultcarry, knowncarry)
+            self.assertEqual(resultcarry,   knowncarry)
 
-    def testNotIntegerInput(self):
-        for value in _NOT_INTERGERS:
-            self.assertRaises(TypeError, minimalmodbus._rightshift, value)
-
-    def testNegativeInput(self):
+    def testWrongInputValue(self):
         self.assertRaises(ValueError, minimalmodbus._rightshift, -1)
 
+    def testWrongInputType(self):
+        for value in _NOT_INTERGERS:
+            self.assertRaises(TypeError, minimalmodbus._rightshift, value)
+            
 
 ############################
 # Error checking functions #
@@ -1553,18 +1551,22 @@ class TestDummyCommunication(ExtendedTestCase):
         self.assertEqual( self.instrument._performCommand(75, 'TESTCOMMAND2'), 'TESTCOMMANDRESPONSE2')
         self.assertEqual( self.instrument._performCommand(2, '\x00\x3d\x00\x01'), '\x01\x01' ) # Read bit register 61 on slave 1 using function code 2.
 
-    def testPerformcommandWrongFunctioncode(self):
-        #self.assertRaises(ValueError, self.instrument._performCommand, 35, 'TESTCOMMAND') # Wrong ValueError message (CRC error = 'Not found in dictionary')
-        self.assertRaises(ValueError, self.instrument._performCommand, -1, 'TESTCOMMAND')
+    def testPerformcommandWrongSlaveResponse(self):
+        self.assertRaises(ValueError, self.instrument._performCommand, 1,  'TESTCOMMAND') # Wrong slave address
+        self.assertRaises(ValueError, self.instrument._performCommand, 2,  'TESTCOMMAND') # Wrong function code
+        self.assertRaises(ValueError, self.instrument._performCommand, 3,  'TESTCOMMAND') # Wrong crc
+        self.assertRaises(ValueError, self.instrument._performCommand, 4,  'TESTCOMMAND') # Too short response message
+        self.assertRaises(ValueError, self.instrument._performCommand, 5,  'TESTCOMMAND') # Error indication from slave
+        
+    def testPerformcommandWrongInputValue(self):
+        self.assertRaises(ValueError, self.instrument._performCommand, -1,  'TESTCOMMAND')
         self.assertRaises(ValueError, self.instrument._performCommand, 128, 'TESTCOMMAND')
 
-    def testPerformcommandWrongFunctioncodeType(self):
+    def testPerformcommandWrongInputType(self):
         for value in _NOT_INTERGERS:
             self.assertRaises(TypeError, self.instrument._performCommand, value, 'TESTCOMMAND')
-
-    def testPerformcommandWrongPayloadType(self):
         for value in _NOT_STRINGS:
-            self.assertRaises(TypeError, self.instrument._performCommand, 16, value)
+            self.assertRaises(TypeError, self.instrument._performCommand, 16,     value)
 
 
     ## Communicate ##
@@ -2077,9 +2079,13 @@ RESPONSES['TESTMESSAGE'] = 'TESTRESPONSE'
 
 # Retrieve an known response (for testing the _performCommand method) #
 # ---------------------------------------------------------------- #
-RESPONSES['\x01\x10TESTCOMMAND\x08B'] = '\x01\x10TESTCOMMANDRESPONSE\xb4,'
+RESPONSES['\x01\x10TESTCOMMAND\x08B']     = '\x01\x10TESTCOMMANDRESPONSE\xb4,'
 RESPONSES['\x01\x4bTESTCOMMAND2\x18\xc8'] = '\x01\x4bTESTCOMMANDRESPONSE2K\x8c'
-
+RESPONSES['\x01\x01TESTCOMMAND4~']        = '\x02\x01TESTCOMMANDRESPONSEx]'    # Wrong slave address
+RESPONSES['\x01\x02TESTCOMMAND0z']        = '\x01\x03TESTCOMMANDRESPONSE2\x8c' # Wrong function code
+RESPONSES['\x01\x03TESTCOMMAND\xcd\xb9']  = '\x01\x03TESTCOMMANDRESPONSEab'    # Wrong CRC
+RESPONSES['\x01\x04TESTCOMMAND8r']        = 'A'                                # Too short response message
+RESPONSES['\x01\x05TESTCOMMAND\xc5\xb1']  = '\x01\x85TESTCOMMANDRESPONSE\xa54' # Error indication from slave
 
 ## Recorded data from OmegaCN7500 ##
 ####################################

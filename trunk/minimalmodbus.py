@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#   Copyright 2011 Jonas Berg
+#   Copyright 2012 Jonas Berg
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -817,7 +817,9 @@ def _embedPayload(slaveaddress, functioncode, payloaddata):
     Raises:
         ValueError, TypeError.
 
-    The resulting message has the format: slaveaddress byte + functioncode byte + payloaddata + CRC (which is two bytes)
+    The resulting message has the format: slaveaddress byte + functioncode byte + payloaddata + CRC (which is two bytes).
+    
+    The CRC is calculated from the string made up of slaveaddress byte + functioncode byte + payloaddata.
 
     """
     _checkSlaveaddress(slaveaddress)

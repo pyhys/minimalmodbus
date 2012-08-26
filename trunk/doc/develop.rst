@@ -303,9 +303,24 @@ but you need to generate the payload yourself. Note that the same data is sent::
 
 Use this if you are to implement other Modbus function codes, as it takes care of CRC generation etc.
 
-There are several useful helper functions available in the :mod:`minimalmodbus` module. 
-See :ref:`internalminimalmodbus`. 
 
+
+Other useful internal functions
+------------------------------------------------------------------------------
+There are several useful (module level) helper functions available in the :mod:`minimalmodbus` module. 
+See :ref:`internalminimalmodbus`. These can be used also when developing your own Modbus instrument hardware.
+
+For example::
+
+    >>> minimalmodbus._calculateCrcString('\x01\x03\x00\x05\x00\x01')
+    '\x94\x0b'
+
+And to embed the payload ``'\x10\x11\x12'`` to slave address 1, with functioncode 16::
+
+    >>> minimalmodbus._embedPayload(1, 16, '\x10\x11\x12')
+    '\x01\x10\x10\x11\x12\x90\x98'
+
+Note that the API might change, as this is outside the official API.
 
 Found a bug?
 ------------------------------------------------------------------------------
@@ -320,6 +335,7 @@ The HTML theme on http://minimalmodbus.sourceforge.net/ is the Sphinx 'Default' 
 
 * The colors etc are adjusted in the :file:`doc/config.py` file. 
 * Header sizes are adjusted in the :file:`doc/_static/default.css` file.
+* The sourceforge logo is displayed using the custom template :file:`doc/_templates/sourceforgelogo.html`. Add ``'sourceforgelogo.html'`` to ``html_sidebars`` in the :file:`doc/config.py` file.
 
 Note that Sphinx version 1.1.2 or later is required to build the documentation.
 
@@ -373,6 +389,7 @@ Change version number etc
 `````````````````````````
 * Manually change the ``__version__`` field in the :file:`minimalmodbus.py` source file.
 * Manually change the release date in :file:`CHANGES.txt`
+* Set copyright year in :file:`doc/conf.py` 
 
 (Note that the version number in the Sphinx configuration file :file:`doc/conf.py` and in the file :file:`setup.py` are changed automatically).
 
@@ -428,6 +445,10 @@ Build the HTML and PDF documentation  (in directory :file:`doc` after making sur
 
     make html
     make latexpdf
+
+Verify all external links::
+
+    make linkcheck
 
 Build the test coverage report (in directory :file:`trunk`). First manually clear the directory :file:`htmlcov`::
    
@@ -768,7 +789,8 @@ TODO
 ----
  
 For next release:
-  * More tests in test_minimalmodbus
+  * test_minimalmodbus: More tests for float conversion functions
+  * test_minimalmodbus: More tests for _genericCommand()
   * Finetune coding style (pep8.py)
   
 

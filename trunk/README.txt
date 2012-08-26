@@ -279,7 +279,10 @@ To switch on the debug mode, where the communication details are printed::
     instrument.debug = True
     print instrument.read_register(289, 1)  # Remember to use print() for Python3
 
-With this you can easily see what is sent to and from your instrument, and immediately see what is wrong. Similar in interactive mode::
+With this you can easily see what is sent to and from your instrument, and immediately see what is wrong. 
+This is very useful also if developing your own Modbus compatible electronic instruments.
+
+Similar in interactive mode::
 
     >>> instrument.read_register(4097,1)
     MinimalModbus debug mode. Writing to instrument: '\n\x03\x10\x01\x00\x01\xd0q'
@@ -298,7 +301,7 @@ http://en.wikipedia.org/wiki/Latin_1.
 
 The byte strings can look pretty strange when printed, as values 0 to 31 (dec) are
 ASCII control signs (not corresponding to any letter). For example 'vertical tab' 
-and 'line feed' are among those. To make the output easier to understand, use::
+and 'line feed' are among those. To make the output easier to understand, print the representation, ``repr()``. Use::
 
     print repr(bytestringname)
 
@@ -321,14 +324,14 @@ Interpret the request message (8 bytes) as:
 ========= ==== ==== ============
 Displayed  Hex  Dec  Description
 ========= ==== ==== ============
-``\x01``  1    1    Slave address (here 1)
-``\x03``  3    3    Function code (here 3 = read registers)
-``\x00``  0    0    Start address MSB
-``\x05``  5    5    Start address LSB
-``\x00``  0    0    Number of registers MSB
-``\x01``  1    1    Number of registers LSB
+``\x01``  01   1    Slave address (here 1)
+``\x03``  03   3    Function code (here 3 = read registers)
+``\x00``  00   0    Start address MSB
+``\x05``  05   5    Start address LSB
+``\x00``  00   0    Number of registers MSB
+``\x01``  01   1    Number of registers LSB
 ``\x94``  94   148  CRC LSB
-``\x0b``  b    11   CRC MSB
+``\x0b``  0b   11   CRC MSB
 ========= ==== ==== ============
 
 So the data in the request is:
@@ -344,10 +347,10 @@ Interpret the response message (7 bytes) as:
 ========= ==== ==== ============
 Displayed  Hex  Dec  Description
 ========= ==== ==== ============
-``\x01``  1    1    Slave address (here 1)
-``\x03``  3    3    Function code (here 3 = read registers)
-``\x02``  2    2    Byte count
-``\x00``  0    0    Value MSB
+``\x01``  01   1    Slave address (here 1)
+``\x03``  03   3    Function code (here 3 = read registers)
+``\x02``  02   2    Byte count
+``\x00``  00   0    Value MSB
 ``º``     ba   186  Value LSB
 ``9``     37   57   CRC LSB
 ``÷``     f7   247  CRC MSB
@@ -363,6 +366,22 @@ We know since earlier that this instrument stores a temperature of 18.6 C as 186
 We provide this information as the second argument in the function call ``read_register(5,1)``, 
 why it automatically divides the register data by 10 and returns ``18.6``.
 
+
+Special characters
+``````````````````
+Some ASCII control characters have representations like ``\n``, and their meanings are described in this table:
+
+=================== ================= =============== =============== ======================
+``repr()`` shows as Can be written as ASCII hex value ASCII dec value Description
+=================== ================= =============== =============== ======================
+``\t``              ``\x09``           09              9               Horizontal Tab (TAB)
+``\n``              ``\x0a``           0a              10              Linefeed (LF)
+``\r``              ``\x0d``           0d              13              Carriage Return (CR)
+=================== ================= =============== =============== ======================
+
+It is also possible to write for example ASCII Bell (BEL, hex = 07, dec = 7) as ``\a``, but its ``repr()`` will still print ``\x07``.
+
+More about ASCII control characters is found on http://en.wikipedia.org/wiki/ASCII.
 
 Trouble shooting
 ----------------
@@ -448,7 +467,9 @@ Significant contributions by Aaron LaLonde and Asier Abalos.
 
 Feedback
 --------
-If you find this software useful, then please leave a review on the SourceForge project page (Log-in is required). http://sourceforge.net/projects/minimalmodbus/ 
+If you find this software useful, then please like it on Facebook via http://sourceforge.net/projects/minimalmodbus/. 
+
+You can also leave a review on the SourceForge project page http://sourceforge.net/projects/minimalmodbus/ (then make a SourceForge account first).
 
 Please also subscribe to the (low volume) mailing list minimalmodbus-list@lists.sourceforge.net (see https://lists.sourceforge.net/lists/listinfo/minimalmodbus-list) so you can help other users getting started.
 

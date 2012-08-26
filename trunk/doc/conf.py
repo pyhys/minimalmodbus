@@ -43,7 +43,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'minimalmodbus'
-copyright = '2011, Jonas Berg'
+copyright = '2012, Jonas Berg'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -147,7 +147,9 @@ html_last_updated_fmt = '%Y-%m-%d %H:%M'
 #html_use_smartypants = True
 
 # Custom sidebar templates, maps document names to template names.
-#html_sidebars = {}
+html_sidebars = {
+   '**': ['localtoc.html', 'relations.html', 'sourcelink.html', 'searchbox.html', 'sourceforgelogo.html'],
+}
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
@@ -182,6 +184,8 @@ html_last_updated_fmt = '%Y-%m-%d %H:%M'
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'minimalmodbusdoc'
 
+# Text for permalinks, shown when hovering mouse
+#html_add_permalinks = 'Permalink'
 
 # -- Options for LaTeX output --------------------------------------------------
 
