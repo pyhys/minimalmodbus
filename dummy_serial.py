@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#   Copyright 2011 Jonas Berg
+#   Copyright 2012 Jonas Berg
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -63,7 +63,7 @@ Might be monkey-patched in the calling test module.
 class Serial():
     """Dummy (mock) serial port for testing purposes.
 
-    Mimics the behavior of a serial port as defined by the `pySerial <http:/pyserial.sourceforge.net/>`_ module.
+    Mimics the behavior of a serial port as defined by the `pySerial <http://pyserial.sourceforge.net/>`_ module.
 
     Args:
         (whatever): The arguments are not used.
