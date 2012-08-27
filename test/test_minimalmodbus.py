@@ -106,6 +106,21 @@ class ExtendedTestCase(unittest.TestCase):
         else:
             unittest.TestCase.assertRaises(self, excClass, callableObj, *args, **kwargs)
 
+    def assertAlmostEqualRatio(self, first, second, epsilon = 1.000001):
+        """A function to compare floats, with ratio instead of difference."""
+        
+        if first == second:
+            return 
+            
+        if (first < 0 and second >= 0) or (first >= 0 and second < 0):
+            raise AssertionError('The arguments have different signs: {0} and {1}'.format(repr(first), repr(second)))
+        
+        ratio = max(first, second)/float(min(first, second))
+        if ratio > epsilon:
+            raise AssertionError('The arguments are not equal: {0} and {1}. Epsilon is {2}.'.\
+                format(repr(first), repr(second), repr(epsilon) ))
+            
+
 
 ##############################
 # Constants for type testing #
@@ -399,17 +414,24 @@ class TestFloatToBytestring(ExtendedTestCase):
     # http://en.wikipedia.org/wiki/Single-precision_floating-point_format
     # http://en.wikipedia.org/wiki/Double-precision_floating-point_format
 
-    #TODO:  more. Range?
+    #TODO:  more. Range? Try very large values within range
     knownValues=[
-    (1.0,     2, '?\x80\x00\x00'),
     (1,       2, '\x3f\x80\x00\x00'),
-    (1.0,     2, '\x3f\x80\x00\x00'),
+    (1.0,     2, '\x3f\x80\x00\x00'), # wikipedia
+    (1.0,     2, '?\x80\x00\x00'),
+    (1.1,     2, '\x3f\x8c\xcc\xcd'),
+    (100,     2, '\x42\xc8\x00\x00'),
     (100.0,   2, '\x42\xc8\x00\x00'),
     (1.0e5,   2, '\x47\xc3\x50\x00'),
-    (1.0,     4, '\x3f\xf0\x00\x00\x00\x00\x00\x00'),
-    (1,       2, '\x3f\x80\x00\x00'), # wikipedia
+    (1.1e9,   2, '\x4e\x83\x21\x56'),
+    (1.0e16,  2, '\x5a\x0e\x1b\xca'),
+    (1.5e16,  2, '\x5a\x55\x29\xaf'),
+    (-1.1,    2, '\xbf\x8c\xcc\xcd'),
     (-2,      2, '\xc0\x00\x00\x00'),
+    (1.0,     4, '\x3f\xf0\x00\x00\x00\x00\x00\x00'),
     (2,       4, '\x40\x00\x00\x00\x00\x00\x00\x00'),
+    (1.1e9,   4, '\x41\xd0\x64\x2a\xc0\x00\x00\x00'),
+    (-1.1,    4, '\xbf\xf1\x99\x99\x99\x99\x99\x9a'),
     (-2,      4, '\xc0\x00\x00\x00\x00\x00\x00\x00'),
     ]
 
@@ -417,9 +439,10 @@ class TestFloatToBytestring(ExtendedTestCase):
         for value, numberOfRegisters, knownstring in self.knownValues:
             resultstring = minimalmodbus._floatToBytestring(value, numberOfRegisters)
             self.assertEqual(resultstring, knownstring)
+        self.assertEqual(minimalmodbus._floatToBytestring(1.5e999, 2), '\x7f\x80\x00\x00') # +inf
 
     def testWrongInputValue(self):
-        #self.assertRaises(ValueError, minimalmodbus._floatToBytestring, 1.1E9999999,  2) #TODO fix!
+        # Note: Out of range will not necessarily raise any error, instead it will indicate +inf etc.
         for numberOfRegisters in [0, 1, 3, 5, 6, 7, 8, 16]:
             self.assertRaises(ValueError, minimalmodbus._floatToBytestring, 1.1, numberOfRegisters)
 
@@ -437,41 +460,32 @@ class TestBytestringToFloat(ExtendedTestCase):
     def testKnownValues(self):
         for knownvalue, numberOfRegisters, bytestring in self.knownValues:
             resultvalue = minimalmodbus._bytestringToFloat(bytestring, numberOfRegisters)
-            self.assertAlmostEqual(resultvalue, knownvalue)
+            self.assertAlmostEqualRatio(resultvalue, knownvalue)
 
     def testWrongInputValue(self):
-        self.assertRaises(ValueError, minimalmodbus._bytestringToFloat,     'A',    2) # TODO more
+        for bytestring in ['', 'A', 'AB', 'ABC', 'ABCDE', 'ABCDEF', 'ABCDEFG']:
+            self.assertRaises(ValueError, minimalmodbus._bytestringToFloat, bytestring, 2)
+            self.assertRaises(ValueError, minimalmodbus._bytestringToFloat, bytestring, 4)
         for numberOfRegisters in [0, 1, 3, 5, 6, 7, 8, 16]:
-            self.assertRaises(ValueError, minimalmodbus._bytestringToFloat, 'ABCD', numberOfRegisters)
+            self.assertRaises(ValueError, minimalmodbus._bytestringToFloat, 'ABCD',     numberOfRegisters)
+            self.assertRaises(ValueError, minimalmodbus._bytestringToFloat, 'ABCDEFGH', numberOfRegisters)
 
     def testWrongInputType(self):
         for value in _NOT_STRINGS:
-            self.assertRaises(TypeError, minimalmodbus._bytestringToFloat, value,   2)
+            self.assertRaises(TypeError, minimalmodbus._bytestringToFloat, value, 2)
         for value in _NOT_INTERGERS:
-            self.assertRaises(TypeError, minimalmodbus._bytestringToFloat, 1.1,     value)
+            self.assertRaises(TypeError, minimalmodbus._bytestringToFloat, 1.1,   value)
 
 
 class TestSanityFloat(ExtendedTestCase):
 
-    knownValues = [
-    (1,      2),
-    (1.0,    2),
-    (1.1,    2),
-    (-1.1,   2),
-    (-1.1,   4),
-    (100,    2),
-    (100.0,  2),
-    (1.0E16, 4),
-    (1.5E16, 4),
-    ]
-    #TODO: More values, adjust AlmostEqual
-    # todo knownValues=TestFloatToBytestring.knownValues
+    knownValues=TestFloatToBytestring.knownValues
 
     def testSanity(self):
-        for value, numberOfRegisters in self.knownValues:
+        for value, numberOfRegisters, knownstring in self.knownValues:
             resultvalue = minimalmodbus._bytestringToFloat( \
                 minimalmodbus._floatToBytestring(value, numberOfRegisters), numberOfRegisters)
-            self.assertAlmostEqual(resultvalue, value)
+            self.assertAlmostEqualRatio(resultvalue, value)
 
 
 class TestValuelistToBytestring(ExtendedTestCase):
