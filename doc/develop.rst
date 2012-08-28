@@ -789,7 +789,6 @@ TODO
 ----
  
 For next release:
-  * test_minimalmodbus: More tests for float conversion functions
   * test_minimalmodbus: More tests for _genericCommand()
   * Finetune coding style (pep8.py)
   

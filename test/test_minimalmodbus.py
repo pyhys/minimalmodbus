@@ -414,7 +414,6 @@ class TestFloatToBytestring(ExtendedTestCase):
     # http://en.wikipedia.org/wiki/Single-precision_floating-point_format
     # http://en.wikipedia.org/wiki/Double-precision_floating-point_format
 
-    #TODO:  more. Range? Try very large values within range
     knownValues=[
     (1,       2, '\x3f\x80\x00\x00'),
     (1.0,     2, '\x3f\x80\x00\x00'), # wikipedia
@@ -426,13 +425,18 @@ class TestFloatToBytestring(ExtendedTestCase):
     (1.1e9,   2, '\x4e\x83\x21\x56'),
     (1.0e16,  2, '\x5a\x0e\x1b\xca'),
     (1.5e16,  2, '\x5a\x55\x29\xaf'),
+    (3.65e30, 2, '\x72\x38\x47\x25'),
     (-1.1,    2, '\xbf\x8c\xcc\xcd'),
     (-2,      2, '\xc0\x00\x00\x00'),
+    (-3.6e30, 2, '\xf2\x35\xc0\xe9'),
     (1.0,     4, '\x3f\xf0\x00\x00\x00\x00\x00\x00'),
     (2,       4, '\x40\x00\x00\x00\x00\x00\x00\x00'),
     (1.1e9,   4, '\x41\xd0\x64\x2a\xc0\x00\x00\x00'),
+    (3.65e30, 4, '\x46\x47\x08\xe4\x9e\x2f\x4d\x62'),
+    (2.42e300,4, '\x7e\x4c\xe8\xa5\x67\x1f\x46\xa0'), 
     (-1.1,    4, '\xbf\xf1\x99\x99\x99\x99\x99\x9a'),
     (-2,      4, '\xc0\x00\x00\x00\x00\x00\x00\x00'),
+    (-3.6e30, 4, '\xc6\x46\xb8\x1d\x1a\x43\xb2\x06'), 
     ]
 
     def testKnownValues(self):
@@ -1384,7 +1388,8 @@ class TestDummyCommunication(ExtendedTestCase):
         self.assertEqual( self.instrument.read_float(103, 3),    1.0 )
         self.assertEqual( self.instrument.read_float(103, 3, 2), 1.0 )
         self.assertEqual( self.instrument.read_float(103, 3, 4), -2.0 )
-
+        self.assertAlmostEqualRatio( self.instrument.read_float(103, 4, 2), 3.65e30 ) # Function code 4
+        
     def testReadFloatWrongValue(self):
         self.assertRaises(ValueError, self.instrument.read_float, -1) # Wrong address
         self.assertRaises(ValueError, self.instrument.read_float, -1,    3) 
@@ -1404,7 +1409,6 @@ class TestDummyCommunication(ExtendedTestCase):
 
 
     ## Write Float ##
-    # Todo: byte order
 
     def testWriteFloat(self):
         self.instrument.write_float(103, 1.1)
@@ -1992,6 +1996,12 @@ RESPONSES['\x01\x10' + '\x00f\x00\x02\x04\xff\xff\xff\xfd' + '\xf5\xf8'] = '\x01
 # Message:  Slave address 1, function code 3. Register address 103, 2 registers. CRC.
 # Response: Slave address 1, function code 3. 4 bytes, value=1.0. CRC.
 RESPONSES['\x01\x03' + '\x00g\x00\x02' + 'u\xd4'] = '\x01\x03' + '\x04\x3f\x80\x00\x00' + '\xf7\xcf'
+
+# Read float from address 103 (2 registers) on slave 1 using function code 4 #
+# ---------------------------------------------------------------------------#
+# Message:  Slave address 1, function code 4. Register address 103, 2 registers. CRC.
+# Response: Slave address 1, function code 4. 4 bytes, value=3.65e30. CRC.
+RESPONSES['\x01\x04' + '\x00g\x00\x02' + '\xc0\x14'] = '\x01\x04' + '\x04\x72\x38\x47\x25' + '\x93\x1a'
 
 # Read float from address 103 (4 registers) on slave 1 using function code 3 #
 # ---------------------------------------------------------------------------#
