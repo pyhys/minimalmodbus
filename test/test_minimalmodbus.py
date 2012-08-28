@@ -180,10 +180,10 @@ class TestExtractPayload(ExtendedTestCase):
             self.assertEqual(result, knownresult)
 
     def testWrongInputValue(self):
-        self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc3',    2,      2) # Wrong CRC
+        self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc3',    2,      2) # Wrong CRC from slave
         self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x82123q\x02',    2,      2) # Error indication from slave
-        self.assertRaises(ValueError, minimalmodbus._extractPayload, 'A',                   2,      2) # Too short message
-        self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x72123B\x02',    2,      2) # Other value in response
+        self.assertRaises(ValueError, minimalmodbus._extractPayload, 'A',                   2,      2) # Too short message from slave
+        self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x72123B\x02',    2,      2) # Wrong functioncode from slave
         for value in [3, 95, 128, 248, -1]:
             self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', value, 2) # Wrong slave address
             self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 2,     value) # Wrong functioncode
@@ -1201,7 +1201,7 @@ class TestDummyCommunication(ExtendedTestCase):
         self.assertEqual( self.instrument.read_bit(62, 1),              0 )
 
     def testReadBitWrongValue(self):
-        self.assertRaises(ValueError, self.instrument.read_bit, -1) # Wrong address
+        self.assertRaises(ValueError, self.instrument.read_bit, -1) # Wrong register address
         self.assertRaises(ValueError, self.instrument.read_bit, 65536)
         self.assertRaises(ValueError, self.instrument.read_bit, 62,   0) # Wrong function code
         self.assertRaises(ValueError, self.instrument.read_bit, 62,   -1)
@@ -1229,7 +1229,7 @@ class TestDummyCommunication(ExtendedTestCase):
         self.instrument.write_bit(72, 1, functioncode=15)
 
     def testWriteBitWrongValue(self):
-        self.assertRaises(ValueError, self.instrument.write_bit, 65536, 1) # Wrong address
+        self.assertRaises(ValueError, self.instrument.write_bit, 65536, 1) # Wrong register address
         self.assertRaises(ValueError, self.instrument.write_bit, -1,    1)
         self.assertRaises(ValueError, self.instrument.write_bit, 71,    10) # Wrong bit value
         self.assertRaises(ValueError, self.instrument.write_bit, 71,    -5)
@@ -1344,7 +1344,7 @@ class TestDummyCommunication(ExtendedTestCase):
         self.assertEqual( self.instrument.read_long(102, signed=True), -1)
 
     def testReadLongWrongValue(self):
-        self.assertRaises(ValueError, self.instrument.read_long, -1) # Wrong address
+        self.assertRaises(ValueError, self.instrument.read_long, -1) # Wrong register address
         self.assertRaises(ValueError, self.instrument.read_long, 65536)
         self.assertRaises(ValueError, self.instrument.read_long, 102,  1)  # Wrong function code
         self.assertRaises(ValueError, self.instrument.read_long, 102,  -1)  
@@ -1368,7 +1368,7 @@ class TestDummyCommunication(ExtendedTestCase):
         self.instrument.write_long(102, -3, True)
 
     def testWriteLongWrongValue(self):
-        self.assertRaises(ValueError, self.instrument.write_long, -1,    5) # Wrong address
+        self.assertRaises(ValueError, self.instrument.write_long, -1,    5) # Wrong register address
         self.assertRaises(ValueError, self.instrument.write_long, 65536, 5)
         self.assertRaises(ValueError, self.instrument.write_long, 102,   -5, signed=False)  # Wrong value
         self.assertRaises(ValueError, self.instrument.write_long, 102,   888888888888888888888)  
@@ -1391,7 +1391,7 @@ class TestDummyCommunication(ExtendedTestCase):
         self.assertAlmostEqualRatio( self.instrument.read_float(103, 4, 2), 3.65e30 ) # Function code 4
         
     def testReadFloatWrongValue(self):
-        self.assertRaises(ValueError, self.instrument.read_float, -1) # Wrong address
+        self.assertRaises(ValueError, self.instrument.read_float, -1) # Wrong register address
         self.assertRaises(ValueError, self.instrument.read_float, -1,    3) 
         self.assertRaises(ValueError, self.instrument.read_float, -1,    3,  2) 
         self.assertRaises(ValueError, self.instrument.read_float, 65536)
@@ -1415,7 +1415,7 @@ class TestDummyCommunication(ExtendedTestCase):
         self.instrument.write_float(103, 1.1, 4)
 
     def testWriteFloatWrongValue(self):
-        self.assertRaises(ValueError, self.instrument.write_float, -1,     1.1) # Wrong address
+        self.assertRaises(ValueError, self.instrument.write_float, -1,     1.1) # Wrong register address
         self.assertRaises(ValueError, self.instrument.write_float, 65536,  1.1)
         for value in [-1, 0, 1, 3, 5, 6, 7, 8, 16]:
             self.assertRaises(ValueError, self.instrument.write_float, 103, 1.1, value) # Wrong number of registers
@@ -1436,7 +1436,7 @@ class TestDummyCommunication(ExtendedTestCase):
         self.assertEqual( self.instrument.read_string(104, 4, 3), 'ABCDEFGH')
 
     def testReadStringWrongValue(self):
-        self.assertRaises(ValueError, self.instrument.read_string, -1) # Wrong address
+        self.assertRaises(ValueError, self.instrument.read_string, -1) # Wrong register address
         self.assertRaises(ValueError, self.instrument.read_string, 65536)
         self.assertRaises(ValueError, self.instrument.read_string, 104,  -1) # Wrong number of registers
         self.assertRaises(ValueError, self.instrument.read_string, 104,  256)
@@ -1460,7 +1460,7 @@ class TestDummyCommunication(ExtendedTestCase):
         self.instrument.write_string(104, 'ABCDEFGH', 4)
 
     def testWriteStringWrongValue(self):
-        self.assertRaises(ValueError, self.instrument.write_string, -1,    'A') # Wrong address
+        self.assertRaises(ValueError, self.instrument.write_string, -1,    'A') # Wrong register address
         self.assertRaises(ValueError, self.instrument.write_string, 65536, 'A')
         self.assertRaises(ValueError, self.instrument.write_string, 104,   'AAA',       1) # Too long string
         self.assertRaises(ValueError, self.instrument.write_string, 104,   'ABCDEFGHI', 4)
@@ -1482,7 +1482,7 @@ class TestDummyCommunication(ExtendedTestCase):
         self.assertEqual( self.instrument.read_registers(105, 3), [16, 32, 64] )
 
     def testReadRegistersWrongValue(self):
-        self.assertRaises(ValueError, self.instrument.read_registers, -1,    1) # Wrong address
+        self.assertRaises(ValueError, self.instrument.read_registers, -1,    1) # Wrong register address
         self.assertRaises(ValueError, self.instrument.read_registers, 65536, 1)
         self.assertRaises(ValueError, self.instrument.read_registers, 105,   -1) # Wrong number of registers
         self.assertRaises(ValueError, self.instrument.read_registers, 105,   256)
@@ -1504,7 +1504,7 @@ class TestDummyCommunication(ExtendedTestCase):
         self.instrument.write_registers(105, [2, 4, 8])
 
     def testWriteRegistersWrongValue(self):
-        self.assertRaises(ValueError, self.instrument.write_registers, -1,    [2]) # Wrong address
+        self.assertRaises(ValueError, self.instrument.write_registers, -1,    [2]) # Wrong register address
         self.assertRaises(ValueError, self.instrument.write_registers, 65536, [2])
         self.assertRaises(ValueError, self.instrument.write_registers, 105,   []) # Wrong list value
         self.assertRaises(ValueError, self.instrument.write_registers, 105,   [-1])
@@ -1531,13 +1531,14 @@ class TestDummyCommunication(ExtendedTestCase):
         self.assertRaises(ValueError, self.instrument._genericCommand, -1, 20)
         self.assertRaises(ValueError, self.instrument._genericCommand, 128, 20)
 
+    def testGenericCommandWrongRegisteraddress(self):
+        self.assertRaises(ValueError, self.instrument._genericCommand, 3, -1)
+        self.assertRaises(ValueError, self.instrument._genericCommand, 3, 65536)
+
     def testGenericCommandWrongFunctioncodeType(self):
         for value in _NOT_INTERGERS:
             self.assertRaises(TypeError, self.instrument._genericCommand, value, 20)
 
-    def testGenericCommandWrongRegisteraddress(self):
-        self.assertRaises(ValueError, self.instrument._genericCommand, 3, -1)
-        self.assertRaises(ValueError, self.instrument._genericCommand, 3, 65536)
 
     def testGenericCommandWrongRegisteraddressType(self):
         for value in _NOT_INTERGERS:
