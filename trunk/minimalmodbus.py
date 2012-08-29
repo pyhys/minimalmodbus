@@ -586,8 +586,8 @@ class Instrument():
                 raise TypeError('The value parameter must be a list. Given {0}.'.format( repr(value) ))
 
             if len(value) != numberOfRegisters:
-                raise ValueError('The list length does not match number of registers. Given {0} and {1}.'.format( \
-                    repr(len(value)), repr(numberOfRegisters) ))
+                raise ValueError('The list length does not match number of registers. List: {0},  Number of registers: {1}.'.format( \
+                    repr(value), repr(numberOfRegisters) ))
 
         ## Build payload to slave ##
         if functioncode in [1, 2]:
