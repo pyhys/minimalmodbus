@@ -525,7 +525,7 @@ class Instrument():
             PAYLOADFORMAT_STRING, PAYLOADFORMAT_REGISTER, PAYLOADFORMAT_REGISTERS]
 
         ## Check input values ##
-        _checkFunctioncode(functioncode, ALL_ALLOWED_FUNCTIONCODES)
+        _checkFunctioncode(functioncode, ALL_ALLOWED_FUNCTIONCODES) # Note: The calling facade functions should validate this
         _checkRegisteraddress(registeraddress)
         _checkInt(numberOfDecimals, minvalue=0, description='number of decimals' )
         _checkInt(numberOfRegisters, minvalue=1, maxvalue=MAX_NUMBER_OF_REGISTERS, description='number of registers' )
@@ -543,8 +543,12 @@ class Instrument():
             payloadformat = PAYLOADFORMAT_REGISTER
 
         if functioncode in [3, 4, 6, 16]:
-            if payloadformat not in ALL_PAYLOADFORMATS:
-                raise ValueError('The payload format is wrong. Given format: {0}.'.format( repr(payloadformat) ))
+            if payloadformat not in ALL_PAYLOADFORMATS: 
+                raise ValueError('The payload format is unknown. Given format: {0}, functioncode: {1}.'.format( repr(payloadformat), repr(functioncode) ))
+
+        else:
+            if payloadformat is not None:
+                raise ValueError('The payload format given is not allowed for this function code. Given format: {0}, functioncode: {1}.'.format( repr(payloadformat), repr(functioncode) ))
 
                     # Signed and numberOfDecimals
         if signed:

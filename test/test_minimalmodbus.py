@@ -1526,6 +1526,9 @@ class TestDummyCommunication(ExtendedTestCase):
         # write_register(35, 20)
         self.instrument._genericCommand(16, 35, value=20)
         
+        # write_register(45, 88)
+        self.instrument._genericCommand(6, 45, value=88) 
+        
         # write_long(102, 5)
         self.instrument._genericCommand(16, 102, value=5, numberOfRegisters=2, payloadformat='long')
         
@@ -1577,17 +1580,37 @@ class TestDummyCommunication(ExtendedTestCase):
         self.assertRaises(ValueError, self.instrument._genericCommand, 3,   289, payloadformat='ABC')
         
     def testGenericCommandWrongValueCombinations(self):     
-        #TODO: More
-        self.assertRaises(ValueError, self.instrument._genericCommand,  5,  71, value=1,         numberOfRegisters=2) # write_bit()
-        self.assertRaises(ValueError, self.instrument._genericCommand, 16,  35, value=20,        numberOfRegisters=2) # ?
+        # Bit
+        self.assertRaises(ValueError, self.instrument._genericCommand,  5,  71, value=1,         numberOfRegisters=2) 
+        
+        # Register
+        self.assertRaises(TypeError,  self.instrument._genericCommand,  6,  45, value='a')
+        self.assertRaises(ValueError, self.instrument._genericCommand,  6,  45, value=88,        numberOfRegisters=2)
+        self.assertRaises(ValueError, self.instrument._genericCommand, 16,  35, value=20,        numberOfRegisters=2) 
+        
+        # Float
         self.assertRaises(TypeError,  self.instrument._genericCommand, 16, 105, value=[2, 4, 8], numberOfRegisters=2, payloadformat='float') 
         self.assertRaises(TypeError,  self.instrument._genericCommand, 16, 105, value='ABC',     numberOfRegisters=2, payloadformat='float') 
-        self.assertRaises(ValueError, self.instrument._genericCommand, 16, 105, value=3.3,       numberOfRegisters=2, numberOfDecimals=1, payloadformat='float') 
-        self.assertRaises(ValueError, self.instrument._genericCommand, 16, 105, value=3.3,       numberOfRegisters=2, signed=True, payloadformat='float') 
+        self.assertRaises(ValueError, self.instrument._genericCommand, 16, 105, value=None,      numberOfRegisters=2, payloadformat='float') 
+        self.assertRaises(ValueError, self.instrument._genericCommand, 16, 105, value=3.3,       numberOfRegisters=2, payloadformat='float', numberOfDecimals=1) 
+        self.assertRaises(ValueError, self.instrument._genericCommand, 16, 105, value=3.3,       numberOfRegisters=2, payloadformat='float', signed=True) 
+        
+        # String
+        self.assertRaises(ValueError, self.instrument._genericCommand, 1,  104, value='A',   numberOfRegisters=1, payloadformat='string')
+        self.assertRaises(ValueError, self.instrument._genericCommand, 16, 104, value='ABC', numberOfRegisters=1, payloadformat='string')
+        self.assertRaises(ValueError, self.instrument._genericCommand, 16, 104, value=None,  numberOfRegisters=1, payloadformat='string')
+        self.assertRaises(TypeError,  self.instrument._genericCommand, 16, 104, value=22,    numberOfRegisters=1, payloadformat='string')
+        self.assertRaises(ValueError, self.instrument._genericCommand, 16, 104, value='A',   numberOfRegisters=1, payloadformat='string', signed=True)
+        self.assertRaises(ValueError, self.instrument._genericCommand, 16, 104, value='A',   numberOfRegisters=1, payloadformat='string', numberOfDecimals=1)        
+        
+        # Registers
         self.assertRaises(TypeError,  self.instrument._genericCommand, 16, 105, value=1,         numberOfRegisters=1, payloadformat='registers')
-        self.assertRaises(ValueError, self.instrument._genericCommand, 16, 105, value=[2, 4, 8], numberOfRegisters=1, payloadformat='registers') 
-        self.assertRaises(ValueError, self.instrument._genericCommand, 16, 104, value='ABC',     numberOfRegisters=1, payloadformat='string')
-        # also write register fc=6, value not numerical
+        self.assertRaises(TypeError,  self.instrument._genericCommand, 16, 105, value='A',       numberOfRegisters=1, payloadformat='registers')
+        self.assertRaises(ValueError, self.instrument._genericCommand, 16, 105, value=[2, 4, 8], numberOfRegisters=1, payloadformat='registers')
+        self.assertRaises(ValueError, self.instrument._genericCommand, 16, 105, value=None,     numberOfRegisters=3, payloadformat='registers') 
+        self.assertRaises(ValueError, self.instrument._genericCommand, 16, 105, value=[2, 4, 8], numberOfRegisters=3, payloadformat='registers', signed=True) 
+        self.assertRaises(ValueError, self.instrument._genericCommand, 16, 105, value=[2, 4, 8], numberOfRegisters=3, payloadformat='registers', numberOfDecimals=1)
+        
 
     def testGenericCommandWrongType(self):  
         # Note: The parameter 'value' type is dependent on the other parameters. See tests above.
