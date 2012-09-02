@@ -617,6 +617,8 @@ class TestSanityTextstring(ExtendedTestCase):
             self.assertEqual( resultstring.strip(), textstring )
 
 
+# TODO: Test _pack and _unpack
+
 class TestBitResponseToValue(ExtendedTestCase):
 
     def testKnownValues(self):
@@ -624,7 +626,9 @@ class TestBitResponseToValue(ExtendedTestCase):
         self.assertEqual(minimalmodbus._bitResponseToValue('\x01'), 1)
 
     def testWrongValues(self):
-        self.assertRaises(ValueError, minimalmodbus._bitResponseToValue, 'ABC' )
+        self.assertRaises(ValueError, minimalmodbus._bitResponseToValue, 'ABC')   # Too long string
+        self.assertRaises(ValueError, minimalmodbus._bitResponseToValue, 'A')     # Wrong string
+        self.assertRaises(ValueError, minimalmodbus._bitResponseToValue, '\x03')  # Wrong string
 
     def testWrongType(self):
         for value in _NOT_STRINGS:

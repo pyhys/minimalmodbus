@@ -1396,7 +1396,7 @@ def _bitResponseToValue(bytestring):
     elif bytestring == RESPONSE_OFF:
         return 0
     else:
-        raise ValueError( 'Could not convert bit response to a value. Input: {0}'.format(repr(bytestring)) )
+        raise ValueError('Could not convert bit response to a value. Input: {0!r}'.format(bytestring))
 
 
 def _createBitpattern(functioncode, value):
@@ -1638,13 +1638,13 @@ def _checkFunctioncode(functioncode, listOfAllowedValues=[]):
         return
 
     if not isinstance(listOfAllowedValues, list):
-        raise TypeError('The listOfAllowedValues should be a list. Given: {0}'.format(repr(listOfAllowedValues)))
+        raise TypeError('The listOfAllowedValues should be a list. Given: {0!r}'.format(listOfAllowedValues))
 
     for value in listOfAllowedValues:
         _checkInt(value, FUNCTIONCODE_MIN, FUNCTIONCODE_MAX, description='functioncode inside listOfAllowedValues')
 
     if functioncode not in listOfAllowedValues:
-        raise ValueError('Wrong function code: {0}, allowed values are {1}'.format(functioncode, repr(listOfAllowedValues)))
+        raise ValueError('Wrong function code: {0}, allowed values are {1!r}'.format(functioncode, listOfAllowedValues))
 
 
 def _checkSlaveaddress(slaveaddress):
@@ -1701,8 +1701,8 @@ def _checkResponseByteCount(payload):
 
     if givenNumberOfDatabytes != countedNumberOfDatabytes:
         errortemplate = 'Wrong given number of bytes in the response: {0}, but counted is {1} as data payload length is {2}.' + \
-            ' The data payload is: {3}'
-        errortext = errortemplate.format(givenNumberOfDatabytes, countedNumberOfDatabytes, len(payload), repr(payload))
+            ' The data payload is: {3!r}'
+        errortext = errortemplate.format(givenNumberOfDatabytes, countedNumberOfDatabytes, len(payload), payload)
         raise ValueError(errortext)
 
 
@@ -1725,11 +1725,11 @@ def _checkResponseRegisterAddress(payload, registeraddress):
     BYTERANGE_FOR_STARTADDRESS = slice(0, 2)
 
     bytesForStartAddress = payload[BYTERANGE_FOR_STARTADDRESS]
-    receivedStartAddress = _twoByteStringToNum( bytesForStartAddress )
+    receivedStartAddress = _twoByteStringToNum(bytesForStartAddress)
 
     if receivedStartAddress != registeraddress:
-        raise ValueError( 'Wrong given write start adress: {0}, but commanded is {1}. The data payload is: {2}'.format( \
-            receivedStartAddress, registeraddress, repr(payload)))
+        raise ValueError('Wrong given write start adress: {0}, but commanded is {1}. The data payload is: {2!r}'.format( \
+            receivedStartAddress, registeraddress, payload))
 
 
 def _checkResponseNumberOfRegisters(payload, numberOfRegisters):
@@ -1754,8 +1754,8 @@ def _checkResponseNumberOfRegisters(payload, numberOfRegisters):
     receivedNumberOfWrittenReisters = _twoByteStringToNum( bytesForNumberOfRegisters )
 
     if receivedNumberOfWrittenReisters != numberOfRegisters:
-        raise ValueError( 'Wrong number of registers to write in the response: {0}, but commanded is {1}. The data payload is: {2}'.format( \
-            receivedNumberOfWrittenReisters, numberOfRegisters, repr(payload)) )
+        raise ValueError('Wrong number of registers to write in the response: {0}, but commanded is {1}. The data payload is: {2!r}'.format( \
+            receivedNumberOfWrittenReisters, numberOfRegisters, payload))
 
 
 def _checkResponseWriteData(payload, writedata):
@@ -1779,8 +1779,8 @@ def _checkResponseWriteData(payload, writedata):
     receivedWritedata = payload[BYTERANGE_FOR_WRITEDATA]
 
     if receivedWritedata != writedata:
-        raise ValueError('Wrong write data in the response: {0}, but commanded is {1}. The data payload is: {2}'.format( \
-            repr(receivedWritedata), repr(writedata), repr(payload)))
+        raise ValueError('Wrong write data in the response: {0!r}, but commanded is {1!r}. The data payload is: {2!r}'.format( \
+            receivedWritedata, writedata, payload))
 
 
 def _checkString(inputstring, description, minlength=0, maxlength=None):
@@ -1800,20 +1800,20 @@ def _checkString(inputstring, description, minlength=0, maxlength=None):
     """
     # Type checking
     if not isinstance(description, str):
-        raise TypeError('The description should be a string. Given: {0}'.format(repr(description)) )
+        raise TypeError('The description should be a string. Given: {0!r}'.format(description))
 
     if not isinstance(inputstring, str):
-        raise TypeError('The {0} should be a string. Given: {1}'.format(description, repr(inputstring)) )
+        raise TypeError('The {0} should be a string. Given: {1!r}'.format(description, inputstring))
 
     if not isinstance(maxlength, (int, type(None))):
-        raise TypeError('The maxlength must be an integer or None. Given: {0}'.format(repr(maxlength)) )
+        raise TypeError('The maxlength must be an integer or None. Given: {0!r}'.format(maxlength))
 
     # Check values
     _checkInt(minlength, minvalue=0, maxvalue=None, description='minlength')
 
     if len(inputstring) < minlength:
-        raise ValueError('The {0} is too short: {1}, but minimum value is {2}. Given: {3}'.format( \
-            description, len(inputstring), minlength, repr(inputstring)))
+        raise ValueError('The {0} is too short: {1}, but minimum value is {2}. Given: {3!r}'.format( \
+            description, len(inputstring), minlength, inputstring))
 
     if not maxlength is None:
         if maxlength < 0:
@@ -1821,11 +1821,11 @@ def _checkString(inputstring, description, minlength=0, maxlength=None):
 
         if maxlength < minlength:
             raise ValueError('The maxlength must not be smaller than minlength. Given: {0} and {1}'.format( \
-                maxlength, minlength) )
+                maxlength, minlength))
 
         if len(inputstring) > maxlength:
-            raise ValueError('The {0} is too long: {1}, but maximum value is {2}. Given: {3}'.format( \
-                description, len(inputstring), maxlength, repr(inputstring)))
+            raise ValueError('The {0} is too long: {1}, but maximum value is {2}. Given: {3!r}'.format( \
+                description, len(inputstring), maxlength, inputstring))
 
 
 def _checkInt(inputvalue, minvalue=None, maxvalue=None, description='inputvalue'):
@@ -1844,16 +1844,16 @@ def _checkInt(inputvalue, minvalue=None, maxvalue=None, description='inputvalue'
 
     """
     if not isinstance(description, str):
-        raise TypeError('The description should be a string. Given: {0}'.format(repr(description)) )
+        raise TypeError('The description should be a string. Given: {0!r}'.format(description))
 
     if not isinstance(inputvalue, (int, long)):
-        raise TypeError('The {0} must be an integer. Given: {1}'.format(description, repr(inputvalue)) )
+        raise TypeError('The {0} must be an integer. Given: {1!r}'.format(description, inputvalue))
 
     if not isinstance(minvalue, (int, long, type(None))):
-        raise TypeError('The minvalue must be an integer or None. Given: {0}'.format(repr(minvalue)) )
+        raise TypeError('The minvalue must be an integer or None. Given: {0!r}'.format(minvalue))
 
     if not isinstance(maxvalue, (int, long, type(None))):
-        raise TypeError('The maxvalue must be an integer or None. Given: {0}'.format(repr(maxvalue)) )
+        raise TypeError('The maxvalue must be an integer or None. Given: {0!r}'.format(maxvalue))
 
     _checkNumerical(inputvalue, minvalue, maxvalue, description)
 
@@ -1875,16 +1875,16 @@ def _checkNumerical(inputvalue, minvalue=None, maxvalue=None, description='input
     """
     # Type checking
     if not isinstance(description, str):
-        raise TypeError( 'The description should be a string. Given: {0}'.format(repr(description)) )
+        raise TypeError( 'The description should be a string. Given: {0!r}'.format(description) )
 
     if not isinstance(inputvalue, (int, long, float)):
-        raise TypeError( 'The {0} must be numerical. Given: {1}'.format(description, repr(inputvalue)) )
+        raise TypeError( 'The {0} must be numerical. Given: {1!r}'.format(description, inputvalue))
 
     if not isinstance(minvalue, (int, float, long, type(None))):
-        raise TypeError( 'The minvalue must be numeric or None. Given: {0}'.format(repr(minvalue)) )
+        raise TypeError('The minvalue must be numeric or None. Given: {0!r}'.format(minvalue))
 
     if not isinstance(maxvalue, (int, float, long, type(None))):
-        raise TypeError( 'The maxvalue must be numeric or None. Given: {0}'.format(repr(maxvalue)) )
+        raise TypeError('The maxvalue must be numeric or None. Given: {0!r}'.format(maxvalue))
 
     # Consistency checking
     if (not minvalue is None) and (not maxvalue is None):
@@ -1917,7 +1917,7 @@ def _checkBool(inputvalue, description='inputvalue'):
     """
     _checkString(description, minlength=1, description='description string')
     if not isinstance(inputvalue, bool):
-        raise TypeError( 'The {0} must be boolean. Given: {1}'.format(description, repr(inputvalue)) )
+        raise TypeError('The {0} must be boolean. Given: {1!r}'.format(description, inputvalue))
 
 
 #####################
