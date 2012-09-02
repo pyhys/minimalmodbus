@@ -173,12 +173,6 @@ If you have a temperature text box where a user has entered ``255`` (possibly de
 This way it is easy to test the measurement program and the GUI separately.
 
 
-Known issues
------------------------------------------------------------------------------
-Changing `close_port_after_each_call` after instantiation of :class:`.Instrument` might be 
-problematic. Set the value ``minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL=True`` immediately after ``import minimalmodbus`` instead.
-
-
 Install or uninstalling a distribution
 --------------------------------------------------------------------------
 To install a python (downloaded) package, uncompress it and use::

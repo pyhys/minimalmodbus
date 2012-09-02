@@ -406,6 +406,19 @@ If there is no response from your instrument, you can try using a lower baud rat
 See also the pySerial pages: http://pyserial.sourceforge.net/
 
 
+Known issues
+--------------
+For the data types involving more than one register (float, long etc), 
+there are differences in the byte order used by different manufacturers. 
+A floating point value of 1.0 is encoded (in single precision) as 3f800000 (hex). 
+In this implementation the data will be sent as ``'\x3f\x80'`` and ``'\x00\x00'`` to two consecutetive registers. 
+Make sure to test that it makes sense for your instrument. 
+It is pretty straight-forward to change this code if some other byte order is required by anyone (see support section).
+
+Changing `close_port_after_each_call` after instantiation of :class:`.Instrument` might be 
+problematic. Set the value ``minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL=True`` immediately after ``import minimalmodbus`` instead.
+
+
 Support
 -------
 Send a mail to minimalmodbus-list@lists.sourceforge.net

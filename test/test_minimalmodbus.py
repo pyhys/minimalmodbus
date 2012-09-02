@@ -71,7 +71,7 @@ import dummy_serial
 # For showing the error messages caught by assertRaises() #
 ###########################################################
 
-ALSO_TIME_CONSUMING_TESTS = False
+ALSO_TIME_CONSUMING_TESTS = True
 """Set this to :const:`False` to skip the most time consuming tests"""
 
 VERBOSITY = 0
@@ -1319,6 +1319,12 @@ class TestDummyCommunication(ExtendedTestCase):
 
     def testWriteRegisterWithWrongCrcResponse(self):
         self.assertRaises(ValueError, self.instrument.write_register, 51, 99) # Slave gives wrong CRC
+        
+    def testWriteRegisterSuppressErrorMessageAtWrongCRC(self):
+        try:
+            self.instrument.write_register(51, 99) # Slave gives wrong CRC
+        except ValueError:
+            minimalmodbus._print_out('Minimalmodbus: An error was suppressed.')
 
     def testWriteRegisterWithWrongSlaveaddressResponse(self):
         self.assertRaises(ValueError, self.instrument.write_register, 54, 99) # Slave gives wrong slaveaddress
@@ -1611,7 +1617,6 @@ class TestDummyCommunication(ExtendedTestCase):
         self.assertRaises(ValueError, self.instrument._genericCommand, 16, 105, value=[2, 4, 8], numberOfRegisters=3, payloadformat='registers', signed=True) 
         self.assertRaises(ValueError, self.instrument._genericCommand, 16, 105, value=[2, 4, 8], numberOfRegisters=3, payloadformat='registers', numberOfDecimals=1)
         
-
     def testGenericCommandWrongType(self):  
         # Note: The parameter 'value' type is dependent on the other parameters. See tests above.
         for value in _NOT_INTERGERS:
@@ -1623,6 +1628,7 @@ class TestDummyCommunication(ExtendedTestCase):
             self.assertRaises(TypeError, self.instrument._genericCommand,  3,     289,    signed=value)
         for value in _NOT_STRINGS_OR_NONE:
             self.assertRaises(ValueError, self.instrument._genericCommand, 3,     289,    payloadformat=value)
+
 
     ## Perform command ##
 
