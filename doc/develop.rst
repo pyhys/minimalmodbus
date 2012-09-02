@@ -805,7 +805,7 @@ TODO
 For next release:
   * Finetune coding style (pep8.py)
   * tests for _pack and _unpack in test_minimalmodbus
-  * change repr() to !r in minimalmodbus down to line 1375
+  * change repr() to !r in _genericCommand
   
 
 .
