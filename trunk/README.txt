@@ -415,7 +415,7 @@ In this implementation the data will be sent as ``'\x3f\x80'`` and ``'\x00\x00'`
 Make sure to test that it makes sense for your instrument. 
 It is pretty straight-forward to change this code if some other byte order is required by anyone (see support section).
 
-Changing `close_port_after_each_call` after instantiation of :class:`.Instrument` might be 
+Changing ``close_port_after_each_call`` after instantiation of ``Instrument`` might be 
 problematic. Set the value ``minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL=True`` immediately after ``import minimalmodbus`` instead.
 
 

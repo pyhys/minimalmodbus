@@ -473,7 +473,7 @@ class Instrument():
 
         """
         if not isinstance(values, list):
-            raise TypeError('The "values parameter" must be a list. Given: {0}'.format(repr(values)))
+            raise TypeError('The "values parameter" must be a list. Given: {0!r}'.format(values))
         _checkInt(len(values), minvalue=1, description='length of input list')
         # Note: The content of the list is checked at content conversion.
 
@@ -871,29 +871,27 @@ def _extractPayload(response, slaveaddress, functioncode):
     calculatedCRC = _calculateCrcString( responseWithoutCRC )
 
     if receivedCRC != calculatedCRC:
-        raise ValueError( 'CRC error: {0} ({1}) instead of {2} ({3}). The response is: {4}'.format( \
-            _twoByteStringToNum(receivedCRC),
-            repr(receivedCRC),
-            _twoByteStringToNum(calculatedCRC),
-            repr(calculatedCRC),
-            repr(response)    ))
+        raise ValueError('CRC error: {0} ({1!r}) instead of {2} ({3!r}). The response is: {4!r}'.format( \
+            _twoByteStringToNum(receivedCRC), receivedCRC,
+            _twoByteStringToNum(calculatedCRC), calculatedCRC,
+            response))
 
     # Check slave address
     responseaddress = ord( response[BYTEPOSITION_FOR_SLAVEADDRESS] )
 
     if responseaddress != slaveaddress:
-        raise ValueError( 'Wrong return slave address: {0} instead of {1}. The response is: {2}'.format( \
-            responseaddress, slaveaddress, repr(response) ))
+        raise ValueError( 'Wrong return slave address: {0} instead of {1}. The response is: {2!r}'.format( \
+            responseaddress, slaveaddress, response))
 
     # Check function code
     receivedFunctioncode = ord( response[BYTEPOSITION_FOR_FUNCTIONCODE ] )
 
     if receivedFunctioncode == _setBitOn(functioncode, BITNUMBER_FUNCTIONCODE_ERRORINDICATION):
-        raise ValueError( 'The slave is indicating an error. The response is: {0}'.format( repr(response) ))
+        raise ValueError('The slave is indicating an error. The response is: {0!r}'.format(response))
 
     elif receivedFunctioncode != functioncode:
-        raise ValueError( 'Wrong functioncode: {0} instead of {1}. The response is: {2}'.format( \
-            receivedFunctioncode, functioncode, repr(response) ))
+        raise ValueError('Wrong functioncode: {0} instead of {1}. The response is: {2!r}'.format( \
+            receivedFunctioncode, functioncode, response))
 
     # Read data payload
     firstDatabyteNumber = NUMBER_OF_RESPONSE_STARTBYTES
@@ -1132,7 +1130,7 @@ def _floatToBytestring(value, numberOfRegisters=2):
         formatcode += 'd'  # Double (8 bytes)
         lengthtarget = 8
     else:
-        raise ValueError('Wrong number of registers! Given value is {0}'.format(repr(numberOfRegisters)))
+        raise ValueError('Wrong number of registers! Given value is {0!r}'.format(numberOfRegisters))
 
     outstring = _pack(formatcode, value)
     assert len(outstring) == lengthtarget
@@ -1169,11 +1167,11 @@ def _bytestringToFloat(bytestring, numberOfRegisters=2):
     elif numberOfRegisters == 4:
         formatcode += 'd'  # Double (8 bytes)
     else:
-        raise ValueError('Wrong number of registers! Given value is {0}'.format(repr(numberOfRegisters)))
+        raise ValueError('Wrong number of registers! Given value is {0!r}'.format(numberOfRegisters))
 
     if len(bytestring) != numberOfBytes:
-        raise ValueError('Wrong length of the byte string! Given value is {0}, and numberOfRegisters is {1}.'.\
-            format(repr(bytestring), repr(numberOfRegisters)))
+        raise ValueError('Wrong length of the byte string! Given value is {0!r}, and numberOfRegisters is {1!r}.'.\
+            format(bytestring, numberOfRegisters))
 
     return _unpack(formatcode, bytestring)
 
@@ -1256,7 +1254,7 @@ def _valuelistToBytestring(valuelist, numberOfRegisters):
     _checkInt(numberOfRegisters, minvalue=1, description='number of registers')
 
     if not isinstance(valuelist, list):
-        raise TypeError('The valuelist parameter must be a list. Given {0}.'.format( repr(valuelist) ))
+        raise TypeError('The valuelist parameter must be a list. Given {0!r}.'.format(valuelist))
 
     for value in valuelist:
         _checkInt(value, minvalue=MINVALUE, maxvalue=MAXVALUE, description='elements in the input value list')
@@ -1328,9 +1326,8 @@ def _pack(formatstring, value):
         result = struct.pack(formatstring, value)
     except:
         errortext = 'The value to send is probably out of range, as the num-to-bytestring conversion failed.'
-        errortext += ' Value: {0} Struct format code is: {1}'
-        formattedError = errortext.format(repr(value), formatstring)
-        raise ValueError(formattedError)
+        errortext += ' Value: {0!r} Struct format code is: {1}'
+        raise ValueError(errortext.format(value, formatstring))
 
     if sys.version_info[0] > 2:
         return str(result, encoding='latin1')  # Convert types to make it Python3 compatible
@@ -1365,10 +1362,9 @@ def _unpack(formatstring, packed):
     try:
         value = struct.unpack(formatstring, packed)[0]
     except:
-        errortext = 'The received bytestring is probably wrong  as the bytestring-to-num conversion failed.'
-        errortext += ' Bytestring: {0} Struct format code is: {1}'
-        formattedError = errortext.format(repr(packed), formatstring)
-        raise ValueError(formattedError)
+        errortext = 'The received bytestring is probably wrong, as the bytestring-to-num conversion failed.'
+        errortext += ' Bytestring: {0!r} Struct format code is: {1}'
+        raise ValueError(errortext.format(packed, formatstring))
 
     return value
 

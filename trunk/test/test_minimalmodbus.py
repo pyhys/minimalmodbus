@@ -617,7 +617,41 @@ class TestSanityTextstring(ExtendedTestCase):
             self.assertEqual( resultstring.strip(), textstring )
 
 
-# TODO: Test _pack and _unpack
+# TODO!
+class TestPack(ExtendedTestCase):
+
+    knownValues = [
+        ('A',    1, 'A '),
+        ('AB',   1, 'AB'),
+        ('ABC',  2, 'ABC '),
+        ('ABCD', 2, 'ABCD'),
+        ('A',    16, 'A'+' '*31),
+        ('A',    32, 'A'+' '*63),
+        ]
+
+    def testKnownValues(self):
+        pass
+
+    def testWrongInputValue(self):
+        pass
+
+    def testWrongInputType(self):
+        pass
+        
+# TODO!
+class TestUnpack(ExtendedTestCase):
+
+    knownValues=TestPack.knownValues
+
+    def testKnownValues(self):
+        pass
+
+    def testWrongInputValue(self):
+        pass
+
+    def testWrongInputType(self):
+        pass
+
 
 class TestBitResponseToValue(ExtendedTestCase):
 
