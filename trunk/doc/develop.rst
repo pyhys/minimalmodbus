@@ -780,16 +780,12 @@ or::
 
     pep8 --statistics minimalmodbus.py
     
-    pep8 --show-pep8  minimalmodbus.py
-    
-    pep8 --show-source  minimalmodbus.py 
-    
+    pep8 -r --select=E251 minimalmodbus.py
 
 TODO
 ----
  
 For next release:
-  * test_minimalmodbus: More tests for _genericCommand()
   * Finetune coding style (pep8.py)
   
 
