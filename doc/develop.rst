@@ -39,7 +39,7 @@ Most of the logic is located in separate (easy to test) functions on module leve
 
 Number conversion to and from bytestrings
 -----------------------------------------------
-The Python module struct is used for conversion. See http://docs.python.org/library/struct.html
+The Python module :mod:`struct` is used for conversion. See http://docs.python.org/library/struct.html
 
 Several wrapper functions are defined for easy use of the conversion. These functions also do argument validity checking.
 
@@ -55,11 +55,19 @@ Floating point number       :meth:`._floatToBytestring`         :meth:`._bytestr
 String                      :meth:`._textstringToBytestring`    :meth:`._bytestringToTextstring`
 =========================== =================================== ================================
 
+Note that the :mod:`struct` module produces byte buffers for Python3, but bytestrings for Python2. 
+This is compensated for automatically by using the wrapper functions 
+:meth:`._pack` and :meth:`._unpack`.
+
 For a description of them, see :ref:`internalminimalmodbus`. 
+
+
 
 Unittesting
 ------------------------------------------------------------------------------
 A brief introduction to unittesting is found here: http://docs.python.org/release/2.5.2/lib/minimal-example.html
+
+The :mod:`unittest` module is documented here: http://docs.python.org/library/unittest.html
 
 Inside the unpacked folder go to :file:`test` and run the unit tests with::
      
@@ -126,6 +134,14 @@ This is part of the output::
     ok
 
 See :mod:`test_minimalmodbus` for details on how this is implemented.
+
+It is possible to run just a few tests. To load a single class of test cases::
+
+     suite = unittest.TestLoader().loadTestsFromTestCase(test_minimalmodbus.TestSetBitOn)
+     
+If necessary::
+
+    reload(test_minimalmodbus.minimalmodbus)
 
 Recording communication data for unittesting
 -------------------------------------------------------------------------
@@ -308,7 +324,8 @@ Use this if you are to implement other Modbus function codes, as it takes care o
 Other useful internal functions
 ------------------------------------------------------------------------------
 There are several useful (module level) helper functions available in the :mod:`minimalmodbus` module. 
-See :ref:`internalminimalmodbus`. These can be used also when developing your own Modbus instrument hardware.
+The module level helper functions can be used without any hardware connected.
+See :ref:`internalminimalmodbus`. These can be handy when developing your own Modbus instrument hardware.
 
 For example::
 
@@ -475,7 +492,7 @@ Upload the test coverage report. In directory :file:`trunk`::
 
 Test documentation
 `````````````````````
-Test links on the Sourceforge and PyPI pages. If adjustments are required on the PyPI page, log in and manually adjust the text. This might be for exampe parsing problems with the ReSTR text (allows no Sphinx-specific constructs).
+Test links on the Sourceforge and PyPI pages. If adjustments are required on the PyPI page, log in and manually adjust the text. This might be for example parsing problems with the ReSTR text (allows no Sphinx-specific constructs).
 
 
 Generate Windows installer
@@ -787,6 +804,8 @@ TODO
  
 For next release:
   * Finetune coding style (pep8.py)
+  * tests for _pack and _unpack in test_minimalmodbus
+  * change repr() to !r in minimalmodbus down to line 1375
   
 
 .

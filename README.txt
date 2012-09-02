@@ -482,7 +482,7 @@ Feedback
 --------
 If you find this software useful, then please like it on Facebook via http://sourceforge.net/projects/minimalmodbus/. 
 
-You can also leave a review on the SourceForge project page http://sourceforge.net/projects/minimalmodbus/ (then make a SourceForge account first).
+You can also leave a review on the SourceForge project page http://sourceforge.net/projects/minimalmodbus/ (then first make a SourceForge account).
 
 Please also subscribe to the (low volume) mailing list minimalmodbus-list@lists.sourceforge.net (see https://lists.sourceforge.net/lists/listinfo/minimalmodbus-list) so you can help other users getting started.
 
