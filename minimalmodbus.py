@@ -534,7 +534,7 @@ class Instrument():
 
         if payloadformat is not None:
             if payloadformat not in ALL_PAYLOADFORMATS:
-                raise ValueError('Wrong payload format variable. Given: {0}'.format( repr(payloadformat) ))
+                raise ValueError('Wrong payload format variable. Given: {0!r}'.format(payloadformat))
 
         ## Check combinations of input parameters ##
         numberOfRegisterBytes = numberOfRegisters * _NUMBER_OF_BYTES_PER_REGISTER
@@ -545,34 +545,37 @@ class Instrument():
 
         if functioncode in [3, 4, 6, 16]:
             if payloadformat not in ALL_PAYLOADFORMATS:
-                raise ValueError('The payload format is unknown. Given format: {0}, functioncode: {1}.'.format( repr(payloadformat), repr(functioncode) ))
-
+                raise ValueError('The payload format is unknown. Given format: {0!r}, functioncode: {1!r}.'.\
+                    format(payloadformat, functioncode))
         else:
             if payloadformat is not None:
-                raise ValueError('The payload format given is not allowed for this function code. Given format: {0}, functioncode: {1}.'.format( repr(payloadformat), repr(functioncode) ))
+                raise ValueError('The payload format given is not allowed for this function code. ' + \
+                    'Given format: {0!r}, functioncode: {1!r}.'.format(payloadformat, functioncode))
 
                     # Signed and numberOfDecimals
         if signed:
             if payloadformat not in [PAYLOADFORMAT_REGISTER, PAYLOADFORMAT_LONG]:
-                raise ValueError('The "signed" parameter can not be used for this data format. Given format: {0}.'.format( repr(payloadformat) ))
+                raise ValueError('The "signed" parameter can not be used for this data format. ' + \
+                    'Given format: {0!r}.'.format(payloadformat))
 
         if numberOfDecimals > 0 and payloadformat != PAYLOADFORMAT_REGISTER:
-                raise ValueError('The "numberOfDecimals" parameter can not be used for this data format. Given format: {0}.'.format( repr(payloadformat) ))
+            raise ValueError('The "numberOfDecimals" parameter can not be used for this data format. ' + \
+                'Given format: {0!r}.'.format(payloadformat))
 
                     # Number of registers
         if functioncode not in [3, 4, 16] and numberOfRegisters != 1:
-            raise ValueError('The numberOfRegisters is not valid for this function code. Given {0} and {1}.'.format( \
-                repr(numberOfRegisters), functioncode))
+            raise ValueError('The numberOfRegisters is not valid for this function code. ' + \
+                'NumberOfRegisters: {0!r}, functioncode {1}.'.format(numberOfRegisters, functioncode))
 
         if functioncode == 16 and payloadformat == PAYLOADFORMAT_REGISTER and numberOfRegisters != 1:
-            raise ValueError('Wrong numberOfRegisters when writing to a single register. Given {0}.'.format( \
-                repr(numberOfRegisters)))
+            raise ValueError('Wrong numberOfRegisters when writing to a ' + \
+                'single register. Given {0!r}.'.format(numberOfRegisters))
             # Note: For function code 16 there is checking also in the content conversion functions.
 
                     # Value
         if functioncode in [5, 6, 15, 16] and value is None:
-            raise ValueError('The input value is not valid for this function code. Given {0} and {1}.'.format( \
-                repr(value), functioncode))
+            raise ValueError('The input value is not valid for this function code. ' + \
+                'Given {0!r} and {1}.'.format(value, functioncode))
 
         if functioncode == 16 and payloadformat in [PAYLOADFORMAT_REGISTER, PAYLOADFORMAT_FLOAT, PAYLOADFORMAT_LONG]:
             _checkNumerical(value, description='input value')
@@ -588,11 +591,11 @@ class Instrument():
                     # Value for registers
         if functioncode == 16 and payloadformat == PAYLOADFORMAT_REGISTERS:
             if not isinstance(value, list):
-                raise TypeError('The value parameter must be a list. Given {0}.'.format( repr(value) ))
+                raise TypeError('The value parameter must be a list. Given {0!r}.'.format(value))
 
             if len(value) != numberOfRegisters:
-                raise ValueError('The list length does not match number of registers. List: {0},  Number of registers: {1}.'.format( \
-                    repr(value), repr(numberOfRegisters) ))
+                raise ValueError('The list length does not match number of registers. ' + \
+                    'List: {0!r},  Number of registers: {1!r}.'.format(value, numberOfRegisters))
 
         ## Build payload to slave ##
         if functioncode in [1, 2]:
@@ -666,16 +669,16 @@ class Instrument():
         if functioncode in [1, 2]:
             registerdata = payloadFromSlave[NUMBER_OF_BYTES_BEFORE_REGISTERDATA:]
             if len(registerdata) != NUMBER_OF_BYTES_FOR_ONE_BIT:
-                raise ValueError('The registerdata length does not match NUMBER_OF_BYTES_FOR_ONE_BIT. Given {0}.'.format( \
-                    repr(len(registerdata)) ))
+                raise ValueError('The registerdata length does not match NUMBER_OF_BYTES_FOR_ONE_BIT. ' + \
+                    'Given {0}.'.format(len(registerdata)))
 
             return _bitResponseToValue(registerdata)
 
         if functioncode in [3, 4]:
             registerdata = payloadFromSlave[NUMBER_OF_BYTES_BEFORE_REGISTERDATA:]
             if len(registerdata) != numberOfRegisterBytes:
-                raise ValueError('The registerdata length does not match number of register bytes. Given {0} and {1}.'.format( \
-                    repr(len(registerdata)), repr(numberOfRegisterBytes) ))
+                raise ValueError('The registerdata length does not match number of register bytes. ' + \
+                    'Given {0!r} and {1!r}.'.format(len(registerdata), numberOfRegisterBytes))
 
             if payloadformat == PAYLOADFORMAT_STRING:
                 return _bytestringToTextstring(registerdata, numberOfRegisters)
@@ -692,8 +695,8 @@ class Instrument():
             elif payloadformat == PAYLOADFORMAT_REGISTER:
                 return _twoByteStringToNum(registerdata, numberOfDecimals, signed=signed)
 
-            raise ValueError('Wrong payloadformat for return value generation. Given {0}'.format( \
-                repr(payloadformat) ))
+            raise ValueError('Wrong payloadformat for return value generation. ' + \
+                'Given {0}'.format(payloadformat))
 
 
     ##########################################
