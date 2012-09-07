@@ -617,40 +617,85 @@ class TestSanityTextstring(ExtendedTestCase):
             self.assertEqual( resultstring.strip(), textstring )
 
 
-# TODO!
 class TestPack(ExtendedTestCase):
 
-    knownValues = [
-        ('A',    1, 'A '),
-        ('AB',   1, 'AB'),
-        ('ABC',  2, 'ABC '),
-        ('ABCD', 2, 'ABCD'),
-        ('A',    16, 'A'+' '*31),
-        ('A',    32, 'A'+' '*63),
+    knownValues=[        
+        (-77,         '>h', '\xff\xb3'), # (Signed) short (2 bytes)
+        (-1,          '>h', '\xff\xff'),
+        (-770,        '>h', '\xfc\xfe'),
+        (-32768,      '>h', '\x80\x00'),
+        (32767,       '>h', '\x7f\xff'),
+        (770,         '>H', '\x03\x02'), # Unsigned short (2 bytes)
+        (65535,       '>H', '\xff\xff'),        
+        (75000,       '>l', '\x00\x01\x24\xf8'),  # (Signed) long (4 bytes)
+        (-1,          '>l',  '\xff\xff\xff\xff'),
+        (-2147483648, '>l',  '\x80\x00\x00\x00'),
+        (-200000000,  '>l',  '\xf4\x14\x3e\x00'),
+        (1,           '>L', '\x00\x00\x00\x01'), # Unsigned long (4 bytes)
+        (75000,       '>L', '\x00\x01\x24\xf8'),
+        (2147483648,  '>L', '\x80\x00\x00\x00'),
+        (2147483647,  '>L', '\x7f\xff\xff\xff'),
+        (1.0,         '>f', '\x3f\x80\x00\x00'), # Float (4 bytes)
+        (1.0e5,       '>f', '\x47\xc3\x50\x00'),
+        (1.0e16,      '>f', '\x5a\x0e\x1b\xca'),
+        (3.65e30,     '>f', '\x72\x38\x47\x25'),
+        (-2,          '>f', '\xc0\x00\x00\x00'),
+        (-3.6e30,     '>f', '\xf2\x35\xc0\xe9'),
+        (1.0,         '>d', '\x3f\xf0\x00\x00\x00\x00\x00\x00'), # Double (8 bytes)
+        (2,           '>d', '\x40\x00\x00\x00\x00\x00\x00\x00'),
+        (1.1e9,       '>d', '\x41\xd0\x64\x2a\xc0\x00\x00\x00'),
+        (3.65e30,     '>d', '\x46\x47\x08\xe4\x9e\x2f\x4d\x62'),
+        (2.42e300,    '>d', '\x7e\x4c\xe8\xa5\x67\x1f\x46\xa0'), 
+        (-1.1,        '>d', '\xbf\xf1\x99\x99\x99\x99\x99\x9a'),
+        (-2,          '>d', '\xc0\x00\x00\x00\x00\x00\x00\x00'),
         ]
-
+    
     def testKnownValues(self):
-        pass
+        for value, formatstring, knownstring in self.knownValues:
+            resultstring = minimalmodbus._pack(formatstring, value)
+            self.assertEqual(resultstring, knownstring)
 
     def testWrongInputValue(self):
-        pass
+        self.assertRaises(ValueError, minimalmodbus._pack, 'ABC',  35)
+        self.assertRaises(ValueError, minimalmodbus._pack, '',     35)
+        self.assertRaises(ValueError, minimalmodbus._pack, '>H',  -35)
+        self.assertRaises(ValueError, minimalmodbus._pack, '>L',  -35)
 
     def testWrongInputType(self):
-        pass
+        for value in _NOT_STRINGS:
+            self.assertRaises(TypeError, minimalmodbus._pack, value, 1)
+        for value in ['1', ['1'], [1], ['\x00\x2d\x00\x58'], ['A', 'B', 'C'], 'ABC']:
+            self.assertRaises(ValueError, minimalmodbus._pack, '>h',  value)
         
-# TODO!
+
 class TestUnpack(ExtendedTestCase):
 
     knownValues=TestPack.knownValues
 
     def testKnownValues(self):
-        pass
+        for knownvalue, formatstring, bytestring in self.knownValues:
+            resultvalue = minimalmodbus._unpack(formatstring, bytestring)
+            self.assertAlmostEqualRatio(resultvalue, knownvalue)
 
     def testWrongInputValue(self):
-        pass
+        self.assertRaises(ValueError, minimalmodbus._unpack, 'ABC', '\xff\xb3')
+        self.assertRaises(ValueError, minimalmodbus._unpack, '',    '\xff\xb3')
+        self.assertRaises(ValueError, minimalmodbus._unpack, '>h',  '')
 
     def testWrongInputType(self):
-        pass
+        for value in _NOT_STRINGS:
+            self.assertRaises(TypeError, minimalmodbus._unpack, value, '\xff\xb3')
+            self.assertRaises(TypeError, minimalmodbus._unpack, '>h',  value)
+
+
+class TestSanityPackUnpack(ExtendedTestCase):
+
+    knownValues=TestPack.knownValues
+
+    def testSanity(self):
+        for value, formatstring, bytestring in self.knownValues:
+            resultstring = minimalmodbus._pack(formatstring, minimalmodbus._unpack(formatstring, bytestring))
+            self.assertEqual(resultstring, bytestring)
 
 
 class TestBitResponseToValue(ExtendedTestCase):
