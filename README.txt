@@ -418,6 +418,8 @@ It is pretty straight-forward to change this code if some other byte order is re
 Changing ``close_port_after_each_call`` after instantiation of ``Instrument`` might be 
 problematic. Set the value ``minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL=True`` immediately after ``import minimalmodbus`` instead.
 
+When running under Python2.6, for some conversion errors no exception is raised. 
+For example when trying to convert a negative value to a bytestring representing an unsigned long.
 
 Support
 -------

@@ -428,6 +428,10 @@ Run unit tests (in the :file:`trunk/test` directory)::
     
     python test_all.py
     python3 test_all.py
+    
+    python2.6 test_all.py
+    python2.7 test_all.py
+    python3.2 test_all.py
 
 Test the source distribution generation (look in the :file:`PKG-INFO` file)::
 

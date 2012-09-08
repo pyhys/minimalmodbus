@@ -67,10 +67,6 @@ import unittest
 import minimalmodbus
 import dummy_serial
 
-###########################################################
-# For showing the error messages caught by assertRaises() #
-###########################################################
-
 ALSO_TIME_CONSUMING_TESTS = True
 """Set this to :const:`False` to skip the most time consuming tests"""
 
@@ -82,6 +78,15 @@ SHOW_ERROR_MESSAGES_FOR_ASSERTRAISES = False
 
 If set to :const:`True`, any unintentional error messages raised during the processing of the command in :meth:`.assertRaises` are also caught (not counted). It will be printed in the short form, and will show no traceback.  It can also be useful to set :data:`VERBOSITY` = 2.
 """
+
+_VERSION_LIMIT = 0x02070000
+
+_runTestsForNewVersion = sys.hexversion >= _VERSION_LIMIT  # For compatibility with Python2.6
+
+###########################################################
+# For showing the error messages caught by assertRaises() #
+# and to implement a better assertAlmostEqual()           #
+###########################################################
 
 class _NonexistantError(Exception):
     pass
@@ -113,14 +118,12 @@ class ExtendedTestCase(unittest.TestCase):
             return 
             
         if (first < 0 and second >= 0) or (first >= 0 and second < 0):
-            raise AssertionError('The arguments have different signs: {0} and {1}'.format(repr(first), repr(second)))
+            raise AssertionError('The arguments have different signs: {0!r} and {1!r}'.format(first, second))
         
         ratio = max(first, second)/float(min(first, second))
         if ratio > epsilon:
-            raise AssertionError('The arguments are not equal: {0} and {1}. Epsilon is {2}.'.\
-                format(repr(first), repr(second), repr(epsilon) ))
-            
-
+            raise AssertionError('The arguments are not equal: {0!r} and {1!r}. Epsilon is {2!r}.'.\
+                format(first, second, epsilon))
 
 ##############################
 # Constants for type testing #
@@ -261,21 +264,24 @@ class TestNumToTwoByteString(ExtendedTestCase):
     def testWrongInputValue(self):
         for LsbFirst in [False, True]:
             # Range 0-65535
-            self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, 77000, 0,  LsbFirst) # Gives DeprecationWarning instead of ValueError for Python 2.6
-            self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, 65536, 0,  LsbFirst)
-            self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, 77,    4,  LsbFirst)
-            self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, -1,    0,  LsbFirst)
-            self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, -77,   1,  LsbFirst)
             self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, 77,    -1, LsbFirst)
+            if _runTestsForNewVersion:  # For compatibility with Python2.6
+                self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, 77000, 0,  LsbFirst) # Gives DeprecationWarning instead of ValueError for Python 2.6
+                self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, 65536, 0,  LsbFirst)
+                self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, 77,    4,  LsbFirst)
+                self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, -1,    0,  LsbFirst)
+                self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, -77,   1,  LsbFirst)
             
-            # Range -32768 to 32767 
-            self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, -77000, 0,  LsbFirst, True)
-            self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, -32769, 0,  LsbFirst, True)
-            self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, 32768,  0,  LsbFirst, True)
-            self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, 77000,  0,  LsbFirst, True)
-            self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, 77,     4,  LsbFirst, True)
-            self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, -77,    4,  LsbFirst, True)
+            # Range -32768 to 32767
             self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, 77,     -1, LsbFirst, True)
+            if _runTestsForNewVersion:  # For compatibility with Python2.6
+                self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, -77000, 0,  LsbFirst, True) # Gives DeprecationWarning instead of ValueError for Python 2.6
+                self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, -32769, 0,  LsbFirst, True)
+                self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, 32768,  0,  LsbFirst, True)
+                self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, 77000,  0,  LsbFirst, True)
+                self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, 77,     4,  LsbFirst, True)
+                self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, -77,    4,  LsbFirst, True)
+            
 
     def testWrongInputType(self):
         for value in _NOT_NUMERICALS:
@@ -357,11 +363,13 @@ class TestLongToBytestring(ExtendedTestCase):
             self.assertEqual(resultstring, knownstring)
 
     def testWrongInputValue(self):
-        self.assertRaises(ValueError, minimalmodbus._longToBytestring, -1,              False, 2) # Range 0 to 4294967295
-        self.assertRaises(ValueError, minimalmodbus._longToBytestring, 4294967296,      False, 2)
-        self.assertRaises(ValueError, minimalmodbus._longToBytestring, -2147483649,     True,  2) # Range -2147483648 to 2147483647
-        self.assertRaises(ValueError, minimalmodbus._longToBytestring, 2147483648,      True,  2)
-        self.assertRaises(ValueError, minimalmodbus._longToBytestring, 222222222222222, True,  2)
+        if _runTestsForNewVersion:  # For compatibility with Python2.6
+            self.assertRaises(ValueError, minimalmodbus._longToBytestring, -1,              False, 2) # Range 0 to 4294967295
+            self.assertRaises(ValueError, minimalmodbus._longToBytestring, 4294967296,      False, 2)
+            self.assertRaises(ValueError, minimalmodbus._longToBytestring, -2147483649,     True,  2) # Range -2147483648 to 2147483647
+            self.assertRaises(ValueError, minimalmodbus._longToBytestring, 2147483648,      True,  2)
+            self.assertRaises(ValueError, minimalmodbus._longToBytestring, 222222222222222, True,  2)
+        
         for numberOfRegisters in [0, 1, 3, 4, 5, 6, 7, 8, 16]:
             self.assertRaises(ValueError, minimalmodbus._longToBytestring, 1,           True,  numberOfRegisters)
 
@@ -658,8 +666,9 @@ class TestPack(ExtendedTestCase):
     def testWrongInputValue(self):
         self.assertRaises(ValueError, minimalmodbus._pack, 'ABC',  35)
         self.assertRaises(ValueError, minimalmodbus._pack, '',     35)
-        self.assertRaises(ValueError, minimalmodbus._pack, '>H',  -35)
-        self.assertRaises(ValueError, minimalmodbus._pack, '>L',  -35)
+        if _runTestsForNewVersion:  # For Python2.6 compatibility
+            self.assertRaises(ValueError, minimalmodbus._pack, '>H',  -35)
+            self.assertRaises(ValueError, minimalmodbus._pack, '>L',  -35)
 
     def testWrongInputType(self):
         for value in _NOT_STRINGS:
@@ -790,7 +799,7 @@ class TestTwosComplement(ExtendedTestCase):
         self.assertRaises(ValueError, minimalmodbus._twosComplement, 1,       -2)
         self.assertRaises(ValueError, minimalmodbus._twosComplement, 1,       -100)
 
-    def wrongInputType(self):
+    def testWrongInputType(self):
         for value in _NOT_INTERGERS:
             self.assertRaises(TypeError, minimalmodbus._twosComplement, value, 8)
 
@@ -816,7 +825,7 @@ class TestFromTwosComplement(ExtendedTestCase):
         self.assertRaises(ValueError, minimalmodbus._fromTwosComplement, 1,       -2)
         self.assertRaises(ValueError, minimalmodbus._fromTwosComplement, 1,       -100)
 
-    def wrongInputType(self):
+    def testWrongInputType(self):
         for value in _NOT_INTERGERS:
             self.assertRaises(TypeError, minimalmodbus._fromTwosComplement, value, 8)
             self.assertRaises(TypeError, minimalmodbus._fromTwosComplement, 1,     value)
@@ -890,6 +899,7 @@ class TestXOR(ExtendedTestCase):
         for value in _NOT_INTERGERS:
             self.assertRaises(TypeError, minimalmodbus._XOR, value, 1)
             self.assertRaises(TypeError, minimalmodbus._XOR, 1,     value)
+
 
 class TestRightshift(ExtendedTestCase):
 
@@ -1171,6 +1181,7 @@ class TestCheckInt(ExtendedTestCase):
             self.assertRaises(TypeError, minimalmodbus._checkInt, 47,    minvalue=40,    maxvalue=value, description='ABC')
         for value in _NOT_STRINGS:
             self.assertRaises(TypeError, minimalmodbus._checkInt, 47,    minvalue=40,    maxvalue=50,    description=value)
+
 
 class TestCheckNumerical(ExtendedTestCase):
 
@@ -1459,8 +1470,9 @@ class TestDummyCommunication(ExtendedTestCase):
     def testWriteLongWrongValue(self):
         self.assertRaises(ValueError, self.instrument.write_long, -1,    5) # Wrong register address
         self.assertRaises(ValueError, self.instrument.write_long, 65536, 5)
-        self.assertRaises(ValueError, self.instrument.write_long, 102,   -5, signed=False)  # Wrong value to write to slave
-        self.assertRaises(ValueError, self.instrument.write_long, 102,   888888888888888888888)  
+        self.assertRaises(ValueError, self.instrument.write_long, 102,   888888888888888888888)  # Wrong value to write to slave
+        if _runTestsForNewVersion:  # For Python2.6 compatibility
+            self.assertRaises(ValueError, self.instrument.write_long, 102,   -5, signed=False)  # Wrong value to write to slave
 
     def testWriteLongWrongType(self):
         for value in _NOT_INTERGERS:
