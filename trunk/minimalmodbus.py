@@ -66,6 +66,8 @@ TIMEOUT  = 0.05
 CLOSE_PORT_AFTER_EACH_CALL = False
 """Default value for port closure setting."""
 
+SERIALPORTS = {}
+
 
 class Instrument():
     """Instrument class for talking to instruments (slaves) via the Modbus RTU protocol (via RS485 or RS232).
@@ -78,8 +80,13 @@ class Instrument():
 
     def __init__(self, port, slaveaddress):
 
-        self.serial = serial.Serial(port=port, baudrate=BAUDRATE, parity=PARITY, bytesize=BYTESIZE, \
-            stopbits=STOPBITS, timeout=TIMEOUT)
+        if port not in SERIALPORTS or not SERIALPORTS[port]:
+            self.serial = SERIALPORTS[port] = serial.Serial(port=port, baudrate=BAUDRATE, parity=PARITY, bytesize=BYTESIZE, \
+                stopbits=STOPBITS, timeout=TIMEOUT)
+        else: 
+            self.serial = SERIALPORTS[port]
+            if self.serial.port is None:
+                self.serial.open()
         """The serial port object as defined by the pySerial module. Created by the constructor.
 
         Attributes:
@@ -776,12 +783,28 @@ class Instrument():
             This is taken care of automatically.
 
         """
-        MAX_NUMBER_OF_BYTES = 1000
+        RESPONSE_FRAME_SIZE = 100
 
         _checkString(message, minlength=1, description='message')
+        
+        functioncode = ord(message[1])
+        
+        ## Getting from bus only necessary bytes ##
+        ## We check for the instruction type and calculate how many bytes will expect ##
+        if functioncode == 3 or functioncode == 4:
+            RESPONSE_FRAME_SIZE = 2 + 1 + _twoByteStringToNum(message[4:6])*2 + 2
+        elif functioncode in [5, 6, 15, 16]:
+            RESPONSE_FRAME_SIZE = 2 + 4 + 2
+        elif   functioncode == 1:
+            count = _twoByteStringToNum(message[4:6])
+            RESPONSE_FRAME_SIZE = 2 + 1 + count + (1 if count%8 else 0) + 2
+        elif functioncode == 2:
+            count = _twoByteStringToNum(message[4:6])
+            RESPONSE_FRAME_SIZE = 2 + 1 + count + (1 if count%8 else 0) + 2
 
         if self.debug:
             _print_out( 'MinimalModbus debug mode. Writing to instrument: ' + repr(message) )
+            _print_out( 'MinimalModbus debug mode. Expecting %d byte to read ' % RESPONSE_FRAME_SIZE )
 
         if self.close_port_after_each_call:
             self.serial.open()
@@ -790,7 +813,7 @@ class Instrument():
             message = bytes(message, encoding='latin1')  # Convert types to make it Python3 compatible
 
         self.serial.write(message)
-        answer =  self.serial.read(MAX_NUMBER_OF_BYTES)
+        answer =  self.serial.read(RESPONSE_FRAME_SIZE)
 
         if sys.version_info[0] > 2:
             answer = str(answer, encoding='latin1')  # Convert types to make it Python3 compatible
