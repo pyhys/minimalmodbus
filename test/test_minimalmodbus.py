@@ -1772,7 +1772,7 @@ class TestDummyCommunication(ExtendedTestCase):
         representation = repr(self.instrument)
         self.assertTrue( 'minimalmodbus.Instrument<id=' in representation )
         self.assertTrue( ', address=1, close_port_after_each_call=False, debug=False, serial=dummy_serial.Serial<id=' in representation )
-        self.assertTrue( ", open=True>(latestWrite='')>" in representation )
+        self.assertTrue( ", open=True>(latestWrite=" in representation )
 
 
     ## Test the dummy serial port itself ##

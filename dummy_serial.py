@@ -76,6 +76,7 @@ class Serial():
     def __init__(self, *args, **kwargs):
         self._latestWrite = ''
         self._isOpen = True
+        self.port = self.initport = kwargs['port']
 
         if VERBOSE:
             _print_out('\nInitializing dummy_serial')
@@ -103,7 +104,7 @@ class Serial():
             raise IOError('The port on dummy_serial is already open')
             
         self._isOpen = True
-
+        self.port = self.initport
 
     def close(self):
         """Close a port on dummy_serial."""
@@ -114,6 +115,7 @@ class Serial():
             raise IOError('The port on dummy_serial is already closed')
             
         self._isOpen = False
+        self.port = None
 
 
     def write(self, inputdata):

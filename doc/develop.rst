@@ -535,6 +535,13 @@ Marketing
   * Facebook
 
 
+Applying patches
+-------------------------------------------------
+Apply the patch like::
+
+    /minimalmodbus$ patch -Np0 -d trunk < concurrency_latency_tests_09-21.diff 
+
+
 Downloading backups from the Sourceforge server
 -----------------------------------------------
 To download the svn repository in archive format, type this in the destination directory on your computer::
