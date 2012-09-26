@@ -477,7 +477,7 @@ Jonas Berg, pyhys@users.sourceforge.net
 
 Credits
 -------
-Significant contributions by Aaron LaLonde and Asier Abalos.
+Significant contributions by Angelo Compagnucci, Aaron LaLonde and Asier Abalos.
 
 
 Feedback
