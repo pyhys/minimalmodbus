@@ -34,10 +34,18 @@ __revision__  = '$Rev$'
 __date__      = '$Date$'
 
 import sys
+import time
+
+DEFAULT_TIMEOUT = 5
+"""The default timeot value. Used if not set by the constructor."""
 
 
 VERBOSE = False
-"""Set this to :const:`True` for printing the communication, and also details on the port initialization."""
+"""Set this to :const:`True` for printing the communication, and also details on the port initialization.
+
+Might be monkey-patched in the calling test module.
+
+"""
 
 
 RESPONSES = {}
@@ -66,10 +74,11 @@ class Serial():
     Mimics the behavior of a serial port as defined by the `pySerial <http://pyserial.sourceforge.net/>`_ module.
 
     Args:
-        (whatever): The arguments are not used.
+        * port:
+        * timeout:
 
     Note:
-    As the portname argument not is used, only one port on :mod:`dummy_serial` can be used simultaneously.
+    As the portname argument not is used properly, only one port on :mod:`dummy_serial` can be used simultaneously.
 
     """
 
@@ -77,23 +86,27 @@ class Serial():
         self._latestWrite = ''
         self._isOpen = True
         self.port = self.initport = kwargs['port']
+        try:
+            self.timeout = kwargs['timeout']
+        except:
+            self.timeout = DEFAULT_TIMEOUT
 
         if VERBOSE:
             _print_out('\nInitializing dummy_serial')
             _print_out('dummy_serial initialization args: ' + repr(args) )
             _print_out('dummy_serial initialization kwargs: ' + repr(kwargs) + '\n')
 
-
     def __repr__(self):
         """String representation of the dummy_serial object"""
-        return "{0}.{1}<id=0x{2:x}, open={3}>(latestWrite={4!r})".format(
+        return "{0}.{1}<id=0x{2:x}, open={3}>(port={4!r}, timeout={5!r}, latestWrite={6!r})".format(
             self.__module__,
             self.__class__.__name__,
             id(self),
             self._isOpen,
+            self.port,
+            self.timeout,
             self._latestWrite,
         )
-
 
     def open(self):
         """Open a (previously initialized) port on dummy_serial."""
@@ -150,25 +163,47 @@ class Serial():
         and what is defined in the :data:`RESPONSES` dictionary.
 
         Args:
-            numberOfBytes (int): For compability with the real function. Not used.
+            numberOfBytes (int): For compability with the real function. 
 
         Returns a **string** for Python2 and **bytes** for Python3.
 
+        If the response is shorter than numberOfBytes, it will sleep for timeout.
+        If the response is longer than numberOfBytes, it will return only numberOfBytes bytes.
+
         """
         if VERBOSE:
-            _print_out('\nReading from port on dummy_serial (max length ' + str(numberOfBytes) + ' bytes)')        
+            _print_out('\nReading from port on dummy_serial (max length {!r} bytes)'.format(numberOfBytes))
+        
+        if numberOfBytes < 0:
+            raise IOError('The numberOfBytes to read must not be negative. Given: {!r}'.format(numberOfBytes))
         
         if not self._isOpen:
             raise IOError('Trying to read from dummy_serial, but the port is not open.')
 
+        # Do the actual reading
         try:
-            returnstring = RESPONSES[self._latestWrite]
+            response = RESPONSES[self._latestWrite]
         except:
-            returnstring = DEFAULT_RESPONSE
-
+            response = DEFAULT_RESPONSE
+        
+        # Simulate the influence of numberOfBytes
+        returnstring = response
+        #if response == DEFAULT_RESPONSE:
+            #pass
+        #elif len(response) < numberOfBytes: # Wait for timeout
+            #_print_out('WARNING!! The response is shorter than given numberOfBytes to read. ' + \
+                #'Response: {!r} (length = {}), numberOfBytes: {}'.format( \
+                #response, len(response), numberOfBytes))
+            #time.sleep(self.timeout)
+        #elif len(response) > numberOfBytes: # Loose trailing bytes
+            #_print_out('WARNING!! The response is longer than given numberOfBytes to read. ' + \
+                #'Some bytes will be lost! Response: {!r} (length = {}), numberOfBytes: {}'.format( \
+                #response, len(response), numberOfBytes))
+            #returnstring = response[:numberOfBytes]
+        
         if VERBOSE:
-            _print_out('dummy_serial latest written data:' + repr(self._latestWrite))
-            _print_out('dummy_serial read return data:' + repr(returnstring) + '\n')
+            _print_out('dummy_serial latest written data: {!r}'.format(self._latestWrite))
+            _print_out('dummy_serial read return data: {!r} (has length {})\n'.format(returnstring, len(returnstring)))
 
         if sys.version_info[0] > 2: # Convert types to make it python3 compatible
             return bytes(returnstring, encoding='latin1')

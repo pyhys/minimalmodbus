@@ -1772,7 +1772,7 @@ class TestDummyCommunication(ExtendedTestCase):
         representation = repr(self.instrument)
         self.assertTrue( 'minimalmodbus.Instrument<id=' in representation )
         self.assertTrue( ', address=1, close_port_after_each_call=False, debug=False, serial=dummy_serial.Serial<id=' in representation )
-        self.assertTrue( ", open=True>(latestWrite=" in representation )
+        self.assertTrue( ", open=True>(port=" in representation )
 
 
     ## Test the dummy serial port itself ##
@@ -2027,6 +2027,24 @@ RESPONSES['\x01\x04' + '\x00\x0e\x00\x01' + 'P\t'] = '\x01\x04' + '\x02\x03\x70'
 # Message: Slave address 1, function code 3. Register address 101, 1 register. CRC.
 # Response: Slave address 1, function code 3. 2 bytes, value=-5 or 65531 (depending on interpretation). CRC
 RESPONSES['\x01\x03' + '\x00e\x00\x01' + '\x94\x15'] = '\x01\x03' + '\x02\xff\xfb' + '\xb87'
+
+# Read register 201 on slave 1 using function code 3 #
+# ---------------------------------------------------#
+# Message: Slave address 1, function code 3. Register address 201, 1 register. CRC.
+# Response: Slave address 1, function code 3. 2 bytes, value=9. CRC
+RESPONSES['\x01\x03' + '\x00\xc9\x00\x01' + 'T4'] = '\x01\x03' + '\x02\x00\x09' + 'xB'
+
+# Read register 202 on slave 1 using function code 3. Too long response #
+# ----------------------------------------------------------------------#
+# Message: Slave address 1, function code 3. Register address 202, 1 register. CRC.
+# Response: Slave address 1, function code 3. 2 bytes (wrong!), value=9. CRC
+RESPONSES['\x01\x03' + '\x00\xca\x00\x01' + '\xa44'] = '\x01\x03' + '\x02\x00\x00\x09' + '\x84t'
+
+# Read register 203 on slave 1 using function code 3. Too short response #
+# ----------------------------------------------------------------------#
+# Message: Slave address 1, function code 3. Register address 203, 1 register. CRC.
+# Response: Slave address 1, function code 3. 2 bytes (wrong!), value=9. CRC
+RESPONSES['\x01\x03' + '\x00\xcb\x00\x01' + '\xf5\xf4'] = '\x01\x03' + '\x02\x09' + '0\xbe'
 
 
 #                ##  WRITE REGISTER  ##
