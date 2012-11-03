@@ -383,13 +383,17 @@ It is also possible to write for example ASCII Bell (BEL, hex = 07, dec = 7) as 
 
 More about ASCII control characters is found on http://en.wikipedia.org/wiki/ASCII.
 
+
 Trouble shooting
 ----------------
+
+No communication
+````````````````
 If there is no communication, make sure that the settings on your instrument are OK:
 
 * Wiring is correct
 * Communication module is set for digital communication
-* Correct protocol (Modbus)
+* Correct protocol (Modbus, and the RTU version)
 * Baud rate
 * Parity 
 * Delay (most often not necessary)
@@ -404,6 +408,19 @@ For troubleshooting, it is recommended to use interactive mode with debug enable
 If there is no response from your instrument, you can try using a lower baud rate.
 
 See also the pySerial pages: http://pyserial.sourceforge.net/
+
+Local echo
+``````````
+Local echo of the USB-to-RS485 adaptor can also be the cause of some problems, and give rise to strange error messages (like "CRC error" or "wrong number of bytes error" etc). Switch on the debug mode to see the request and response messages. If the full request message can be found as the first part of the response, then local echo is likely the cause.
+
+Make a test to remove the adaptor from the instrument (but still connected to the computer), and see if you still have a response. 
+
+Most adaptors have switches to select echo ON/OFF. Turning off the local echo can be done in a number of ways:
+
+* A DIP-switch inside the plastic cover.
+* A jumper inside the plastic cover.
+* Shorting two of the pins in the 9-pole D-SUB connector turns off the echo for some models.
+* If based on a FTDI chip, some special program can be used to change a chip setting for disabling echo.
 
 
 Known issues
