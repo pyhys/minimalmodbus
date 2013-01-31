@@ -17,7 +17,7 @@ Python package index (PyPI) with download
     http://pypi.python.org/pypi/MinimalModbus/ (this page if viewed on python.org. Note that no API is available). The  download section is at the end of the page.
 
 The SourceForge project page
-    http://sourceforge.net/projects/minimalmodbus/ with mailing list and subversion repository ( http://minimalmodbus.svn.sourceforge.net/viewvc/minimalmodbus/trunk/ ).
+    http://sourceforge.net/projects/minimalmodbus/ with mailing list and subversion repository ( http://sourceforge.net/p/minimalmodbus/code/ ).
 
 
 General on Modbus protocol
