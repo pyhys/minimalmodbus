@@ -1,7 +1,7 @@
 Developer documentation
 =======================
 Follow the coding progress in the SVN repository (click on the revision number to see the actual file content):
-http://minimalmodbus.svn.sourceforge.net/viewvc/minimalmodbus/trunk/
+http://sourceforge.net/p/minimalmodbus/code/
 
 Design considerations
 -----------------------------------------------------------------------------
@@ -571,7 +571,7 @@ pep8.py
    
 Subversion (svn) usage
 -----------------------------------------------------------------------------   
-Subversion provides an easy way to share code with each other. You can find all MinimalModbus files on the subversion repository on http://minimalmodbus.svn.sourceforge.net/viewvc/minimalmodbus/ Look in the trunk subfolder.
+Subversion provides an easy way to share code with each other. You can find all MinimalModbus files on the subversion repository on http://sourceforge.net/p/minimalmodbus/code/ Look in the trunk subfolder.
 
 Some usage instructions are found on http://sourceforge.net/scm/?type=svn&group_id=548418
 
@@ -591,9 +591,8 @@ The usage is::
 where *NewSubfolder* is the name of a subfolder that will be created in present directory. You can also write ``svn co`` instead of ``svn checkout``.
 
 In a proper directory on your computer, download the files (not only the :file:`trunk` subfolder) using::
-
-  svn co https://minimalmodbus.svn.sourceforge.net/svnroot/minimalmodbus minimalmodbus   
    
+  svn checkout svn://svn.code.sf.net/p/minimalmodbus/code/ minimalmodbus
    
 Submit contributions
 ``````````````````````
