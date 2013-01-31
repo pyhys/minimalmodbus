@@ -125,6 +125,15 @@ These can be overridden::
 
 For details on the allowed parity values, see http://pyserial.sourceforge.net/pyserial_api.html#constants 
 
+To change the parity setting, use::
+
+  import serial
+  instrument.serial.parity = serial.PARITY_EVEN
+
+or alternatively (to avoid import of ``serial``)::
+
+  instrument.serial.parity = minimalmodbus.serial.PARITY_EVEN
+
 
 Dependencies
 ------------
@@ -189,6 +198,9 @@ Some deviations from the official standard:
 **Strings**
     Each register (16 bits) is interpreted as two characters (each 1 byte = 8 bits). Often 16 consecutive registers are used, allowing 32 characters in the string. 
 
+**8-bit registers**
+    For example Danfoss use 8-bit registers for storage of some settings internally in the instruments. The data is nevertherless transmitted as 16 bit over the serial link, so you can read and write like normal (but with values limited to the range 0-255).
+    
 
 Implemented functions
 ---------------------
@@ -405,7 +417,7 @@ The corresponding settings should also be used in MinimalModbus. Check also your
 
 For troubleshooting, it is recommended to use interactive mode with debug enabled. See http://minimalmodbus.sourceforge.net/usage.html#interactive-usage
 
-If there is no response from your instrument, you can try using a lower baud rate.
+If there is no response from your instrument, you can try using a lower baud rate, or to adjust the timeout setting.
 
 See also the pySerial pages: http://pyserial.sourceforge.net/
 
