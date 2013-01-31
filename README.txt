@@ -122,17 +122,22 @@ Most of the serial port parameters have the default values defined in the Modbus
 These can be overridden::
     
     instrument.serial.timeout = 0.2
+    
+To see which settings you actually are using::
+
+    print instrument     
 
 For details on the allowed parity values, see http://pyserial.sourceforge.net/pyserial_api.html#constants 
 
 To change the parity setting, use::
 
-  import serial
-  instrument.serial.parity = serial.PARITY_EVEN
+    import serial
+    instrument.serial.parity = serial.PARITY_EVEN
 
 or alternatively (to avoid import of ``serial``)::
 
-  instrument.serial.parity = minimalmodbus.serial.PARITY_EVEN
+    instrument.serial.parity = minimalmodbus.serial.PARITY_EVEN
+
 
 
 Dependencies
