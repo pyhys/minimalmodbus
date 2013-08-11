@@ -608,6 +608,7 @@ These are the most used commands::
     svn status -v
     svn status -v --no-ignore
     svn diff
+    svn log
     svn add FILENAME or DIRECTORYNAME
     svn remove FILENAME or DIRECTORYNAME
     svn commit -m 'Write your log message here'
