@@ -3,9 +3,15 @@ MinimalModbus
 
 Introduction
 ------------
-MinimalModbus is an easy-to-use Python module for talking to instruments (slaves) from a computer (master) using the Modbus protocol. Example code includes drivers for Eurotherm and Omega process controllers. The only dependence is the pySerial module. 
+MinimalModbus is an easy-to-use Python module for talking to instruments (slaves) 
+from a computer (master) using the Modbus protocol, and is intended to be running on the master. 
+Example code includes drivers for Eurotherm and Omega process controllers. 
+The only dependence is the pySerial module. 
 
-This software supports the 'Modbus RTU' serial communication version of the protocol, and is intended for use on Linux, OS X and Windows platforms. It is open source, and has the Apache License, Version 2.0. Tested with Python2.6, Python2.7 and Python3.2.
+This software supports the 'Modbus RTU' serial communication version of the protocol, 
+and is intended for use on Linux, OS X and Windows platforms. 
+It is open source, and has the Apache License, Version 2.0. 
+Tested with Python2.6, Python2.7 and Python3.2.
 
 
 Home page
@@ -22,7 +28,9 @@ The SourceForge project page
 
 General on Modbus protocol
 --------------------------
-Modbus is a serial communications protocol published by Modicon in 1979, according to http://en.wikipedia.org/wiki/Modbus. It is often used to communicate with industrial electronic devices. 
+Modbus is a serial communications protocol published by Modicon in 1979, 
+according to http://en.wikipedia.org/wiki/Modbus. 
+It is often used to communicate with industrial electronic devices. 
 
 There are several types of Modbus protocols:
 
@@ -46,20 +54,43 @@ Note that the computer (master) actually is a client, and the instruments (slave
 
 Typical hardware
 ----------------
-The application for which I wrote this software is to read and write data from Eurotherm process controllers. These come with different types of communication protocols, but the controllers I prefer use the Modbus RTU protocol. MinimalModbus is intended for general communication using the Modbus RTU protocol (using a serial link), so there should be lots of applications.
+The application for which I wrote this software is to read and write data 
+from Eurotherm process controllers. 
+These come with different types of communication protocols, 
+but the controllers I prefer use the Modbus RTU protocol. 
+MinimalModbus is intended for general communication using the Modbus RTU protocol 
+(using a serial link), so there should be lots of applications.
 
-As an example on the usage of MinimialModbus, the driver I use for an Eurotherm 3504 process controller is included. It uses the MinimalModbus Python module for its communication. Also a driver for Omega CN7500 is included. For hardware details on these process controllers, see `Eurotherm 3500 <http://www.eurotherm.com/products/controllers/multi-loop/>`_ and `Omega CN7500 <http://www.omega.com/ppt/pptsc.asp?ref=CN7500/>`_.
+As an example on the usage of MinimialModbus, the driver I use for an 
+Eurotherm 3504 process controller is included. It uses the MinimalModbus Python module 
+for its communication. Also a driver for Omega CN7500 is included. 
+For hardware details on these process controllers, see 
+`Eurotherm 3500 <http://www.eurotherm.com/products/controllers/multi-loop/>`_ and 
+`Omega CN7500 <http://www.omega.com/ppt/pptsc.asp?ref=CN7500/>`_.
 
-There can be several instruments (slaves, nodes) on a single bus, and the slaves have addresses in the range 1 to 247. In the Modbus RTU protocol, only the master can initiate communication. The physical layer is most often the serial bus RS485, which is described at http://en.wikipedia.org/wiki/Rs485.
+There can be several instruments (slaves, nodes) on a single bus, 
+and the slaves have addresses in the range 1 to 247. In the Modbus RTU protocol, 
+only the master can initiate communication. The physical layer is most often 
+the serial bus RS485, which is described at http://en.wikipedia.org/wiki/Rs485.
 
-To connect your computer to the RS485 bus, a serial port is required. There are direct USB-to-RS485 converters, but I use a USB-to-RS232 converter together with an industrial RS232-to-RS485 converter. This has the advantage that the latter is galvanically isolated using opto-couplers, and has transient supression. This software has been tested using a Westermo MDW-45 RS232-to-RS485 converter.
+To connect your computer to the RS485 bus, a serial port is required. 
+There are direct USB-to-RS485 converters, but I use a USB-to-RS232 converter 
+together with an industrial RS232-to-RS485 converter. This has the advantage that 
+the latter is galvanically isolated using opto-couplers, and has transient supression. 
+This software has been tested using a Westermo MDW-45 RS232-to-RS485 converter.
 
 
 Typical usage
 -------------
-The instrument is typically connected via a serial port, and a USB-to-serial adaptor should be used on most modern computers. How to configure such a serial port is described on the pySerial page: http://pyserial.sourceforge.net/
+The instrument is typically connected via a serial port, and a USB-to-serial 
+adaptor should be used on most modern computers. How to configure such a serial 
+port is described on the pySerial page: http://pyserial.sourceforge.net/
 
-For example, consider an instrument (slave) with address number 1 to which we are to communicate via a serial port with the name ``/dev/ttyUSB1``. The instrument stores the measured temperature in register 289. For this instrument a temperature of 77.2 C is stored as (the integer) 772, why we use 1 decimal. To read this data from the instrument::
+For example, consider an instrument (slave) with address number 1 
+to which we are to communicate via a serial port with the name 
+``/dev/ttyUSB1``. The instrument stores the measured temperature in register 289. 
+For this instrument a temperature of 77.2 C is stored as (the integer) 772, 
+why we use 1 decimal. To read this data from the instrument::
 
     #!/usr/bin/env python
     import minimalmodbus
@@ -74,12 +105,16 @@ For example, consider an instrument (slave) with address number 1 to which we ar
     NEW_TEMPERATURE = 95
     instrument.write_register(24, NEW_TEMPERATURE, 1) # Registernumber, value, number of decimals for storage
 
-The full API for MinimalModbus is available on http://minimalmodbus.sourceforge.net/apiminimalmodbus.html, and the documentation in PDF format is found on http://minimalmodbus.sourceforge.net/minimalmodbus.pdf
+The full API for MinimalModbus is available on http://minimalmodbus.sourceforge.net/apiminimalmodbus.html, and the 
+documentation in PDF format is found on http://minimalmodbus.sourceforge.net/minimalmodbus.pdf
 
 
 Subclassing
 -----------
-It is better to put the details in a driver for the specific instrument. An example driver for Eurotherm3500 is included in this library, and it is recommended to have a look at its source code. To get the process value (PV from loop1)::
+It is better to put the details in a driver for the specific instrument. 
+An example driver for Eurotherm3500 is included in this library, 
+and it is recommended to have a look at its source code. 
+To get the process value (PV from loop1)::
 
     #!/usr/bin/env python
     import eurotherm3500
@@ -142,9 +177,12 @@ or alternatively (to avoid import of ``serial``)::
 
 Dependencies
 ------------
-Python versions 2.6 and higher are supported (including 3.x). Tested with Python2.6, Python2.7 and Python3.2. This module is pure Python.
+Python versions 2.6 and higher are supported (including 3.x). 
+Tested with Python2.6, Python2.7 and Python3.2. This module is pure Python.
 
-This module relies on `pySerial <http://pyserial.sourceforge.net/>`_ (also pure Python) to do the heavy lifting, and it is the only dependency. You can find it at the Python package index: http://pypi.python.org/pypi/pyserial
+This module relies on `pySerial <http://pyserial.sourceforge.net/>`_ (also pure Python) 
+to do the heavy lifting, and it is the only dependency. 
+You can find it at the Python package index: http://pypi.python.org/pypi/pyserial
 
 
 Download and installation
@@ -158,7 +196,9 @@ or possibly::
    sudo pip install -U pyserial
    sudo pip install -U minimalmodbus
 
-You can also manually download the compressed source files from http://pypi.python.org/pypi/MinimalModbus/ (see the end of that page). In that case you first need to manually install pySerial from http://pypi.python.org/pypi/pyserial.
+You can also manually download the compressed source files from 
+http://pypi.python.org/pypi/MinimalModbus/ (see the end of that page). 
+In that case you first need to manually install pySerial from http://pypi.python.org/pypi/pyserial.
 
 There are compressed source files for Unix/Linux (.tar.gz) and Windows (.zip). 
 To install a manually downloaded file, uncompress it and run (from within the directory)::
@@ -175,9 +215,11 @@ If using Python 3, then install with::
 
 There is also a Windows installer (.exe) available. Just start it and follow the instructions.
 
-For Python3 there might be problems with *easy_install* and *pip*. In that case, first manually install pySerial and then manually install MinimalModbus.
+For Python3 there might be problems with *easy_install* and *pip*. 
+In that case, first manually install pySerial and then manually install MinimalModbus.
 
-To make sure it is installed properly, print the _getDiagnosticString() message. See the support section below for instructions.
+To make sure it is installed properly, print the _getDiagnosticString() message. 
+See the support section below for instructions.
 
 Modbus data types
 -----------------
@@ -244,7 +286,8 @@ Running several scripts using the same port will give problems.
 
 Issues when running under Windows
 ---------------------------------
-When running under Windows, the underlying pySerial may complain that the serial port is already open. This seems to occur especially when communicating with more than one instrument. 
+When running under Windows, the underlying pySerial may complain that the 
+serial port is already open. This seems to occur especially when communicating with more than one instrument. 
 It is possible to make MinimalModbus close the serial port after each call. Use it like::
 
     #!/usr/bin/env python
@@ -309,7 +352,9 @@ Similar in interactive mode::
 
 The data is stored internally in this driver as byte strings (representing byte values). 
 For example a byte with value 18 (dec) = 12 (hex) = 00010010 (bin) is stored in a string of length one.
-This can be created using the function ``chr(18)``, or by simply typing the string ``'\x12'`` (which is a string of length 1). See http://docs.python.org/reference/lexical_analysis.html#string-literals for details on escape sequences.
+This can be created using the function ``chr(18)``, or by simply typing the 
+string ``'\x12'`` (which is a string of length 1). See 
+http://docs.python.org/reference/lexical_analysis.html#string-literals for details on escape sequences.
 
 For more information about hexadecimal numbers, see http://en.wikipedia.org/wiki/Hexadecimal.
 
@@ -323,11 +368,17 @@ and 'line feed' are among those. To make the output easier to understand, print 
 
     print repr(bytestringname)
 
-Registers are 16 bit wide (2 bytes), and the data is sent with the most significant byte (MSB) before the least significant byte (LSB). This is called big-endian byte order. To find the register data value, multiply the MSB by 256 (dec) and add the LSB.
+Registers are 16 bit wide (2 bytes), and the data is sent with the most 
+significant byte (MSB) before the least significant byte (LSB). This is 
+called big-endian byte order. To find the register data value, multiply the 
+MSB by 256 (dec) and add the LSB.
 
 Example
 ````````
-We use this example in debug mode. It reads one register (number 5) and interpret the data as having 1 decimal. The slave has address 1 (as set when creating the ``instrument`` instance), and we are using MODBUS function code 3 (the default value for ``read_register()``)::
+We use this example in debug mode. It reads one register (number 5) and 
+interpret the data as having 1 decimal. The slave has address 1 (as set 
+when creating the ``instrument`` instance), and we are using MODBUS 
+function code 3 (the default value for ``read_register()``)::
 
     >>> instrument.read_register(5,1)
     
@@ -335,7 +386,8 @@ This will be displayed::
 
     MinimalModbus debug mode. Writing to instrument: '\x01\x03\x00\x05\x00\x01\x94\x0b'
 
-In the section 'Modbus implementation details' above, the request message structure is described. See the table entry for function code 3.
+In the section 'Modbus implementation details' above, the request message 
+structure is described. See the table entry for function code 3.
 
 Interpret the request message (8 bytes) as:
 
@@ -387,7 +439,8 @@ why it automatically divides the register data by 10 and returns ``18.6``.
 
 Special characters
 ``````````````````
-Some ASCII control characters have representations like ``\n``, and their meanings are described in this table:
+Some ASCII control characters have representations like ``\n``, 
+and their meanings are described in this table:
 
 =================== ================= =============== =============== ======================
 ``repr()`` shows as Can be written as ASCII hex value ASCII dec value Description
@@ -397,7 +450,8 @@ Some ASCII control characters have representations like ``\n``, and their meanin
 ``\r``              ``\x0d``           0d              13              Carriage Return (CR)
 =================== ================= =============== =============== ======================
 
-It is also possible to write for example ASCII Bell (BEL, hex = 07, dec = 7) as ``\a``, but its ``repr()`` will still print ``\x07``.
+It is also possible to write for example ASCII Bell (BEL, hex = 07, dec = 7) 
+as ``\a``, but its ``repr()`` will still print ``\x07``.
 
 More about ASCII control characters is found on http://en.wikipedia.org/wiki/ASCII.
 
@@ -421,19 +475,27 @@ The corresponding settings should also be used in MinimalModbus. Check also your
 
 * Port name
 
-For troubleshooting, it is recommended to use interactive mode with debug enabled. See http://minimalmodbus.sourceforge.net/usage.html#interactive-usage
+For troubleshooting, it is recommended to use interactive mode with debug 
+enabled. See http://minimalmodbus.sourceforge.net/usage.html#interactive-usage
 
-If there is no response from your instrument, you can try using a lower baud rate, or to adjust the timeout setting.
+If there is no response from your instrument, you can try using a lower 
+baud rate, or to adjust the timeout setting.
 
 See also the pySerial pages: http://pyserial.sourceforge.net/
 
 Local echo
 ``````````
-Local echo of the USB-to-RS485 adaptor can also be the cause of some problems, and give rise to strange error messages (like "CRC error" or "wrong number of bytes error" etc). Switch on the debug mode to see the request and response messages. If the full request message can be found as the first part of the response, then local echo is likely the cause.
+Local echo of the USB-to-RS485 adaptor can also be the cause of some problems, 
+and give rise to strange error messages (like "CRC error" or "wrong number of bytes error" etc). 
+Switch on the debug mode to see the request and response messages. 
+If the full request message can be found as the first part of the response, 
+then local echo is likely the cause.
 
-Make a test to remove the adaptor from the instrument (but still connected to the computer), and see if you still have a response. 
+Make a test to remove the adaptor from the instrument (but still connected 
+to the computer), and see if you still have a response. 
 
-Most adaptors have switches to select echo ON/OFF. Turning off the local echo can be done in a number of ways:
+Most adaptors have switches to select echo ON/OFF. Turning off the local 
+echo can be done in a number of ways:
 
 * A DIP-switch inside the plastic cover.
 * A jumper inside the plastic cover.
@@ -451,7 +513,8 @@ Make sure to test that it makes sense for your instrument.
 It is pretty straight-forward to change this code if some other byte order is required by anyone (see support section).
 
 Changing ``close_port_after_each_call`` after instantiation of ``Instrument`` might be 
-problematic. Set the value ``minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL=True`` immediately after ``import minimalmodbus`` instead.
+problematic. Set the value ``minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL=True`` 
+immediately after ``import minimalmodbus`` instead.
 
 When running under Python2.6, for some conversion errors no exception is raised. 
 For example when trying to convert a negative value to a bytestring representing an unsigned long.
@@ -473,7 +536,9 @@ It can be helpful to describe which instrument model you are using, and possibly
 
 Develop
 -------
-The details printed in debug mode (messages and responses) are very useful for using the included dummy_serial port for unit testing purposes. For examples, see the file test/test_minimalmodbus.py.
+The details printed in debug mode (messages and responses) are very useful 
+for using the included dummy_serial port for unit testing purposes. 
+For examples, see the file test/test_minimalmodbus.py.
     
 More implementation details are found on http://minimalmodbus.sourceforge.net/develop.html  
     
@@ -484,14 +549,19 @@ Unit tests are provided in the test subfolder. To run them::
 
     python test_minimalmodbus.py
     
-Also a dummy/mock/stub for the serial port, dummy_serial, is provided for test purposes. See http://minimalmodbus.sourceforge.net/apidummyserial.html
+Also a dummy/mock/stub for the serial port, dummy_serial, is provided for 
+test purposes. See http://minimalmodbus.sourceforge.net/apidummyserial.html
 
-The test coverage analysis is found at http://minimalmodbus.sourceforge.net/htmlcov/index.html. To see which parts of the code that have been tested, click the corresponding file name.    
+The test coverage analysis is found at http://minimalmodbus.sourceforge.net/htmlcov/index.html. 
+To see which parts of the code that have been tested, click the corresponding file name.    
         
 
 Related software
 ----------------
-The MinimalModbus module is intended for easy-to-use communication with instruments using the Modbus (RTU) protocol. There are a few other Python modules for Modbus protocol implementation. For more advanced use, you should consider using one of these:
+The MinimalModbus module is intended for easy-to-use communication with 
+instruments using the Modbus (RTU) protocol. 
+There are a few other Python modules for Modbus protocol implementation. 
+For more advanced use, you should consider using one of these:
 
 pyModbus 
     From http://code.google.com/p/pymodbus/: 'Pymodbus is a full Modbus protocol implementation using twisted for its asynchronous communications core.'
@@ -519,9 +589,13 @@ Feedback
 --------
 If you find this software useful, then please like it on Facebook via http://sourceforge.net/projects/minimalmodbus/. 
 
-You can also leave a review on the SourceForge project page http://sourceforge.net/projects/minimalmodbus/ (then first make a SourceForge account).
+You can also leave a review on the SourceForge project page 
+http://sourceforge.net/projects/minimalmodbus/ (then first make a SourceForge account).
 
-Please also subscribe to the (low volume) mailing list minimalmodbus-list@lists.sourceforge.net (see https://lists.sourceforge.net/lists/listinfo/minimalmodbus-list) so you can help other users getting started.
+Please also subscribe to the (low volume) mailing list 
+minimalmodbus-list@lists.sourceforge.net 
+(see https://lists.sourceforge.net/lists/listinfo/minimalmodbus-list) 
+so you can help other users getting started.
 
 
 References
