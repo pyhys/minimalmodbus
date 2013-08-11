@@ -882,7 +882,7 @@ def _extractPayload(response, slaveaddress, functioncode):
     """
     BYTEPOSITION_FOR_SLAVEADDRESS          = 0  # Zero-based counting
     BYTEPOSITION_FOR_FUNCTIONCODE          = 1
-    NUMBER_OF_RESPONSE_STARTBYTES          = 2
+    NUMBER_OF_RESPONSE_STARTBYTES          = 2  # Number of bytes before the response payload
     NUMBER_OF_CRC_BYTES                    = 2
     BITNUMBER_FUNCTIONCODE_ERRORINDICATION = 7
 
@@ -891,6 +891,18 @@ def _extractPayload(response, slaveaddress, functioncode):
     _checkSlaveaddress(slaveaddress)
     _checkFunctioncode(functioncode, None)
 
+    # Fix for broken T3-PT10 which outputs extra 0xFE byte after some messages
+    # Patch by Edwin van den Oetelaar 
+    # check length of message when functioncode in 3,4 
+    # if received buffer length longer than expected, truncate it, 
+    # this makes sure CRC bytes are taken from right place, not the end of the buffer, it ignores the extra bytes in the buffer
+    if functioncode in ( 0x03, 0x04 ) :
+        try:
+            modbuslen = ord(response[NUMBER_OF_RESPONSE_STARTBYTES])
+            response = response[:modbuslen+5] # the number of bytes used for CRC(2),slaveid(1),functioncode(1),bytecount(1) = 5
+        except IndexError:
+            pass
+        
     # Check CRC
     receivedCRC = response[-NUMBER_OF_CRC_BYTES:]
     responseWithoutCRC = response[0 : len(response) - NUMBER_OF_CRC_BYTES ]

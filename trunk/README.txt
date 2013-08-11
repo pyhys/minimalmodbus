@@ -210,7 +210,8 @@ Some deviations from the official standard:
 Implemented functions
 ---------------------
 These are the functions to use for reading and writing registers and bits of your instrument. Study the 
-documentation of your instrument to find which Modbus function code to use.
+documentation of your instrument to find which Modbus function code to use. The function codes are 
+given in decimal in this table.
 
 +---------------------------------------+------------------+---------------+-------------------+---------------+
 | Data type in slave                    | Read             | Function code | Write             | Function code |
