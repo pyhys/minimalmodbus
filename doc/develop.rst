@@ -3,6 +3,8 @@ Developer documentation
 Follow the coding progress in the SVN repository:
 http://sourceforge.net/p/minimalmodbus/code/
 
+or directly to: https://svn.code.sf.net/p/minimalmodbus/code/trunk/
+
 Design considerations
 -----------------------------------------------------------------------------
 My take on the design is that is should be as simple as possible, hence the name MinimalModbus, 
@@ -486,7 +488,7 @@ Make sure the Subversion is updated::
 
 Make a tag in Subversion (adapt to version number)::
      
-    svn copy https://minimalmodbus.svn.sourceforge.net/svnroot/minimalmodbus/trunk https://minimalmodbus.svn.sourceforge.net/svnroot/minimalmodbus/tags/0.3 -m "Release 0.3"
+    svn copy https://svn.code.sf.net/p/minimalmodbus/code/trunk/ https://svn.code.sf.net/p/minimalmodbus/code/tags/0.5 -m "Release 0.5"
 
 Upload to PyPI
 ``````````````
@@ -532,7 +534,9 @@ Upload the test coverage report. In directory :file:`trunk`::
 
 Test documentation
 `````````````````````
-Test links on the Sourceforge and PyPI pages. If adjustments are required on the PyPI page, log in and manually adjust the text. This might be for example parsing problems with the ReSTR text (allows no Sphinx-specific constructs).
+Test links on the Sourceforge and PyPI pages. If adjustments are required 
+on the PyPI page, log in and manually adjust the text. This might be for 
+example parsing problems with the ReSTR text (allows no Sphinx-specific constructs).
 
 
 Generate Windows installer
