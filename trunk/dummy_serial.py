@@ -40,6 +40,10 @@ DEFAULT_TIMEOUT = 5
 """The default timeot value. Used if not set by the constructor."""
 
 
+DEFAULT_BAUDRATE = 19200
+"""The default baud rate. Used if not set by the constructor."""
+
+
 VERBOSE = False
 """Set this to :const:`True` for printing the communication, and also details on the port initialization.
 
@@ -90,6 +94,10 @@ class Serial():
             self.timeout = kwargs['timeout']
         except:
             self.timeout = DEFAULT_TIMEOUT
+        try:
+            self.baudrate = kwargs['baudrate']
+        except:
+            self.baudrate = DEFAULT_BAUDRATE
 
         if VERBOSE:
             _print_out('\nInitializing dummy_serial')
@@ -185,6 +193,9 @@ class Serial():
             response = RESPONSES[self._latestWrite]
         except:
             response = DEFAULT_RESPONSE
+        
+        # TODO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        # Adapt the behavior to better mimic the Windows behavior
         
         # Simulate the influence of numberOfBytes
         returnstring = response

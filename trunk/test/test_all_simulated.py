@@ -19,10 +19,10 @@
 
 .. moduleauthor:: Jonas Berg <pyhys@users.sourceforge.net>
 
-test_all: Run all the unit tests
+test_all_simulated: Run all the unit tests (without any hardware)
 
-This Python file was changed (committed) at $Date$, 
-which was $Revision$.
+This Python file was changed (committed) at $Date: 2012-08-10 20:17:03 +0200 (Fri, 10 Aug 2012) $, 
+which was $Revision: 152 $.
 
 """
 
@@ -30,8 +30,8 @@ __author__  = "Jonas Berg"
 __email__   = "pyhys@users.sourceforge.net"
 __license__ = "Apache License, Version 2.0"
 
-__revision__  = "$Rev$"
-__date__      = "$Date$"
+__revision__  = "$Rev: 152 $"
+__date__      = "$Date: 2012-08-10 20:17:03 +0200 (Fri, 10 Aug 2012) $"
 
 import unittest
 

@@ -112,8 +112,14 @@ class ExtendedTestCase(unittest.TestCase):
             unittest.TestCase.assertRaises(self, excClass, callableObj, *args, **kwargs)
 
     def assertAlmostEqualRatio(self, first, second, epsilon = 1.000001):
-        """A function to compare floats, with ratio instead of difference."""
+        """A function to compare floats, with ratio instead of difference.
         
+        Args:
+            * first (float): Input argument for comparison
+            * second (float): Input argument for comparison
+            * epsilon (float): Largest allowed ratio of largest to smallest of the two input arguments
+        
+        """
         if first == second:
             return 
             
@@ -198,6 +204,65 @@ class TestExtractPayload(ExtendedTestCase):
         for value in _NOT_INTERGERS:
             self.assertRaises(TypeError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', value,  2)
             self.assertRaises(TypeError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 2,      value)
+
+############################################
+## Serial communication utility functions ##
+############################################
+
+class TestPredictRtuResponseSize(ExtendedTestCase):
+
+    knownValues=[
+    ('\x01\x05\x00\x47\xff\x00</', 8),
+    ('\x01\x01\x00\x3e\x00\x01\x9c\x06', 6),
+    ('\x01\x0f\x00\x48\x00\x01\x01\x01\x0fY', 8),
+    ]
+
+    def testKnownValues(self):
+        for message, knownresult in self.knownValues:
+            result = minimalmodbus._predictRtuResponseSize(message)
+            self.assertEqual(result, knownresult)
+
+    def testRecordedMessages(self):            
+        # The key is the 'message', and the item is the 'response'
+        for message in GOOD_RESPONSES:
+            result = minimalmodbus._predictRtuResponseSize(message)
+            self.assertEqual(result, len(RESPONSES[message]))
+
+    def testWrongInputValue(self):
+        self.assertRaises(ValueError, minimalmodbus._predictRtuResponseSize, '') # Too short message
+        self.assertRaises(ValueError, minimalmodbus._predictRtuResponseSize, 'ABC') # Too short message
+        self.assertRaises(ValueError, minimalmodbus._predictRtuResponseSize, '\x01\xA1\x00\x3e\x00\x01\x9c\x06') # Wrong function code
+
+    def testWrongInputType(self):
+        for value in _NOT_STRINGS:
+            self.assertRaises(TypeError, minimalmodbus._predictRtuResponseSize, value)
+
+
+class TestCalculateMinimumSilentPeriod(ExtendedTestCase):
+
+    knownValues=[
+    (2400,      0.016), 
+    (2400.0,    0.016),
+    (4800,      0.008),
+    (9600,      0.004),
+    (19200,     0.002), 
+    (38400,     0.001),
+    (115200,    0.00033)
+    ]
+    
+    def testKnownValues(self):
+        for baudrate, knownresult in self.knownValues:
+            result = minimalmodbus._calculate_minimum_silent_period(baudrate)
+            self.assertAlmostEqualRatio(result, knownresult, 1.02) # Allow 2% deviation from listed known values
+
+    def testWrongInputValue(self):
+        for value in [-2400, -2400.0, -1, -0.5 , 0, 0.5, 0.9]:
+            self.assertRaises(ValueError, minimalmodbus._calculate_minimum_silent_period, value)
+
+    def testWrongInputType(self):
+        for value in _NOT_NUMERICALS:
+            self.assertRaises(TypeError, minimalmodbus._calculate_minimum_silent_period, value)
+
 
 ##############################
 # String and num conversions #
@@ -1752,18 +1817,23 @@ class TestDummyCommunication(ExtendedTestCase):
 
     ## Communicate ##
 
+    # TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    # Adapt to better mimic the behavior of Windows serial ports.
+    
+    LARGE_NUMBER = 1000
+
     def testCommunicateKnownResponse(self):
-        self.assertEqual( self.instrument._communicate('TESTMESSAGE'), 'TESTRESPONSE' )
+        self.assertEqual( self.instrument._communicate('TESTMESSAGE', 1000), 'TESTRESPONSE' )
 
     def testCommunicateWrongType(self):
         for value in _NOT_STRINGS:
-            self.assertRaises(TypeError, self.instrument._communicate, value)
+            self.assertRaises(TypeError, self.instrument._communicate, value, 1000)
 
     def testCommunicateNoMessage(self):
-        self.assertRaises(ValueError, self.instrument._communicate, '')
+        self.assertRaises(ValueError, self.instrument._communicate, '', 1000)
 
     def testCommunicateNoResponse(self):
-        self.assertRaises(IOError, self.instrument._communicate, 'MessageForEmptyResponse')
+        self.assertRaises(IOError, self.instrument._communicate, 'MessageForEmptyResponse', 1000)
 
 
     ## __repr__ ##
@@ -1771,7 +1841,7 @@ class TestDummyCommunication(ExtendedTestCase):
     def testRepresentation(self):
         representation = repr(self.instrument)
         self.assertTrue( 'minimalmodbus.Instrument<id=' in representation )
-        self.assertTrue( ', address=1, close_port_after_each_call=False, debug=False, serial=dummy_serial.Serial<id=' in representation )
+        self.assertTrue( ', address=1, close_port_after_each_call=False, precalculate_read_size=True, debug=False, serial=dummy_serial.Serial<id=' in representation )
         self.assertTrue( ", open=True>(port=" in representation )
 
 
@@ -1938,6 +2008,8 @@ class TestDummyCommunicationDebugmode(ExtendedTestCase):
 
 
 RESPONSES = {}
+WRONG_RESPONSES = {}
+GOOD_RESPONSES = {}
 """A dictionary of respones from a dummy instrument.
 
 The key is the message (string) sent to the serial port, and the item is the response (string)
@@ -1954,25 +2026,25 @@ from the dummy serial port.
 # ----------------------------------------------------------------------------------------- #
 # Message:  Slave address 1, function code 2. Register address 61, 1 coil. CRC.
 # Response: Slave address 1, function code 2. 1 byte, value=1. CRC.
-RESPONSES['\x01\x02' + '\x00\x3d\x00\x01' + '(\x06'] = '\x01\x02' + '\x01\x01' + '`H'
+GOOD_RESPONSES['\x01\x02' + '\x00\x3d\x00\x01' + '(\x06'] = '\x01\x02' + '\x01\x01' + '`H'
 
 # Read bit register 62 on slave 1 using function code 1 #
 # ----------------------------------------------------- #
 # Message:  Slave address 1, function code 1. Register address 62, 1 coil. CRC.
 # Response: Slave address 1, function code 1. 1 byte, value=0. CRC.
-RESPONSES['\x01\x01' + '\x00\x3e\x00\x01' + '\x9c\x06'] = '\x01\x01' + '\x01\x00' + 'Q\x88'
+GOOD_RESPONSES['\x01\x01' + '\x00\x3e\x00\x01' + '\x9c\x06'] = '\x01\x01' + '\x01\x00' + 'Q\x88'
 
 # Read bit register 63 on slave 1 using function code 2, slave gives wrong byte count #
 # ----------------------------------------------------------------------------------- #
 # Message:  Slave address 1, function code 2. Register address 63, 1 coil. CRC.
 # Response: Slave address 1, function code 2. 2 bytes (wrong), value=1. CRC.
-RESPONSES['\x01\x02' + '\x00\x3f\x00\x01' + '\x89\xc6'] = '\x01\x02' + '\x02\x01' + '`\xb8'
+WRONG_RESPONSES['\x01\x02' + '\x00\x3f\x00\x01' + '\x89\xc6'] = '\x01\x02' + '\x02\x01' + '`\xb8'
 
 # Read bit register 64 on slave 1 using function code 2, slave gives no response #
 # ------------------------------------------------------------------------------ #
 # Message:  Slave address 1, function code 2. Register address 64, 1 coil. CRC.
 # Response: (empty string)
-RESPONSES['\x01\x02' + '\x00\x40\x00\x01' + '\xb8\x1e'] = ''
+WRONG_RESPONSES['\x01\x02' + '\x00\x40\x00\x01' + '\xb8\x1e'] = ''
 
 
 #                ##  WRITE BIT  ##
@@ -1981,25 +2053,25 @@ RESPONSES['\x01\x02' + '\x00\x40\x00\x01' + '\xb8\x1e'] = ''
 # ------------------------------------------------------ #
 # Message:  Slave address 1, function code 5. Register address 71, value 1 (FF00). CRC.
 # Response: Slave address 1, function code 5. Register address 71, value 1 (FF00). CRC.
-RESPONSES['\x01\x05' + '\x00\x47\xff\x00' + '</'] = '\x01\x05' + '\x00\x47\xff\x00' + '</'
+GOOD_RESPONSES['\x01\x05' + '\x00\x47\xff\x00' + '</'] = '\x01\x05' + '\x00\x47\xff\x00' + '</'
 
 # Write bit register 72 on slave 1 using function code 15 #
 # ------------------------------------------------------ #
 # Message:  Slave address 1, function code 15. Register address 72, 1 bit, 1 byte, value 1 (0100). CRC.
 # Response: Slave address 1, function code 15. Register address 72, 1 bit. CRC.
-RESPONSES['\x01\x0f' + '\x00\x48\x00\x01\x01\x01' + '\x0fY'] = '\x01\x0f' + '\x00\x48\x00\x01' + '\x14\x1d'
+GOOD_RESPONSES['\x01\x0f' + '\x00\x48\x00\x01\x01\x01' + '\x0fY'] = '\x01\x0f' + '\x00\x48\x00\x01' + '\x14\x1d'
 
 # Write bit register 73 on slave 1 using function code 15, slave gives wrong number of registers #
 # ---------------------------------------------------------------------------------------------- #
 # Message:  Slave address 1, function code 15. Register address 73, 1 bit, 1 byte, value 1 (0100). CRC.
 # Response: Slave address 1, function code 15. Register address 73, 2 bits (wrong). CRC.
-RESPONSES['\x01\x0f' + '\x00\x49\x00\x01\x01\x01' + '2\x99'] = '\x01\x0f' + '\x00\x49\x00\x02' + '\x05\xdc'
+WRONG_RESPONSES['\x01\x0f' + '\x00\x49\x00\x01\x01\x01' + '2\x99'] = '\x01\x0f' + '\x00\x49\x00\x02' + '\x05\xdc'
 
 # Write bit register 74 on slave 1 using function code 5, slave gives wrong write data #
 # ------------------------------------------------------------------------------------ #
 # Message:  Slave address 1, function code 5. Register address 74, value 1 (FF00). CRC.
 # Response: Slave address 1, function code 5. Register address 74, value 0 (0000, wrong). CRC.
-RESPONSES['\x01\x05' + '\x00\x4a\xff\x00' + '\xad\xec'] = '\x01\x05' + '\x00\x47\x00\x00' + '}\xdf'
+WRONG_RESPONSES['\x01\x05' + '\x00\x4a\xff\x00' + '\xad\xec'] = '\x01\x05' + '\x00\x47\x00\x00' + '}\xdf'
 
 
 #                ##  READ REGISTER  ##
@@ -2008,43 +2080,43 @@ RESPONSES['\x01\x05' + '\x00\x4a\xff\x00' + '\xad\xec'] = '\x01\x05' + '\x00\x47
 # ---------------------------------------------------#
 # Message:  Slave address 1, function code 3. Register address 289, 1 register. CRC.
 # Response: Slave address 1, function code 3. 2 bytes, value=770. CRC=14709.
-RESPONSES['\x01\x03' + '\x01!\x00\x01' + '\xd5\xfc'] = '\x01\x03' + '\x02\x03\x02' + '\x39\x75'
+GOOD_RESPONSES['\x01\x03' + '\x01!\x00\x01' + '\xd5\xfc'] = '\x01\x03' + '\x02\x03\x02' + '\x39\x75'
 
 # Read register 5 on slave 1 using function code 3 #
 # ---------------------------------------------------#
 # Message: Slave address 1, function code 3. Register address 289, 1 register. CRC.
 # Response: Slave address 1, function code 3. 2 bytes, value=184. CRC
-RESPONSES['\x01\x03' + '\x00\x05\x00\x01' + '\x94\x0b'] = '\x01\x03' + '\x02\x00\xb8' + '\xb86'
+GOOD_RESPONSES['\x01\x03' + '\x00\x05\x00\x01' + '\x94\x0b'] = '\x01\x03' + '\x02\x00\xb8' + '\xb86'
 
 # Read register 14 on slave 1 using function code 4 #
 # --------------------------------------------------#
 # Message:  Slave address 1, function code 4. Register address 14, 1 register. CRC.
 # Response: Slave address 1, function code 4. 2 bytes, value=880. CRC.
-RESPONSES['\x01\x04' + '\x00\x0e\x00\x01' + 'P\t'] = '\x01\x04' + '\x02\x03\x70' + '\xb8$'
+GOOD_RESPONSES['\x01\x04' + '\x00\x0e\x00\x01' + 'P\t'] = '\x01\x04' + '\x02\x03\x70' + '\xb8$'
 
 # Read register 101 on slave 1 using function code 3 #
 # ---------------------------------------------------#
 # Message: Slave address 1, function code 3. Register address 101, 1 register. CRC.
 # Response: Slave address 1, function code 3. 2 bytes, value=-5 or 65531 (depending on interpretation). CRC
-RESPONSES['\x01\x03' + '\x00e\x00\x01' + '\x94\x15'] = '\x01\x03' + '\x02\xff\xfb' + '\xb87'
+GOOD_RESPONSES['\x01\x03' + '\x00e\x00\x01' + '\x94\x15'] = '\x01\x03' + '\x02\xff\xfb' + '\xb87'
 
 # Read register 201 on slave 1 using function code 3 #
 # ---------------------------------------------------#
 # Message: Slave address 1, function code 3. Register address 201, 1 register. CRC.
 # Response: Slave address 1, function code 3. 2 bytes, value=9. CRC
-RESPONSES['\x01\x03' + '\x00\xc9\x00\x01' + 'T4'] = '\x01\x03' + '\x02\x00\x09' + 'xB'
+GOOD_RESPONSES['\x01\x03' + '\x00\xc9\x00\x01' + 'T4'] = '\x01\x03' + '\x02\x00\x09' + 'xB'
 
 # Read register 202 on slave 1 using function code 3. Too long response #
 # ----------------------------------------------------------------------#
 # Message: Slave address 1, function code 3. Register address 202, 1 register. CRC.
 # Response: Slave address 1, function code 3. 2 bytes (wrong!), value=9. CRC
-RESPONSES['\x01\x03' + '\x00\xca\x00\x01' + '\xa44'] = '\x01\x03' + '\x02\x00\x00\x09' + '\x84t'
+WRONG_RESPONSES['\x01\x03' + '\x00\xca\x00\x01' + '\xa44'] = '\x01\x03' + '\x02\x00\x00\x09' + '\x84t'
 
 # Read register 203 on slave 1 using function code 3. Too short response #
 # ----------------------------------------------------------------------#
 # Message: Slave address 1, function code 3. Register address 203, 1 register. CRC.
 # Response: Slave address 1, function code 3. 2 bytes (wrong!), value=9. CRC
-RESPONSES['\x01\x03' + '\x00\xcb\x00\x01' + '\xf5\xf4'] = '\x01\x03' + '\x02\x09' + '0\xbe'
+WRONG_RESPONSES['\x01\x03' + '\x00\xcb\x00\x01' + '\xf5\xf4'] = '\x01\x03' + '\x02\x09' + '0\xbe'
 
 
 #                ##  WRITE REGISTER  ##
@@ -2053,85 +2125,85 @@ RESPONSES['\x01\x03' + '\x00\xcb\x00\x01' + '\xf5\xf4'] = '\x01\x03' + '\x02\x09
 # ----------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 24, 1 register, 2 bytes, value=50. CRC.
 # Response: Slave address 1, function code 16. Register address 24, 1 register. CRC.
-RESPONSES['\x01\x10' + '\x00\x18\x00\x01\x02\x002' + '$]'] = '\x01\x10' + '\x00\x18\x00\x01' + '\x81\xce'
+GOOD_RESPONSES['\x01\x10' + '\x00\x18\x00\x01\x02\x002' + '$]'] = '\x01\x10' + '\x00\x18\x00\x01' + '\x81\xce'
 
 # Write value 20 in register 35 on slave 1 using function code 16 #
 # ----------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 35, 1 register, 2 bytes, value=20. CRC.
 # Response: Slave address 1, function code 16. Register address 35, 1 register. CRC.
-RESPONSES['\x01\x10' + '\x00#\x00\x01' + '\x02\x00\x14' + '\xa1\x0c'] = '\x01\x10' + '\x00#\x00\x01' + '\xf0\x03'
+GOOD_RESPONSES['\x01\x10' + '\x00#\x00\x01' + '\x02\x00\x14' + '\xa1\x0c'] = '\x01\x10' + '\x00#\x00\x01' + '\xf0\x03'
 
 # Write value 88 in register 45 on slave 1 using function code 6 #
 # ---------------------------------------------------------------#
 # Message:  Slave address 1, function code 6. Register address 45, value=88. CRC.
 # Response: Slave address 1, function code 6. Register address 45, value=88. CRC.
-RESPONSES['\x01\x06' + '\x00\x2d\x00\x58' + '\x189'] = '\x01\x06' + '\x00\x2d\x00\x58' + '\x189'
+GOOD_RESPONSES['\x01\x06' + '\x00\x2d\x00\x58' + '\x189'] = '\x01\x06' + '\x00\x2d\x00\x58' + '\x189'
 
 # Write value 5 in register 101 on slave 1 using function code 16 #
 # ----------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 101, 1 register, 2 bytes, value=5. CRC.
 # Response: Slave address 1, function code 16. Register address 101, 1 register. CRC.
-RESPONSES['\x01\x10' + '\x00e\x00\x01\x02\x00\x05' + 'o\xa6'] = '\x01\x10' + '\x00e\x00\x01' + '\x11\xd6'
+GOOD_RESPONSES['\x01\x10' + '\x00e\x00\x01\x02\x00\x05' + 'o\xa6'] = '\x01\x10' + '\x00e\x00\x01' + '\x11\xd6'
 
 # Write value 50 in register 101 on slave 1 using function code 16 #
 # ----------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 101, 1 register, 2 bytes, value=5. CRC.
 # Response: Slave address 1, function code 16. Register address 101, 1 register. CRC.
-RESPONSES['\x01\x10' + '\x00e\x00\x01\x02\x002' + '.p'] = '\x01\x10' + '\x00e\x00\x01' + '\x11\xd6'
+GOOD_RESPONSES['\x01\x10' + '\x00e\x00\x01\x02\x002' + '.p'] = '\x01\x10' + '\x00e\x00\x01' + '\x11\xd6'
 
 # Write value -5 in register 101 on slave 1 using function code 16 #
 # ----------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 101, 1 register, 2 bytes, value=-5. CRC.
 # Response: Slave address 1, function code 16. Register address 101, 1 register. CRC.
-RESPONSES['\x01\x10' + '\x00e\x00\x01\x02\xff\xfb' + '\xaf\xd6'] = '\x01\x10' + '\x00e\x00\x01' + '\x11\xd6'
+GOOD_RESPONSES['\x01\x10' + '\x00e\x00\x01\x02\xff\xfb' + '\xaf\xd6'] = '\x01\x10' + '\x00e\x00\x01' + '\x11\xd6'
 
 # Write value -50 in register 101 on slave 1 using function code 16 #
 # ----------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 101, 1 register, 2 bytes, value=-50. CRC.
 # Response: Slave address 1, function code 16. Register address 101, 1 register. CRC.
-RESPONSES['\x01\x10' + '\x00e\x00\x01\x02\xff\xce' + 'o\xc1'] = '\x01\x10' + '\x00e\x00\x01' + '\x11\xd6'
+GOOD_RESPONSES['\x01\x10' + '\x00e\x00\x01\x02\xff\xce' + 'o\xc1'] = '\x01\x10' + '\x00e\x00\x01' + '\x11\xd6'
 
 # Write value 99 in register 51 on slave 1 using function code 16, slave gives wrong CRC #
 # ---------------------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 51, 1 register, 2 bytes, value=99. CRC.
 # Response: Slave address 1, function code 16. Register address 51, 1 register. Wrong CRC.
-RESPONSES['\x01\x10' + '\x00\x33\x00\x01' + '\x02\x00\x63' + '\xe3\xba'] = '\x01\x10' + '\x00\x33\x00\x01' + 'AB'
+WRONG_RESPONSES['\x01\x10' + '\x00\x33\x00\x01' + '\x02\x00\x63' + '\xe3\xba'] = '\x01\x10' + '\x00\x33\x00\x01' + 'AB'
 
 # Write value 99 in register 52 on slave 1 using function code 16, slave gives wrong number of registers #
 # -------------------------------------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 52, 1 register, 2 bytes, value=99. CRC.
 # Response: Slave address 1, function code 16. Register address 52, 2 registers (wrong). CRC.
-RESPONSES['\x01\x10' + '\x00\x34\x00\x01' + '\x02\x00\x63' + '\xe2\r'] = '\x01\x10' + '\x00\x34\x00\x02' + '\x00\x06'
+WRONG_RESPONSES['\x01\x10' + '\x00\x34\x00\x01' + '\x02\x00\x63' + '\xe2\r'] = '\x01\x10' + '\x00\x34\x00\x02' + '\x00\x06'
 
 # Write value 99 in register 53 on slave 1 using function code 16, slave gives wrong register address #
 # ----------------------------------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 53, 1 register, 2 bytes, value=99. CRC.
 # Response: Slave address 1, function code 16. Register address 54 (wrong), 1 register. CRC.
-RESPONSES['\x01\x10' + '\x00\x35\x00\x01' + '\x02\x00\x63' + '\xe3\xdc'] = '\x01\x10' + '\x00\x36\x00\x01' + '\xe1\xc7'
+WRONG_RESPONSES['\x01\x10' + '\x00\x35\x00\x01' + '\x02\x00\x63' + '\xe3\xdc'] = '\x01\x10' + '\x00\x36\x00\x01' + '\xe1\xc7'
 
 # Write value 99 in register 54 on slave 1 using function code 16, slave gives wrong slave address #
 # ------------------------------------------------------------------------------------------------ #
 # Message:  Slave address 1, function code 16. Register address 54, 1 register, 2 bytes, value=99. CRC.
 # Response: Slave address 2 (wrong), function code 16. Register address 54, 1 register. CRC.
-RESPONSES['\x01\x10' + '\x00\x36\x00\x01' + '\x02\x00\x63' + '\xe3\xef'] = '\x02\x10' + '\x00\x36\x00\x01' + '\xe1\xf4'
+GOOD_RESPONSES['\x01\x10' + '\x00\x36\x00\x01' + '\x02\x00\x63' + '\xe3\xef'] = '\x02\x10' + '\x00\x36\x00\x01' + '\xe1\xf4'
 
 # Write value 99 in register 55 on slave 1 using function code 16, slave gives wrong functioncode #
 # ----------------------------------------------------------------------------------------------- #
 # Message:  Slave address 1, function code 16. Register address 55, 1 register, 2 bytes, value=99. CRC.
 # Response: Slave address 1, function code 6 (wrong). Register address 55, 1 register. CRC.
-RESPONSES['\x01\x10' + '\x00\x37\x00\x01' + '\x02\x00\x63' + '\xe2>'] = '\x01\x06' + '\x00\x37\x00\x01' + '\xf9\xc4'
+WRONG_RESPONSES['\x01\x10' + '\x00\x37\x00\x01' + '\x02\x00\x63' + '\xe2>'] = '\x01\x06' + '\x00\x37\x00\x01' + '\xf9\xc4'
 
 # Write value 99 in register 56 on slave 1 using function code 16, slave gives wrong functioncode (indicates an error) #
 # -------------------------------------------------------------------------------------------------------------------- #
 # Message:  Slave address 1, function code 16. Register address 56, 1 register, 2 bytes, value=99. CRC.
 # Response: Slave address 1, function code 144 (wrong). Register address 56, 1 register. CRC.
-RESPONSES['\x01\x10' + '\x00\x38\x00\x01' + '\x02\x00\x63' + '\xe2\xc1'] = '\x01\x90' + '\x00\x38\x00\x01' + '\x81\xda'
+WRONG_RESPONSES['\x01\x10' + '\x00\x38\x00\x01' + '\x02\x00\x63' + '\xe2\xc1'] = '\x01\x90' + '\x00\x38\x00\x01' + '\x81\xda'
 
 # Write value 99 in register 55 on slave 1 using function code 6, slave gives wrong write data #
 # -------------------------------------------------------------------------------------------- #
 # Message:  Slave address 1, function code 6. Register address 55, value=99. CRC.
 # Response: Slave address 1, function code 6. Register address 55, value=98 (wrong). CRC.
-RESPONSES['\x01\x06' + '\x00\x37\x00\x63' + 'x-'] = '\x01\x06' + '\x00\x37\x00\x62' + '\xb9\xed'
+WRONG_RESPONSES['\x01\x06' + '\x00\x37\x00\x63' + 'x-'] = '\x01\x06' + '\x00\x37\x00\x62' + '\xb9\xed'
 
 
 #                ##  READ LONG ##
@@ -2140,7 +2212,7 @@ RESPONSES['\x01\x06' + '\x00\x37\x00\x63' + 'x-'] = '\x01\x06' + '\x00\x37\x00\x
 # --------------------------------------------------------------------------#
 # Message: Slave address 1, function code 3. Register address 289, 2 registers. CRC.
 # Response: Slave address 1, function code 3. 4 bytes, value=-1 or 4294967295 (depending on interpretation). CRC
-RESPONSES['\x01\x03' + '\x00f\x00\x02' + '$\x14'] = '\x01\x03' + '\x04\xff\xff\xff\xff' + '\xfb\xa7'
+GOOD_RESPONSES['\x01\x03' + '\x00f\x00\x02' + '$\x14'] = '\x01\x03' + '\x04\xff\xff\xff\xff' + '\xfb\xa7'
 
 
 #                ##  WRITE LONG ##
@@ -2149,25 +2221,25 @@ RESPONSES['\x01\x03' + '\x00f\x00\x02' + '$\x14'] = '\x01\x03' + '\x04\xff\xff\x
 # -------------------------------------------------------------------------------------------#
 # Message: Slave address 1, function code 16. Register address 102, 2 registers, 4 bytes, value=5. CRC.
 # Response: Slave address 1, function code 16. Register address 102, 2 registers. CRC
-RESPONSES['\x01\x10' + '\x00f\x00\x02\x04\x00\x00\x00\x05' + '\xb5\xae'] = '\x01\x10' + '\x00f\x00\x02' + '\xa1\xd7'
+GOOD_RESPONSES['\x01\x10' + '\x00f\x00\x02\x04\x00\x00\x00\x05' + '\xb5\xae'] = '\x01\x10' + '\x00f\x00\x02' + '\xa1\xd7'
 
 # Write long (2 registers, starting at 102) on slave 1 using function code 16, with value -5. #
 # --------------------------------------------------------------------------------------------#
 # Message: Slave address 1, function code 16. Register address 102, 2 registers, 4 bytes, value=-5. CRC.
 # Response: Slave address 1, function code 16. Register address 102, 2 registers. CRC
-RESPONSES['\x01\x10' + '\x00f\x00\x02\x04\xff\xff\xff\xfb' + 'u\xfa'] = '\x01\x10' + '\x00f\x00\x02' + '\xa1\xd7'
+GOOD_RESPONSES['\x01\x10' + '\x00f\x00\x02\x04\xff\xff\xff\xfb' + 'u\xfa'] = '\x01\x10' + '\x00f\x00\x02' + '\xa1\xd7'
 
 # Write long (2 registers, starting at 102) on slave 1 using function code 16, with value 3. #
 # -------------------------------------------------------------------------------------------#
 # Message: Slave address 1, function code 16. Register address 102, 2 registers, 4 bytes, value=3. CRC.
 # Response: Slave address 1, function code 16. Register address 102, 2 registers. CRC
-RESPONSES['\x01\x10' + '\x00f\x00\x02\x04\x00\x00\x00\x03' + '5\xac'] = '\x01\x10' + '\x00f\x00\x02' + '\xa1\xd7'
+GOOD_RESPONSES['\x01\x10' + '\x00f\x00\x02\x04\x00\x00\x00\x03' + '5\xac'] = '\x01\x10' + '\x00f\x00\x02' + '\xa1\xd7'
 
 # Write long (2 registers, starting at 102) on slave 1 using function code 16, with value -3. #
 # --------------------------------------------------------------------------------------------#
 # Message: Slave address 1, function code 16. Register address 102, 2 registers, 4 bytes, value=-3. CRC.
 # Response: Slave address 1, function code 16. Register address 102, 2 registers. CRC
-RESPONSES['\x01\x10' + '\x00f\x00\x02\x04\xff\xff\xff\xfd' + '\xf5\xf8'] = '\x01\x10' + '\x00f\x00\x02' + '\xa1\xd7'
+GOOD_RESPONSES['\x01\x10' + '\x00f\x00\x02\x04\xff\xff\xff\xfd' + '\xf5\xf8'] = '\x01\x10' + '\x00f\x00\x02' + '\xa1\xd7'
 
 
 #                ##  READ FLOAT ##
@@ -2176,19 +2248,19 @@ RESPONSES['\x01\x10' + '\x00f\x00\x02\x04\xff\xff\xff\xfd' + '\xf5\xf8'] = '\x01
 # ---------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 3. Register address 103, 2 registers. CRC.
 # Response: Slave address 1, function code 3. 4 bytes, value=1.0. CRC.
-RESPONSES['\x01\x03' + '\x00g\x00\x02' + 'u\xd4'] = '\x01\x03' + '\x04\x3f\x80\x00\x00' + '\xf7\xcf'
+GOOD_RESPONSES['\x01\x03' + '\x00g\x00\x02' + 'u\xd4'] = '\x01\x03' + '\x04\x3f\x80\x00\x00' + '\xf7\xcf'
 
 # Read float from address 103 (2 registers) on slave 1 using function code 4 #
 # ---------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 4. Register address 103, 2 registers. CRC.
 # Response: Slave address 1, function code 4. 4 bytes, value=3.65e30. CRC.
-RESPONSES['\x01\x04' + '\x00g\x00\x02' + '\xc0\x14'] = '\x01\x04' + '\x04\x72\x38\x47\x25' + '\x93\x1a'
+GOOD_RESPONSES['\x01\x04' + '\x00g\x00\x02' + '\xc0\x14'] = '\x01\x04' + '\x04\x72\x38\x47\x25' + '\x93\x1a'
 
 # Read float from address 103 (4 registers) on slave 1 using function code 3 #
 # ---------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 3. Register address 103, 4 registers. CRC.
 # Response: Slave address 1, function code 3. 8 bytes, value=-2.0 CRC.
-RESPONSES['\x01\x03' + '\x00g\x00\x04' + '\xf5\xd6'] = '\x01\x03' + '\x08\xc0\x00\x00\x00\x00\x00\x00\x00' + '\x99\x87'
+GOOD_RESPONSES['\x01\x03' + '\x00g\x00\x04' + '\xf5\xd6'] = '\x01\x03' + '\x08\xc0\x00\x00\x00\x00\x00\x00\x00' + '\x99\x87'
 
 
 #                ##  WRITE FLOAT ##
@@ -2197,13 +2269,13 @@ RESPONSES['\x01\x03' + '\x00g\x00\x04' + '\xf5\xd6'] = '\x01\x03' + '\x08\xc0\x0
 # -------------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 103, 2 registers, 4 bytes, value=1.1 . CRC.
 # Response: Slave address 1, function code 16. Register address 103, 2 registers. CRC.
-RESPONSES['\x01\x10' + '\x00g\x00\x02\x04?\x8c\xcc\xcd' + '\xed\x0b'] = '\x01\x10' + '\x00g\x00\x02' + '\xf0\x17'
+GOOD_RESPONSES['\x01\x10' + '\x00g\x00\x02\x04?\x8c\xcc\xcd' + '\xed\x0b'] = '\x01\x10' + '\x00g\x00\x02' + '\xf0\x17'
 
 # Write float 1.1 to address 103 (4 registers) on slave 1 using function code 16 #
 # -------------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 103, 4 registers, 8 bytes, value=1.1 . CRC.
 # Response: Slave address 1, function code 16. Register address 103, 4 registers. CRC.
-RESPONSES['\x01\x10' + '\x00g\x00\x04\x08?\xf1\x99\x99\x99\x99\x99\x9a' + 'u\xf7'] = '\x01\x10' + '\x00g\x00\x04' + 'p\x15'
+GOOD_RESPONSES['\x01\x10' + '\x00g\x00\x04\x08?\xf1\x99\x99\x99\x99\x99\x9a' + 'u\xf7'] = '\x01\x10' + '\x00g\x00\x04' + 'p\x15'
 
 
 #                ##  READ STRING  ##
@@ -2212,13 +2284,13 @@ RESPONSES['\x01\x10' + '\x00g\x00\x04\x08?\xf1\x99\x99\x99\x99\x99\x9a' + 'u\xf7
 # ---------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 3. Register address 104, 1 register. CRC.
 # Response: Slave address 1, function code 3. 2 bytes, value = 'AB'.  CRC.
-RESPONSES['\x01\x03' + '\x00h\x00\x01' + '\x05\xd6'] = '\x01\x03' + '\x02AB' + '\x08%'
+GOOD_RESPONSES['\x01\x03' + '\x00h\x00\x01' + '\x05\xd6'] = '\x01\x03' + '\x02AB' + '\x08%'
 
 # Read string from address 104 (4 registers) on slave 1 using function code 3 #
 # ----------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 3. Register address 104, 4 registers. CRC.
 # Response: Slave address 1, function code 3.  8 bytes, value = 'ABCDEFGH'.  CRC.
-RESPONSES['\x01\x03' + '\x00h\x00\x04' + '\xc5\xd5'] = '\x01\x03' + '\x08ABCDEFGH' + '\x0b\xcc'
+GOOD_RESPONSES['\x01\x03' + '\x00h\x00\x04' + '\xc5\xd5'] = '\x01\x03' + '\x08ABCDEFGH' + '\x0b\xcc'
 
 
 #                ##  WRITE STRING  ##
@@ -2227,19 +2299,19 @@ RESPONSES['\x01\x03' + '\x00h\x00\x04' + '\xc5\xd5'] = '\x01\x03' + '\x08ABCDEFG
 # -------------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 104, 1 register, 2 bytes, value='A ' . CRC.
 # Response: Slave address 1, function code 16. Register address 104, 1 register. CRC.
-RESPONSES['\x01\x10' + '\x00h\x00\x01\x02A ' + '\x9f0'] = '\x01\x10' + '\x00h\x00\x01' + '\x80\x15'
+GOOD_RESPONSES['\x01\x10' + '\x00h\x00\x01\x02A ' + '\x9f0'] = '\x01\x10' + '\x00h\x00\x01' + '\x80\x15'
 
 # Write string 'A' to address 104 (4 registers) on slave 1 using function code 16 #
 # --------------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 104, 4 registers, 8 bytes, value='A       ' . CRC.
 # Response: Slave address 1, function code 16. Register address 104, 2 registers. CRC.
-RESPONSES['\x01\x10' + '\x00h\x00\x04\x08A       ' + '\xa7\xae'] = '\x01\x10' + '\x00h\x00\x04' + '@\x16'
+GOOD_RESPONSES['\x01\x10' + '\x00h\x00\x04\x08A       ' + '\xa7\xae'] = '\x01\x10' + '\x00h\x00\x04' + '@\x16'
 
 # Write string 'ABCDEFGH' to address 104 (4 registers) on slave 1 using function code 16 #
 # ---------------------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 104, 4 registers, 8 bytes, value='ABCDEFGH' . CRC.
 # Response: Slave address 1, function code 16. Register address 104, 4 registers. CRC.
-RESPONSES['\x01\x10' + '\x00h\x00\x04\x08ABCDEFGH' + 'I>'] = '\x01\x10' + '\x00h\x00\x04' + '@\x16'
+GOOD_RESPONSES['\x01\x10' + '\x00h\x00\x04\x08ABCDEFGH' + 'I>'] = '\x01\x10' + '\x00h\x00\x04' + '@\x16'
 
 
 #                ##  READ REGISTERS  ##
@@ -2248,13 +2320,13 @@ RESPONSES['\x01\x10' + '\x00h\x00\x04\x08ABCDEFGH' + 'I>'] = '\x01\x10' + '\x00h
 # --------------------------------------------------------------------#
 # Message:  Slave address 1, function code 3. Register address 105, 1 register. CRC.
 # Response: Slave address 1, function code 3. 2 bytes, value = 16.  CRC.
-RESPONSES['\x01\x03' + '\x00i\x00\x01' + 'T\x16'] = '\x01\x03' + '\x02\x00\x10' + '\xb9\x88'
+GOOD_RESPONSES['\x01\x03' + '\x00i\x00\x01' + 'T\x16'] = '\x01\x03' + '\x02\x00\x10' + '\xb9\x88'
 
 # Read from address 105 (3 registers) on slave 1 using function code 3 #
 # ---------------------------------------------------------------------#
 # Message:  Slave address 1, function code 3. Register address 105, 3 registers. CRC.
 # Response: Slave address 1, function code 3. 6 bytes, value = 16, 32, 64. CRC.
-RESPONSES['\x01\x03' + '\x00i\x00\x03' + '\xd5\xd7'] =  '\x01\x03' + '\x06\x00\x10\x00\x20\x00\x40' + '\xe0\x8c'
+GOOD_RESPONSES['\x01\x03' + '\x00i\x00\x03' + '\xd5\xd7'] =  '\x01\x03' + '\x06\x00\x10\x00\x20\x00\x40' + '\xe0\x8c'
 
 
 #                ##  WRITE REGISTERS  ##
@@ -2263,80 +2335,82 @@ RESPONSES['\x01\x03' + '\x00i\x00\x03' + '\xd5\xd7'] =  '\x01\x03' + '\x06\x00\x
 # ------------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 105, 1 register, 2 bytes, value=2 . CRC.
 # Response: Slave address 1, function code 16. Register address 105, 1 register. CRC.
-RESPONSES['\x01\x10' + '\x00i\x00\x01\x02\x00\x02' + '.\xa8'] = '\x01\x10' + '\x00i\x00\x01' + '\xd1\xd5'
+GOOD_RESPONSES['\x01\x10' + '\x00i\x00\x01\x02\x00\x02' + '.\xa8'] = '\x01\x10' + '\x00i\x00\x01' + '\xd1\xd5'
 
 # Write value [2, 4, 8] to address 105 (3 registers) on slave 1 using function code 16 #
 # -------------------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 105, 3 register, 6 bytes, value=2, 4, 8. CRC.
 # Response: Slave address 1, function code 16. Register address 105, 3 registers. CRC.
-RESPONSES['\x01\x10' + '\x00i\x00\x03\x06\x00\x02\x00\x04\x00\x08' + '\x0c\xd6'] = '\x01\x10' + '\x00i\x00\x03' + 'P\x14'
+GOOD_RESPONSES['\x01\x10' + '\x00i\x00\x03\x06\x00\x02\x00\x04\x00\x08' + '\x0c\xd6'] = '\x01\x10' + '\x00i\x00\x03' + 'P\x14'
 
 
 #                ##  OTHER RESPONSES  ##
 
 # Retrieve an empty response (for testing the _communicate method) #
 # ---------------------------------------------------------------- #
-RESPONSES['MessageForEmptyResponse'] = ''
+WRONG_RESPONSES['MessageForEmptyResponse'] = ''
 
 # Retrieve an known response (for testing the _communicate method) #
 # ---------------------------------------------------------------- #
-RESPONSES['TESTMESSAGE'] = 'TESTRESPONSE'
+WRONG_RESPONSES['TESTMESSAGE'] = 'TESTRESPONSE'
 
 # Retrieve an known response (for testing the _performCommand method) #
 # ---------------------------------------------------------------- #
-RESPONSES['\x01\x10TESTCOMMAND\x08B']     = '\x01\x10TESTCOMMANDRESPONSE\xb4,'
-RESPONSES['\x01\x4bTESTCOMMAND2\x18\xc8'] = '\x01\x4bTESTCOMMANDRESPONSE2K\x8c'
-RESPONSES['\x01\x01TESTCOMMAND4~']        = '\x02\x01TESTCOMMANDRESPONSEx]'    # Wrong slave address in response
-RESPONSES['\x01\x02TESTCOMMAND0z']        = '\x01\x03TESTCOMMANDRESPONSE2\x8c' # Wrong function code in response
-RESPONSES['\x01\x03TESTCOMMAND\xcd\xb9']  = '\x01\x03TESTCOMMANDRESPONSEab'    # Wrong CRC in response
-RESPONSES['\x01\x04TESTCOMMAND8r']        = 'A'                                # Too short response message
-RESPONSES['\x01\x05TESTCOMMAND\xc5\xb1']  = '\x01\x85TESTCOMMANDRESPONSE\xa54' # Error indication from slave
+WRONG_RESPONSES['\x01\x10TESTCOMMAND\x08B']     = '\x01\x10TESTCOMMANDRESPONSE\xb4,'
+WRONG_RESPONSES['\x01\x4bTESTCOMMAND2\x18\xc8'] = '\x01\x4bTESTCOMMANDRESPONSE2K\x8c'
+WRONG_RESPONSES['\x01\x01TESTCOMMAND4~']        = '\x02\x01TESTCOMMANDRESPONSEx]'    # Wrong slave address in response
+WRONG_RESPONSES['\x01\x02TESTCOMMAND0z']        = '\x01\x03TESTCOMMANDRESPONSE2\x8c' # Wrong function code in response
+WRONG_RESPONSES['\x01\x03TESTCOMMAND\xcd\xb9']  = '\x01\x03TESTCOMMANDRESPONSEab'    # Wrong CRC in response
+WRONG_RESPONSES['\x01\x04TESTCOMMAND8r']        = 'A'                                # Too short response message
+WRONG_RESPONSES['\x01\x05TESTCOMMAND\xc5\xb1']  = '\x01\x85TESTCOMMANDRESPONSE\xa54' # Error indication from slave
 
 ## Recorded data from OmegaCN7500 ##
 ####################################
 
 # Slave address 1, read_bit(2068) Response value 1.
-RESPONSES['\x01\x02\x08\x14\x00\x01\xfb\xae'] ='\x01\x02\x01\x01`H'
+GOOD_RESPONSES['\x01\x02\x08\x14\x00\x01\xfb\xae'] ='\x01\x02\x01\x01`H'
 
 # Slave address 1, write_bit(2068, 0)
-RESPONSES['\x01\x05\x08\x14\x00\x00\x8f\xae'] ='\x01\x05\x08\x14\x00\x00\x8f\xae'
+GOOD_RESPONSES['\x01\x05\x08\x14\x00\x00\x8f\xae'] ='\x01\x05\x08\x14\x00\x00\x8f\xae'
 
 # Slave address 1, write_bit(2068, 1)
-RESPONSES['\x01\x05\x08\x14\xff\x00\xce^'] ='\x01\x05\x08\x14\xff\x00\xce^'
+GOOD_RESPONSES['\x01\x05\x08\x14\xff\x00\xce^'] ='\x01\x05\x08\x14\xff\x00\xce^'
 
 # Slave address 1, read_register(4097, 1) Response value 823.6
-RESPONSES['\x01\x03\x10\x01\x00\x01\xd1\n'] ='\x01\x03\x02 ,\xa0Y'
+GOOD_RESPONSES['\x01\x03\x10\x01\x00\x01\xd1\n'] ='\x01\x03\x02 ,\xa0Y'
 
 # Slave address 1, write_register(4097, 700.0, 1)
-RESPONSES['\x01\x10\x10\x01\x00\x01\x02\x1bX\xbdJ'] ='\x01\x10\x10\x01\x00\x01T\xc9'
+GOOD_RESPONSES['\x01\x10\x10\x01\x00\x01\x02\x1bX\xbdJ'] ='\x01\x10\x10\x01\x00\x01T\xc9'
 
 # Slave address 1, write_register(4097, 823.6, 1)
-RESPONSES['\x01\x10\x10\x01\x00\x01\x02 ,\xae]'] ='\x01\x10\x10\x01\x00\x01T\xc9'
+GOOD_RESPONSES['\x01\x10\x10\x01\x00\x01\x02 ,\xae]'] ='\x01\x10\x10\x01\x00\x01T\xc9'
 
 # Slave address 10, read_bit(2068) Response value 1
-RESPONSES['\n\x02\x08\x14\x00\x01\xfa\xd5'] = '\n\x02\x01\x01bl'
+GOOD_RESPONSES['\n\x02\x08\x14\x00\x01\xfa\xd5'] = '\n\x02\x01\x01bl'
 
 # Slave address 10, write_bit(2068, 0)
-RESPONSES['\n\x05\x08\x14\x00\x00\x8e\xd5'] ='\n\x05\x08\x14\x00\x00\x8e\xd5'
+GOOD_RESPONSES['\n\x05\x08\x14\x00\x00\x8e\xd5'] ='\n\x05\x08\x14\x00\x00\x8e\xd5'
 
 # Slave address 10, write_bit(2068, 1)
-RESPONSES['\n\x05\x08\x14\xff\x00\xcf%'] ='\n\x05\x08\x14\xff\x00\xcf%'
+GOOD_RESPONSES['\n\x05\x08\x14\xff\x00\xcf%'] ='\n\x05\x08\x14\xff\x00\xcf%'
 
 # Slave address 10, read_register(4096, 1) Response value 25.0
-RESPONSES['\n\x03\x10\x00\x00\x01\x81\xb1'] ='\n\x03\x02\x00\xfa\x9d\xc6'
+GOOD_RESPONSES['\n\x03\x10\x00\x00\x01\x81\xb1'] ='\n\x03\x02\x00\xfa\x9d\xc6'
 
 # Slave address 10, read_register(4097, 1) Response value 325.8
-RESPONSES['\n\x03\x10\x01\x00\x01\xd0q'] ='\n\x03\x02\x0c\xba\x996'
+GOOD_RESPONSES['\n\x03\x10\x01\x00\x01\xd0q'] ='\n\x03\x02\x0c\xba\x996'
 
 # Slave address 10, write_register(4097, 325.8, 1)
-RESPONSES['\n\x10\x10\x01\x00\x01\x02\x0c\xbaA\xc3'] ='\n\x10\x10\x01\x00\x01U\xb2'
+GOOD_RESPONSES['\n\x10\x10\x01\x00\x01\x02\x0c\xbaA\xc3'] ='\n\x10\x10\x01\x00\x01U\xb2'
 
 # Slave address 10, write_register(4097, 20.0, 1)
-RESPONSES['\n\x10\x10\x01\x00\x01\x02\x00\xc8\xc4\xe6'] ='\n\x10\x10\x01\x00\x01U\xb2'
+GOOD_RESPONSES['\n\x10\x10\x01\x00\x01\x02\x00\xc8\xc4\xe6'] ='\n\x10\x10\x01\x00\x01U\xb2'
 
 # Slave address 10, write_register(4097, 200.0, 1)
-RESPONSES['\n\x10\x10\x01\x00\x01\x02\x07\xd0\xc6\xdc'] ='\n\x10\x10\x01\x00\x01U\xb2'
+GOOD_RESPONSES['\n\x10\x10\x01\x00\x01\x02\x07\xd0\xc6\xdc'] ='\n\x10\x10\x01\x00\x01U\xb2'
 
+RESPONSES.update(WRONG_RESPONSES)
+RESPONSES.update(GOOD_RESPONSES)
 
 #################
 # Run the tests #

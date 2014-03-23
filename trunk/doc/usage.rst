@@ -1,6 +1,6 @@
 Detailed usage documentation
 =============================
-
+For introductive usage documentation, see the main documentation page.
 
 Interactive usage
 --------------------------------------------------------------------------------
@@ -171,6 +171,82 @@ The role of the GUI is this:
 If you have a temperature text box where a user has entered ``255`` (possibly degrees C), and a button 'Run!' or 'Go!' or something similar, then the GUI program should read ``255`` from the box when the user presses the button, and call the function ``setTemperature(255)``.
 
 This way it is easy to test the measurement program and the GUI separately.
+
+
+Workaround for floats with wrong byte order
+------------------------------------------------------
+If your instrument responds with floats implemented in the other byte order 
+than MinimalModbus, here is a workaroud that can be used.
+
+For example you are reading two registers (starting with register 3924) 
+from slave number 2, and the result should be a float of approximately 208::
+  
+    MinimalModbus debug mode. Response from instrument: '\x02\x03\x04\x93\x9dCPD\x95'
+
+    \x02 Slave address (here 2)
+    \x03 Function code (here 3 = read registers)
+    \x04 Byte count (here 4 bytes)
+    \x93 Payload. Here 93 (hex) = 147 (dec)
+    \x9d Payload. Here 9d (hex) = 157 (dec)
+    C    Payload. Here ASCII letter C = 43 (hex) = 67 (dec).
+    P    Payload. Here ASCII letter P = 50 (hex) = 80 (dec).
+    D    CRC LSB
+    \x95 CRC MSB
+
+So the payload is ``\x93\x9dCP``, which is 4 bytes (as each register stores 2 bytes). 
+See http://minimalmodbus.sourceforge.net/index.html#example
+
+You should try this in interactive mode in Python, and to manually re-shuffle the bytes::
+
+    ~$ python
+    Python 2.7.3 (default, Sep 26 2013, 20:08:41)
+    [GCC 4.6.3] on linux2
+    Type "help", "copyright", "credits" or "license" for more information.
+    >>> import minimalmodbus
+    >>>
+    >>> minimalmodbus._bytestringToFloat("\x93\x9dCP")
+    -3.9698747127906995e-27
+    >>>
+    >>> minimalmodbus._bytestringToFloat("CP\x93\x9d")
+    208.5766143798828
+    >>>
+
+Suggested work-around:
+
+* Read the register values directly using the read_registers function. 
+* Then reshuffle the bytes
+* Convert it to a float using the internal function _bytestringToFloat. 
+
+Something like::
+
+    values = read_registers(3924, numberOfRegisters=2)
+    registerstring = chr(values[2]) + chr(values[3]) + chr(values[0]) + chr(values[1])
+    floatvalue = minimalmodbus._bytestringToFloat(registerstring)
+
+See :meth:`.read_registers` and http://minimalmodbus.sourceforge.net/_modules/minimalmodbus.html#_bytestringToFloat
+
+
+
+Handling extra 0xFE byte after some messages
+--------------------------------------------------------------------------
+Some users have reported errors due to instruments not fulfilling the Modbus standard.
+For example can some additional byte be pasted at the end of the response from the instrument.
+Here is an example how this can be handled by tweaking the minimalmodbus.py file.
+
+Add this to _extractPayload function, after the argument validity testing section::
+
+    # Fix for broken T3-PT10 which outputs extra 0xFE byte after some messages
+    # Patch by Edwin van den Oetelaar 
+    # check length of message when functioncode in 3,4 
+    # if received buffer length longer than expected, truncate it, 
+    # this makes sure CRC bytes are taken from right place, not the end of the buffer, it ignores the extra bytes in the buffer
+    if functioncode in (0x03, 0x04) :
+        try:
+            modbuslen = ord(response[NUMBER_OF_RESPONSE_STARTBYTES])
+            response = response[:modbuslen+5] # the number of bytes used for CRC(2),slaveid(1),functioncode(1),bytecount(1) = 5
+        except IndexError:
+            pass
+
 
 
 Install or uninstalling a distribution

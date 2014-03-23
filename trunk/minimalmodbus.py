@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#   Copyright 2012 Jonas Berg
+#   Copyright 2014 Jonas Berg
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ __email__    = 'pyhys@users.sourceforge.net'
 __url__      = 'http://minimalmodbus.sourceforge.net/'
 __license__  = 'Apache License, Version 2.0'
 
-__version__  = '0.4.1'
+__version__  = '0.4.5'
 __status__   = 'Beta'
 __revision__ = '$Rev$'
 __date__     = '$Date$'
@@ -40,6 +40,7 @@ import os
 import serial
 import struct
 import sys
+import time
 
 # Allow long also in Python3
 # http://python3porting.com/noconv.html
@@ -47,12 +48,17 @@ if sys.version > '3':
     long = int
 
 _NUMBER_OF_BYTES_PER_REGISTER = 2
+_SECONDS_TO_MILLISECONDS = 1000
+
+# Several instrument instances can share the same serialport
+_SERIALPORTS = {}
+_LATEST_READ_TIMES = {}
 
 BAUDRATE = 19200
 """Default value for the baudrate in Baud (int)."""
 
 PARITY   = serial.PARITY_NONE
-"""Default value for the  parity. See the pySerial module for documentation. Defaults to serial.PARITY_NONE"""
+"""Default value for the parity. See the pySerial module for documentation. Defaults to serial.PARITY_NONE"""
 
 BYTESIZE = 8
 """Default value for the bytesize (int)."""
@@ -66,27 +72,23 @@ TIMEOUT  = 0.05
 CLOSE_PORT_AFTER_EACH_CALL = False
 """Default value for port closure setting."""
 
-SERIALPORTS = {}
-
 
 class Instrument():
     """Instrument class for talking to instruments (slaves) via the Modbus RTU protocol (via RS485 or RS232).
 
     Args:
-        * port (str): The serial port name, for example ``/dev/ttyUSB0`` (Linux), ``/dev/tty.usbserial`` (OS X) or ``/com3`` (Windows).
+        * port (str): The serial port name, for example ``/dev/ttyUSB0`` (Linux), ``/dev/tty.usbserial`` (OS X) or ``COM4`` (Windows).
         * slaveaddress (int): Slave address in the range 1 to 247 (use decimal numbers, not hex).
 
     """
 
     def __init__(self, port, slaveaddress):
-
-        if port not in SERIALPORTS or not SERIALPORTS[port]:
-            self.serial = SERIALPORTS[port] = serial.Serial(port=port, baudrate=BAUDRATE, parity=PARITY, bytesize=BYTESIZE, \
-                stopbits=STOPBITS, timeout=TIMEOUT)
-        else: 
-            self.serial = SERIALPORTS[port]
+        if port not in _SERIALPORTS or not _SERIALPORTS[port]:
+            self.serial = _SERIALPORTS[port] = serial.Serial(port=port, baudrate=BAUDRATE, parity=PARITY, bytesize=BYTESIZE, stopbits=STOPBITS, timeout=TIMEOUT)
+        else:
+            self.serial = _SERIALPORTS[port]
             if self.serial.port is None:
-                self.serial.open()
+                self.serial.open() 
         """The serial port object as defined by the pySerial module. Created by the constructor.
 
         Attributes:
@@ -113,17 +115,25 @@ class Instrument():
         self.close_port_after_each_call = CLOSE_PORT_AFTER_EACH_CALL
         """If this is :const:`True`, the serial port will be closed after each call. Defaults to :data:`CLOSE_PORT_AFTER_EACH_CALL`. To change it, set the value ``minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL=True`` ."""
 
+        self.precalculate_read_size = True
+        """If this is :const:`False`, the serial port reads until timeout 
+        instead of just reading a specific number of bytes. Defaults to :const:`True`.
+        
+        New in version 0.5.
+        """
+
         if  self.close_port_after_each_call:
             self.serial.close()
 
     def __repr__(self):
         """String representation of the :class:`.Instrument` object."""
-        return "{0}.{1}<id=0x{2:x}, address={3}, close_port_after_each_call={4}, debug={5}, serial={6}>".format(
+        return "{0}.{1}<id=0x{2:x}, address={3}, close_port_after_each_call={4}, precalculate_read_size={5}, debug={6}, serial={7}>".format(
             self.__module__,
             self.__class__.__name__,
             id(self),
             self.address,
             self.close_port_after_each_call,
+            self.precalculate_read_size,
             self.debug,
             self.serial,
             )
@@ -726,21 +736,39 @@ class Instrument():
         Makes use of the :meth:`_communicate` method. The message is generated with the :func:`_embedPayload` function, and the parsing of the response is done with the :func:`_extractPayload` function.
 
         """
+        DEFAULT_NUMBER_OF_BYTES_TO_READ = 1000
+        
         _checkFunctioncode(functioncode, None )
         _checkString(payloadToSlave, description='payload')
 
-        message             = _embedPayload(self.address, functioncode, payloadToSlave)
-        response            = self._communicate(message)
-        payloadFromSlave    = _extractPayload(response, self.address, functioncode)
+        message = _embedPayload(self.address, functioncode, payloadToSlave)
+        
+        # Calculate number of bytes to read
+        if not self.precalculate_read_size:
+            number_of_bytes_to_read = DEFAULT_NUMBER_OF_BYTES_TO_READ
+        else:
+            try:
+                number_of_bytes_to_read = _predictRtuResponseSize(message)
+            except:
+                number_of_bytes_to_read = DEFAULT_NUMBER_OF_BYTES_TO_READ
+                if self.debug:
+                    template = 'MinimalModbus debug mode. ' + \
+                            'Could not precalculate RTU response size. ' + \
+                            'Will read {} bytes. Message: {!r}'
+                    _print_out(template.format(number_of_bytes_to_read, message))
 
+        response = self._communicate(message, number_of_bytes_to_read)
+        
+        payloadFromSlave = _extractPayload(response, self.address, functioncode)
         return payloadFromSlave
 
 
-    def _communicate(self, message):
+    def _communicate(self, message, number_of_bytes_to_read):
         """Talk to the slave via a serial port.
 
         Args:
             message (str): The raw message that is to be sent to the slave.
+            number_of_bytes_to_read (int): number of bytes to read
 
         Returns:
             The raw data (string) returned from the slave.
@@ -752,12 +780,28 @@ class Instrument():
         makes it difficult to print it in the promt (messes up a bit).
         Use repr() to make the string printable (shows ascii values for control signs.)
 
-        Will block until timeout (or reaching a large number of bytes).
+        Will block until reaching *number_of_bytes_to_read* or timeout.
 
         If the attribute :attr:`Instrument.debug` is :const:`True`, the communication details are printed.
 
         If the attribute :attr:`Instrument.close_port_after_each_call` is :const:`True` the
         serial port is closed after each call.
+        
+        Timing::
+
+                                                  Request from master (Master is writing)
+                                                  |
+                                                  |       Response from slave (Master is reading)
+                                                  |       |
+            ----W----R----------------------------W-------R----------------------------------------
+                     |                            |       |
+                     |<----- Silent period ------>|       |
+                                                  |       |
+                             Roundtrip time  ---->|-------|<--   
+                             
+        The resolution for Python's time.time() is lower on Windows than on Linux. 
+        It is about 16 ms on Windows according to 
+        http://stackoverflow.com/questions/157359/accurate-timestamping-in-python
 
         .. note::
             Some implementation details:
@@ -780,49 +824,72 @@ class Instrument():
             data payload + CRC code (two bytes)
 
             For Python3, the information sent to and from pySerial should be of the type bytes.
-            This is taken care of automatically.
+            This is taken care of automatically by MinimalModbus.
 
         """
-        RESPONSE_FRAME_SIZE = 100
 
         _checkString(message, minlength=1, description='message')
+        _checkInt(number_of_bytes_to_read)
         
-        functioncode = ord(message[1])
-        
-        ## Getting from bus only necessary bytes ##
-        ## We check for the instruction type and calculate how many bytes will expect ##
-        if functioncode == 3 or functioncode == 4:
-            RESPONSE_FRAME_SIZE = 2 + 1 + _twoByteStringToNum(message[4:6])*2 + 2
-        elif functioncode in [5, 6, 15, 16]:
-            RESPONSE_FRAME_SIZE = 2 + 4 + 2
-        elif   functioncode == 1:
-            count = _twoByteStringToNum(message[4:6])
-            RESPONSE_FRAME_SIZE = 2 + 1 + count + (1 if count%8 else 0) + 2
-        elif functioncode == 2:
-            count = _twoByteStringToNum(message[4:6])
-            RESPONSE_FRAME_SIZE = 2 + 1 + count + (1 if count%8 else 0) + 2
-
         if self.debug:
-            _print_out( 'MinimalModbus debug mode. Writing to instrument: ' + repr(message) )
-            _print_out( 'MinimalModbus debug mode. Expecting %d byte to read ' % RESPONSE_FRAME_SIZE )
+            _print_out('\nMinimalModbus debug mode. Writing to instrument (expecting {} bytes back): {!r}'. \
+                format(number_of_bytes_to_read, message))
 
         if self.close_port_after_each_call:
             self.serial.open()
 
         if sys.version_info[0] > 2:
-            message = bytes(message, encoding='latin1')  # Convert types to make it Python3 compatible
-
+            message = bytes(message, encoding='latin1')  # Convert types to make it Python3 compatible     
+        
+        # Sleep to make sure 3.5 character times have passed
+        minimum_silent_period   = _calculate_minimum_silent_period(self.serial.baudrate)
+        time_since_read         = time.time() - _LATEST_READ_TIMES.get(self.serial.port, 0)
+        
+        if time_since_read < minimum_silent_period:
+            sleep_time = minimum_silent_period - time_since_read
+            
+            if self.debug:
+                template = 'MinimalModbus debug mode. Sleeping for {:.1f} ms. ' + \
+                        'Minimum silent period: {:.1f} ms, time since read: {:.1f} ms.'
+                text = template.format(
+                    sleep_time*_SECONDS_TO_MILLISECONDS, 
+                    minimum_silent_period*_SECONDS_TO_MILLISECONDS, 
+                    time_since_read*_SECONDS_TO_MILLISECONDS)
+                _print_out(text)
+                
+            time.sleep(sleep_time)
+        
+        elif self.debug:
+            template = 'MinimalModbus debug mode. No sleep required before write. ' + \
+                'Time since previous read: {:.1f} ms, minimum silent period: {:.2f} ms.'
+            text = template.format(
+                time_since_read*_SECONDS_TO_MILLISECONDS,
+                minimum_silent_period*_SECONDS_TO_MILLISECONDS)
+            _print_out(text)
+        
+        # Write message
+        latest_write_time = time.time()
         self.serial.write(message)
-        answer =  self.serial.read(RESPONSE_FRAME_SIZE)
-
-        if sys.version_info[0] > 2:
-            answer = str(answer, encoding='latin1')  # Convert types to make it Python3 compatible
+        
+        # Read response
+        answer =  self.serial.read(number_of_bytes_to_read)
+        _LATEST_READ_TIMES[self.serial.port] = time.time()
 
         if self.close_port_after_each_call:
             self.serial.close()
 
+        if sys.version_info[0] > 2:
+            answer = str(answer, encoding='latin1')  # Convert types to make it Python3 compatible
+
         if self.debug:
-            _print_out( 'MinimalModbus debug mode. Response from instrument: ' + repr(answer) )
+            template = 'MinimalModbus debug mode. Response from instrument: {!r} ({} bytes), ' + \
+                'roundtrip time: {:.1f} ms. Timeout setting: {:.1f} ms.\n'
+            text = template.format(
+                answer, 
+                len(answer), 
+                (_LATEST_READ_TIMES.get(self.serial.port,0) - latest_write_time)*_SECONDS_TO_MILLISECONDS,
+                self.serial.timeout*_SECONDS_TO_MILLISECONDS)
+            _print_out(text)
 
         if len(answer) == 0:
             raise IOError('No communication with the instrument (no answer)')
@@ -890,18 +957,6 @@ def _extractPayload(response, slaveaddress, functioncode):
     _checkString(response, description='response')
     _checkSlaveaddress(slaveaddress)
     _checkFunctioncode(functioncode, None)
-
-    # Fix for broken T3-PT10 which outputs extra 0xFE byte after some messages
-    # Patch by Edwin van den Oetelaar 
-    # check length of message when functioncode in 3,4 
-    # if received buffer length longer than expected, truncate it, 
-    # this makes sure CRC bytes are taken from right place, not the end of the buffer, it ignores the extra bytes in the buffer
-    if functioncode in ( 0x03, 0x04 ) :
-        try:
-            modbuslen = ord(response[NUMBER_OF_RESPONSE_STARTBYTES])
-            response = response[:modbuslen+5] # the number of bytes used for CRC(2),slaveid(1),functioncode(1),bytecount(1) = 5
-        except IndexError:
-            pass
         
     # Check CRC
     receivedCRC = response[-NUMBER_OF_CRC_BYTES:]
@@ -938,7 +993,79 @@ def _extractPayload(response, slaveaddress, functioncode):
     payload = response[ firstDatabyteNumber:lastDatabyteNumber ]
     return payload
 
+    
+############################################
+## Serial communication utility functions ##
+############################################
+    
+def _predictRtuResponseSize(message):
+    """Calculate the number of bytes that should be received from the slave for Modbus RTU.
+    
+    Args:
+        message (str): The raw message that is to be sent to the slave.
 
+    Returns:
+        The preducted number of bytes (int) in the response.
+        
+    Raises:
+        ValueError, TypeError.
+            
+    """
+    BYTEPOSITION_FOR_FUNCTIONCODE = 1
+    BYTERANGE_FOR_GIVEN_SIZE = slice(4,6) 
+    NUMBER_OF_RESPONSE_STARTBYTES = 2  # Number of bytes before the response payload
+    NUMBER_OF_PAYLOAD_BYTES_IN_WRITE_CONFIRMATION = 4
+    NUMBER_OF_BYTES_FOR_BYTECOUNTFIELD = 1
+    NUMBER_OF_CRC_BYTES = 2
+    
+    _checkString(message, 
+        minlength=NUMBER_OF_RESPONSE_STARTBYTES+NUMBER_OF_CRC_BYTES, 
+        description='message')
+    functioncode = ord(message[BYTEPOSITION_FOR_FUNCTIONCODE])
+
+    if functioncode in [5, 6, 15, 16]:
+        response_payload_size = NUMBER_OF_PAYLOAD_BYTES_IN_WRITE_CONFIRMATION    
+        
+    elif functioncode in [1, 2, 3, 4]:    
+        given_size = _twoByteStringToNum(message[BYTERANGE_FOR_GIVEN_SIZE])
+        if functioncode == 1 or functioncode == 2:
+            # Algorithm from MODBUS APPLICATION PROTOCOL SPECIFICATION V1.1b
+            number_of_inputs = given_size
+            response_payload_size = NUMBER_OF_BYTES_FOR_BYTECOUNTFIELD + \
+                                    number_of_inputs//8 + (1 if number_of_inputs%8 else 0)
+            
+        elif functioncode == 3 or functioncode == 4:
+            number_of_registers = given_size
+            response_payload_size = NUMBER_OF_BYTES_FOR_BYTECOUNTFIELD + \
+                                    number_of_registers*_NUMBER_OF_BYTES_PER_REGISTER
+        
+    else:
+        raise ValueError('Wrong functioncode: {}. The raw message is: {!r}'.format( \
+            functioncode, message))
+    
+    return NUMBER_OF_RESPONSE_STARTBYTES + response_payload_size + NUMBER_OF_CRC_BYTES
+    
+def _calculate_minimum_silent_period(baudrate):
+    """Calculate the silent period length to comply with the 3.5 character silence between messages.
+    
+    Args:
+        baudrate (numerical): The baudrate for the serial port
+
+    Returns:
+        The number of seconds (float) that should pass between each message on the bus.
+
+    Raises:
+        ValueError, TypeError.
+
+    """
+    _checkNumerical(baudrate, minvalue=1, description='baudrate') # Avoid division by zero
+    
+    BITTIMES_PER_CHARACTERTIME = 11
+    MINIMUM_SILENT_CHARACTERTIMES = 3.5
+    
+    bittime = 1/float(baudrate)
+    return bittime * BITTIMES_PER_CHARACTERTIME * MINIMUM_SILENT_CHARACTERTIMES
+    
 ##############################
 # String and num conversions #
 ##############################
@@ -2021,10 +2148,13 @@ def _getDiagnosticString():
 
 if __name__ == '__main__':
 
+    #print '2400 bit/s:', calculate_minimum_silent_period(2400), 's'
+    #print '115200 bit/s:', calculate_minimum_silent_period(115200), 's'
+
     _print_out( 'TESTING MODBUS MODULE' )
-    #instrument = Instrument('/dev/cvdHeatercontroller', 1)
-    #instrument.debug = True
-    #_print_out( str(instrument.read_register(273, 1)) )
+    instrument = Instrument('/dev/ttyUSB0', 1)
+    instrument.debug = True
+    _print_out( str(instrument.read_register(273, 1)) )
     _print_out( 'DONE!' )
 
 pass
