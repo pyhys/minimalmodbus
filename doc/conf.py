@@ -11,7 +11,9 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys, os
+import os
+import sys
+import time
 
 import minimalmodbus
 
@@ -43,7 +45,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'minimalmodbus'
-copyright = '2012, Jonas Berg'
+copyright = time.strftime('%Y') + ', Jonas Berg'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

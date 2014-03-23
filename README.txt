@@ -6,12 +6,12 @@ Introduction
 MinimalModbus is an easy-to-use Python module for talking to instruments (slaves) 
 from a computer (master) using the Modbus protocol, and is intended to be running on the master. 
 Example code includes drivers for Eurotherm and Omega process controllers. 
-The only dependence is the pySerial module. 
+The only dependence is the pySerial module (also pure Python). 
 
 This software supports the 'Modbus RTU' serial communication version of the protocol, 
 and is intended for use on Linux, OS X and Windows platforms. 
 It is open source, and has the Apache License, Version 2.0. 
-Tested with Python2.6, Python2.7 and Python3.2.
+Tested with Python2.7 and Python3.2.
 
 
 Home page
@@ -23,7 +23,8 @@ Python package index (PyPI) with download
     http://pypi.python.org/pypi/MinimalModbus/ (this page if viewed on python.org. Note that no API is available). The  download section is at the end of the page.
 
 The SourceForge project page
-    http://sourceforge.net/projects/minimalmodbus/ with mailing list and subversion repository ( http://sourceforge.net/p/minimalmodbus/code/ ).
+    http://sourceforge.net/projects/minimalmodbus/ with mailing list and 
+    subversion repository ( http://sourceforge.net/p/minimalmodbus/code/ ).
 
 
 General on Modbus protocol
@@ -66,7 +67,7 @@ Eurotherm 3504 process controller is included. It uses the MinimalModbus Python 
 for its communication. Also a driver for Omega CN7500 is included. 
 For hardware details on these process controllers, see 
 `Eurotherm 3500 <http://www.eurotherm.com/products/controllers/multi-loop/>`_ and 
-`Omega CN7500 <http://www.omega.com/ppt/pptsc.asp?ref=CN7500/>`_.
+`Omega CN7500 <http://www.omega.com/pptst/CN7500.html>`_.
 
 There can be several instruments (slaves, nodes) on a single bus, 
 and the slaves have addresses in the range 1 to 247. In the Modbus RTU protocol, 
@@ -75,9 +76,8 @@ the serial bus RS485, which is described at http://en.wikipedia.org/wiki/Rs485.
 
 To connect your computer to the RS485 bus, a serial port is required. 
 There are direct USB-to-RS485 converters, but I use a USB-to-RS232 converter 
-together with an industrial RS232-to-RS485 converter. This has the advantage that 
+together with an industrial RS232-to-RS485 converter (Westermo MDW-45). This has the advantage that 
 the latter is galvanically isolated using opto-couplers, and has transient supression. 
-This software has been tested using a Westermo MDW-45 RS232-to-RS485 converter.
 
 
 Typical usage
@@ -143,12 +143,12 @@ More on the usage of MinimalModbus is found on http://minimalmodbus.sourceforge.
 
 Default values
 --------------
-Most of the serial port parameters have the default values defined in the Modbus standard::
+Most of the serial port parameters have the default values defined in the Modbus standard (19200 8N1)::
 
     instrument.serial.port          # this is the serial port name
     instrument.serial.baudrate = 19200   # Baud
-    instrument.serial.parity   = serial.PARITY_NONE
     instrument.serial.bytesize = 8
+    instrument.serial.parity   = serial.PARITY_NONE
     instrument.serial.stopbits = 1
     instrument.serial.timeout  = 0.05   # seconds
 
@@ -174,11 +174,10 @@ or alternatively (to avoid import of ``serial``)::
     instrument.serial.parity = minimalmodbus.serial.PARITY_EVEN
 
 
-
 Dependencies
 ------------
 Python versions 2.6 and higher are supported (including 3.x). 
-Tested with Python2.6, Python2.7 and Python3.2. This module is pure Python.
+Tested with Python2.7 and Python3.2. This module is pure Python.
 
 This module relies on `pySerial <http://pyserial.sourceforge.net/>`_ (also pure Python) 
 to do the heavy lifting, and it is the only dependency. 
@@ -286,9 +285,15 @@ Running several scripts using the same port will give problems.
 
 Issues when running under Windows
 ---------------------------------
-When running under Windows, the underlying pySerial may complain that the 
-serial port is already open. This seems to occur especially when communicating with more than one instrument. 
-It is possible to make MinimalModbus close the serial port after each call. Use it like::
+Since MinimalModbus version 0.5, the handling of several instruments on the same
+serial port has been improved for Windows.
+
+It should no longer be necessary to use ````minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = True```` 
+when running on Windows, as this now is handled in a better way internally. 
+This gives a significantly increased communication speed.
+
+If the underlying pySerial complains that the serial port is already open, 
+it is still possible to make MinimalModbus close the serial port after each call. Use it like::
 
     #!/usr/bin/env python
     import minimalmodbus
@@ -455,6 +460,108 @@ as ``\a``, but its ``repr()`` will still print ``\x07``.
 
 More about ASCII control characters is found on http://en.wikipedia.org/wiki/ASCII.
 
+Timing of the serial communications
+-----------------------------------
+The Modbus RTU standard prescribes a silent period corresponding to 3.5 characters 
+between each message, to be able fo figure out where one message ends and the 
+next one starts.
+
+The silent period after the message to the slave is the responsibility of the slave.
+
+The silent period after the message from the slave has previously been 
+implemented in MinimalModbus by setting a generous timeout value, and let the 
+serial ``read()`` function wait for timeout.
+
+The character time corresponds to 11 bit times, according to http://www.automation.com/library/articles-white-papers/fieldbus-serial-bus-io-networks/introduction-to-modbus.
+
+========== ============== ========== =============== ======================
+Baud rate  Bit rate       Bit time   Character time  3.5 character times
+========== ============== ========== =============== ======================
+2400       2400 bits/s    417 us     4.6 ms          16 ms
+4800       4800 bits/s    208 us     2.3 ms          8.0 ms
+9600       9600 bits/s    104 us     1.2 ms          4.0 ms
+19200      19200 bits/s   52 us      573 us          2.0 ms
+38400      38400 bits/s   26 us      286 us          1.0 ms
+115200     115200 bit/s   8.7 us     95 us           0.33 ms
+========== ============== ========== =============== ======================
+
+RS-485 introduction
+-------------------
+Several nodes (instruments) can be connected to one RS485 bus. The bus consists of two lines, 
+A and B, carrying differential voltages. In both ends of the bus, 
+a 120 Ohm termination resistor is connected between line A and B. 
+Most often a common ground line is connected between the nodes as well.
+
+At idle, both line A and B rest at the same voltage (or almost the same voltage). 
+When a logic 1 is transmitted, line A is pulled towards lower voltage and 
+line B is pulled towards higher voltage. 
+Note that the A/B nameing is sometimes mixed up by some manufacturers.
+
+Each node uses a transceiver chip, containing a transmitter (sender) and a receiver. 
+Only one transmitter can be active on the bus simultaneously. 
+
+Pins on the RS485 bus side of the transceiver chip:
+
+* A: inverting line
+* B: non-inverting line
+* GND
+
+Pins on the microcontroller side of the transceiver chip:
+
+* TX: Data to be transmitted
+* TXENABLE: For enabling/disabling the transmitter
+* RX: Received data
+* RXENABLE: For enabling/disabling the receiver
+
+If the receiver is enabled simultaneusly with the transmitter, the sent data 
+is echoed back to the microcontroller. This echo functionality is sometimes useful, 
+but most often the TXENABLE and RXENABLE pins are connected in such a way 
+that the receiver is disabled when the transmitter is active.
+
+For detailed information, see http://en.wikipedia.org/wiki/RS-485.
+
+Controlling the RS485 sender
+````````````````````````````
+Controlling the TXENABLE pin on the transceiver chip is the tricky part 
+when it comes to RS485 communication. There are some options:
+
+**Using a USB-to-serial conversion chip that is capable of setting the TXENABLE pin properly**
+    See for example the FTDI chip 
+    `FT232RL <http://www.ftdichip.com/Products/ICs/FT232R.htm>`_, which has a separate 
+    output for this purpose (TXDEN in their terminology). The Sparkfun 
+    breakout board `BOB-09822 <https://www.sparkfun.com/products/9822>`_ 
+    combines this FTDI chip with a RS485 transceiver chip. The TXDEN output 
+    from the FTDI chip is high (+5 V) when the transmitter is to be activated. 
+    The FTDI chip calculates when the transmitter should be activated, so you 
+    do not have to do anything in your application software.
+
+**Using a RS232-to-RS485 converter capable of figuring out this by it self**
+    This typically requires a microcontroller in the converter, and that you 
+    configure the baud rate, stop bits etc. This is a straight-forward and 
+    easy-to-use alternative, as you can use it together with a standard 
+    USB-to-RS232 cable and nothing needs to be done in your application software. 
+    One example of this type of converter is `Westermo MDW-45 <http://www.westermo.com>`_, 
+    which I have been using with great success.
+
+**Using a converter where the TXENABLE pin is controlled by the TX pin, sometimes via some timer circuit**
+    I am not conviced that this is a good idea.
+
+**Controlling a separate GPIO pin from kernelspace software on embedded Linux machines** 
+    See for example http://blog.savoirfairelinux.com/en/2013/rs-485-for-beaglebone-a-quick-peek-at-the-omap-uart/ 
+    This is a very elegant solution, as the TXENABLE pin is controlled by the 
+    kernel driver and you don't have to worry about it in your application program.
+
+**Controlling a separate GPIO pin from userspace software on embedded Linux machines**
+    This could also be useful, but I guess that the time delay could be unacceptably large.
+
+**Controlling the RTS pin in the RS232 interface, and connecting it to the TXENABLE pin of the transceiver**
+    This can be done from userspace, but will then lead to large time delays. 
+    I have tested this with a 3.3V FTDI  USB-to-serial cable using pySerial 
+    on a Linux laptop. The cable has a RTS output, 
+    but no TXDEN output. Note that the RTS output is +3.3 V at idle, and 0 V when 
+    RTS is set to True. The delay time is around 1 ms, as measured with an oscilloscope. 
+    This corresponds to approx 100 bit times when running at 115200 bps, but this 
+    value also includes delays caused by the Python intepreter.
 
 Trouble shooting
 ----------------
@@ -483,6 +590,17 @@ baud rate, or to adjust the timeout setting.
 
 See also the pySerial pages: http://pyserial.sourceforge.net/
 
+To make sure you are sending something valid, start with the examples in 
+the users manual of your instrument. Use MinimalModbus in debug mode and make sure that each sent byte is correct.
+
+The terminiation resistors of the RS-485 bus must be set correctly. Use a 
+multimeter to verify that there is termination in the appropriate nodes of 
+your RS-485 bus.
+
+To troubleshoot the communication in more detail, an oscilloscope can be very 
+useful to verify transmitted data. 
+
+
 Local echo
 ``````````
 Local echo of the USB-to-RS485 adaptor can also be the cause of some problems, 
@@ -502,6 +620,15 @@ echo can be done in a number of ways:
 * Shorting two of the pins in the 9-pole D-SUB connector turns off the echo for some models.
 * If based on a FTDI chip, some special program can be used to change a chip setting for disabling echo.
 
+Serial adaptors not recognized
+``````````````````````````````
+There have been reports on problems with serial adaptors on some platforms, 
+for example Raspberry Pi. It seems to lack kernel drives for some chips, like PL2303. 
+Serial adaptors based on FTDI FT232RL are known to work.
+
+Make sure to run the ``dmesg`` command before and after plugging in your 
+serial adaptor, to verify that the proper kernel driver is loaded.
+
 
 Known issues
 --------------
@@ -519,6 +646,7 @@ immediately after ``import minimalmodbus`` instead.
 When running under Python2.6, for some conversion errors no exception is raised. 
 For example when trying to convert a negative value to a bytestring representing an unsigned long.
 
+
 Support
 -------
 Send a mail to minimalmodbus-list@lists.sourceforge.net
@@ -531,7 +659,7 @@ Describe the problem in detail, and include any error messsages. Please also inc
 Note that it can be very helpful to switch on the debug mode, where the communication 
 details are printed. See the 'Debug mode' section.
 
-It can be helpful to describe which instrument model you are using, and possibly a link to online PDF documentation for it.
+Describe which instrument model you are using, and possibly a link to online PDF documentation for it.
 
 
 Develop
@@ -555,6 +683,7 @@ test purposes. See http://minimalmodbus.sourceforge.net/apidummyserial.html
 The test coverage analysis is found at http://minimalmodbus.sourceforge.net/htmlcov/index.html. 
 To see which parts of the code that have been tested, click the corresponding file name.    
         
+More details on the unittests are found on http://minimalmodbus.sourceforge.net/develop.html  
 
 Related software
 ----------------
@@ -582,7 +711,8 @@ Jonas Berg, pyhys@users.sourceforge.net
 
 Credits
 -------
-Significant contributions by Angelo Compagnucci, Aaron LaLonde and Asier Abalos.
+Significant contributions by Angelo Compagnucci, Aaron LaLonde, Asier Abalos, 
+Simon Funke, Edwin van den Oetelaar and Michael Penza.
 
 
 Feedback

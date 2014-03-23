@@ -1,24 +1,34 @@
 Developer documentation
 =======================
-Follow the coding progress in the SVN repository (click on the revision number to see the actual file content):
+Follow the coding progress in the SVN repository:
 http://sourceforge.net/p/minimalmodbus/code/
 
 Design considerations
 -----------------------------------------------------------------------------
-My take on the design is that is should be as simple as possible, hence the name MinimalModbus, but it should implement the smallest number of functions needed for it to be useful. The target audience for this driver simply wants to talk to Modbus clients using a serial interface (RTU is good enough), using some simple driver (preferably MinimalModbus).
+My take on the design is that is should be as simple as possible, hence the name MinimalModbus, 
+but it should implement the smallest number of functions needed for it to be useful. 
+The target audience for this driver simply wants to talk to Modbus clients 
+using a serial interface (RTU is good enough), using some simple driver (preferably MinimalModbus).
 
-Only a few functions are implemented. It is very easy to implement lots of (seldom used) functions, resulting in buggy code with large fractions of it almost never used. It is instead much better to implement the features when needed/requested. There are many Modbus function codes, but I guess that most are not used.
+Only a few functions are implemented. It is very easy to implement lots of 
+(seldom used) functions, resulting in buggy code with large fractions of it almost never used. 
+It is instead much better to implement the features when needed/requested. 
+There are many Modbus function codes, but I guess that most are not used.
 
-It is a goal that the same driver should be compatible for both Python2 and Python3 programs. Some suggestions for making this possible are found here:
+It is a goal that the same driver should be compatible for both Python2 and 
+Python3 programs. Some suggestions for making this possible are found here:
 http://wiki.python.org/moin/PortingPythonToPy3k
 
 There should be unittests for all functions, and mock communication data.
 
-Errors should be caught as early as possible, and the error messages should be informative. For this reason there is type checking for for the parameters in most functions. This is rather un-pythonic, but is intended to give more clear error messages (for easier remote support).
+Errors should be caught as early as possible, and the error messages should be informative. 
+For this reason there is type checking for for the parameters in most functions. 
+This is rather un-pythonic, but is intended to give more clear error messages (for easier remote support).
 
 Note that the term 'address' is ambigous, why it is better to use the terms 'register address' or 'slave address'.
 
-Use only external links in the README.txt, otherwise they will not work on Python Package Index (PyPI). No Sphinx-specific constructs are allowed in that file.
+Use only external links in the README.txt, otherwise they will not work on Python Package Index (PyPI). 
+No Sphinx-specific constructs are allowed in that file.
 
 
 General driver structure
@@ -34,14 +44,16 @@ Function                    Description
 :meth:`._communicate`       Handles raw strings for communication via pySerial.
 =========================== ================================================================================
 
-Most of the logic is located in separate (easy to test) functions on module level. For a description of them, see :ref:`internalminimalmodbus`. 
+Most of the logic is located in separate (easy to test) functions on module level. 
+For a description of them, see :ref:`internalminimalmodbus`. 
 
 
 Number conversion to and from bytestrings
 -----------------------------------------------
 The Python module :mod:`struct` is used for conversion. See http://docs.python.org/library/struct.html
 
-Several wrapper functions are defined for easy use of the conversion. These functions also do argument validity checking.
+Several wrapper functions are defined for easy use of the conversion. 
+These functions also do argument validity checking.
 
 =========================== =================================== ================================
 Data type                   To bytestring                       From bytestring
@@ -69,14 +81,15 @@ A brief introduction to unittesting is found here: http://docs.python.org/releas
 
 The :mod:`unittest` module is documented here: http://docs.python.org/library/unittest.html
 
+The unittests uses previosly recorded communication data for the testing. 
 Inside the unpacked folder go to :file:`test` and run the unit tests with::
      
-    python test_all.py
-    python3 test_all.py
+    python test_all_simulated.py
+    python3 test_all_simulated.py
 
-    python3.2 test_all.py
-    python2.6 test_all.py
-    python2.7 test_all.py
+    python3.2 test_all_simulated.py
+    python2.6 test_all_simulated.py
+    python2.7 test_all_simulated.py
 
 It is also possible to run the individual test files::
 
@@ -84,6 +97,19 @@ It is also possible to run the individual test files::
     python test_eurotherm3500.py
     python test_omegacn7500.py
 
+MinimalModbus is also tested with hardware. A Delta temperature controller 
+DTB4824 is used together with a USB-to-RS485 converter. 
+
+Run it with::
+
+   python test_deltaDTB4824.py
+   
+The baudrate and portname can optionally be set from command line::
+
+    python test_deltaDTB4824.py 19200 /dev/ttyUSB0
+    
+For more details on testing with this hardware, see the source of the script :file:`test_deltaDTB4824.py` 
+in the :file:`test` folder.
 
 Making sure that error messages are informative for the user
 ------------------------------------------------------------------------------
@@ -337,6 +363,16 @@ And to embed the payload ``'\x10\x11\x12'`` to slave address 1, with functioncod
     >>> minimalmodbus._embedPayload(1, 16, '\x10\x11\x12')
     '\x01\x10\x10\x11\x12\x90\x98'
 
+Playing with two's complement::
+
+    >>> minimalmodbus._twosComplement(-1, bits=8)
+    255
+
+Calculating the minimum silent interval (seconds) at a baudrate of 19200 bits/s::
+
+    >>> minimalmodbus._calculate_minimum_silent_period(19200)
+    0.0020052083333333332
+
 Note that the API might change, as this is outside the official API.
 
 Found a bug?
@@ -406,9 +442,10 @@ Change version number etc
 `````````````````````````
 * Manually change the ``__version__`` field in the :file:`minimalmodbus.py` source file.
 * Manually change the release date in :file:`CHANGES.txt`
-* Set copyright year in :file:`doc/conf.py` 
 
-(Note that the version number in the Sphinx configuration file :file:`doc/conf.py` and in the file :file:`setup.py` are changed automatically).
+(Note that the version number in the Sphinx configuration file :file:`doc/conf.py` 
+and in the file :file:`setup.py` are changed automatically. 
+Also the copyright year in :file:`doc/conf.py` is changed automatically).
 
 How to number releases are described in :pep:`386`.
 
@@ -426,12 +463,11 @@ Unittesting
 ```````````
 Run unit tests (in the :file:`trunk/test` directory)::
     
-    python test_all.py
-    python3 test_all.py
+    python test_all_simulated.py
+    python3 test_all_simulated.py
     
-    python2.6 test_all.py
-    python2.7 test_all.py
-    python3.2 test_all.py
+    python2.7 test_all_simulated.py
+    python3.2 test_all_simulated.py
 
 Test the source distribution generation (look in the :file:`PKG-INFO` file)::
 
@@ -473,7 +509,7 @@ Verify all external links::
 
 Build the test coverage report (in directory :file:`trunk`). First manually clear the directory :file:`htmlcov`::
    
-    coverage run ./test/test_all.py
+    coverage run ./test/test_all_simulated.py 
     coverage html --omit=/usr/*
     
 
@@ -815,6 +851,20 @@ TODO
  
 For next release:
   * Finetune coding style (pep8.py)
+  
+Future releases:
+  * ASCII support
+  * Callback for enabling/disabling RS485 transceivers
+  
+Maybe:
+ * Improve the dummy_serial behavior, to better mimic Windows behavior. 
+   Also using the number_of_bytes_to_read in the unittests.
+ * Floats with other byte order
+ * Handle RS485 adapters with echo functionality enabled
+ * Speeding up the code (new CRC calculation, disable some other checks)
+ * Test with other Python versions
+ 
+ 
   
 
 .

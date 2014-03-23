@@ -21,12 +21,14 @@ Additional resources available on home page
    changes
    usage
    develop
-   internalminimalmodbus
-   internalomegacn7500
-   internaltestminimalmodbus
    apidummyserial
+   internalminimalmodbus
+   internaltestminimalmodbus
+   internaltestdtb4824
    internaltesteurotherm3500
+   internalomegacn7500
    internaltestomegacn7500
+
 
 Indices and tables
 ==================
