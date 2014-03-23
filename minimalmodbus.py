@@ -31,7 +31,7 @@ __email__    = 'pyhys@users.sourceforge.net'
 __url__      = 'http://minimalmodbus.sourceforge.net/'
 __license__  = 'Apache License, Version 2.0'
 
-__version__  = '0.4.5'
+__version__  = '0.5'
 __status__   = 'Beta'
 __revision__ = '$Rev$'
 __date__     = '$Date$'

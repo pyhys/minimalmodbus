@@ -1,5 +1,5 @@
 
-Release 0.5 (2014-?-?)
+Release 0.5 (2014-03-23)
 --------------------------
 * Precalculating number of bytes to read, in order to increase the speed.
 * Better handling of several instruments on the same serial port, especially 
