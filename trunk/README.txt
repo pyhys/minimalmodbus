@@ -176,7 +176,7 @@ or alternatively (to avoid import of ``serial``)::
 
 Dependencies
 ------------
-Python versions 2.6 and higher are supported (including 3.x). 
+Python versions 2.7 and higher are supported (including 3.x). 
 Tested with Python2.7 and Python3.2. This module is pure Python.
 
 This module relies on `pySerial <http://pyserial.sourceforge.net/>`_ (also pure Python) 
@@ -520,8 +520,8 @@ that the receiver is disabled when the transmitter is active.
 
 For detailed information, see http://en.wikipedia.org/wiki/RS-485.
 
-Controlling the RS485 sender
-````````````````````````````
+Controlling the RS485 transmitter
+````````````````````````````````````
 Controlling the TXENABLE pin on the transceiver chip is the tricky part 
 when it comes to RS485 communication. There are some options:
 
