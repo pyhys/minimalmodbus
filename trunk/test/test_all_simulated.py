@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#   Copyright 2011 Jonas Berg
+#   Copyright 2014 Jonas Berg
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -21,8 +21,8 @@
 
 test_all_simulated: Run all the unit tests (without any hardware)
 
-This Python file was changed (committed) at $Date: 2012-08-10 20:17:03 +0200 (Fri, 10 Aug 2012) $, 
-which was $Revision: 152 $.
+This Python file was changed (committed) at $Date$, 
+which was $Revision$.
 
 """
 
@@ -30,8 +30,8 @@ __author__  = "Jonas Berg"
 __email__   = "pyhys@users.sourceforge.net"
 __license__ = "Apache License, Version 2.0"
 
-__revision__  = "$Rev: 152 $"
-__date__      = "$Date: 2012-08-10 20:17:03 +0200 (Fri, 10 Aug 2012) $"
+__revision__  = "$Rev$"
+__date__      = "$Date$"
 
 import unittest
 
