@@ -378,6 +378,8 @@ significant byte (MSB) before the least significant byte (LSB). This is
 called big-endian byte order. To find the register data value, multiply the 
 MSB by 256 (dec) and add the LSB.
 
+Error checking is done using CRC (cyclic redundancy check), and the result is two bytes.
+
 Example
 ````````
 We use this example in debug mode. It reads one register (number 5) and 
