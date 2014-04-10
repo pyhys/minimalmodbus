@@ -1,15 +1,17 @@
 """
 Hardware testing of MinimalModbus using the Delta DTB temperature controller.
 
-For use with Delta DTB4824VR.
+For use with Delta DTB4824VR. 
 
 Usage
 -------------
-The first argument to this script is the baudrate. It is optional,
-and will default to DEFAULT_BAUDRATE.
 
-The second argument to this script is the port name. It is optional,
-and will default to DEFAULT_PORT_NAME.
+python scriptname [-rtu] [-ascii] [-b9600] [-D/dev/ttyUSB0]
+
+ * -b : baud rate
+ * -D : port name
+ 
+NOTE: There should be no space between the option switch and its argument.
 
 
 Settings in the temperature controller
@@ -92,20 +94,36 @@ def main():
     ## Read command line arguments ##
     #################################
 
-    if len(sys.argv) > 1:
-        BAUDRATE = int(sys.argv[1])
-    else:
-        BAUDRATE = DEFAULT_BAUDRATE
+    # Do manual parsing of command line,
+    # as none of the modules in the standard library handles python 2.6 to 3.x
 
-    if len(sys.argv) > 2:
-        PORT_NAME = sys.argv[2]
-    else:
-        PORT_NAME = DEFAULT_PORT_NAME
+    MODE        = minimalmodbus.MODE_RTU
+    BAUDRATE    = DEFAULT_BAUDRATE
+    PORT_NAME   = DEFAULT_PORT_NAME
 
+    for arg in sys.argv:
+        if arg.startswith('-ascii'):
+            MODE = minimalmodbus.MODE_ASCII
+            
+        elif arg.startswith('-rtu'): 
+            MODE = minimalmodbus.MODE_RTU
+        
+        elif arg.startswith('-b'):
+            if len(arg) < 3:
+                minimalmodbus._print_out('Wrong usage of the -b option. Use -b9600')
+                sys.exit()
+            BAUDRATE = int(arg[2:])
+            
+        elif arg.startswith('-D'):
+            if len(arg) < 3:
+                minimalmodbus._print_out('Wrong usage of the -D option. Use -D/dev/ttyUSB0 or -DCOM4')
+                sys.exit()
+            PORT_NAME = arg[2:]
+    
     ################################
     ## Create instrument instance ##
     ################################
-    instrument = minimalmodbus.Instrument(PORT_NAME, SLAVE_ADDRESS)
+    instrument = minimalmodbus.Instrument(PORT_NAME, SLAVE_ADDRESS, MODE)
     instrument.serial.baudrate = BAUDRATE
     instrument.serial.timeout = TIMEOUT
     instrument.debug = False
@@ -116,14 +134,19 @@ def main():
     text += '###############################################################\n'
     text += '## Hardware test with Delta DTB4824                          ##\n'
     text += '##                                                           ##\n'
-    text += '## Baudrate: {:>8} bits/s                                 ##\n'.format(instrument.serial.baudrate)
-    text += '## Port name: {:>15}                                ##\n'.format(instrument.serial.port)
-    text += '## Platform: {:<15}                                 ##\n'.format(sys.platform)
+    text += '## Modbus mode:    {:15}                           ##\n'.format(instrument.mode)
     text += '## Python version: {}.{}.{}                                     ##\n'.format(sys.version_info[0], sys.version_info[1], sys.version_info[2])
+    text += '## Baudrate (-b):  {:>8} bits/s                           ##\n'.format(instrument.serial.baudrate)
+    text += '## Platform:       {:15}                           ##\n'.format(sys.platform)
+    text += '## Port name (-D): {:15}                           ##\n'.format(instrument.serial.port)
     text += '##                                                           ##\n'
+    text += '## Slave address:  {:<15}                           ##\n'.format(instrument.address)
+    text += '## Timeout:        {:0.3f} s                                   ##\n'.format(instrument.serial.timeout)
     text += '## Full file path: ' + os.path.abspath(__file__) + '\n'
     text += '###############################################################\n'
     minimalmodbus._print_out(text)
+
+    minimalmodbus._print_out(repr(instrument))
 
 
     if RUN_VERIFY_EXAMPLES:
@@ -135,13 +158,13 @@ def main():
 
         # Read two registers starting at 0x1000. This is process value (PV) and setpoint (SV).
         # Should send '\x01\x03\x10\x00\x00\x02\xc0\xcb' OK!
-        minimalmodbus._print_out('\nReading register 0x1000 and 0x1001:')
-        minimalmodbus._print_out(repr(instrument.read_registers(0x1000, 2)))
+        #minimalmodbus._print_out('\nReading register 0x1000 and 0x1001:')
+        #minimalmodbus._print_out(repr(instrument.read_registers(0x1000, 2)))
 
         # Read 9 bits starting at 0x0810.
         # Should send '\x01\x02\x08\x10\x00\x09\xbb\xa9' OK!
-        minimalmodbus._print_out('\nReading 9 bits starting at 0x0810:')
-        minimalmodbus._print_out(repr(instrument._performCommand(2, '\x08\x10\x00\x09')))
+        #minimalmodbus._print_out('\nReading 9 bits starting at 0x0810:')
+        #minimalmodbus._print_out(repr(instrument._performCommand(2, '\x08\x10\x00\x09')))
 
         # Write value 800 to register 0x1001. This is a setpoint of 80.0 degrees (Centigrades, dependent on setting).
         # Should send '\x01\x06\x10\x01\x03\x20\xdd\xe2' OK!
@@ -149,17 +172,28 @@ def main():
         # Response from instrument: '\x01\x06\x10\x01\x03 \xdd\xe2' OK!
         # Note that the slave will indicate an error if the CoSH parameter in the controller
         # does not allow writing.
+        # ASCII mode: Request  ':010610010320C5\r\n' 
+        #             Response ':010610010320C5\r\n'
 
         # Write 1 to one bit at 0x0810. This is "Communication write in enabled".
         # Should send '\x01\x05\x08\x10\xff\x00\x8f\x9f' OK!
         instrument.write_bit(0x0810, 1)
         # Response from instrument: '\x01\x05\x08\x10\xff\x00\x8f\x9f' OK!
+        
+        
+        #instrument.read_register(0x1001)
+        # ASCII mode: Request  ':010310010001EA\r\n'
+        #             Response ':0103020320D7\r\n'
+        
+        
+        
 
     if RUN_READOUT_PRESENT_SETTINGS:
         ###############################
         ## Read out present settings ##
         ###############################
-        instrument.debug = False
+        instrument.debug = True
+        print '*******************'
 
         minimalmodbus._print_out('\nPV:'                        + str(instrument.read_register(0x1000)))
         minimalmodbus._print_out('Setpoint:'                    + str(instrument.read_register(0x1001, 1)))
@@ -194,18 +228,18 @@ def main():
         time.sleep(SLEEP_TIME)
 
         instrument.write_bit(0x0814, 1) # Run
-        minimalmodbus._print_out('Setpoint:'            + str(instrument.read_register(0x1001, 1)))
+        minimalmodbus._print_out('\nSetpoint:'            + str(instrument.read_register(0x1001, 1)))
         minimalmodbus._print_out('RUN/STOP setting:'    + str(instrument.read_bit(0x0814)))
         time.sleep(SLEEP_TIME)
 
         setpoint_value = 35
         instrument.write_register(0x1001,setpoint_value, 1, functioncode=6)
-        minimalmodbus._print_out('Setpoint:'            + str(instrument.read_register(0x1001, 1)))
+        minimalmodbus._print_out('\nSetpoint:'            + str(instrument.read_register(0x1001, 1)))
         minimalmodbus._print_out('RUN/STOP setting:'    + str(instrument.read_bit(0x0814)))
         time.sleep(SLEEP_TIME)
 
         instrument.write_bit(0x0814, 0) # Stop
-        minimalmodbus._print_out('Setpoint:'            + str(instrument.read_register(0x1001, 1)))
+        minimalmodbus._print_out('\nSetpoint:'            + str(instrument.read_register(0x1001, 1)))
         minimalmodbus._print_out('RUN/STOP setting:'    + str(instrument.read_bit(0x0814)))
 
     if RUN_MEASURE_ROUNDTRIP_TIME:
@@ -247,10 +281,10 @@ def main():
         minimalmodbus._print_out('\nInstrument1 SP:')
         minimalmodbus._print_out(str(instrument.read_register(0x1001, 1)))
 
-        instrument2 = minimalmodbus.Instrument(PORT_NAME, SLAVE_ADDRESS)
+        instrument2 = minimalmodbus.Instrument(PORT_NAME, SLAVE_ADDRESS, MODE)
         instrument2.debug = False
         instrument2.serial.baudrate = BAUDRATE
-        instrument2.serial.timeout = TIMEOUT
+        instrument2.serial.timeout  = TIMEOUT
 
         minimalmodbus._print_out('\nInstrument2 SP:')
         minimalmodbus._print_out(str(instrument2.read_register(0x1001, 1)))
