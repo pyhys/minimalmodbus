@@ -39,10 +39,10 @@ Modbus RTU
     A serial protocol that uses binary representation of the data. **Supported by this software**.
 
 Modbus ASCII
-    A serial protocol that uses ASCII representation of the data. Not supported by this software.
+    A serial protocol that uses ASCII representation of the data. **Supported by this software**.
 
 Modbus TCP/IP and variants
-    A protocol for communication over TCP/IP networks. Not supported by this software.
+    A protocol for communication over TCP/IP networks. Not supported by this software, consider donating some Modbus TCP equipment.
 
 For full documentation on the Modbus protocol, see `www.modbus.com <http://www.modbus.com/>`_.
 
@@ -219,6 +219,13 @@ In that case, first manually install pySerial and then manually install MinimalM
 
 To make sure it is installed properly, print the _getDiagnosticString() message. 
 See the support section below for instructions.
+
+You can also download the source directly from command line under Linux::
+
+    wget http://downloads.sourceforge.net/project/minimalmodbus/0.5/MinimalModbus-0.5.tar.gz
+    wget https://pypi.python.org/packages/source/M/MinimalModbus/MinimalModbus-0.5.tar.gz
+
+Change version number to the appropriate value.
 
 Modbus data types
 -----------------
@@ -564,6 +571,45 @@ when it comes to RS485 communication. There are some options:
     RTS is set to True. The delay time is around 1 ms, as measured with an oscilloscope. 
     This corresponds to approx 100 bit times when running at 115200 bps, but this 
     value also includes delays caused by the Python intepreter.
+
+
+MODBUS ASCII format
+-----------------------
+This driver also supports Modbus ASCII mode.
+
+Basically, a byte with value 0-255 in Modbus RTU mode will in Modbus ASCII 
+mode be sent as two characters corresponding to the hex value of that byte.
+
+For example a value of 76 (dec) = 4C (hex) is sent as the byte 0x4C in Modbus 
+RTU mode. This byte happens to correspond to the character 'L' in the ASCII encoding. 
+Thus for Modbus RTU this is sent: '\x4C', which is a string of length 1 and will print as 'L'.
+
+The same value will in Modbus ASCII be sent as the string '4C', which has a length of 2.
+
+The frame format is slightly different for Modbus ASCII. The request message 
+is sent from the master in this format::
+
+    Start [1 character], Slave Address [2 characters], Function code [2 characters], Payload data [0 to ? TODO characters], LRC [2 characters], Stop [2 characters].
+
+ * The start character is the colon (:).
+ * The LRC is a longitudinal redundancy check code, for error checking of the message.
+ * The stop characters are carriage return ('\r' = '\x0D') and line feed ('\n' = '\x0A).
+
+Manual testing of Modbus ASCII equipment
+------------------------------------------
+It is easy to test Modbus ASCII equipment from Linux command line. First must 
+the appropriate serial port be set up properly:
+
+ * Print port settings: ``stty -F /dev/ttyUSB0``
+ * Print all settings for a port: ``stty -F /dev/ttyUSB0 -a``
+ * Reset port to default values: ``stty -F /dev/ttyUSB0 sane``
+ * Change port baudrate: ``stty -F /dev/ttyUSB0 19200``
+
+To send out a Modbus ASCII request, and print out the response::
+
+    cat /dev/ttyUSB0 &
+    echo -e ":010310010001EA\r\n" > /dev/ttyUSB0
+
 
 Trouble shooting
 ----------------

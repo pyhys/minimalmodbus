@@ -928,9 +928,9 @@ def _embedPayload(slaveaddress, mode, functioncode, payloaddata):
 
     The resulting message has the format: 
      * RTU Mode: slaveaddress byte + functioncode byte + payloaddata + CRC (which is two bytes).
-     * ASCII Mode: header (:) + slaveaddress byte + functioncode byte + payloaddata + LRC (which is two characters) + footer (CRLF)
+     * ASCII Mode: header (:) + slaveaddress (2 characters) + functioncode (2 characters) + payloaddata + LRC (which is two characters) + footer (CRLF)
 
-    The LRC or CRC is calculated from the byte string made up of slaveaddress byte + functioncode byte + payloaddata. 
+    The LRC or CRC is calculated from the byte string made up of slaveaddress + functioncode + payloaddata. 
     The header, LRC/CRC, and footer are excluded from the calculation.
 
     """
@@ -950,7 +950,7 @@ def _embedPayload(slaveaddress, mode, functioncode, payloaddata):
     #print(repr(_calculateLrcString(firstPart)))
     #print(type(_calculateLrcString(firstPart)))
     
-    a = _ASCII_HEADER + _hexencode(firstPart) 
+    #a = _ASCII_HEADER + _hexencode(firstPart) 
 
     if mode == MODE_ASCII:
         message = _ASCII_HEADER + \
