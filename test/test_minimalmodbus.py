@@ -205,6 +205,11 @@ _NOT_INTLISTS = [0, 1, 2, -1, True, False, 0.0, 1.0, '1', ['1'], None, ['\x00\x2
             #self.assertRaises(TypeError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', value,  2)
             #self.assertRaises(TypeError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 2,      value)
 
+
+#class TestSanityEmbedExtractPayload(ExtendedTestCase):
+
+    #knownValues=TestEmbedPayload.knownValues
+
 ############################################
 ## Serial communication utility functions ##
 ############################################

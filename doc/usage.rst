@@ -337,3 +337,45 @@ or::
 
 It is better to set the path in the :file:`.basrc` file.
 
+
+Including MinimalModbus in a Yocto build
+----------------------------------------------------------------------------
+It is easy to include MinimalModbus in a Yocto build, which is using Bitbake. Yocto is a
+collaboration with the Open Embedded initiative.
+
+In your layer, create the file 
+:file:`recipes-connectivity/minimalmodbus/python-minimalmodbus_0.5.bb`.
+
+It's content should be::
+
+    SUMMARY = "Easy-to-use Modbus RTU implementation for Python"
+    SECTION = "devel/python"
+    LICENSE = "Apache-2.0"
+    LIC_FILES_CHKSUM = "file://LICENCE.txt;md5=27da4ba4e954f7f4ba8d1e08a2c756c4"
+    
+    DEPENDS = "python"
+    RDEPENDS_${PN} = "python-pyserial"
+    
+    PR = "r0"
+    
+    SRC_URI = "${SOURCEFORGE_MIRROR}/project/minimalmodbus/${PV}/MinimalModbus-${PV}.tar.gz"
+    
+    SRC_URI[md5sum] = "1b2ec44e9537e14dcb8a238ea3eda451"
+    SRC_URI[sha256sum] = "d9acf6457bc26d3c784caa5d7589303afe95e980ceff860ec2a4051038bc261e"
+    
+    S = "${WORKDIR}/MinimalModbus-${PV}"
+    
+    inherit distutils
+
+You also need to add this to your :file:`local.conf` file::
+
+    ????  += 'python-minimalmodbus' TODO!
+        
+When using the recipe for another version of MinimalModbus, change the version 
+number in the filename. Bitbake will complain that the md5sum and sha256sum not 
+are correct, but Bitbake will print out the correct values so you can change 
+the recipe accordingly.
+
+
+
+
