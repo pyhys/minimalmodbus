@@ -941,17 +941,6 @@ def _embedPayload(slaveaddress, mode, functioncode, payloaddata):
 
     firstPart = _numToOneByteString(slaveaddress) + _numToOneByteString(functioncode) + payloaddata
 
-    #print(repr(firstPart))
-    #print(type(firstPart))
-    
-    #print(repr(_hexencode(firstPart)))
-    #print(type(_hexencode(firstPart)))
-    
-    #print(repr(_calculateLrcString(firstPart)))
-    #print(type(_calculateLrcString(firstPart)))
-    
-    #a = _ASCII_HEADER + _hexencode(firstPart) 
-
     if mode == MODE_ASCII:
         message = _ASCII_HEADER + \
                 _hexencode(firstPart) + \

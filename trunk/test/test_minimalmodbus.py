@@ -153,62 +153,117 @@ _NOT_INTLISTS = [0, 1, 2, -1, True, False, 0.0, 1.0, '1', ['1'], None, ['\x00\x2
 # Payload handling #
 ####################
 
-#class TestEmbedPayload(ExtendedTestCase):
+class TestEmbedPayload(ExtendedTestCase):
 
-    #knownValues=[
-    #(2, 2, '123', '\x02\x02123X\xc2'),
-    #(1, 16, 'ABC', '\x01\x10ABC<E'),
-    #(0, 5, 'hjl', '\x00\x05hjl\x8b\x9d'),
-    #]
+    knownValues=[
+    (2, 2,  'rtu',   '123', '\x02\x02123X\xc2'),
+    (1, 16, 'rtu',   'ABC', '\x01\x10ABC<E'),
+    (0, 5,  'rtu',   'hjl', '\x00\x05hjl\x8b\x9d'),
+    (1, 3,  'rtu',   '\x01\x02\x03', '\x01\x03\x01\x02\x03\t%'),
+    (1, 3,  'ascii', '123', ':010331323366\r\n'),
+    (4, 5,  'ascii', '\x01\x02\x03', ':0405010203F1\r\n'),
+    (2, 2,  'ascii', '123', ':020231323366\r\n'),
+    ]
 
-    #def testKnownValues(self):
-        #for slaveaddress, functioncode, inputstring, knownresult in self.knownValues:
+    def testKnownValues(self):
+        for slaveaddress, functioncode, mode, inputstring, knownresult in self.knownValues:
 
-            #result = minimalmodbus._embedPayload(slaveaddress, functioncode, inputstring)
-            #self.assertEqual(result, knownresult)
+            result = minimalmodbus._embedPayload(slaveaddress, mode, functioncode, inputstring)
+            self.assertEqual(result, knownresult)
 
-    #def testWrongInputValue(self):
-        #self.assertRaises(ValueError, minimalmodbus._embedPayload, 248, 16,  'ABC') # Wrong slave address
-        #self.assertRaises(ValueError, minimalmodbus._embedPayload, -1,  16,  'ABC')
-        #self.assertRaises(ValueError, minimalmodbus._embedPayload, 1,   222, 'ABC') # Wrong function code
-        #self.assertRaises(ValueError, minimalmodbus._embedPayload, 1,   -1,  'ABC')
-
-    #def testWrongInputType(self):
-        #for value in _NOT_INTERGERS:
-            #self.assertRaises(TypeError, minimalmodbus._embedPayload, value, 16,    'ABC')
-            #self.assertRaises(TypeError, minimalmodbus._embedPayload, 1,     value, 'ABC')
-        #for value in _NOT_STRINGS:
-            #self.assertRaises(TypeError, minimalmodbus._embedPayload, 1,     16,    value)
-
-
-#class TestExtractPayload(ExtendedTestCase):
-
-    #knownValues=TestEmbedPayload.knownValues
-
-    #def testKnownValues(self):
-        #for address, functioncode, knownresult, inputstring in self.knownValues:
-
-            #result = minimalmodbus._extractPayload(inputstring, address, functioncode )
-            #self.assertEqual(result, knownresult)
-
-    #def testWrongInputValue(self):
-        #self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc3',    2,      2) # Wrong CRC from slave
-        #self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x82123q\x02',    2,      2) # Error indication from slave
-        #self.assertRaises(ValueError, minimalmodbus._extractPayload, 'A',                   2,      2) # Too short message from slave
-        #self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x72123B\x02',    2,      2) # Wrong functioncode from slave
-        #for value in [3, 95, 128, 248, -1]:
-            #self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', value, 2) # Wrong slave address
-            #self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 2,     value) # Wrong functioncode
-
-    #def testWrongInputType(self):
-        #for value in _NOT_INTERGERS:
-            #self.assertRaises(TypeError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', value,  2)
-            #self.assertRaises(TypeError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 2,      value)
+    def testWrongInputValue(self):
+        self.assertRaises(ValueError, minimalmodbus._embedPayload, 248, 'rtu',   16,  'ABC') # Wrong slave address
+        self.assertRaises(ValueError, minimalmodbus._embedPayload, -1,  'rtu',   16,  'ABC')
+        self.assertRaises(ValueError, minimalmodbus._embedPayload, 248, 'ascii', 16,  'ABC')
+        self.assertRaises(ValueError, minimalmodbus._embedPayload, -1,  'ascii', 16,  'ABC')
+        
+        self.assertRaises(ValueError, minimalmodbus._embedPayload, 1, 'rtuu',  16,  'ABC') # Wrong Modbus mode
+        self.assertRaises(ValueError, minimalmodbus._embedPayload, 1, 'RTU',   16,  'ABC')
+        self.assertRaises(ValueError, minimalmodbus._embedPayload, 1, 'ASCII', 16,  'ABC')
+        self.assertRaises(ValueError, minimalmodbus._embedPayload, 1, 'asci',  16,  'ABC')
+        
+        self.assertRaises(ValueError, minimalmodbus._embedPayload, 1,   'rtu',   222, 'ABC') # Wrong function code
+        self.assertRaises(ValueError, minimalmodbus._embedPayload, 1,   'rtu',   -1,  'ABC')
+        self.assertRaises(ValueError, minimalmodbus._embedPayload, 1,   'ascii', 222, 'ABC')
+        self.assertRaises(ValueError, minimalmodbus._embedPayload, 1,   'ascii', -1,  'ABC')
+        
+    def testWrongInputType(self):
+        for value in _NOT_INTERGERS:
+            self.assertRaises(TypeError, minimalmodbus._embedPayload, value, 'rtu',   16,    'ABC')
+            self.assertRaises(TypeError, minimalmodbus._embedPayload, value, 'ascii', 16,    'ABC')
+            self.assertRaises(TypeError, minimalmodbus._embedPayload, 1,     'rtu',   value, 'ABC')
+            self.assertRaises(TypeError, minimalmodbus._embedPayload, 1,     'ascii', value, 'ABC')
+        for value in _NOT_STRINGS:
+            self.assertRaises(TypeError, minimalmodbus._embedPayload, 1,     value,   16,    'ABC')
+            self.assertRaises(TypeError, minimalmodbus._embedPayload, 1,     'rtu',   16,    value)
+            self.assertRaises(TypeError, minimalmodbus._embedPayload, 1,     'ascii', 16,    value)
 
 
-#class TestSanityEmbedExtractPayload(ExtendedTestCase):
+class TestExtractPayload(ExtendedTestCase):
 
-    #knownValues=TestEmbedPayload.knownValues
+    knownValues = TestEmbedPayload.knownValues
+
+    def testKnownValues(self):
+        for slaveaddress, functioncode, mode, knownresult, inputstring in self.knownValues:
+            result = minimalmodbus._extractPayload(inputstring, slaveaddress, mode, functioncode)
+            self.assertEqual(result, knownresult)
+
+    def testWrongInputValue(self):
+        self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc3',     2,     'rtu',   2) # Wrong CRC from slave
+        self.assertRaises(ValueError, minimalmodbus._extractPayload, ':0202313233F1\r\n',    2,     'ascii', 2) # Wrong LRC from slave
+        self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x82123q\x02',     2,     'rtu',   2) # Error indication from slave
+        self.assertRaises(ValueError, minimalmodbus._extractPayload, ':0282313233E6\r\n',    2,     'ascii', 2)
+        self.assertRaises(ValueError, minimalmodbus._extractPayload, 'ABC',                  2,     'rtu',   2) # Too short message from slave
+        self.assertRaises(ValueError, minimalmodbus._extractPayload, 'ABCDEFGH',             2,     'ascii', 2)
+        self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x72123B\x02',     2,     'rtu',   2) # Wrong functioncode from slave
+        self.assertRaises(ValueError, minimalmodbus._extractPayload, ':020431323364\r\n',    2,     'ascii', 2)
+        self.assertRaises(ValueError, minimalmodbus._extractPayload, '020231323366\r\n',     2,     'ascii', 2) # Missing ASCII header
+        self.assertRaises(ValueError, minimalmodbus._extractPayload, ':020231323366',        2,     'ascii', 2) # Wrong ASCII footer
+        self.assertRaises(ValueError, minimalmodbus._extractPayload, ':020231323366\r',      2,     'ascii', 2)
+        self.assertRaises(ValueError, minimalmodbus._extractPayload, ':020231323366\n',      2,     'ascii', 2)
+        self.assertRaises(ValueError, minimalmodbus._extractPayload, ':02023132366\r\n',     2,     'ascii', 2) # Odd number of ASCII payload characters
+        
+        for value in [3, 95, 128, 248, -1]:
+            self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', value, 'rtu',   2) # Wrong slave address
+            self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 2,     'rtu',   value) # Wrong functioncode
+        
+        for value in ['RTU', 'ASCII', 'asc', '', ' ']:
+            self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 2,      value,  2) # Wrong mode
+        
+    def testWrongInputType(self):
+        for value in _NOT_INTERGERS:
+            self.assertRaises(TypeError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', value, 'rtu',   2) # Wrong slaveaddress type
+            self.assertRaises(TypeError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', value, 'ascii', 2)
+            self.assertRaises(TypeError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 2,     'rtu',   value)  # Wrong functioncode type
+            self.assertRaises(TypeError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 2,     'ascii', value)
+        for value in _NOT_STRINGS:
+            self.assertRaises(TypeError, minimalmodbus._extractPayload, value,              2,     'rtu',   2) # Wrong message
+            self.assertRaises(TypeError, minimalmodbus._extractPayload, value,              2,     'ascii', 2) 
+            self.assertRaises(TypeError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 2,     value,   2) # Wrong mode
+            
+            
+class TestSanityEmbedExtractPayload(ExtendedTestCase):
+
+    knownValues = TestEmbedPayload.knownValues
+
+    def testKnownValues(self):
+        for slaveaddress, functioncode, mode, payload, message in self.knownValues:
+            embeddedResult  = minimalmodbus._embedPayload(slaveaddress, mode, functioncode, payload)
+            extractedResult = minimalmodbus._extractPayload(embeddedResult, slaveaddress, mode, functioncode)
+            self.assertEqual(extractedResult, payload)
+            
+    def testRange(self):
+        for i in range(110):
+            payload = str(i)
+
+            embeddedResultRtu  = minimalmodbus._embedPayload(2, 'rtu', 6, payload)
+            extractedResultRtu = minimalmodbus._extractPayload(embeddedResultRtu, 2, 'rtu', 6)
+            self.assertEqual(extractedResultRtu, payload)
+            
+            embeddedResultAscii  = minimalmodbus._embedPayload(2, 'ascii', 6, payload)
+            extractedResultAscii = minimalmodbus._extractPayload(embeddedResultAscii, 2, 'ascii', 6)
+            self.assertEqual(extractedResultAscii, payload)
+            
 
 ############################################
 ## Serial communication utility functions ##
@@ -216,7 +271,7 @@ _NOT_INTLISTS = [0, 1, 2, -1, True, False, 0.0, 1.0, '1', ['1'], None, ['\x00\x2
 
 class TestPredictResponseSize(ExtendedTestCase):    
     
-    knownValues=[
+    knownValues = [
     ('rtu',  1,     '\x00\x3e\x00\x01', 6),
     ('rtu',  1,     '\x00\x3e\x00\x07', 6),
     ('rtu',  1,     '\x00\x3e\x00\x08', 6),
@@ -1980,7 +2035,7 @@ class TestDummyCommunication(ExtendedTestCase):
     def testRepresentation(self):
         representation = repr(self.instrument)
         self.assertTrue( 'minimalmodbus.Instrument<id=' in representation )
-        self.assertTrue( ', address=1, close_port_after_each_call=False, precalculate_read_size=True, debug=False, serial=dummy_serial.Serial<id=' in representation )
+        self.assertTrue( ', address=1, mode=rtu, close_port_after_each_call=False, precalculate_read_size=True, debug=False, serial=dummy_serial.Serial<id=' in representation )
         self.assertTrue( ", open=True>(port=" in representation )
 
 
