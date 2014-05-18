@@ -2202,8 +2202,10 @@ class TestDummyCommunicationDebugmode(ExtendedTestCase):
 
 
 RTU_RESPONSES = {}
-WRONG_RTU_RESPONSES = {}
 GOOD_RTU_RESPONSES = {}
+WRONG_RTU_RESPONSES = {}
+GOOD_ASCII_RESPONSES = {}
+WRONG_ASCII_RESPONSES = {}
 """A dictionary of respones from a dummy instrument.
 
 The key is the message (string) sent to the serial port, and the item is the response (string)
@@ -2558,6 +2560,7 @@ WRONG_RTU_RESPONSES['\x01\x03TESTCOMMAND\xcd\xb9']  = '\x01\x03TESTCOMMANDRESPON
 WRONG_RTU_RESPONSES['\x01\x04TESTCOMMAND8r']        = 'A'                                # Too short response message
 WRONG_RTU_RESPONSES['\x01\x05TESTCOMMAND\xc5\xb1']  = '\x01\x85TESTCOMMANDRESPONSE\xa54' # Error indication from slave
 
+
 ## Recorded data from OmegaCN7500 ##
 ####################################
 
@@ -2604,15 +2607,272 @@ GOOD_RTU_RESPONSES['\n\x10\x10\x01\x00\x01\x02\x00\xc8\xc4\xe6'] ='\n\x10\x10\x0
 GOOD_RTU_RESPONSES['\n\x10\x10\x01\x00\x01\x02\x07\xd0\xc6\xdc'] ='\n\x10\x10\x01\x00\x01U\xb2'
 
 
+
 ## Recorded RTU data from Delta DTB4824 ##
 ##########################################
 
+# Slave address 7, read_registers(0x1000, 2). This is process value (PV) and setpoint (SV).
+# Response value [64990, 350]
+GOOD_RTU_RESPONSES['\x07\x03\x10\x00\x00\x02\xc0\xad'] = '\x07\x03\x04\xfd\xde\x01^M\xcd'
+
+
+
+    ## Read 9 bits starting at 0x0810.
+    #instrument._performCommand(2, '\x08\x10\x00\x09')
+    #Writing to instrument (expecting 7 bytes back): '\x07\x02\x08\x10\x00\t\xbb\xcf'
+    #Response from instrument: '\x07\x02\x02\x07\x003\x88' (7 bytes)
+    #'\x02\x07\x00'
+
+
+    ## Write value 800 to register 0x1001. This is a setpoint of 80.0 degrees (Centigrades, dependent on setting).
+    #instrument.write_register(0x1001, 0x0320, functioncode=6)
+    #Writing to instrument (expecting 8 bytes back): '\x07\x06\x10\x01\x03 \xdd\x84'
+    #Response from instrument: '\x07\x06\x10\x01\x03 \xdd\x84' (8 bytes)
+
+
+    ## Write 1 to one bit at 0x0810. This is "Communication write in enabled".
+    #instrument.write_bit(0x0810, 1)
+    #Writing to instrument (expecting 8 bytes back): '\x07\x05\x08\x10\xff\x00\x8f\xf9'
+    #Response from instrument: '\x07\x05\x08\x10\xff\x00\x8f\xf9' (8 bytes)
+
+
+    #instrument.read_register(0x1000)
+    #Writing to instrument (expecting 7 bytes back): '\x07\x03\x10\x00\x00\x01\x80\xac'
+    #Response from instrument: '\x07\x03\x02\xfd\xde\xf0\x8c' (7 bytes)
+    #PV:64990
+
+
+    #instrument.read_register(0x1001, 1)
+    #Writing to instrument (expecting 7 bytes back): '\x07\x03\x10\x01\x00\x01\xd1l'
+    #Response from instrument: '\x07\x03\x02\x03 1l' (7 bytes)
+    #Setpoint:80.0
+
+
+    #instrument.read_register(0x1004)
+    #Writing to instrument (expecting 7 bytes back): '\x07\x03\x10\x04\x00\x01\xc1m'
+    #'\x07\x03\x02\x00\x0e\xb1\x80' (7 bytes)
+    #Sensor type:14
+
+
+    #instrument.read_register(0x1005)
+    #Writing to instrument (expecting 7 bytes back): '\x07\x03\x10\x05\x00\x01\x90\xad'
+    #Response from instrument: '\x07\x03\x02\x00\x01\xf1\x84' (7 bytes)
+    #Control method:1
+
+
+    #instrument.read_register(0x1006)
+    #Writing to instrument (expecting 7 bytes back): '\x07\x03\x10\x06\x00\x01`\xad'
+    #Response from instrument: '\x07\x03\x02\x00\x000D' (7 bytes)
+    #Heating/cooling selection:0
+
+    #instrument.read_register(0x1012, 1)
+    #Writing to instrument (expecting 7 bytes back): '\x07\x03\x10\x12\x00\x01 \xa9'
+    #Response from instrument: '\x07\x03\x02\x00\x000D' (7 bytes)
+    #Output 1 value:0.0
+
+    #instrument.read_register(0x1013, 1)
+    #Writing to instrument (expecting 7 bytes back): '\x07\x03\x10\x13\x00\x01qi'
+    #Response from instrument: '\x07\x03\x02\x00\x000D' (7 bytes)
+    #Output 2 value:0.0
+
+    #instrument.read_register(0x1023)
+    #Writing to instrument (expecting 7 bytes back): '\x07\x03\x10#\x00\x01qf'
+    #Response from instrument: '\x07\x03\x02\x00\x000D' (7 bytes)
+    #System alarm setting:0
+
+    #instrument.read_register(0x102A)
+    #Writing to instrument (expecting 7 bytes back): '\x07\x03\x10*\x00\x01\xa1d'
+    #Response from instrument: '\x07\x03\x02\x00\x000D' (7 bytes)
+    #LED status:0
+
+    #instrument.read_register(0x102B)
+    #Writing to instrument (expecting 7 bytes back): '\x07\x03\x10+\x00\x01\xf0\xa4'
+    #Response from instrument: '\x07\x03\x02\x00\x0fp@' (7 bytes)
+    #Pushbutton status:15
+
+
+    #instrument.read_register(0x102F)
+    #Writing to instrument (expecting 7 bytes back): '\x07\x03\x10/\x00\x01\xb1e'
+    #Response from instrument: '\x07\x03\x02\x01\x901\xb8' (7 bytes)
+    #Firmware version:400
+
+
+
+    #instrument.read_bit(0x0800)
+    #Writing to instrument (expecting 6 bytes back): '\x07\x02\x08\x00\x00\x01\xbb\xcc'
+    #Response from instrument: '\x07\x02\x01\x00\xa1\x00' (6 bytes)
+    #LED AT:0
+
+    #instrument.read_bit(0x0801)
+    #Writing to instrument (expecting 6 bytes back): '\x07\x02\x08\x01\x00\x01\xea\x0c'
+    #Response from instrument: '\x07\x02\x01\x00\xa1\x00' (6 bytes)
+    #LED Out1:0
+
+    #instrument.read_bit(0x0802)
+    #Writing to instrument (expecting 6 bytes back): '\x07\x02\x08\x02\x00\x01\x1a\x0c'
+    #Response from instrument: '\x07\x02\x01\x00\xa1\x00' (6 bytes)
+    #LED Out2:0
+
+    #instrument.read_bit(0x0814)
+    #Writing to instrument (expecting 6 bytes back): '\x07\x02\x08\x14\x00\x01\xfb\xc8'
+    #Response from instrument: '\x07\x02\x01\x00\xa1\x00' (6 bytes)
+    #RUN/STOP setting:0
+
+    #instrument.write_bit(0x0814, 0) # Stop
+    #Writing to instrument (expecting 8 bytes back): '\x07\x05\x08\x14\x00\x00\x8f\xc8'
+    #Response from instrument: '\x07\x05\x08\x14\x00\x00\x8f\xc8' (8 bytes)
+
+    #instrument.write_register(0x1001,25, 1, functioncode=6)
+    #Writing to instrument (expecting 8 bytes back): '\x07\x06\x10\x01\x00\xfa\\\xef'
+    #Response from instrument: '\x07\x06\x10\x01\x00\xfa\\\xef' (8 bytes)
+
+
+    #instrument.write_bit(0x0814, 1) # Run
+    #riting to instrument (expecting 8 bytes back): '\x07\x05\x08\x14\xff\x00\xce8'
+    #Response from instrument: '\x07\x05\x08\x14\xff\x00\xce8' (8 bytes)
 
 
 
 
 ## Recorded ASCII data from Delta DTB4824 ##
 ############################################
+
+# Slave address 7, read_registers(0x1000, 2). This is process value (PV) and setpoint (SV).
+# Response value [64990, 350]
+GOOD_ASCII_RESPONSES[':070310000002E4\r\n'] = ':070304FDDE015EB8\r\n'
+
+
+
+## Read 9 bits starting at 0x0810.
+#instrument._performCommand(2, '\x08\x10\x00\x09')
+#Writing to instrument (expecting 15 bytes back): ':070208100009D6\r\n'
+#Response from instrument: ':0702021700DE\r\n' (15 bytes), roundtrip time: 11.8 ms. Timeout setting: 200.0 ms.
+#'\x02\x17\x00'
+
+
+## Write value 800 to register 0x1001. This is a setpoint of 80.0 degrees (Centigrades, dependent on setting).
+#instrument.write_register(0x1001, 0x0320, functioncode=6)
+#Writing to instrument (expecting 17 bytes back): ':070610010320BF\r\n'
+#Response from instrument: ':070610010320BF\r\n' (17 bytes)
+
+
+
+## Write 1 to one bit at 0x0810. This is "Communication write in enabled".
+#instrument.write_bit(0x0810, 1)
+#Writing to instrument (expecting 17 bytes back): ':07050810FF00DD\r\n'
+#Response from instrument: ':07050810FF00DD\r\n' (17 bytes)
+
+
+#instrument.read_register(0x1000)
+#Writing to instrument (expecting 15 bytes back): ':070310000001E5\r\n'
+#Response from instrument: ':070302FDDE19\r\n' (15 bytes)
+#PV:64990
+
+
+#instrument.read_register(0x1001, 1)
+#Writing to instrument (expecting 15 bytes back): ':070310010001E4\r\n'
+#Response from instrument: ':0703020320D1\r\n' (15 bytes)
+#Setpoint:80.0
+
+#instrument.read_register(0x1004)
+#Writing to instrument (expecting 15 bytes back): ':070310040001E1\r\n'
+#Response from instrument: ':070302000EE6\r\n' (15 bytes)
+#Sensor type:14
+
+
+#instrument.read_register(0x1005)
+#Writing to instrument (expecting 15 bytes back): ':070310050001E0\r\n'
+#Response from instrument: ':0703020001F3\r\n' (15 bytes)
+#Control method:1
+
+
+#instrument.read_register(0x1006)
+#Writing to instrument (expecting 15 bytes back): ':070310060001DF\r\n'
+#Response from instrument: ':0703020000F4\r\n' (15 bytes)
+#Heating/cooling selection:0
+
+
+#instrument.read_register(0x1012, 1)
+#Writing to instrument (expecting 15 bytes back): ':070310120001D3\r\n'
+#Response from instrument: ':07030203E809\r\n' (15 bytes)
+#Output 1 value:100.0
+
+#instrument.read_register(0x1013, 1)
+#Writing to instrument (expecting 15 bytes back): ':070310130001D2\r\n'
+#Response from instrument: ':0703020000F4\r\n' (15 bytes)
+#Output 2 value:0.0
+
+
+#instrument.read_register(0x1023)
+#Writing to instrument (expecting 15 bytes back): ':070310230001C2\r\n'
+#Response from instrument: ':0703020000F4\r\n' (15 bytes)
+#System alarm setting:0
+
+
+#instrument.read_register(0x102A)
+#Writing to instrument (expecting 15 bytes back): ':0703102A0001BB\r\n'
+#Response from instrument: ':0703020040B4\r\n' (15 bytes)
+#LED status:64
+
+
+
+#instrument.read_register(0x102B)
+#Writing to instrument (expecting 15 bytes back): ':0703102B0001BA\r\n'
+#Response from instrument: ':070302000FE5\r\n' (15 bytes)
+#Pushbutton status:15
+
+#instrument.read_register(0x102F)
+#Writing to instrument (expecting 15 bytes back): ':0703102F0001B6\r\n'
+#Response from instrument: ':070302019063\r\n' (15 bytes)
+#Firmware version:400
+
+
+#instrument.read_bit(0x0800)
+#Writing to instrument (expecting 13 bytes back): ':070208000001EE\r\n'
+#Response from instrument: ':07020100F6\r\n' (13 bytes)
+#LED AT:0
+
+
+
+#instrument.read_bit(0x0801)
+#Writing to instrument (expecting 13 bytes back): ':070208010001ED\r\n'
+#Response from instrument: ':07020101F5\r\n' (13 bytes)
+#LED Out1:1
+
+
+#instrument.read_bit(0x0802)
+#Writing to instrument (expecting 13 bytes back): ':070208020001EC\r\n'
+#Response from instrument: ':07020100F6\r\n' (13 bytes)
+#LED Out2:0
+
+
+#instrument.read_bit(0x0814)
+#riting to instrument (expecting 13 bytes back): ':070208140001DA\r\n'
+#MinimalModbus debug mode. Response from instrument: ':07020101F5\r\n' (13 bytes)
+#RUN/STOP setting:1
+
+
+#instrument.write_bit(0x0814, 0) # Stop
+#Writing to instrument (expecting 17 bytes back): ':070508140000D8\r\n'
+#Response from instrument: ':070508140000D8\r\n' (17 bytes)
+
+
+
+#instrument.write_register(0x1001,25, 1, functioncode=6)
+#Writing to instrument (expecting 17 bytes back): ':0706100100FAE8\r\n'
+#Response from instrument: ':0706100100FAE8\r\n' (17 bytes)
+
+
+
+
+
+#instrument.write_bit(0x0814, 1) # Run
+#Writing to instrument (expecting 17 bytes back): ':07050814FF00D9\r\n'
+#Response from instrument: ':07050814FF00D9\r\n' (17 bytes)
+
+
+
+
 
 
 
