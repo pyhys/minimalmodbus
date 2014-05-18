@@ -6,12 +6,14 @@ For use with Delta DTB4824VR.
 Usage
 -------------
 
-python scriptname [-rtu] [-ascii] [-b9600] [-D/dev/ttyUSB0]
+python scriptname [-rtu] [-ascii] [-b38400] [-D/dev/ttyUSB0]
 
  * -b : baud rate
  * -D : port name
  
 NOTE: There should be no space between the option switch and its argument.
+
+Defaults to RTU mode.
 
 
 Settings in the temperature controller
@@ -86,7 +88,7 @@ RUN_VERIFY_EXAMPLES             = True
 RUN_READOUT_PRESENT_SETTINGS    = True
 RUN_START_AND_STOP_REGULATOR    = True
 RUN_MEASURE_ROUNDTRIP_TIME      = True
-RUN_VERIFY_TWO_INTSTRUMENTS     = True
+RUN_VERIFY_TWO_INSTRUMENTS      = True
 
 
 def main():
@@ -154,17 +156,17 @@ def main():
         ## Examples from page 11 in the "DTB Series Temperature Controller Instruction Sheet", ##
         ## version 2010-04-20                                                                  ##
         #########################################################################################
-        instrument.debug = True
+        instrument.debug = False
 
         # Read two registers starting at 0x1000. This is process value (PV) and setpoint (SV).
         # Should send '\x01\x03\x10\x00\x00\x02\xc0\xcb' OK!
-        #minimalmodbus._print_out('\nReading register 0x1000 and 0x1001:')
-        #minimalmodbus._print_out(repr(instrument.read_registers(0x1000, 2)))
+        minimalmodbus._print_out('\nReading register 0x1000 and 0x1001:')
+        minimalmodbus._print_out(repr(instrument.read_registers(0x1000, 2)))
 
         # Read 9 bits starting at 0x0810.
         # Should send '\x01\x02\x08\x10\x00\x09\xbb\xa9' OK!
-        #minimalmodbus._print_out('\nReading 9 bits starting at 0x0810:')
-        #minimalmodbus._print_out(repr(instrument._performCommand(2, '\x08\x10\x00\x09')))
+        minimalmodbus._print_out('\nReading 9 bits starting at 0x0810:')
+        minimalmodbus._print_out(repr(instrument._performCommand(2, '\x08\x10\x00\x09')))
 
         # Write value 800 to register 0x1001. This is a setpoint of 80.0 degrees (Centigrades, dependent on setting).
         # Should send '\x01\x06\x10\x01\x03\x20\xdd\xe2' OK!
@@ -192,9 +194,8 @@ def main():
         ###############################
         ## Read out present settings ##
         ###############################
-        instrument.debug = True
-        print '*******************'
-
+        instrument.debug = False
+        
         minimalmodbus._print_out('\nPV:'                        + str(instrument.read_register(0x1000)))
         minimalmodbus._print_out('Setpoint:'                    + str(instrument.read_register(0x1001, 1)))
         minimalmodbus._print_out('Sensor type:'                 + str(instrument.read_register(0x1004)))
@@ -272,7 +273,7 @@ def main():
         text = 'Time per value: {:0.1f} ms.'.format(time_per_value)
         minimalmodbus._print_out(text)
 
-    if RUN_VERIFY_TWO_INTSTRUMENTS:
+    if RUN_VERIFY_TWO_INSTRUMENTS:
         #######################################################
         ## Verify that two instruments can use the same port ##
         #######################################################
