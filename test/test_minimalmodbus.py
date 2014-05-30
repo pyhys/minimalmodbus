@@ -303,25 +303,31 @@ class TestPredictResponseSize(ExtendedTestCase):
             slaveaddress = ord(message[0])
             functioncode = ord(message[1])
             payloadToSlave = minimalmodbus._extractPayload(message, slaveaddress, 'rtu', functioncode)
-            responseFromSlave = GOOD_RTU_RESPONSES[message]
-            
             result = minimalmodbus._predictResponseSize('rtu', functioncode, payloadToSlave)
+            
+            responseFromSlave = GOOD_RTU_RESPONSES[message]
             self.assertEqual(result, len(responseFromSlave))
 
     def testRecordedAsciiMessages(self):    
-        #TODO
-        pass
+        ## Use the dictionary where the key is the 'message', and the item is the 'response'
+        for message in GOOD_ASCII_RESPONSES:
+            slaveaddress = int(message[1:3])
+            functioncode = int(message[3:5])
+            payloadToSlave = minimalmodbus._extractPayload(message, slaveaddress, 'ascii', functioncode)
+            result = minimalmodbus._predictResponseSize('ascii', functioncode, payloadToSlave)
+            
+            responseFromSlave = GOOD_ASCII_RESPONSES[message]
+            self.assertEqual(result, len(responseFromSlave))
      
-
     def testWrongInputValue(self):
         self.assertRaises(ValueError, minimalmodbus._predictResponseSize, 'asciiii',    6,      'ABCD') # Wrong mode
         self.assertRaises(ValueError, minimalmodbus._predictResponseSize, 'ascii',      999,    'ABCD') # Wrong function code
         self.assertRaises(ValueError, minimalmodbus._predictResponseSize, 'rtu',        999,    'ABCD') # Wrong function code
-        self.assertRaises(ValueError, minimalmodbus._predictResponseSize, 'ascii',      1,      'ABC') # Too short message
-        self.assertRaises(ValueError, minimalmodbus._predictResponseSize, 'rtu',        1,      'ABC') # Too short message
-        self.assertRaises(ValueError, minimalmodbus._predictResponseSize, 'ascii',      1,      'AB') # Too short message
-        self.assertRaises(ValueError, minimalmodbus._predictResponseSize, 'ascii',      1,      'A') # Too short message
-        self.assertRaises(ValueError, minimalmodbus._predictResponseSize, 'ascii',      1,      '') # Too short message
+        self.assertRaises(ValueError, minimalmodbus._predictResponseSize, 'ascii',      1,      'ABC')  # Too short message
+        self.assertRaises(ValueError, minimalmodbus._predictResponseSize, 'rtu',        1,      'ABC')  # Too short message
+        self.assertRaises(ValueError, minimalmodbus._predictResponseSize, 'ascii',      1,      'AB')   # Too short message
+        self.assertRaises(ValueError, minimalmodbus._predictResponseSize, 'ascii',      1,      'A')    # Too short message
+        self.assertRaises(ValueError, minimalmodbus._predictResponseSize, 'ascii',      1,      '')     # Too short message
 
     def testWrongInputType(self):
         for value in _NOT_STRINGS:
@@ -2708,7 +2714,7 @@ GOOD_ASCII_RESPONSES[':070208000001EE\r\n'] = ':07020100F6\r\n'
 
 # Slave address 7, read_bit(0x0801). This is LED Out1.
 # Response value 1
-GOOD_ASCII_RESPONSES[':070208010001ED\r\n'] = ':07020101F5\r\n'
+GOOD_ASCII_RESPONSES[':070208010001ED\r\n'] = ':07020101F5\r\n' 
 
 # Slave address 7, read_bit(0x0802). This is LED Out2.
 # Response value 0
