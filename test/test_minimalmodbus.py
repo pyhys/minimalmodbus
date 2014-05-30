@@ -2130,6 +2130,102 @@ class TestDummyCommunicationOmegaSlave10(ExtendedTestCase):
         del(self.instrument)
 
 
+class TestDummyCommunicationDTB4824_RTU(ExtendedTestCase):
+
+    def setUp(self):
+        dummy_serial.VERBOSE = False
+        dummy_serial.RESPONSES = RTU_RESPONSES
+        dummy_serial.DEFAULT_RESPONSE = 'NotFoundInResponseDictionary'
+        minimalmodbus.serial.Serial = dummy_serial.Serial
+        minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = False
+        self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 7) # port name, slave address (in decimal)
+    
+    def testReadBit(self):
+        self.assertEqual( self.instrument.read_bit(0x0800), 0) # LED AT
+        self.assertEqual( self.instrument.read_bit(0x0801), 0) # LED Out1
+        self.assertEqual( self.instrument.read_bit(0x0802), 0) # LED Out2
+        self.assertEqual( self.instrument.read_bit(0x0814), 0) # RUN/STOP
+
+    def testWriteBit(self):
+        self.instrument.write_bit(0x0810, 1) # "Communication write in enabled".
+        self.instrument.write_bit(0x0814, 0) # STOP
+        self.instrument.write_bit(0x0814, 1) # RUN
+        
+    def testReadBits(self):
+        self.assertEqual( self.instrument._performCommand(2, '\x08\x10\x00\x09'), '\x02\x07\x00') 
+
+    def testReadRegister(self):
+        self.assertEqual( self.instrument.read_register(0x1000), 64990) # Process value (PV)
+        self.assertAlmostEqual( self.instrument.read_register(0x1001, 1), 80.0 ) # Setpoint (SV).
+        self.assertEqual( self.instrument.read_register(0x1004), 14) # Sensor type.
+        self.assertEqual( self.instrument.read_register(0x1005), 1) # Control method
+        self.assertEqual( self.instrument.read_register(0x1006), 0) # Heating/cooling selection.
+        self.assertAlmostEqual( self.instrument.read_register(0x1012, 1), 0.0 ) # Output 1
+        self.assertAlmostEqual( self.instrument.read_register(0x1013, 1), 0.0 ) # Output 2
+        self.assertEqual( self.instrument.read_register(0x1023), 0) # System alarm setting
+        self.assertEqual( self.instrument.read_register(0x102A), 0) # LED status
+        self.assertEqual( self.instrument.read_register(0x102B), 15) # Pushbutton status
+        self.assertEqual( self.instrument.read_register(0x102F), 400) # Firmware version
+
+    def testReadRegisters(self):
+        self.assertEqual( self.instrument.read_registers(0x1000, 2), [64990, 350]) # Process value (PV) and setpoint (SV).
+
+    def testWriteRegister(self):
+        self.instrument.write_register(0x1001, 0x0320, functioncode=6) # Setpoint of 80.0 degrees
+        self.instrument.write_register(0x1001, 25, 1,  functioncode=6) # Setpoint
+
+    def tearDown(self):
+        self.instrument = None
+        del(self.instrument)
+
+class TestDummyCommunicationDTB4824_ASCII(ExtendedTestCase):
+
+    def setUp(self):
+        dummy_serial.VERBOSE = False
+        dummy_serial.RESPONSES = ASCII_RESPONSES
+        dummy_serial.DEFAULT_RESPONSE = 'NotFoundInResponseDictionary'
+        minimalmodbus.serial.Serial = dummy_serial.Serial
+        minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = False
+        self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 7, 'ascii') # port name, slave address (in decimal), mode
+    
+    def testReadBit(self):
+        self.assertEqual( self.instrument.read_bit(0x0800), 0) # LED AT
+        self.assertEqual( self.instrument.read_bit(0x0801), 1) # LED Out1
+        self.assertEqual( self.instrument.read_bit(0x0802), 0) # LED Out2
+        self.assertEqual( self.instrument.read_bit(0x0814), 1) # RUN/STOP
+
+    def testWriteBit(self):
+        self.instrument.write_bit(0x0810, 1) # "Communication write in enabled".
+        self.instrument.write_bit(0x0814, 0) # STOP
+        self.instrument.write_bit(0x0814, 1) # RUN
+        
+    def testReadBits(self):
+        self.assertEqual( self.instrument._performCommand(2, '\x08\x10\x00\x09'), '\x02\x17\x00') 
+
+    def testReadRegister(self):
+        self.assertEqual( self.instrument.read_register(0x1000), 64990) # Process value (PV)
+        self.assertAlmostEqual( self.instrument.read_register(0x1001, 1), 80.0 ) # Setpoint (SV).
+        self.assertEqual( self.instrument.read_register(0x1004), 14) # Sensor type.
+        self.assertEqual( self.instrument.read_register(0x1005), 1) # Control method
+        self.assertEqual( self.instrument.read_register(0x1006), 0) # Heating/cooling selection.
+        self.assertAlmostEqual( self.instrument.read_register(0x1012, 1), 100.0 ) # Output 1
+        self.assertAlmostEqual( self.instrument.read_register(0x1013, 1), 0.0 ) # Output 2
+        self.assertEqual( self.instrument.read_register(0x1023), 0) # System alarm setting
+        self.assertEqual( self.instrument.read_register(0x102A), 64) # LED status
+        self.assertEqual( self.instrument.read_register(0x102B), 15) # Pushbutton status
+        self.assertEqual( self.instrument.read_register(0x102F), 400) # Firmware version
+
+    def testReadRegisters(self):
+        self.assertEqual( self.instrument.read_registers(0x1000, 2), [64990, 350]) # Process value (PV) and setpoint (SV).
+
+    def testWriteRegister(self):
+        self.instrument.write_register(0x1001, 0x0320, functioncode=6) # Setpoint of 80.0 degrees
+        self.instrument.write_register(0x1001, 25, 1,  functioncode=6) # Setpoint
+
+    def tearDown(self):
+        self.instrument = None
+        del(self.instrument)
+
 class TestDummyCommunicationWithPortClosure(ExtendedTestCase):
 
     def setUp(self):
@@ -2801,6 +2897,7 @@ RTU_RESPONSES.update(WRONG_RTU_RESPONSES)
 RTU_RESPONSES.update(GOOD_RTU_RESPONSES)
 ASCII_RESPONSES.update(WRONG_ASCII_RESPONSES)
 ASCII_RESPONSES.update(GOOD_ASCII_RESPONSES)
+
 #################
 # Run the tests #
 #################
