@@ -32,6 +32,13 @@ Note that the term 'address' is ambigous, why it is better to use the terms 'reg
 Use only external links in the README.txt, otherwise they will not work on Python Package Index (PyPI). 
 No Sphinx-specific constructs are allowed in that file.
 
+Design priorities:
+ * Easy to use
+ * Catch errors early
+ * Informative error messages
+ * Good unittest coverage
+ * Same codebase for Python2 and Python3
+
 
 General driver structure
 -------------------------------------------------------------------------
@@ -857,22 +864,19 @@ For next release:
   * Finetune coding style (pep8.py)
   
 Future releases:
-  * ASCII support
   * Callback for enabling/disabling RS485 transceivers
+
+Minor tweaks:
+  * Serial port flushing
+  * Hexdecode: Better error codes for wrong input characters
   
 Maybe:
  * Improve the dummy_serial behavior, to better mimic Windows behavior. 
    Also using the number_of_bytes_to_read in the unittests.
  * Floats with other byte order
  * Handle RS485 adapters with echo functionality enabled
+ * Logging instead of _print_out()
+ * Timing based on time.clock() for Windows
  * Speeding up the code (new CRC calculation, disable some other checks)
  * Test with other Python versions
  
- 
-  
-
-.
-
-
-
-

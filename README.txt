@@ -8,7 +8,7 @@ from a computer (master) using the Modbus protocol, and is intended to be runnin
 Example code includes drivers for Eurotherm and Omega process controllers. 
 The only dependence is the pySerial module (also pure Python). 
 
-This software supports the 'Modbus RTU' serial communication version of the protocol, 
+This software supports the 'Modbus RTU' and 'Modbus ASCII' serial communication versions of the protocol, 
 and is intended for use on Linux, OS X and Windows platforms. 
 It is open source, and has the Apache License, Version 2.0. 
 Tested with Python2.7 and Python3.2.
@@ -20,7 +20,8 @@ Home page with full API documentation
     http://minimalmodbus.sourceforge.net/ (this page if viewed on sourceforge.net).
 
 Python package index (PyPI) with download 
-    http://pypi.python.org/pypi/MinimalModbus/ (this page if viewed on python.org. Note that no API is available). The  download section is at the end of the page.
+    http://pypi.python.org/pypi/MinimalModbus/ (this page if viewed on python.org. 
+    Note that no API is available). The  download section is at the end of the page.
 
 The SourceForge project page
     http://sourceforge.net/projects/minimalmodbus/ with mailing list and 
@@ -86,7 +87,7 @@ The instrument is typically connected via a serial port, and a USB-to-serial
 adaptor should be used on most modern computers. How to configure such a serial 
 port is described on the pySerial page: http://pyserial.sourceforge.net/
 
-For example, consider an instrument (slave) with address number 1 
+For example, consider an instrument (slave) with Modbus RTU mode and address number 1 
 to which we are to communicate via a serial port with the name 
 ``/dev/ttyUSB1``. The instrument stores the measured temperature in register 289. 
 For this instrument a temperature of 77.2 C is stored as (the integer) 772, 
@@ -107,6 +108,10 @@ why we use 1 decimal. To read this data from the instrument::
 
 The full API for MinimalModbus is available on http://minimalmodbus.sourceforge.net/apiminimalmodbus.html, and the 
 documentation in PDF format is found on http://minimalmodbus.sourceforge.net/minimalmodbus.pdf
+
+Correspondingly for Modbus ASCII mode::
+
+    instrument = minimalmodbus.Instrument('/dev/ttyUSB1', 1, minimalmodbus.MODE_ASCII)
 
 
 Subclassing
@@ -153,6 +158,7 @@ Most of the serial port parameters have the default values defined in the Modbus
     instrument.serial.timeout  = 0.05   # seconds
 
     instrument.address     # this is the slave address number
+    instrument.mode = minimalmodbus.MODE_RTU   # rtu or ascii mode
 
 These can be overridden::
     
@@ -589,28 +595,49 @@ The same value will in Modbus ASCII be sent as the string '4C', which has a leng
 The frame format is slightly different for Modbus ASCII. The request message 
 is sent from the master in this format::
 
-    Start [1 character], Slave Address [2 characters], Function code [2 characters], Payload data [0 to ? TODO characters], LRC [2 characters], Stop [2 characters].
+    Start [1 character], Slave Address [2 characters], Function code [2 characters], Payload data [0 to 2*252 characters], LRC [2 characters], Stop [2 characters].
 
+Where:
  * The start character is the colon (:).
  * The LRC is a longitudinal redundancy check code, for error checking of the message.
  * The stop characters are carriage return ('\r' = '\x0D') and line feed ('\n' = '\x0A).
 
 Manual testing of Modbus ASCII equipment
 ------------------------------------------
-It is easy to test Modbus ASCII equipment from Linux command line. First must 
+You can make a small Python program to test the communication::
+
+    import serial
+    ser = serial.Serial('/dev/ttyUSB0', 19200, timeout=1)
+    print ser
+
+    ser.write(':010310010001EA\r\n')
+    print ser.read(1000) # Read 1000 bytes, or wait for timeout
+
+It should print something like::
+
+    Serial<id=0x9faa08c, open=True>(port='/dev/ttyUSB0', baudrate=19200, bytesize=8, parity='N', stopbits=1, timeout=1, xonxoff=False, rtscts=False, dsrdtr=False)
+    :0103020136C3
+
+It is also easy to test Modbus ASCII equipment from Linux command line. First must 
 the appropriate serial port be set up properly:
 
  * Print port settings: ``stty -F /dev/ttyUSB0``
  * Print all settings for a port: ``stty -F /dev/ttyUSB0 -a``
  * Reset port to default values: ``stty -F /dev/ttyUSB0 sane``
+ * Change port to raw behavior: ``stty -F /dev/ttyUSB0 raw``
+ * and: ``stty -F /dev/ttyUSB0 -echo -echoe -echok``
  * Change port baudrate: ``stty -F /dev/ttyUSB0 19200``
 
-To send out a Modbus ASCII request, and print out the response::
+To send out a Modbus ASCII request (read register 0x1001 on slave 1), and print out the response::
 
     cat /dev/ttyUSB0 &
     echo -e ":010310010001EA\r\n" > /dev/ttyUSB0
 
+The reponse will be something like::
 
+    :0103020136C3
+    
+    
 Trouble shooting
 ----------------
 
@@ -620,7 +647,7 @@ If there is no communication, make sure that the settings on your instrument are
 
 * Wiring is correct
 * Communication module is set for digital communication
-* Correct protocol (Modbus, and the RTU version)
+* Correct protocol (Modbus, and the RTU or ASCII version)
 * Baud rate
 * Parity 
 * Delay (most often not necessary)
@@ -733,6 +760,7 @@ To see which parts of the code that have been tested, click the corresponding fi
         
 More details on the unittests are found on http://minimalmodbus.sourceforge.net/develop.html  
 
+
 Related software
 ----------------
 The MinimalModbus module is intended for easy-to-use communication with 
@@ -760,7 +788,7 @@ Jonas Berg, pyhys@users.sourceforge.net
 Credits
 -------
 Significant contributions by Angelo Compagnucci, Aaron LaLonde, Asier Abalos, 
-Simon Funke, Edwin van den Oetelaar and Michael Penza.
+Simon Funke, Edwin van den Oetelaar, Dominik Socha and Michael Penza.
 
 
 Feedback

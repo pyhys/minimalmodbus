@@ -6,14 +6,27 @@ For use with Delta DTB4824VR.
 Usage
 -------------
 
-python scriptname [-rtu] [-ascii] [-b38400] [-D/dev/ttyUSB0]
+::
 
+    python scriptname [-rtu] [-ascii] [-b38400] [-D/dev/ttyUSB0]
+
+Arguments:
  * -b : baud rate
  * -D : port name
  
 NOTE: There should be no space between the option switch and its argument.
 
 Defaults to RTU mode.
+
+
+Recommended test sequence
+---------------------------
+Make sure that RUN_VERIFY_EXAMPLES and corresponding flags are all 'True'.
+
+ * Run the tests under Linux and Windows
+ * Use 2400 bps and 38400 bps
+ * Use Modbus ASCII and Modbus RTU
+ * Use Python 2.7 and Python 3.x 
 
 
 Settings in the temperature controller
@@ -25,7 +38,7 @@ Use these setting valuess in the temperature controller:
  * SP   1    (Decimal point position)
  * CoSH on   (ON: communication write-in enabled)
  * C-SL rtu
- * C-no 1
+ * C-no 1    (Slave number)
  * BPS       (see the DEFAULT_BAUDRATE setting below, or the command line argument)
  * LEN  8
  * PRTY None
