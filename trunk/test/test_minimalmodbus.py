@@ -67,7 +67,7 @@ import unittest
 import minimalmodbus
 import dummy_serial
 
-ALSO_TIME_CONSUMING_TESTS = False
+ALSO_TIME_CONSUMING_TESTS = True
 """Set this to :const:`False` to skip the most time consuming tests"""
 
 VERBOSITY = 0

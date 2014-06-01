@@ -98,7 +98,7 @@ class Instrument():
     Args:
         * port (str): The serial port name, for example ``/dev/ttyUSB0`` (Linux), ``/dev/tty.usbserial`` (OS X) or ``COM4`` (Windows).
         * slaveaddress (int): Slave address in the range 1 to 247 (use decimal numbers, not hex).
-        * mode (str): TODO!
+        * mode (str): Mode selection. Can be MODE_RTU or MODE_ASCII!
 
     """
 
