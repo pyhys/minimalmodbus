@@ -1552,7 +1552,7 @@ class TestDummyCommunication(ExtendedTestCase):
 
         # Initialize a (dummy) instrument
         minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = False
-        self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1) # port name, slave address (in decimal)
+        self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1, minimalmodbus.MODE_RTU) # port name, slave address (in decimal)
         self.instrument.debug = False
 
 
@@ -2022,24 +2022,21 @@ class TestDummyCommunication(ExtendedTestCase):
 
 
     ## Communicate ##
-
-    # TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    # Adapt to better mimic the behavior of Windows serial ports.
     
-    LARGE_NUMBER = 1000
+    LARGE_NUMBER_OF_BYTES = 1000
 
     def testCommunicateKnownResponse(self):
-        self.assertEqual( self.instrument._communicate('TESTMESSAGE', 1000), 'TESTRESPONSE' )
+        self.assertEqual( self.instrument._communicate('TESTMESSAGE', LARGE_NUMBER_OF_BYTES), 'TESTRESPONSE' )
 
     def testCommunicateWrongType(self):
         for value in _NOT_STRINGS:
-            self.assertRaises(TypeError, self.instrument._communicate, value, 1000)
+            self.assertRaises(TypeError, self.instrument._communicate, value, LARGE_NUMBER_OF_BYTES)
 
     def testCommunicateNoMessage(self):
-        self.assertRaises(ValueError, self.instrument._communicate, '', 1000)
+        self.assertRaises(ValueError, self.instrument._communicate, '', LARGE_NUMBER_OF_BYTES)
 
     def testCommunicateNoResponse(self):
-        self.assertRaises(IOError, self.instrument._communicate, 'MessageForEmptyResponse', 1000)
+        self.assertRaises(IOError, self.instrument._communicate, 'MessageForEmptyResponse', LARGE_NUMBER_OF_BYTES)
 
 
     ## __repr__ ##
