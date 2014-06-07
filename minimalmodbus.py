@@ -108,7 +108,7 @@ class Instrument():
         else:
             self.serial = _SERIALPORTS[port]
             if self.serial.port is None:
-                self.serial.open() 
+                self.serial.open()
         """The serial port object as defined by the pySerial module. Created by the constructor.
 
         Attributes:
@@ -130,8 +130,8 @@ class Instrument():
         """Slave address (int). Most often set by the constructor (see the class documentation). """
 
         self.mode = mode
-        """Slave mode (str), can be MODE_RTU or MODE_ASCII.  Most often set by the constructor (see the class documentation). 
-        
+        """Slave mode (str), can be MODE_RTU or MODE_ASCII.  Most often set by the constructor (see the class documentation).
+
         New in version 0.6.
         """
 
@@ -142,9 +142,9 @@ class Instrument():
         """If this is :const:`True`, the serial port will be closed after each call. Defaults to :data:`CLOSE_PORT_AFTER_EACH_CALL`. To change it, set the value ``minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL=True`` ."""
 
         self.precalculate_read_size = True
-        """If this is :const:`False`, the serial port reads until timeout 
+        """If this is :const:`False`, the serial port reads until timeout
         instead of just reading a specific number of bytes. Defaults to :const:`True`.
-        
+
         New in version 0.5.
         """
 
@@ -540,9 +540,9 @@ class Instrument():
             * signed (bool): Whether the data should be interpreted as unsigned or signed. Only for a single register or for payloadformat='long'.
             * payloadformat (None or string): None, 'long', 'float', 'string', 'register', 'registers'. Not necessary for single registers or bits.
 
-        If a value of 77.0 is stored internally in the slave register as 770, 
-        then use ``numberOfDecimals=1`` which will divide the received data by 10 
-        before returning the value. Similarly ``numberOfDecimals=2`` will divide 
+        If a value of 77.0 is stored internally in the slave register as 770,
+        then use ``numberOfDecimals=1`` which will divide the received data by 10
+        before returning the value. Similarly ``numberOfDecimals=2`` will divide
         the received data by 100 before returning the value. Same functionality also
         when writing data to the slave.
 
@@ -760,19 +760,19 @@ class Instrument():
         Raises:
             ValueError, TypeError.
 
-        Makes use of the :meth:`_communicate` method. The message is generated 
-        with the :func:`_embedPayload` function, and the parsing of the 
+        Makes use of the :meth:`_communicate` method. The message is generated
+        with the :func:`_embedPayload` function, and the parsing of the
         response is done with the :func:`_extractPayload` function.
 
         """
         DEFAULT_NUMBER_OF_BYTES_TO_READ = 1000
-        
+
         _checkFunctioncode(functioncode, None)
         _checkString(payloadToSlave, description='payload')
-        
+
         # Build message
         message = _embedPayload(self.address, self.mode, functioncode, payloadToSlave)
-    
+
         # Calculate number of bytes to read
         number_of_bytes_to_read = DEFAULT_NUMBER_OF_BYTES_TO_READ
         if self.precalculate_read_size:
@@ -783,10 +783,10 @@ class Instrument():
                     template = 'MinimalModbus debug mode. Could not precalculate response size for Modbus {} mode. ' + \
                         'Will read {} bytes. Message: {!r}'
                     _print_out(template.format(self.mode, number_of_bytes_to_read, message))
-        
+
         # Communicate
         response = self._communicate(message, number_of_bytes_to_read)
-        
+
         # Extract payload
         payloadFromSlave = _extractPayload(response, self.address, self.mode, functioncode)
         return payloadFromSlave
@@ -815,7 +815,7 @@ class Instrument():
 
         If the attribute :attr:`Instrument.close_port_after_each_call` is :const:`True` the
         serial port is closed after each call.
-        
+
         Timing::
 
                                                   Request from master (Master is writing)
@@ -826,10 +826,10 @@ class Instrument():
                      |                            |       |
                      |<----- Silent period ------>|       |
                                                   |       |
-                             Roundtrip time  ---->|-------|<--   
-                             
-        The resolution for Python's time.time() is lower on Windows than on Linux. 
-        It is about 16 ms on Windows according to 
+                             Roundtrip time  ---->|-------|<--
+
+        The resolution for Python's time.time() is lower on Windows than on Linux.
+        It is about 16 ms on Windows according to
         http://stackoverflow.com/questions/157359/accurate-timestamping-in-python
 
         For Python3, the information sent to and from pySerial should be of the type bytes.
@@ -839,37 +839,37 @@ class Instrument():
 
         _checkString(message, minlength=1, description='message')
         _checkInt(number_of_bytes_to_read)
-        
+
         if self.debug:
             _print_out('\nMinimalModbus debug mode. Writing to instrument (expecting {} bytes back): {!r}'. \
                 format(number_of_bytes_to_read, message))
 
         if self.close_port_after_each_call:
             self.serial.open()
-            
+
         #self.serial.flushInput() TODO
 
         if sys.version_info[0] > 2:
-            message = bytes(message, encoding='latin1')  # Convert types to make it Python3 compatible     
-        
+            message = bytes(message, encoding='latin1')  # Convert types to make it Python3 compatible
+
         # Sleep to make sure 3.5 character times have passed
         minimum_silent_period   = _calculate_minimum_silent_period(self.serial.baudrate)
         time_since_read         = time.time() - _LATEST_READ_TIMES.get(self.serial.port, 0)
-        
+
         if time_since_read < minimum_silent_period:
             sleep_time = minimum_silent_period - time_since_read
-            
+
             if self.debug:
                 template = 'MinimalModbus debug mode. Sleeping for {:.1f} ms. ' + \
                         'Minimum silent period: {:.1f} ms, time since read: {:.1f} ms.'
                 text = template.format(
-                    sleep_time*_SECONDS_TO_MILLISECONDS, 
-                    minimum_silent_period*_SECONDS_TO_MILLISECONDS, 
+                    sleep_time*_SECONDS_TO_MILLISECONDS,
+                    minimum_silent_period*_SECONDS_TO_MILLISECONDS,
                     time_since_read*_SECONDS_TO_MILLISECONDS)
                 _print_out(text)
-                
+
             time.sleep(sleep_time)
-        
+
         elif self.debug:
             template = 'MinimalModbus debug mode. No sleep required before write. ' + \
                 'Time since previous read: {:.1f} ms, minimum silent period: {:.2f} ms.'
@@ -877,11 +877,11 @@ class Instrument():
                 time_since_read*_SECONDS_TO_MILLISECONDS,
                 minimum_silent_period*_SECONDS_TO_MILLISECONDS)
             _print_out(text)
-        
+
         # Write message
         latest_write_time = time.time()
         self.serial.write(message)
-        
+
         # Read response
         answer =  self.serial.read(number_of_bytes_to_read)
         _LATEST_READ_TIMES[self.serial.port] = time.time()
@@ -896,8 +896,8 @@ class Instrument():
             template = 'MinimalModbus debug mode. Response from instrument: {!r} ({} bytes), ' + \
                 'roundtrip time: {:.1f} ms. Timeout setting: {:.1f} ms.\n'
             text = template.format(
-                answer, 
-                len(answer), 
+                answer,
+                len(answer),
                 (_LATEST_READ_TIMES.get(self.serial.port,0) - latest_write_time)*_SECONDS_TO_MILLISECONDS,
                 self.serial.timeout*_SECONDS_TO_MILLISECONDS)
             _print_out(text)
@@ -926,11 +926,11 @@ def _embedPayload(slaveaddress, mode, functioncode, payloaddata):
     Raises:
         ValueError, TypeError.
 
-    The resulting message has the format: 
+    The resulting message has the format:
      * RTU Mode: slaveaddress byte + functioncode byte + payloaddata + CRC (which is two bytes).
      * ASCII Mode: header (:) + slaveaddress (2 characters) + functioncode (2 characters) + payloaddata + LRC (which is two characters) + footer (CRLF)
 
-    The LRC or CRC is calculated from the byte string made up of slaveaddress + functioncode + payloaddata. 
+    The LRC or CRC is calculated from the byte string made up of slaveaddress + functioncode + payloaddata.
     The header, LRC/CRC, and footer are excluded from the calculation.
 
     """
@@ -948,7 +948,7 @@ def _embedPayload(slaveaddress, mode, functioncode, payloaddata):
                 _ASCII_FOOTER
     else:
         message = firstPart + _calculateCrcString(firstPart)
-    
+
     return message
 
 
@@ -967,32 +967,32 @@ def _extractPayload(response, slaveaddress, mode, functioncode):
     Raises:
         ValueError, TypeError. Raises an exception if there is any problem with the received address, the functioncode or the CRC.
 
-    The received response should have the format: 
+    The received response should have the format:
         RTU Mode: slaveaddress byte + functioncode byte + payloaddata + CRC (which is two bytes)
         ASCII Mode: header (:) + slaveaddress byte + functioncode byte + payloaddata + LRC (which is two characters) + footer (CRLF)
 
     For development purposes, this function can also be used to extract the payload from the message sent TO the slave.
-    
+
     """
     BYTEPOSITION_FOR_ASCII_HEADER          = 0 # Relative to plain response
 
     BYTEPOSITION_FOR_SLAVEADDRESS          = 0  # Relative to (stripped) response
     BYTEPOSITION_FOR_FUNCTIONCODE          = 1
-    
+
     NUMBER_OF_RESPONSE_STARTBYTES          = 2  # Number of bytes before the response payload (in stripped response)
     NUMBER_OF_CRC_BYTES                    = 2
     NUMBER_OF_LRC_BYTES                    = 1
     BITNUMBER_FUNCTIONCODE_ERRORINDICATION = 7
 
     MINIMAL_RESPONSE_LENGTH_RTU            = NUMBER_OF_RESPONSE_STARTBYTES + NUMBER_OF_CRC_BYTES
-    MINIMAL_RESPONSE_LENGTH_ASCII          = 9 
-    
+    MINIMAL_RESPONSE_LENGTH_ASCII          = 9
+
     # Argument validity testing
     _checkString(response, description='response')
     _checkSlaveaddress(slaveaddress)
     _checkMode(mode)
     _checkFunctioncode(functioncode, None)
-    
+
     plainresponse = response
 
     # Validate response length
@@ -1006,7 +1006,7 @@ def _extractPayload(response, slaveaddress, mode, functioncode):
                 MINIMAL_RESPONSE_LENGTH_RTU,
                 response))
 
-    # Validate the ASCII header and footer. 
+    # Validate the ASCII header and footer.
     if mode == MODE_ASCII:
         if response[BYTEPOSITION_FOR_ASCII_HEADER] != _ASCII_HEADER:
             raise ValueError('Did not find header ({!r}) as start of ASCII response. The plain response is: {!r}'.format( \
@@ -1019,15 +1019,15 @@ def _extractPayload(response, slaveaddress, mode, functioncode):
 
         # Strip ASCII header and footer
         response = response[1:-2]
-        
+
         if len(response)%2 != 0:
             template = 'Stripped ASCII frames should have an even number of bytes, but is {} bytes. ' + \
                     'The stripped response is: {!r} (plain response: {!r})'
-            raise ValueError(template.format(len(response), response, plainresponse))        
-        
+            raise ValueError(template.format(len(response), response, plainresponse))
+
         # Convert the ASCII (stripped) response string to RTU-like response string
         response = _hexdecode(response)
-                
+
     # Validate response checksum
     if mode == MODE_ASCII:
         calculateChecksum =  _calculateLrcString
@@ -1035,17 +1035,17 @@ def _extractPayload(response, slaveaddress, mode, functioncode):
     else:
         calculateChecksum =  _calculateCrcString
         numberOfChecksumBytes = NUMBER_OF_CRC_BYTES
-        
-    receivedChecksum = response[-numberOfChecksumBytes:]    
+
+    receivedChecksum = response[-numberOfChecksumBytes:]
     responseWithoutChecksum = response[0 : len(response) - numberOfChecksumBytes]
     calculatedChecksum = calculateChecksum(responseWithoutChecksum)
-            
+
     if receivedChecksum != calculatedChecksum:
         template = 'Checksum error in {} mode: {!r} instead of {!r} . The response is: {!r} (plain response: {!r})'
         text = template.format(
                 mode,
-                receivedChecksum, 
-                calculatedChecksum, 
+                receivedChecksum,
+                calculatedChecksum,
                 response, plainresponse)
         raise ValueError(text)
 
@@ -1076,61 +1076,61 @@ def _extractPayload(response, slaveaddress, mode, functioncode):
 
     payload = response[ firstDatabyteNumber:lastDatabyteNumber ]
     return payload
-    
+
 ############################################
 ## Serial communication utility functions ##
 ############################################
 
 def _predictResponseSize(mode, functioncode, payloadToSlave):
     """Calculate the number of bytes that should be received from the slave.
-    
+
     Args:
      * mode (str) :
-     * functioncode (int): 
+     * functioncode (int):
      * payloadToSlave (str): The raw message that is to be sent to the slave (not hex encoded string)
 
     Returns:
         The preducted number of bytes (int) in the response.
-        
+
     Raises:
         ValueError, TypeError.
-            
+
     """
     MIN_PAYLOAD_LENGTH = 4 # For implemented functioncodes here
     BYTERANGE_FOR_GIVEN_SIZE = slice(2,4) # Within the payload
-    
+
     NUMBER_OF_PAYLOAD_BYTES_IN_WRITE_CONFIRMATION = 4
     NUMBER_OF_PAYLOAD_BYTES_FOR_BYTECOUNTFIELD = 1
-    
+
     RTU_TO_ASCII_PAYLOAD_FACTOR = 2
 
     NUMBER_OF_RTU_RESPONSE_STARTBYTES   = 2
     NUMBER_OF_RTU_RESPONSE_ENDBYTES     = 2
     NUMBER_OF_ASCII_RESPONSE_STARTBYTES = 5
     NUMBER_OF_ASCII_RESPONSE_ENDBYTES   = 4
-    
+
     # Argument validity testing
     _checkMode(mode)
     _checkFunctioncode(functioncode, None)
     _checkString(payloadToSlave, description='payload', minlength=MIN_PAYLOAD_LENGTH)
-    
+
     # Calculate payload size
     if functioncode in [5, 6, 15, 16]:
-        response_payload_size = NUMBER_OF_PAYLOAD_BYTES_IN_WRITE_CONFIRMATION    
-        
-    elif functioncode in [1, 2, 3, 4]:    
+        response_payload_size = NUMBER_OF_PAYLOAD_BYTES_IN_WRITE_CONFIRMATION
+
+    elif functioncode in [1, 2, 3, 4]:
         given_size = _twoByteStringToNum(payloadToSlave[BYTERANGE_FOR_GIVEN_SIZE])
         if functioncode == 1 or functioncode == 2:
             # Algorithm from MODBUS APPLICATION PROTOCOL SPECIFICATION V1.1b
             number_of_inputs = given_size
             response_payload_size = NUMBER_OF_PAYLOAD_BYTES_FOR_BYTECOUNTFIELD + \
                                     number_of_inputs//8 + (1 if number_of_inputs%8 else 0)
-            
+
         elif functioncode == 3 or functioncode == 4:
             number_of_registers = given_size
             response_payload_size = NUMBER_OF_PAYLOAD_BYTES_FOR_BYTECOUNTFIELD + \
                                     number_of_registers*_NUMBER_OF_BYTES_PER_REGISTER
-        
+
     else:
         raise ValueError('Wrong functioncode: {}. The raw message is: {!r}'.format( \
             functioncode, message))
@@ -1144,11 +1144,11 @@ def _predictResponseSize(mode, functioncode, payloadToSlave):
         return NUMBER_OF_RTU_RESPONSE_STARTBYTES + \
             response_payload_size + \
             NUMBER_OF_RTU_RESPONSE_ENDBYTES
-    
-    
+
+
 def _calculate_minimum_silent_period(baudrate):
     """Calculate the silent period length to comply with the 3.5 character silence between messages.
-    
+
     Args:
         baudrate (numerical): The baudrate for the serial port
 
@@ -1160,13 +1160,13 @@ def _calculate_minimum_silent_period(baudrate):
 
     """
     _checkNumerical(baudrate, minvalue=1, description='baudrate') # Avoid division by zero
-    
+
     BITTIMES_PER_CHARACTERTIME = 11
     MINIMUM_SILENT_CHARACTERTIMES = 3.5
-    
+
     bittime = 1/float(baudrate)
     return bittime * BITTIMES_PER_CHARACTERTIME * MINIMUM_SILENT_CHARACTERTIMES
-    
+
 ##############################
 # String and num conversions #
 ##############################
@@ -1637,9 +1637,11 @@ def _unpack(formatstring, packed):
 
 def _hexencode(bytestring):
     """Convert a byte string to a hex encoded string.
+    
+    For example 'J' will return '4A', and ``'\\x04'`` will return '04'.
 
     Args:
-        bytestring (str): Can be for example ``A\\x01B\\x45``.
+        bytestring (str): Can be for example ``'A\\x01B\\x45'``.
 
     Returns:
         A string of twice the length, with characters in the range '0' to '9' and 'A' to 'F'.
@@ -1649,42 +1651,55 @@ def _hexencode(bytestring):
 
     """
     _checkString(bytestring, description='byte string')
-    
+
     # Use plain string formatting instead of binhex.hexlify,
     # in order to have it Python 2.x and 3.x compatible
-    
+
     outstring = ''
-    for c in bytestring: 
+    for c in bytestring:
         outstring += '{0:02X}'.format(ord(c))
     return outstring
-    
+
 
 def _hexdecode(hexstring):
     """Convert a hex encoded string to a byte string.
+    
+    For example '4A' will return 'J', and '04' will return ``'\\x04'`` (which has length 1).
 
     Args:
-        hexstring (str): Can be for example ``A3``.
+        hexstring (str): Can be for example 'A3'. Must be of even length.
+        Allowed characters are '0' to '9', 'a' to 'f' and 'A' to 'F'.
 
     Returns:
-        A string of half the length, with characters corresponding to all 0-255 values for each byte'
+        A string of half the length, with characters corresponding to all 0-255 values for each byte.
 
     Raises:
         TypeError, ValueError
 
     """
-    #TODO: Better error codes for wrong input characters
+    # Note: For Python3 the appropriate would be: raise TypeError(new_error_message) from err
+    # but the Python2 interpreter will indicate SyntaxError.
+    # Thus we need to live with this warning in Python3:
+    # 'During handling of the above exception, another exception occurred'
     
     _checkString(hexstring, description='hexstring')
-    
+
     if len(hexstring)%2 != 0:
         raise ValueError('The input hexstring must be of even length. Given: {!r}'.format(hexstring))
-        
+
     if sys.version_info[0] > 2:
         by = bytes(hexstring, 'latin1')
-        binascii.unhexlify(by)
-        return str(binascii.unhexlify(by), encoding='latin1') 
-    
-    return hexstring.decode('hex')
+        try:
+            return str(binascii.unhexlify(by), encoding='latin1')
+        except binascii.Error as err:
+            new_error_message = 'Hexdecode reported an error: {!s}. Input hexstring: {}'.format(err.args[0], hexstring)
+            raise TypeError(new_error_message) 
+
+    else:
+        try:
+            return hexstring.decode('hex')
+        except TypeError as err:
+            raise TypeError('Hexdecode reported an error: {}. Input hexstring: {}'.format(err.message, hexstring))
 
 
 def _bitResponseToValue(bytestring):
@@ -1930,21 +1945,21 @@ def _calculateLrcString(inputstring):
     """Calculate LRC for Modbus.
 
     Args:
-        inputstring (str): An arbitrary-length message (without the beginning 
+        inputstring (str): An arbitrary-length message (without the beginning
         colon and terminating CRLF). It should already be decoded from hex-string.
 
     Returns:
         A one-byte LRC bytestring (not encoded to hex-string)
 
     Algorithm from the document 'MODBUS over serial line specification and implementation guide V1.02'.
-    
+
     The LRC is calculated as 8 bits (one byte).
-    
-    For example a LRC 0110 0001 (bin) = 61 (hex) = 97 (dec) = 'a'. This function will 
+
+    For example a LRC 0110 0001 (bin) = 61 (hex) = 97 (dec) = 'a'. This function will
     then return 'a'.
-    
-    In Modbus ASCII mode, this should be transmitted using two characters. This 
-    example should be transmitted '61', which is a string of length two. This function 
+
+    In Modbus ASCII mode, this should be transmitted using two characters. This
+    example should be transmitted '61', which is a string of length two. This function
     does not handle that conversion for transmission.
     """
     _checkString(inputstring, description='input LRC string')
@@ -1954,7 +1969,7 @@ def _calculateLrcString(inputstring):
         register += ord(character)
 
     lrc = ((register ^ 0xFF) + 1) & 0xFF
-    
+
     lrcString =_numToOneByteString(lrc)
     return lrcString
 
@@ -2344,23 +2359,25 @@ def _getDiagnosticString():
 
 if __name__ == '__main__':
 
-    
+
     #print '2400 bit/s:', calculate_minimum_silent_period(2400), 's'
     #print '115200 bit/s:', calculate_minimum_silent_period(115200), 's'
 
-    _print_out( '\n\n\n\n\n\n\nTESTING MINIMALMODBUS MODULE' )
+    _print_out( '\nTESTING MINIMALMODBUS MODULE' )
     #instrument = Instrument('/dev/ttyUSB0', 1, MODE_ASCII)
     #instrument.serial.timeout  = 1
     #instrument.serial.baudrate = 4800
     #instrument.debug = True
-    
+
+    #_hexdecode('1a')
+    _print_out( _hexdecode('4a'))
     #print repr(_calculateLrcString('A'))
     #print repr(_calculateLrcString('B'))
     #print repr(_calculateLrcString('C'))
-    
+
     #value = instrument.read_register(0x1001, 1)
     #_print_out('Setpoint: ' + str(value))
-    
+
     #instrument.write_bit(0x0810, 1)
     #_print_out( str(instrument.read_register(273, 1)) )
     #_print_out( 'DONE!' )

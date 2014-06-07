@@ -67,7 +67,7 @@ import unittest
 import minimalmodbus
 import dummy_serial
 
-ALSO_TIME_CONSUMING_TESTS = True
+ALSO_TIME_CONSUMING_TESTS = False
 """Set this to :const:`False` to skip the most time consuming tests"""
 
 VERBOSITY = 0
@@ -875,7 +875,10 @@ class TestHexencode(ExtendedTestCase):
 
     knownValues=[     
         ('',        ''),   
+        ('7',       '37'),
+        ('J',       '4A'),
         ('\x5d',    '5D'),
+        ('\x04',    '04'),
         ('mn',      '6D6E'),
         ('Katt1',   '4B61747431'),
         ]
@@ -901,6 +904,9 @@ class TestHexdecode(ExtendedTestCase):
         for knownstring, value in self.knownValues:
             resultstring = minimalmodbus._hexdecode(value)
             self.assertEqual(resultstring, knownstring)
+            
+        self.assertEqual(minimalmodbus._hexdecode('4A'), 'J')
+        self.assertEqual(minimalmodbus._hexdecode('4a'), 'J')
 
     def testAllowLowercase(self):
         minimalmodbus._hexdecode('Aa')

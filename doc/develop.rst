@@ -733,8 +733,9 @@ What                Usage                                           Result
 Inline web link     ```Link text <http://example.com/>`_``          `Link text <http://example.com/>`_
 Internal link       ``:ref:`testminimalmodbus```                    :ref:`testminimalmodbus`
 Inline code         ````code text````                               ``code text``
+String              'A'                                             'A'
 String w escape ch. (string within inline code)                     ``'ABC\x00'``
-(less good)         (string within inline code, double backslash)   ``'ABC\\x00'`` Differnt somtimes! Why?
+(less good)         (string within inline code, double backslash)   ``'ABC\\x00'`` Different somtimes! Why?
 (less good)         (string with double backslash)                  'ABC\\x00'
 Environment var     ``:envvar:`PYTHONPATH```                        :envvar:`PYTHONPATH`
 OS-level command    ``:command:`make```                             :command:`make`
@@ -868,7 +869,6 @@ Future releases:
 
 Minor tweaks:
   * Serial port flushing
-  * Hexdecode: Better error codes for wrong input characters
   
 Maybe:
  * Improve the dummy_serial behavior, to better mimic Windows behavior. 

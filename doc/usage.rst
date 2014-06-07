@@ -369,8 +369,8 @@ It's content should be::
 
 You also need to add this to your :file:`local.conf` file::
 
-    ????  += 'python-minimalmodbus' TODO!
-        
+    IMAGE_INSTALL_append = " python-minimalmodbus" 
+    
 When using the recipe for another version of MinimalModbus, change the version 
 number in the filename. Bitbake will complain that the md5sum and sha256sum not 
 are correct, but Bitbake will print out the correct values so you can change 
