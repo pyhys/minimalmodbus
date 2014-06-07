@@ -348,7 +348,7 @@ In your layer, create the file
 
 It's content should be::
 
-    SUMMARY = "Easy-to-use Modbus RTU implementation for Python"
+    SUMMARY = "Easy-to-use Modbus RTU and Modbus ASCII implementation for Python"
     SECTION = "devel/python"
     LICENSE = "Apache-2.0"
     LIC_FILES_CHKSUM = "file://LICENCE.txt;md5=27da4ba4e954f7f4ba8d1e08a2c756c4"

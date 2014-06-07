@@ -856,7 +856,8 @@ or::
 
     pep8 --statistics minimalmodbus.py
     
-    pep8 -r --select=E251 minimalmodbus.py
+    pep8 -r --select=E261 --show-source minimalmodbus.py
+
 
 TODO
 ----
@@ -866,13 +867,11 @@ For next release:
   
 Future releases:
   * Callback for enabling/disabling RS485 transceivers
-
-Minor tweaks:
-  * Serial port flushing
   
 Maybe:
  * Improve the dummy_serial behavior, to better mimic Windows behavior. 
    Also using the number_of_bytes_to_read in the unittests.
+ * Unittests for measuring the sleep time in _communicate.* Serial port flushing
  * Floats with other byte order
  * Handle RS485 adapters with echo functionality enabled
  * Logging instead of _print_out()

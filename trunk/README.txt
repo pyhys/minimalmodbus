@@ -42,11 +42,10 @@ Modbus RTU
 Modbus ASCII
     A serial protocol that uses ASCII representation of the data. **Supported by this software**.
 
-Modbus TCP/IP and variants
+Modbus TCP, and variants
     A protocol for communication over TCP/IP networks. Not supported by this software, consider donating some Modbus TCP equipment.
 
 For full documentation on the Modbus protocol, see `www.modbus.com <http://www.modbus.com/>`_.
-
 
 Two important documents are:
   * `Modbus application protocol V1.1b <http://www.modbus.com/docs/Modbus_Application_Protocol_V1_1b.pdf>`_ 
@@ -226,7 +225,7 @@ In that case, first manually install pySerial and then manually install MinimalM
 To make sure it is installed properly, print the _getDiagnosticString() message. 
 See the support section below for instructions.
 
-You can also download the source directly from command line under Linux::
+You can also download the source directly from Linux command line::
 
     wget http://downloads.sourceforge.net/project/minimalmodbus/0.5/MinimalModbus-0.5.tar.gz
     wget https://pypi.python.org/packages/source/M/MinimalModbus/MinimalModbus-0.5.tar.gz
@@ -588,7 +587,7 @@ mode be sent as two characters corresponding to the hex value of that byte.
 
 For example a value of 76 (dec) = 4C (hex) is sent as the byte 0x4C in Modbus 
 RTU mode. This byte happens to correspond to the character 'L' in the ASCII encoding. 
-Thus for Modbus RTU this is sent: '\x4C', which is a string of length 1 and will print as 'L'.
+Thus for Modbus RTU this is sent: ``'\x4C'``, which is a string of length 1 and will print as 'L'.
 
 The same value will in Modbus ASCII be sent as the string '4C', which has a length of 2.
 
@@ -600,7 +599,7 @@ is sent from the master in this format::
 Where:
  * The start character is the colon (:).
  * The LRC is a longitudinal redundancy check code, for error checking of the message.
- * The stop characters are carriage return ('\r' = '\x0D') and line feed ('\n' = '\x0A).
+ * The stop characters are carriage return ('\r' = ``'\x0D'``) and line feed ('\n' = ``'\x0A'``).
 
 Manual testing of Modbus ASCII equipment
 ------------------------------------------

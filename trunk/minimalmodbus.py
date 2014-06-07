@@ -92,6 +92,7 @@ MODE_ASCII = 'ascii'
 ## Modbus instrument object ##
 ##############################
 
+
 class Instrument():
     """Instrument class for talking to instruments (slaves) via the Modbus RTU protocol (via RS485 or RS232).
 
@@ -168,6 +169,7 @@ class Instrument():
     ######################################
     ## Methods for talking to the slave ##
     ######################################
+
 
     def read_bit(self, registeraddress, functioncode=2):
         """Read one bit from the slave.
@@ -461,7 +463,7 @@ class Instrument():
 
         """
         _checkInt(numberOfRegisters, minvalue=1, description='number of registers for write string')
-        _checkString(textstring, 'input string', minlength=1, maxlength=2*numberOfRegisters)
+        _checkString(textstring, 'input string', minlength=1, maxlength=2 * numberOfRegisters)
         self._genericCommand(16, registeraddress, textstring, \
             numberOfRegisters=numberOfRegisters, payloadformat='string')
 
@@ -522,10 +524,10 @@ class Instrument():
 
         self._genericCommand(16, registeraddress, values, numberOfRegisters=len(values), payloadformat='registers')
 
-
     #####################
     ## Generic command ##
     #####################
+
 
     def _genericCommand(self, functioncode, registeraddress, value=None, \
             numberOfDecimals=0, numberOfRegisters=1, signed=False, payloadformat=None):
@@ -644,23 +646,23 @@ class Instrument():
 
         ## Build payload to slave ##
         if functioncode in [1, 2]:
-            payloadToSlave =_numToTwoByteString(registeraddress) + \
+            payloadToSlave = _numToTwoByteString(registeraddress) + \
                             _numToTwoByteString(NUMBER_OF_BITS)
 
         elif functioncode in [3, 4]:
-            payloadToSlave =_numToTwoByteString(registeraddress) + \
+            payloadToSlave = _numToTwoByteString(registeraddress) + \
                             _numToTwoByteString(numberOfRegisters)
 
         elif functioncode == 5:
-            payloadToSlave =_numToTwoByteString(registeraddress) + \
+            payloadToSlave = _numToTwoByteString(registeraddress) + \
                             _createBitpattern(functioncode, value)
 
         elif functioncode == 6:
-            payloadToSlave =_numToTwoByteString(registeraddress) + \
+            payloadToSlave = _numToTwoByteString(registeraddress) + \
                             _numToTwoByteString(value, numberOfDecimals, signed=signed)
 
         elif functioncode == 15:
-            payloadToSlave =_numToTwoByteString(registeraddress) + \
+            payloadToSlave = _numToTwoByteString(registeraddress) + \
                             _numToTwoByteString(NUMBER_OF_BITS) + \
                             _numToOneByteString(NUMBER_OF_BYTES_FOR_ONE_BIT) + \
                             _createBitpattern(functioncode, value)
@@ -682,7 +684,7 @@ class Instrument():
                 registerdata = _valuelistToBytestring(value, numberOfRegisters)
 
             assert len(registerdata) == numberOfRegisterBytes
-            payloadToSlave =_numToTwoByteString(registeraddress) + \
+            payloadToSlave = _numToTwoByteString(registeraddress) + \
                             _numToTwoByteString(numberOfRegisters) + \
                             _numToOneByteString(numberOfRegisterBytes) + \
                             registerdata
@@ -746,6 +748,7 @@ class Instrument():
     ##########################################
     ## Communication implementation details ##
     ##########################################
+
 
     def _performCommand(self, functioncode, payloadToSlave):
         """Performs the command having the *functioncode*.
@@ -863,9 +866,9 @@ class Instrument():
                 template = 'MinimalModbus debug mode. Sleeping for {:.1f} ms. ' + \
                         'Minimum silent period: {:.1f} ms, time since read: {:.1f} ms.'
                 text = template.format(
-                    sleep_time*_SECONDS_TO_MILLISECONDS,
-                    minimum_silent_period*_SECONDS_TO_MILLISECONDS,
-                    time_since_read*_SECONDS_TO_MILLISECONDS)
+                    sleep_time * _SECONDS_TO_MILLISECONDS,
+                    minimum_silent_period * _SECONDS_TO_MILLISECONDS,
+                    time_since_read * _SECONDS_TO_MILLISECONDS)
                 _print_out(text)
 
             time.sleep(sleep_time)
@@ -874,8 +877,8 @@ class Instrument():
             template = 'MinimalModbus debug mode. No sleep required before write. ' + \
                 'Time since previous read: {:.1f} ms, minimum silent period: {:.2f} ms.'
             text = template.format(
-                time_since_read*_SECONDS_TO_MILLISECONDS,
-                minimum_silent_period*_SECONDS_TO_MILLISECONDS)
+                time_since_read * _SECONDS_TO_MILLISECONDS,
+                minimum_silent_period * _SECONDS_TO_MILLISECONDS)
             _print_out(text)
 
         # Write message
@@ -883,7 +886,7 @@ class Instrument():
         self.serial.write(message)
 
         # Read response
-        answer =  self.serial.read(number_of_bytes_to_read)
+        answer = self.serial.read(number_of_bytes_to_read)
         _LATEST_READ_TIMES[self.serial.port] = time.time()
 
         if self.close_port_after_each_call:
@@ -898,8 +901,8 @@ class Instrument():
             text = template.format(
                 answer,
                 len(answer),
-                (_LATEST_READ_TIMES.get(self.serial.port,0) - latest_write_time)*_SECONDS_TO_MILLISECONDS,
-                self.serial.timeout*_SECONDS_TO_MILLISECONDS)
+                (_LATEST_READ_TIMES.get(self.serial.port, 0) - latest_write_time) * _SECONDS_TO_MILLISECONDS,
+                self.serial.timeout * _SECONDS_TO_MILLISECONDS)
             _print_out(text)
 
         if len(answer) == 0:
@@ -910,6 +913,7 @@ class Instrument():
 ####################
 # Payload handling #
 ####################
+
 
 def _embedPayload(slaveaddress, mode, functioncode, payloaddata):
     """Build a message from the slaveaddress, the function code and the payload data.
@@ -974,7 +978,7 @@ def _extractPayload(response, slaveaddress, mode, functioncode):
     For development purposes, this function can also be used to extract the payload from the message sent TO the slave.
 
     """
-    BYTEPOSITION_FOR_ASCII_HEADER          = 0 # Relative to plain response
+    BYTEPOSITION_FOR_ASCII_HEADER          = 0  # Relative to plain response
 
     BYTEPOSITION_FOR_SLAVEADDRESS          = 0  # Relative to (stripped) response
     BYTEPOSITION_FOR_FUNCTIONCODE          = 1
@@ -1020,7 +1024,7 @@ def _extractPayload(response, slaveaddress, mode, functioncode):
         # Strip ASCII header and footer
         response = response[1:-2]
 
-        if len(response)%2 != 0:
+        if len(response) % 2 != 0:
             template = 'Stripped ASCII frames should have an even number of bytes, but is {} bytes. ' + \
                     'The stripped response is: {!r} (plain response: {!r})'
             raise ValueError(template.format(len(response), response, plainresponse))
@@ -1030,10 +1034,10 @@ def _extractPayload(response, slaveaddress, mode, functioncode):
 
     # Validate response checksum
     if mode == MODE_ASCII:
-        calculateChecksum =  _calculateLrcString
+        calculateChecksum = _calculateLrcString
         numberOfChecksumBytes = NUMBER_OF_LRC_BYTES
     else:
-        calculateChecksum =  _calculateCrcString
+        calculateChecksum = _calculateCrcString
         numberOfChecksumBytes = NUMBER_OF_CRC_BYTES
 
     receivedChecksum = response[-numberOfChecksumBytes:]
@@ -1050,14 +1054,14 @@ def _extractPayload(response, slaveaddress, mode, functioncode):
         raise ValueError(text)
 
     # Check slave address
-    responseaddress = ord( response[BYTEPOSITION_FOR_SLAVEADDRESS] )
+    responseaddress = ord(response[BYTEPOSITION_FOR_SLAVEADDRESS])
 
     if responseaddress != slaveaddress:
-        raise ValueError( 'Wrong return slave address: {} instead of {}. The response is: {!r}'.format( \
+        raise ValueError('Wrong return slave address: {} instead of {}. The response is: {!r}'.format( \
             responseaddress, slaveaddress, response))
 
     # Check function code
-    receivedFunctioncode = ord( response[BYTEPOSITION_FOR_FUNCTIONCODE ] )
+    receivedFunctioncode = ord(response[BYTEPOSITION_FOR_FUNCTIONCODE])
 
     if receivedFunctioncode == _setBitOn(functioncode, BITNUMBER_FUNCTIONCODE_ERRORINDICATION):
         raise ValueError('The slave is indicating an error. The response is: {!r}'.format(response))
@@ -1074,12 +1078,13 @@ def _extractPayload(response, slaveaddress, mode, functioncode):
     else:
         lastDatabyteNumber = len(response) - NUMBER_OF_CRC_BYTES
 
-    payload = response[ firstDatabyteNumber:lastDatabyteNumber ]
+    payload = response[firstDatabyteNumber:lastDatabyteNumber]
     return payload
 
 ############################################
 ## Serial communication utility functions ##
 ############################################
+
 
 def _predictResponseSize(mode, functioncode, payloadToSlave):
     """Calculate the number of bytes that should be received from the slave.
@@ -1096,8 +1101,8 @@ def _predictResponseSize(mode, functioncode, payloadToSlave):
         ValueError, TypeError.
 
     """
-    MIN_PAYLOAD_LENGTH = 4 # For implemented functioncodes here
-    BYTERANGE_FOR_GIVEN_SIZE = slice(2,4) # Within the payload
+    MIN_PAYLOAD_LENGTH = 4  # For implemented functioncodes here
+    BYTERANGE_FOR_GIVEN_SIZE = slice(2, 4)  # Within the payload
 
     NUMBER_OF_PAYLOAD_BYTES_IN_WRITE_CONFIRMATION = 4
     NUMBER_OF_PAYLOAD_BYTES_FOR_BYTECOUNTFIELD = 1
@@ -1124,12 +1129,12 @@ def _predictResponseSize(mode, functioncode, payloadToSlave):
             # Algorithm from MODBUS APPLICATION PROTOCOL SPECIFICATION V1.1b
             number_of_inputs = given_size
             response_payload_size = NUMBER_OF_PAYLOAD_BYTES_FOR_BYTECOUNTFIELD + \
-                                    number_of_inputs//8 + (1 if number_of_inputs%8 else 0)
+                                    number_of_inputs // 8 + (1 if number_of_inputs % 8 else 0)
 
         elif functioncode == 3 or functioncode == 4:
             number_of_registers = given_size
             response_payload_size = NUMBER_OF_PAYLOAD_BYTES_FOR_BYTECOUNTFIELD + \
-                                    number_of_registers*_NUMBER_OF_BYTES_PER_REGISTER
+                                    number_of_registers * _NUMBER_OF_BYTES_PER_REGISTER
 
     else:
         raise ValueError('Wrong functioncode: {}. The raw message is: {!r}'.format( \
@@ -1138,7 +1143,7 @@ def _predictResponseSize(mode, functioncode, payloadToSlave):
     # Calculate number of bytes to read
     if mode == MODE_ASCII:
         return NUMBER_OF_ASCII_RESPONSE_STARTBYTES + \
-            response_payload_size*RTU_TO_ASCII_PAYLOAD_FACTOR + \
+            response_payload_size * RTU_TO_ASCII_PAYLOAD_FACTOR + \
             NUMBER_OF_ASCII_RESPONSE_ENDBYTES
     else:
         return NUMBER_OF_RTU_RESPONSE_STARTBYTES + \
@@ -1159,17 +1164,18 @@ def _calculate_minimum_silent_period(baudrate):
         ValueError, TypeError.
 
     """
-    _checkNumerical(baudrate, minvalue=1, description='baudrate') # Avoid division by zero
+    _checkNumerical(baudrate, minvalue=1, description='baudrate')  # Avoid division by zero
 
     BITTIMES_PER_CHARACTERTIME = 11
     MINIMUM_SILENT_CHARACTERTIMES = 3.5
 
-    bittime = 1/float(baudrate)
+    bittime = 1 / float(baudrate)
     return bittime * BITTIMES_PER_CHARACTERTIME * MINIMUM_SILENT_CHARACTERTIMES
 
 ##############################
 # String and num conversions #
 ##############################
+
 
 def _numToOneByteString(inputvalue):
     """Convert a numerical value to a one-byte string.
@@ -1229,12 +1235,12 @@ def _numToTwoByteString(value, numberOfDecimals=0, LsbFirst=False, signed=False)
 
     """
     _checkNumerical(value, description='inputvalue')
-    _checkInt(numberOfDecimals, minvalue=0, description='number of decimals' )
+    _checkInt(numberOfDecimals, minvalue=0, description='number of decimals')
     _checkBool(LsbFirst, description='LsbFirst')
     _checkBool(signed, description='signed parameter')
 
     multiplier = 10 ** numberOfDecimals
-    integer = int( float(value) * multiplier )
+    integer = int(float(value) * multiplier)
 
     if LsbFirst:
         formatcode = '<'  # Little-endian
@@ -1637,7 +1643,7 @@ def _unpack(formatstring, packed):
 
 def _hexencode(bytestring):
     """Convert a byte string to a hex encoded string.
-    
+
     For example 'J' will return '4A', and ``'\\x04'`` will return '04'.
 
     Args:
@@ -1663,7 +1669,7 @@ def _hexencode(bytestring):
 
 def _hexdecode(hexstring):
     """Convert a hex encoded string to a byte string.
-    
+
     For example '4A' will return 'J', and '04' will return ``'\\x04'`` (which has length 1).
 
     Args:
@@ -1681,10 +1687,10 @@ def _hexdecode(hexstring):
     # but the Python2 interpreter will indicate SyntaxError.
     # Thus we need to live with this warning in Python3:
     # 'During handling of the above exception, another exception occurred'
-    
+
     _checkString(hexstring, description='hexstring')
 
-    if len(hexstring)%2 != 0:
+    if len(hexstring) % 2 != 0:
         raise ValueError('The input hexstring must be of even length. Given: {!r}'.format(hexstring))
 
     if sys.version_info[0] > 2:
@@ -1693,7 +1699,7 @@ def _hexdecode(hexstring):
             return str(binascii.unhexlify(by), encoding='latin1')
         except binascii.Error as err:
             new_error_message = 'Hexdecode reported an error: {!s}. Input hexstring: {}'.format(err.args[0], hexstring)
-            raise TypeError(new_error_message) 
+            raise TypeError(new_error_message)
 
     else:
         try:
@@ -1763,6 +1769,7 @@ def _createBitpattern(functioncode, value):
 # Number manipulation #
 #######################
 
+
 def _twosComplement(x, bits=16):
     """Calculate the two's complement of an integer.
 
@@ -1792,16 +1799,16 @@ def _twosComplement(x, bits=16):
     """
     _checkInt(bits, minvalue=0, description='number of bits')
     _checkInt(x, description='input')
-    upperlimit = 2**(bits - 1) - 1
-    lowerlimit = -2**(bits - 1)
+    upperlimit = 2 ** (bits - 1) - 1
+    lowerlimit = -2 ** (bits - 1)
     if x > upperlimit or x < lowerlimit:
         raise ValueError('The input value is out of range. Given value is {0}, but allowed range is {1} to {2} when using {3} bits.' \
-            .format(x, lowerlimit, upperlimit, bits) )
+            .format(x, lowerlimit, upperlimit, bits))
 
     # Calculate two'2 complement
     if x >= 0:
         return x
-    return x + 2**bits
+    return x + 2 ** bits
 
 
 def _fromTwosComplement(x, bits=16):
@@ -1831,21 +1838,22 @@ def _fromTwosComplement(x, bits=16):
     _checkInt(bits, minvalue=0, description='number of bits')
 
     _checkInt(x, description='input')
-    upperlimit = 2**(bits) - 1
+    upperlimit = 2 ** (bits) - 1
     lowerlimit = 0
     if x > upperlimit or x < lowerlimit:
         raise ValueError('The input value is out of range. Given value is {0}, but allowed range is {1} to {2} when using {3} bits.' \
-            .format(x, lowerlimit, upperlimit, bits) )
+            .format(x, lowerlimit, upperlimit, bits))
 
     # Calculate inverse(?) of two'2 complement
-    limit = 2**(bits - 1) - 1
+    limit = 2 ** (bits - 1) - 1
     if x <= limit:
         return x
-    return x - 2**bits
+    return x - 2 ** bits
 
 ####################
 # Bit manipulation #
 ####################
+
 
 def _XOR(integer1, integer2):
     """An alias for the bitwise XOR command.
@@ -1908,6 +1916,7 @@ def _rightshift(inputInteger):
 # Error checking functions #
 ############################
 
+
 def _calculateCrcString(inputstring):
     """Calculate CRC-16 for Modbus.
 
@@ -1941,6 +1950,7 @@ def _calculateCrcString(inputstring):
 
     return _numToTwoByteString(register, LsbFirst=True)
 
+
 def _calculateLrcString(inputstring):
     """Calculate LRC for Modbus.
 
@@ -1970,8 +1980,9 @@ def _calculateLrcString(inputstring):
 
     lrc = ((register ^ 0xFF) + 1) & 0xFF
 
-    lrcString =_numToOneByteString(lrc)
+    lrcString = _numToOneByteString(lrc)
     return lrcString
+
 
 def _checkMode(mode):
     """Check that the Modbus mode is valie.
@@ -1989,6 +2000,7 @@ def _checkMode(mode):
 
     if mode not in [MODE_RTU, MODE_ASCII]:
         raise ValueError("Unreconized Modbus mode given. Must be 'rtu' or 'ascii' but {0!r} was given.".format(mode))
+
 
 def _checkFunctioncode(functioncode, listOfAllowedValues=[]):
     """Check that the given functioncode is in the listOfAllowedValues.
@@ -2070,7 +2082,7 @@ def _checkResponseByteCount(payload):
 
     _checkString(payload, minlength=1, description='payload')
 
-    givenNumberOfDatabytes = ord( payload[POSITION_FOR_GIVEN_NUMBER] )
+    givenNumberOfDatabytes = ord(payload[POSITION_FOR_GIVEN_NUMBER])
     countedNumberOfDatabytes = len(payload) - NUMBER_OF_BYTES_TO_SKIP
 
     if givenNumberOfDatabytes != countedNumberOfDatabytes:
@@ -2120,12 +2132,12 @@ def _checkResponseNumberOfRegisters(payload, numberOfRegisters):
 
     """
     _checkString(payload, minlength=4, description='payload')
-    _checkInt(numberOfRegisters, minvalue=1, maxvalue=0xFFFF, description='numberOfRegisters' )
+    _checkInt(numberOfRegisters, minvalue=1, maxvalue=0xFFFF, description='numberOfRegisters')
 
     BYTERANGE_FOR_NUMBER_OF_REGISTERS = slice(2, 4)
 
     bytesForNumberOfRegisters = payload[BYTERANGE_FOR_NUMBER_OF_REGISTERS]
-    receivedNumberOfWrittenReisters = _twoByteStringToNum( bytesForNumberOfRegisters )
+    receivedNumberOfWrittenReisters = _twoByteStringToNum(bytesForNumberOfRegisters)
 
     if receivedNumberOfWrittenReisters != numberOfRegisters:
         raise ValueError('Wrong number of registers to write in the response: {0}, but commanded is {1}. The data payload is: {2!r}'.format( \
@@ -2249,10 +2261,10 @@ def _checkNumerical(inputvalue, minvalue=None, maxvalue=None, description='input
     """
     # Type checking
     if not isinstance(description, str):
-        raise TypeError( 'The description should be a string. Given: {0!r}'.format(description) )
+        raise TypeError('The description should be a string. Given: {0!r}'.format(description))
 
     if not isinstance(inputvalue, (int, long, float)):
-        raise TypeError( 'The {0} must be numerical. Given: {1!r}'.format(description, inputvalue))
+        raise TypeError('The {0} must be numerical. Given: {1!r}'.format(description, inputvalue))
 
     if not isinstance(minvalue, (int, float, long, type(None))):
         raise TypeError('The minvalue must be numeric or None. Given: {0!r}'.format(minvalue))
@@ -2263,18 +2275,18 @@ def _checkNumerical(inputvalue, minvalue=None, maxvalue=None, description='input
     # Consistency checking
     if (not minvalue is None) and (not maxvalue is None):
         if maxvalue < minvalue:
-            raise ValueError( 'The maxvalue must not be smaller than minvalue. Given: {0} and {1}, respectively.'.format( \
-                maxvalue, minvalue) )
+            raise ValueError('The maxvalue must not be smaller than minvalue. Given: {0} and {1}, respectively.'.format( \
+                maxvalue, minvalue))
 
     # Value checking
     if not minvalue is None:
         if inputvalue < minvalue:
-            raise ValueError( 'The {0} is too small: {1}, but minimum value is {2}.'.format( \
+            raise ValueError('The {0} is too small: {1}, but minimum value is {2}.'.format( \
                 description, inputvalue, minvalue))
 
     if not maxvalue is None:
         if inputvalue > maxvalue:
-            raise ValueError( 'The {0} is too large: {1}, but maximum value is {2}.'.format( \
+            raise ValueError('The {0} is too large: {1}, but maximum value is {2}.'.format( \
                 description, inputvalue, maxvalue))
 
 
@@ -2297,7 +2309,8 @@ def _checkBool(inputvalue, description='inputvalue'):
 # Development tools #
 #####################
 
-def _print_out( inputstring ):
+
+def _print_out(inputstring):
     """Print the inputstring. To make it compatible with Python2 and Python3.
 
      Args:
@@ -2349,7 +2362,7 @@ def _getDiagnosticString():
     text += 'Variable __name__: ' + __name__ + '\n'
     text += 'Current directory: ' + os.getcwd() + '\n\n'
     text += 'Python path: \n'
-    text += '\n'.join( sys.path ) + '\n'
+    text += '\n'.join(sys.path) + '\n'
     text += '\n## End of diagnostic output ## \n'
     return text
 
@@ -2363,14 +2376,14 @@ if __name__ == '__main__':
     #print '2400 bit/s:', calculate_minimum_silent_period(2400), 's'
     #print '115200 bit/s:', calculate_minimum_silent_period(115200), 's'
 
-    _print_out( '\nTESTING MINIMALMODBUS MODULE' )
+    _print_out('\nTESTING MINIMALMODBUS MODULE')
     #instrument = Instrument('/dev/ttyUSB0', 1, MODE_ASCII)
     #instrument.serial.timeout  = 1
     #instrument.serial.baudrate = 4800
     #instrument.debug = True
 
     #_hexdecode('1a')
-    _print_out( _hexdecode('4a'))
+    _print_out(_hexdecode('4a'))
     #print repr(_calculateLrcString('A'))
     #print repr(_calculateLrcString('B'))
     #print repr(_calculateLrcString('C'))
@@ -2379,7 +2392,7 @@ if __name__ == '__main__':
     #_print_out('Setpoint: ' + str(value))
 
     #instrument.write_bit(0x0810, 1)
-    #_print_out( str(instrument.read_register(273, 1)) )
-    #_print_out( 'DONE!' )
+    #_print_out(str(instrument.read_register(273, 1)))
+    #_print_out('DONE!')
 
 pass
