@@ -861,10 +861,6 @@ or::
 
 TODO
 ----
- 
-For next release:
-  * Finetune coding style (pep8.py)
-  
 Future releases:
   * Callback for enabling/disabling RS485 transceivers
   
