@@ -871,7 +871,8 @@ Future releases:
 Maybe:
  * Improve the dummy_serial behavior, to better mimic Windows behavior. 
    Also using the number_of_bytes_to_read in the unittests.
- * Unittests for measuring the sleep time in _communicate.* Serial port flushing
+ * Unittests for measuring the sleep time in _communicate.
+ * Serial port flushing
  * Floats with other byte order
  * Handle RS485 adapters with echo functionality enabled
  * Logging instead of _print_out()

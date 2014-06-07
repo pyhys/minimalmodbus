@@ -67,7 +67,7 @@ import unittest
 import minimalmodbus
 import dummy_serial
 
-ALSO_TIME_CONSUMING_TESTS = False
+ALSO_TIME_CONSUMING_TESTS = True
 """Set this to :const:`False` to skip the most time consuming tests"""
 
 VERBOSITY = 0
@@ -78,6 +78,8 @@ SHOW_ERROR_MESSAGES_FOR_ASSERTRAISES = False
 
 If set to :const:`True`, any unintentional error messages raised during the processing of the command in :meth:`.assertRaises` are also caught (not counted). It will be printed in the short form, and will show no traceback.  It can also be useful to set :data:`VERBOSITY` = 2.
 """
+
+_LARGE_NUMBER_OF_BYTES = 1000
 
 # For compatibility with Python2.6
 _VERSION_LIMIT = 0x02070000    
@@ -2022,21 +2024,19 @@ class TestDummyCommunication(ExtendedTestCase):
 
 
     ## Communicate ##
-    
-    LARGE_NUMBER_OF_BYTES = 1000
 
     def testCommunicateKnownResponse(self):
-        self.assertEqual( self.instrument._communicate('TESTMESSAGE', LARGE_NUMBER_OF_BYTES), 'TESTRESPONSE' )
+        self.assertEqual( self.instrument._communicate('TESTMESSAGE', _LARGE_NUMBER_OF_BYTES), 'TESTRESPONSE' )
 
     def testCommunicateWrongType(self):
         for value in _NOT_STRINGS:
-            self.assertRaises(TypeError, self.instrument._communicate, value, LARGE_NUMBER_OF_BYTES)
+            self.assertRaises(TypeError, self.instrument._communicate, value, _LARGE_NUMBER_OF_BYTES)
 
     def testCommunicateNoMessage(self):
-        self.assertRaises(ValueError, self.instrument._communicate, '', LARGE_NUMBER_OF_BYTES)
+        self.assertRaises(ValueError, self.instrument._communicate, '', _LARGE_NUMBER_OF_BYTES)
 
     def testCommunicateNoResponse(self):
-        self.assertRaises(IOError, self.instrument._communicate, 'MessageForEmptyResponse', LARGE_NUMBER_OF_BYTES)
+        self.assertRaises(IOError, self.instrument._communicate, 'MessageForEmptyResponse', _LARGE_NUMBER_OF_BYTES)
 
 
     ## __repr__ ##
