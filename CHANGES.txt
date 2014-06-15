@@ -1,10 +1,16 @@
 
+Release 0.6 (2014-?-?)
+--------------------------
+* Support for Modbus ASCII mode.
+
+
 Release 0.5 (2014-03-23)
 --------------------------
 * Precalculating number of bytes to read, in order to increase the speed.
 * Better handling of several instruments on the same serial port, especially 
   for Windows.
 * Improved timing for better compliance with Modbus timing requirements.
+
 
 Release 0.4 (2012-09-08)
 --------------------------
@@ -16,16 +22,19 @@ Release 0.4 (2012-09-08)
 * Use of the Python struct module instead of own bit-tweaking internally.
 * Improved documentation.
 
+
 Release 0.3.2 (2012-01-25)
 --------------------------
 * Fine-tuned setup.py for smoother installation.
 * Improved documentation.
+
 
 Release 0.3.1 (2012-01-24)
 --------------------------
 * Improved requirements handling in setup.py
 * Adjusted MANIFEST.in not to include doc/_templates
 * Adjusted RST text formatting in README.txt
+
 
 Release 0.3 (2012-01-23)
 ------------------------

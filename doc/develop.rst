@@ -865,6 +865,8 @@ Future releases:
   * Callback for enabling/disabling RS485 transceivers
   
 Maybe:
+ * Increase test coverage for minimalmodbus.py
+ * Remove "if __name__ == '__main__'" from minimalmodbus.py
  * Improve the dummy_serial behavior, to better mimic Windows behavior. 
    Also using the number_of_bytes_to_read in the unittests.
  * Unittests for measuring the sleep time in _communicate.
@@ -876,3 +878,5 @@ Maybe:
  * Speeding up the code (new CRC calculation, disable some other checks)
  * Test with other Python versions
  
+ When available:
+  * Use Sphinx 1.3 to handle Sourceforge linkcheck errors. See https://bitbucket.org/birkenfeld/sphinx/issue/1331/linkchecker-option-to-override-user-agent

@@ -757,6 +757,8 @@ test purposes. See http://minimalmodbus.sourceforge.net/apidummyserial.html
 The test coverage analysis is found at http://minimalmodbus.sourceforge.net/htmlcov/index.html. 
 To see which parts of the code that have been tested, click the corresponding file name.    
         
+Hardware tests are performed using a Delta DTB4824 process controller. See the test subfolder for more information.
+        
 More details on the unittests are found on http://minimalmodbus.sourceforge.net/develop.html  
 
 
