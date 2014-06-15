@@ -27,6 +27,13 @@ Make sure that RUN_VERIFY_EXAMPLES and corresponding flags are all 'True'.
  * Use 2400 bps and 38400 bps
  * Use Modbus ASCII and Modbus RTU
  * Use Python 2.7 and Python 3.x 
+ 
+ 
+ Sequence (for each use Python 2.7 and 3.x):
+  * 38400 bps RTU
+  * 38400 bps ASCII
+  * 2400 bps ASCII
+  * 2400 bps RTU
 
 
 Settings in the temperature controller
@@ -34,7 +41,7 @@ Settings in the temperature controller
 To change the settings on the temperature controller panel,
 hold the SET button for more than 3 seconds.
 
-Use these setting valuess in the temperature controller:
+Use these setting values in the temperature controller:
  * SP   1    (Decimal point position)
  * CoSH on   (ON: communication write-in enabled)
  * C-SL rtu
@@ -199,8 +206,6 @@ def main():
         #instrument.read_register(0x1001)
         # ASCII mode: Request  ':010310010001EA\r\n'
         #             Response ':0103020320D7\r\n'
-        
-        
         
 
     if RUN_READOUT_PRESENT_SETTINGS:
