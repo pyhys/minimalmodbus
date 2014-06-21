@@ -2365,34 +2365,3 @@ def _getDiagnosticString():
     text += '\n'.join(sys.path) + '\n'
     text += '\n## End of diagnostic output ## \n'
     return text
-
-########################
-## Testing the module ##
-########################
-
-if __name__ == '__main__':
-
-
-    #print '2400 bit/s:', calculate_minimum_silent_period(2400), 's'
-    #print '115200 bit/s:', calculate_minimum_silent_period(115200), 's'
-
-    _print_out('\nTESTING MINIMALMODBUS MODULE')
-    #instrument = Instrument('/dev/ttyUSB0', 1, MODE_ASCII)
-    #instrument.serial.timeout  = 1
-    #instrument.serial.baudrate = 4800
-    #instrument.debug = True
-
-    #_hexdecode('1a')
-    _print_out(_hexdecode('4a'))
-    #print repr(_calculateLrcString('A'))
-    #print repr(_calculateLrcString('B'))
-    #print repr(_calculateLrcString('C'))
-
-    #value = instrument.read_register(0x1001, 1)
-    #_print_out('Setpoint: ' + str(value))
-
-    #instrument.write_bit(0x0810, 1)
-    #_print_out(str(instrument.read_register(273, 1)))
-    #_print_out('DONE!')
-
-pass
