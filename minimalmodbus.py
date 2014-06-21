@@ -1137,8 +1137,8 @@ def _predictResponseSize(mode, functioncode, payloadToSlave):
                                     number_of_registers * _NUMBER_OF_BYTES_PER_REGISTER
 
     else:
-        raise ValueError('Wrong functioncode: {}. The raw message is: {!r}'.format( \
-            functioncode, message))
+        raise ValueError('Wrong functioncode: {}. The payload is: {!r}'.format( \
+            functioncode, payloadToSlave))
 
     # Calculate number of bytes to read
     if mode == MODE_ASCII:
