@@ -478,6 +478,8 @@ Run unit tests (in the :file:`trunk/test` directory)::
     python2.7 test_all_simulated.py
     python3.2 test_all_simulated.py
 
+Also make tests using Delta DTB4824 hardware. See the file :file:`test/test_deltaDTB4824.py`
+
 Test the source distribution generation (look in the :file:`PKG-INFO` file)::
 
     python setup.py sdist
