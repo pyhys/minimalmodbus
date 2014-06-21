@@ -576,6 +576,12 @@ when it comes to RS485 communication. There are some options:
     RTS is set to True. The delay time is around 1 ms, as measured with an oscilloscope. 
     This corresponds to approx 100 bit times when running at 115200 bps, but this 
     value also includes delays caused by the Python intepreter.
+    
+**Have the transmitter constantly enabled**
+    Some users have been reporting on success for this strategy. The problem is that the master and
+    slaves have their transmitters enabled simultaneously. I guess for certain situations (and
+    being lucky with the transceiver chip) it might work. Note that you will receive your own transmitted 
+    message (local echo). To handle local echo, see http://minimalmodbus.sourceforge.net/usage.html 
 
 
 MODBUS ASCII format
@@ -694,6 +700,9 @@ echo can be done in a number of ways:
 * Shorting two of the pins in the 9-pole D-SUB connector turns off the echo for some models.
 * If based on a FTDI chip, some special program can be used to change a chip setting for disabling echo.
 
+To handle local echo, see http://minimalmodbus.sourceforge.net/usage.html 
+
+
 Serial adaptors not recognized
 ``````````````````````````````
 There have been reports on problems with serial adaptors on some platforms, 
@@ -789,7 +798,7 @@ Jonas Berg, pyhys@users.sourceforge.net
 Credits
 -------
 Significant contributions by Angelo Compagnucci, Aaron LaLonde, Asier Abalos, 
-Simon Funke, Edwin van den Oetelaar, Dominik Socha and Michael Penza.
+Simon Funke, Edwin van den Oetelaar, Dominik Socha, Luca Di Gregorio and Michael Penza.
 
 
 Feedback

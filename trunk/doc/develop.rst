@@ -866,13 +866,11 @@ Future releases:
   
 Maybe:
  * Increase test coverage for minimalmodbus.py
- * Remove "if __name__ == '__main__'" from minimalmodbus.py
  * Improve the dummy_serial behavior, to better mimic Windows behavior. 
    Also using the number_of_bytes_to_read in the unittests.
  * Unittests for measuring the sleep time in _communicate.
  * Serial port flushing
  * Floats with other byte order
- * Handle RS485 adapters with echo functionality enabled
  * Logging instead of _print_out()
  * Timing based on time.clock() for Windows
  * Speeding up the code (new CRC calculation, disable some other checks)
