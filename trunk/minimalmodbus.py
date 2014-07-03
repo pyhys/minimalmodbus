@@ -36,6 +36,7 @@ __status__   = 'Beta'
 __revision__ = '$Rev$'
 __date__     = '$Date$'
 
+import logging
 import os
 import serial
 import struct
@@ -148,6 +149,12 @@ class Instrument():
 
         New in version 0.5.
         """
+        
+        self.on_transmitter_enable = None
+        self.on_transmitter_disable = None
+        self.userdata = None
+
+
 
         if  self.close_port_after_each_call:
             self.serial.close()
@@ -837,6 +844,10 @@ class Instrument():
 
         For Python3, the information sent to and from pySerial should be of the type bytes.
         This is taken care of automatically by MinimalModbus.
+        
+        
+        
+        self.on_transmitter_enable
 
         """
 
@@ -883,7 +894,22 @@ class Instrument():
 
         # Write message
         latest_write_time = time.time()
+        
+        if self.on_transmitter_enable:
+            if self.debug:
+                _print_out('MinimalModbus debug mode. Will run "on_transmitter_enable".')
+            self.on_transmitter_enable(self, self.userdata)
+            if self.debug:
+                _print_out('MinimalModbus debug mode. Back from "on_transmitter_enable".')
+                
         self.serial.write(message)
+        
+        if self.on_transmitter_disable:
+            if self.debug:
+                _print_out('MinimalModbus debug mode. Will run "on_transmitter_disable".')
+            self.on_transmitter_disable(self, self.userdata)
+            if self.debug:
+                _print_out('MinimalModbus debug mode. Back from "on_transmitter_disable".')
 
         # Read response
         answer = self.serial.read(number_of_bytes_to_read)
