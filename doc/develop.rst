@@ -737,8 +737,8 @@ Internal link       ``:ref:`testminimalmodbus```                    :ref:`testmi
 Inline code         ````code text````                               ``code text``
 String              'A'                                             'A'
 String w escape ch. (string within inline code)                     ``'ABC\x00'``
-(less good)         (string within inline code, double backslash)   ``'ABC\\x00'`` Different somtimes! Why?
-(less good)         (string with double backslash)                  'ABC\\x00'
+(less good)         (string within inline code, double backslash)   ``'ABC\\x00'`` For use in Python docstrings.
+(less good)         (string with double backslash)                  'ABC\\x00' Avoid
 Environment var     ``:envvar:`PYTHONPATH```                        :envvar:`PYTHONPATH`
 OS-level command    ``:command:`make```                             :command:`make`
 File                ``:file:`minimalmodbus.py```                    :file:`minimalmodbus.py`
@@ -767,6 +767,22 @@ Headings
 Internal links
   * Add an internal marker ``.. _my-reference-label:`` before a heading.
   * Then make an internal link to it using ``:ref:`my-reference-label```.
+  
+Strings with backslash
+  * In Python docstrings, use raw strings (a r before the tripplequote), 
+    to have the backslashes reach Sphinx.
+
+Informative boxes
+  * ``.. seealso:: Example of a **seealso** box.`` 
+  * ``.. note:: Example of a **note** box.`` 
+  * ``.. warning:: Example of a **warning** box.`` 
+  
+.. seealso:: Example of a **seealso** box.
+
+.. note:: Example of a **note** box.
+
+.. warning:: Example of a **warning** box.
+
 
 Useful Sphinx-related links
 ```````````````````````````

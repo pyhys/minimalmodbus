@@ -1533,6 +1533,10 @@ class TestPrintOut(ExtendedTestCase):
             self.assertRaises(TypeError, minimalmodbus._print_out, value)
 
 
+# TODO: TestInterpretRawMessage
+
+# TODO: TestInterpretPayload
+
 ###########################################
 # Communication using a dummy serial port #
 ###########################################
@@ -2038,6 +2042,9 @@ class TestDummyCommunication(ExtendedTestCase):
     def testCommunicateNoResponse(self):
         self.assertRaises(IOError, self.instrument._communicate, 'MessageForEmptyResponse', _LARGE_NUMBER_OF_BYTES)
 
+    # TODO: test local echo
+    # Test Handle local echo
+    # Test local error not matching sent message
 
     ## __repr__ ##
 
