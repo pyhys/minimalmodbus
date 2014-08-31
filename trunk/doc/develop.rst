@@ -580,9 +580,7 @@ Marketing
 ````````````
   * Mailing list
   * Sourceforge project news
-  * Freecode (former Freshmeat)
-  * Facebook
-
+  
 
 Applying patches
 -------------------------------------------------
@@ -884,6 +882,7 @@ Future releases:
   
 Maybe:
  * Increase test coverage for minimalmodbus.py
+ * Improve debug messages to include hex values, not just bytestrings.
  * Improve the dummy_serial behavior, to better mimic Windows behavior. 
    Also using the number_of_bytes_to_read in the unittests.
  * Unittests for measuring the sleep time in _communicate.
@@ -893,6 +892,8 @@ Maybe:
  * Timing based on time.clock() for Windows
  * Speeding up the code (new CRC calculation, disable some other checks)
  * Test with other Python versions
+ * Change 'message' to 'request' variable names in the source code
+ * Developer: signature for hardware testing  ???
  
  When available:
   * Use Sphinx 1.3 to handle Sourceforge linkcheck errors. See https://bitbucket.org/birkenfeld/sphinx/issue/1331/linkchecker-option-to-override-user-agent

@@ -904,12 +904,13 @@ class Instrument():
         # Write message
         latest_write_time = time.time()
         
+               
         if self.on_transmitter_enable:
             if self.debug:
-                _print_out('MinimalModbus debug mode. Will run "on_transmitter_enable".')
+                _print_out('\nMinimalModbus debug mode. Will run "on_transmitter_enable".')
             self.on_transmitter_enable(self, self.userdata)
             if self.debug:
-                _print_out('MinimalModbus debug mode. Back from "on_transmitter_enable".')
+                _print_out('MinimalModbus debug mode. Back from "on_transmitter_enable".\n')
                 
         self.serial.write(message)
 
@@ -925,13 +926,14 @@ class Instrument():
                 text = template.format(message, len(message), localEchoToDiscard, len(localEchoToDiscard))
                 raise IOError(text)
 
+        self.serial.setRTS(level=True) # 5 V
         
         if self.on_transmitter_disable:
             if self.debug:
-                _print_out('MinimalModbus debug mode. Will run "on_transmitter_disable".')
+                _print_out('\nMinimalModbus debug mode. Will run "on_transmitter_disable".')
             self.on_transmitter_disable(self, self.userdata)
             if self.debug:
-                _print_out('MinimalModbus debug mode. Back from "on_transmitter_disable".')
+                _print_out('MinimalModbus debug mode. Back from "on_transmitter_disable".\n')
 
         # Read response
         answer = self.serial.read(number_of_bytes_to_read)

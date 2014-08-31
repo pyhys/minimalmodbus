@@ -622,7 +622,7 @@ Where:
 
 Manual testing of Modbus equipment
 ------------------------------------------
-Look in your equipment's manual to find working communication examples
+Look in your equipment's manual to find working communication examples.
 
 You can make a small Python program to test the communication::
 
@@ -633,23 +633,20 @@ You can make a small Python program to test the communication::
     print ser
 
     ser.write(':010310010001EA\r\n')
-    print ser.read(1000) # Read 1000 bytes, or wait for timeout
+    print repr(ser.read(1000)) # Read 1000 bytes, or wait for timeout
 
 It should print something like::
 
     Serial<id=0x9faa08c, open=True>(port='/dev/ttyUSB0', baudrate=19200, bytesize=8, parity='N', stopbits=1, timeout=1, xonxoff=False, rtscts=False, dsrdtr=False)
     :0103020136C3
 
-Correspondingly for Modbus ASCII::
+Correspondingly for Modbus ASCII, change the write command to for example::
 
-    import serial
-    ser = serial.Serial('/dev/ttyUSB0', 19200, timeout=1)
-    print ser
+    TODO: Verify
 
     ser.write(':010310010001EA\r\n')
-    print ser.read(1000) # Read 1000 bytes, or wait for timeout
 
-It should print something like::
+It should then print something like::
 
     Serial<id=0x9faa08c, open=True>(port='/dev/ttyUSB0', baudrate=19200, bytesize=8, parity='N', stopbits=1, timeout=1, xonxoff=False, rtscts=False, dsrdtr=False)
     :0103020136C3
@@ -733,6 +730,10 @@ echo can be done in a number of ways:
 
 To handle local echo, see http://minimalmodbus.sourceforge.net/usage.html 
 
+Empty bytes added in the beginning or the end on the received message
+``````````````````````````````````````````````````````````````````````
+This is due to interfercece. Use biasing of modbus lines, by connecting resistors 
+to gnd and Vcc from the the two lines. This is sometimes named "failsafe".
 
 Serial adaptors not recognized
 ``````````````````````````````
