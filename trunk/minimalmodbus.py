@@ -31,7 +31,7 @@ __email__    = 'pyhys@users.sourceforge.net'
 __url__      = 'http://minimalmodbus.sourceforge.net/'
 __license__  = 'Apache License, Version 2.0'
 
-__version__  = '0.6'
+__version__  = '0.6.2'
 __status__   = 'Beta'
 __revision__ = '$Rev$'
 __date__     = '$Date$'
@@ -149,6 +149,15 @@ class Instrument():
 
         New in version 0.5.
         """
+        
+        self.handle_local_echo = False
+        """Enable this if your RS-485 adaptor has local echo enabled. 
+        Then the transmitted message will appear at the receive line of the RS-485 adaptor.
+        MinimalModbus will then read and discard this data, before reading the data from the slave.
+
+        New in version 0.7.
+        """
+        
         
         self.on_transmitter_enable = None
         self.on_transmitter_disable = None
@@ -903,6 +912,19 @@ class Instrument():
                 _print_out('MinimalModbus debug mode. Back from "on_transmitter_enable".')
                 
         self.serial.write(message)
+
+        if self.handle_local_echo:
+            localEchoToDiscard = self.serial.read(len(message))
+            if self.debug:
+                template = 'MinimalModbus debug mode. Discarding this local echo: {!r} ({} bytes).' 
+                text = template.format(localEchoToDiscard, len(localEchoToDiscard))
+                _print_out(text)
+            if localEchoToDiscard != message:
+                template = 'Local echo handling is enabled, but the local echo does not match the sent message. ' + \
+                    'Message: {!r} ({} bytes), local echo: {!r} ({} bytes).' 
+                text = template.format(message, len(message), localEchoToDiscard, len(localEchoToDiscard))
+                raise IOError(text)
+
         
         if self.on_transmitter_disable:
             if self.debug:
@@ -2339,7 +2361,7 @@ def _checkBool(inputvalue, description='inputvalue'):
 def _print_out(inputstring):
     """Print the inputstring. To make it compatible with Python2 and Python3.
 
-     Args:
+    Args:
         inputstring (str): The string that should be printed.
 
     Raises:
@@ -2350,6 +2372,158 @@ def _print_out(inputstring):
 
     sys.stdout.write(inputstring + '\n')
 
+
+def _interpretRawMessage(inputstr):
+    r"""Generate a human readable description of a Modbus bytestring.
+    
+    Args:
+        inputstr (str): The bytestring that should be interpreted.
+
+    Returns:
+        A descriptive string.
+
+    For example, the string ``'\n\x03\x10\x01\x00\x01\xd0q'`` should give something like::
+        
+        TODO: update
+    
+        Modbus bytestring decoder
+        Input string (length 8 characters): '\n\x03\x10\x01\x00\x01\xd0q'
+        Probably modbus RTU mode.
+        Slave address: 10 (dec). Function code: 3 (dec).
+        Valid message. Extracted payload: '\x10\x01\x00\x01'
+
+        Pos   Character Hex  Dec  Probable interpretation 
+        -------------------------------------------------
+          0:  '\n'      0A    10  Slave address 
+          1:  '\x03'    03     3  Function code 
+          2:  '\x10'    10    16  Payload    
+          3:  '\x01'    01     1  Payload    
+          4:  '\x00'    00     0  Payload    
+          5:  '\x01'    01     1  Payload    
+          6:  '\xd0'    D0   208  Checksum, CRC LSB 
+          7:  'q'       71   113  Checksum, CRC MSB 
+
+    """
+    
+    output = ''
+    output += 'Modbus bytestring decoder\n'
+    output += 'Input string (length {} characters): {!r} \n'.format(len(inputstr), inputstr)
+
+    # Detect modbus type
+    if inputstr.startswith(_ASCII_HEADER) and inputstr.endswith(_ASCII_FOOTER):
+        mode = MODE_ASCII
+    else:
+        mode = MODE_RTU
+    output += 'Probably modbus {} mode.\n'.format(mode.upper())
+
+    # Extract slave address and function code
+    try:
+        if mode == MODE_ASCII:
+            slaveaddress = int(inputstr[1:3])
+            functioncode = int(inputstr[3:5])
+        else:
+            slaveaddress = ord(inputstr[0])
+            functioncode = ord(inputstr[1])
+        output += 'Slave address: {} (dec). Function code: {} (dec).\n'.format(slaveaddress, functioncode)
+    except:
+        output += '\nCould not extract slave address and function code. \n\n'
+
+    # Check message validity
+    try:
+        extractedpayload = _extractPayload(inputstr, slaveaddress, mode, functioncode)
+        output += 'Valid message. Extracted payload: {!r}\n'.format(extractedpayload)
+    except (ValueError, TypeError) as err:
+        output += '\nThe message does not seem to be valid modbus {}. Error message: \n{}. \n\n'.format(mode.upper(), err.message)
+    except NameError as err:
+        output += '\nNo message validity checking. \n\n' # Slave address or function code not available
+
+    # Generate table describing the message
+    if mode == MODE_RTU:
+        output += '\nPos   Character Hex  Dec  Probable interpretation \n'
+        output += '------------------------------------------------- \n'
+        for i, character in enumerate(inputstr):
+            if i==0:
+                description = 'Slave address'
+            elif i==1:
+                description = 'Function code'
+            elif i==len(inputstr)-2:
+                description = 'Checksum, CRC LSB'
+            elif i==len(inputstr)-1:
+                description = 'Checksum, CRC MSB'
+            else:
+                description = 'Payload'
+            output += '{0:3.0f}:  {1!r:<8}  {2:02X}  {2: 4.0f}  {3:<10} \n'.format(i, character, ord(character), description)
+        
+    elif mode == MODE_ASCII:
+        output += '\nPos   Character(s) Converted  Hex  Dec  Probable interpretation \n'
+        output += '--------------------------------------------------------------- \n'
+        
+        i = 0
+        while i < len(inputstr):
+            
+            if inputstr[i] in [':', '\r', '\n']:
+                if inputstr[i] == ':': 
+                    description = 'Start character'
+                else:
+                    description = 'Stop character'
+                    
+                output += '{0:3.0f}:  {1!r:<8}                          {2} \n'.format(i, inputstr[i], description)
+                i += 1
+                
+            else:
+                if i == 1:
+                    description = 'Slave address'
+                elif i == 3:
+                    description = 'Function code'
+                elif i == len(inputstr)-4:
+                    description = 'Checksum (LRC)'
+                else:
+                    description = 'Payload'
+                
+                try:
+                    hexvalue = _hexdecode(inputstr[i:i+2])
+                    output +=  '{0:3.0f}:  {1!r:<8}     {2!r}     {3:02X}  {3: 4.0f}  {4} \n'.format(i, inputstr[i:i+2], hexvalue, ord(hexvalue), description)
+                except:
+                    output +=  '{0:3.0f}:  {1!r:<8}     ?           ?     ?  {2} \n'.format(i, inputstr[i:i+2], description)
+                i += 2
+        
+    # Generate table describing the payload
+    output += '\n\n'
+    try:
+        output += _interpretPayload(functioncode, extractedpayload)
+    except:
+        output += '\nCould not interpret the payload. \n\n' # Payload or function code not available
+    
+    return output
+    
+
+def _interpretPayload(functioncode, payload):
+    r"""Generate a human readable description of a Modbus payload.
+    
+    Args:
+      * functioncode (int): Function code
+      * payload (str): The payload that should be interpreted. It should be a byte string.
+
+    Returns:
+        A descriptive string.
+
+    For example, the payload ``'\x10\x01\x00\x01'`` for functioncode 3 should give something like::
+    
+        TODO: Update
+    
+
+    """
+    output = ''
+    output += 'Modbus payload decoder\n'
+    output += 'Input payload (length {} characters): {!r} \n'.format(len(payload), payload)
+    output += 'Function code: {} (dec).\n'.format(functioncode)
+    
+    if len(payload) == 4:
+        FourbyteMessageFirstHalfValue = _twoByteStringToNum(payload[0:2])
+        FourbyteMessageSecondHalfValue = _twoByteStringToNum(payload[2:4])
+
+
+    return output
 
 def _getDiagnosticString():
     """Generate a diagnostic string, showing the module version, the platform, current directory etc.
