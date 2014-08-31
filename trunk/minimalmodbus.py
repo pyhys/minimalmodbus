@@ -2414,7 +2414,7 @@ def _interpretRawMessage(inputstr):
         mode = MODE_ASCII
     else:
         mode = MODE_RTU
-    output += 'Probably modbus {} mode.\n'.format(mode.upper())
+    output += 'Probably Modbus {} mode.\n'.format(mode.upper())
 
     # Extract slave address and function code
     try:
@@ -2433,7 +2433,7 @@ def _interpretRawMessage(inputstr):
         extractedpayload = _extractPayload(inputstr, slaveaddress, mode, functioncode)
         output += 'Valid message. Extracted payload: {!r}\n'.format(extractedpayload)
     except (ValueError, TypeError) as err:
-        output += '\nThe message does not seem to be valid modbus {}. Error message: \n{}. \n\n'.format(mode.upper(), err.message)
+        output += '\nThe message does not seem to be valid Modbus {}. Error message: \n{}. \n\n'.format(mode.upper(), err.message)
     except NameError as err:
         output += '\nNo message validity checking. \n\n' # Slave address or function code not available
 
@@ -2487,7 +2487,7 @@ def _interpretRawMessage(inputstr):
                     output +=  '{0:3.0f}:  {1!r:<8}     ?           ?     ?  {2} \n'.format(i, inputstr[i:i+2], description)
                 i += 2
         
-    # Generate table describing the payload
+    # Generate description for the payload
     output += '\n\n'
     try:
         output += _interpretPayload(functioncode, extractedpayload)

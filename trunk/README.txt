@@ -558,30 +558,43 @@ when it comes to RS485 communication. There are some options:
     which I have been using with great success.
 
 **Using a converter where the TXENABLE pin is controlled by the TX pin, sometimes via some timer circuit**
-    I am not conviced that this is a good idea.
-
-**Controlling a separate GPIO pin from kernelspace software on embedded Linux machines** 
-    See for example http://blog.savoirfairelinux.com/en/2013/rs-485-for-beaglebone-a-quick-peek-at-the-omap-uart/ 
-    This is a very elegant solution, as the TXENABLE pin is controlled by the 
-    kernel driver and you don't have to worry about it in your application program.
-
-**Controlling a separate GPIO pin from userspace software on embedded Linux machines**
-    This could also be useful, but I guess that the time delay could be unacceptably large.
-
-**Controlling the RTS pin in the RS232 interface, and connecting it to the TXENABLE pin of the transceiver**
-    This can be done from userspace, but will then lead to large time delays. 
-    I have tested this with a 3.3V FTDI  USB-to-serial cable using pySerial 
-    on a Linux laptop. The cable has a RTS output, 
-    but no TXDEN output. Note that the RTS output is +3.3 V at idle, and 0 V when 
-    RTS is set to True. The delay time is around 1 ms, as measured with an oscilloscope. 
-    This corresponds to approx 100 bit times when running at 115200 bps, but this 
-    value also includes delays caused by the Python intepreter.
+    I am not conviced that it is a good idea to control the TXENABLE pin by the TX pin, 
+    as only one of the logic levels are actively driving the bus voltage. 
+    If using a timer circuit, the hardware needs to be adjusted to the baudrate.
     
 **Have the transmitter constantly enabled**
     Some users have been reporting on success for this strategy. The problem is that the master and
     slaves have their transmitters enabled simultaneously. I guess for certain situations (and
     being lucky with the transceiver chip) it might work. Note that you will receive your own transmitted 
     message (local echo). To handle local echo, see http://minimalmodbus.sourceforge.net/usage.html 
+
+**Controlling a separate GPIO pin from kernelspace software on embedded Linux machines** 
+    See for example http://blog.savoirfairelinux.com/en/2013/rs-485-for-beaglebone-a-quick-peek-at-the-omap-uart/ 
+    This is a very elegant solution, as the TXENABLE pin is controlled by the 
+    kernel driver and you don't have to worry about it in your application program. 
+    Unfortunately this is not available for all boards, for example the standard distribution for 
+    Beaglebone (September 2014).
+
+**Controlling a separate GPIO pin from userspace software on embedded Linux machines**
+    This will give large time delays, but might be acceptable for low speeds. See below.
+
+**Controlling the RTS pin in the RS232 interface (from userspace), and connecting it to the TXENABLE pin of the transceiver**
+    This will give large time delays, but might be acceptable for low speeds. See below.
+    
+**RTS toggle on Windows machines
+    TODO: Look into this
+    
+Controlling the RS-485 transceiver from userspace
+----------------------------------------------------
+As described above, this should be avoided. Nevertheless, for low speeds (maybe up to 9600 bits/s) it might be useful.
+
+   This can be done from userspace, but will then lead to large time delays. 
+    I have tested this with a 3.3V FTDI  USB-to-serial cable using pySerial 
+    on a Linux laptop. The cable has a RTS output, 
+    but no TXDEN output. Note that the RTS output is +3.3 V at idle, and 0 V when 
+    RTS is set to True. The delay time is around 1 ms, as measured with an oscilloscope. 
+    This corresponds to approx 100 bit times when running at 115200 bps, but this 
+    value also includes delays caused by the Python intepreter.
 
 
 MODBUS ASCII format
@@ -607,9 +620,27 @@ Where:
  * The LRC is a longitudinal redundancy check code, for error checking of the message.
  * The stop characters are carriage return ('\r' = ``'\x0D'``) and line feed ('\n' = ``'\x0A'``).
 
-Manual testing of Modbus ASCII equipment
+Manual testing of Modbus equipment
 ------------------------------------------
+Look in your equipment's manual to find working communication examples
+
 You can make a small Python program to test the communication::
+
+    TODO: RTU example
+
+    import serial
+    ser = serial.Serial('/dev/ttyUSB0', 19200, timeout=1)
+    print ser
+
+    ser.write(':010310010001EA\r\n')
+    print ser.read(1000) # Read 1000 bytes, or wait for timeout
+
+It should print something like::
+
+    Serial<id=0x9faa08c, open=True>(port='/dev/ttyUSB0', baudrate=19200, bytesize=8, parity='N', stopbits=1, timeout=1, xonxoff=False, rtscts=False, dsrdtr=False)
+    :0103020136C3
+
+Correspondingly for Modbus ASCII::
 
     import serial
     ser = serial.Serial('/dev/ttyUSB0', 19200, timeout=1)
