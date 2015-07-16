@@ -1,11 +1,20 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 # Do not import non-standard modules here, as it will mess up the installation in clients.
 import re
-from distutils.core import setup
 
-with open('README.txt') as readmefile:
-    long_description = readmefile.read()
+try:
+    from setuptools import setup
+except ImportError:
+    from distutils.core import setup
+
+
+with open('README.rst') as readme_file:
+    readme = readme_file.read()
+
+with open('HISTORY.rst') as history_file:
+    history = history_file.read().replace('.. :changelog:', '')
 
 # Read version number etc from other file
 # http://stackoverflow.com/questions/2058802/how-can-i-get-the-version-defined-in-setup-py-setuptools-in-my-package
@@ -13,18 +22,22 @@ with open('minimalmodbus.py') as mainfile:
     main_py = mainfile.read()
 metadata = dict( re.findall(r"__([a-z]+)__ *= *'([^']+)'", main_py) )
 
-setup(name       = 'MinimalModbus',
+setup(
+    name='minimalmodbus',
     version      = metadata['version'],
     license      = metadata['license'],
     author       = metadata['author'],
     author_email = metadata['email'],
     url          = metadata['url'],
-    keywords     = 'modbus serial RTU ASCII',
-    description  = 'Easy-to-use Modbus RTU and Modbus ASCII implementation for Python',
-    long_description = long_description,
-    py_modules = ['minimalmodbus', 'eurotherm3500', 'omegacn7500', 'dummy_serial'],
+    description="Easy-to-use Modbus RTU and Modbus ASCII implementation for Python",
+    long_description=readme + '\n\n' + history,
+    include_package_data=True,
     install_requires = ['pyserial'],
-    classifiers = [ 
+    py_modules = ['minimalmodbus', 'eurotherm3500', 'omegacn7500', 'dummy_serial'],
+    zip_safe=False,
+    keywords='minimalmodbus modbus serial RTU ASCII',
+    classifiers=[
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'Intended Audience :: Information Technology',
         'Intended Audience :: Science/Research',
@@ -45,11 +58,7 @@ setup(name       = 'MinimalModbus',
         'Topic :: Software Development :: Libraries :: Python Modules',
         'Topic :: System :: Hardware :: Hardware Drivers',
         'Topic :: Terminals :: Serial',
-        ],
-    )
-
-# See PEP396 how to derive the version number from the source file: http://www.python.org/dev/peps/pep-0396/#deriving
-
-# Note that additional files for inclusion are defined in MANIFEST.in
-
-
+    ],
+    test_suite='tests',
+    tests_require=[]
+)

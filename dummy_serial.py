@@ -21,8 +21,8 @@
 
 dummy_serial: A dummy/mock implementation of a serial port for testing purposes.
 
-This Python file was changed (committed) at $Date$,
-which was $Revision$.
+This Python file was changed (committed) at $Date: 2014-03-23 17:12:58 +0100 $,
+which was $Revision: 178 $.
 
 """
 
@@ -30,8 +30,8 @@ __author__  = 'Jonas Berg'
 __email__   = 'pyhys@users.sourceforge.net'
 __license__ = 'Apache License, Version 2.0'
 
-__revision__  = '$Rev$'
-__date__      = '$Date$'
+__revision__  = '$Rev: 178 $'
+__date__      = '$Date: 2014-03-23 17:12:58 +0100  $'
 
 import sys
 import time

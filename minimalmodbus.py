@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#   Copyright 2014 Jonas Berg
+#   Copyright 2015 Jonas Berg
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -21,20 +21,20 @@
 
 MinimalModbus: A Python driver for the Modbus RTU protocol via serial port (via RS485 or RS232).
 
-This Python file was changed (committed) at $Date$,
-which was $Revision$.
+This Python file was changed (committed) at $Date: 2014-08-31 14:54:31 +0200 $,
+which was $Revision: 205 $.
 
 """
 
 __author__   = 'Jonas Berg'
 __email__    = 'pyhys@users.sourceforge.net'
-__url__      = 'http://minimalmodbus.sourceforge.net/'
+__url__      = 'https://github.com/pyhys/minimalmodbus'
 __license__  = 'Apache License, Version 2.0'
 
-__version__  = '0.6.2'
+__version__  = '0.6.2aa'
 __status__   = 'Beta'
-__revision__ = '$Rev$'
-__date__     = '$Date$'
+__revision__ = '$Rev: 205 $'
+__date__     = '$Date: 2014-08-31 14:54:31 +0200$'
 
 import logging
 import os
@@ -157,13 +157,6 @@ class Instrument():
 
         New in version 0.7.
         """
-        
-        
-        self.on_transmitter_enable = None
-        self.on_transmitter_disable = None
-        self.userdata = None
-
-
 
         if  self.close_port_after_each_call:
             self.serial.close()
@@ -855,8 +848,6 @@ class Instrument():
         This is taken care of automatically by MinimalModbus.
         
         
-        
-        self.on_transmitter_enable
 
         """
 
@@ -904,14 +895,6 @@ class Instrument():
         # Write message
         latest_write_time = time.time()
         
-               
-        if self.on_transmitter_enable:
-            if self.debug:
-                _print_out('\nMinimalModbus debug mode. Will run "on_transmitter_enable".')
-            self.on_transmitter_enable(self, self.userdata)
-            if self.debug:
-                _print_out('MinimalModbus debug mode. Back from "on_transmitter_enable".\n')
-                
         self.serial.write(message)
 
         if self.handle_local_echo:
@@ -925,15 +908,6 @@ class Instrument():
                     'Message: {!r} ({} bytes), local echo: {!r} ({} bytes).' 
                 text = template.format(message, len(message), localEchoToDiscard, len(localEchoToDiscard))
                 raise IOError(text)
-
-        self.serial.setRTS(level=True) # 5 V
-        
-        if self.on_transmitter_disable:
-            if self.debug:
-                _print_out('\nMinimalModbus debug mode. Will run "on_transmitter_disable".')
-            self.on_transmitter_disable(self, self.userdata)
-            if self.debug:
-                _print_out('MinimalModbus debug mode. Back from "on_transmitter_disable".\n')
 
         # Read response
         answer = self.serial.read(number_of_bytes_to_read)
@@ -1824,7 +1798,7 @@ def _twosComplement(x, bits=16):
     """Calculate the two's complement of an integer.
 
     Then also negative values can be represented by an upper range of positive values.
-    See http://en.wikipedia.org/wiki/Two%27s_complement
+    See https://en.wikipedia.org/wiki/Two%27s_complement
 
     Args:
         * x (int): input integer.
