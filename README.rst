@@ -11,16 +11,17 @@ MinimalModbus
 
 Easy-to-use Modbus RTU and Modbus ASCII implementation for Python
 
-* Free software: Apache 2.0 license
-* Documentation: https://minimalmodbus.readthedocs.org.
-* Source code on GitHub: https://github.com/pyhys/minimalmodbus
-* Python package index (PyPI) with download: https://pypi.python.org/pypi/MinimalModbus/ 
+ * Free software: Apache 2.0 license
+ * Documentation: https://minimalmodbus.readthedocs.org.
+ * Source code on GitHub: https://github.com/pyhys/minimalmodbus
+ * Python package index (PyPI) with download: https://pypi.python.org/pypi/MinimalModbus/ 
 
 Other web sites:
-* Readthedocs project page: https://readthedocs.org/projects/minimalmodbus/
-* Old sourgeforce documentation page: http://minimalmodbus.sourceforge.net/
-* Old sourgeforce project page: http://sourceforge.net/projects/minimalmodbus
-* Old sourgeforce repository: http://sourceforge.net/p/minimalmodbus/code/
+ * Readthedocs project page: https://readthedocs.org/projects/minimalmodbus/
+ * Old Sourceforge documentation page: http://minimalmodbus.sourceforge.net/
+ * Old Sourceforge project page: http://sourceforge.net/projects/minimalmodbus
+ * Old Sourceforge repository: http://sourceforge.net/p/minimalmodbus/code/
+
 
 Features
 --------
