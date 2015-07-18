@@ -1,3 +1,5 @@
+.. _usage:
+
 ========
 Usage
 ========
@@ -79,8 +81,7 @@ why we use 1 decimal. To read this data from the instrument::
     NEW_TEMPERATURE = 95
     instrument.write_register(24, NEW_TEMPERATURE, 1) # Registernumber, value, number of decimals for storage
 
-The full API for MinimalModbus is available on http://minimalmodbus.sourceforge.net/apiminimalmodbus.html, and the 
-documentation in PDF format is found on http://minimalmodbus.sourceforge.net/minimalmodbus.pdf
+The full API for MinimalModbus is available in :ref:`apiminimalmodbus`.
 
 Correspondingly for Modbus ASCII mode::
 
@@ -116,7 +117,7 @@ Correspondingly, to use the driver for Omega CN7500::
     
     print instrument.get_pv() # print temperature
 
-More on the usage of MinimalModbus is found on http://minimalmodbus.sourceforge.net/usage.html
+More on the usage of MinimalModbus is found in :ref:`detailedusage`. 
 
 
 Default values

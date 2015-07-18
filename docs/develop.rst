@@ -618,6 +618,9 @@ Each of these have some additional information below on this page.
 SVN
    Version control software. See http://subversion.apache.org/  
    
+Git
+   Version control software. See https://git-scm.com/
+
 Sphinx
    For generating HTML documentation. See http://sphinx-doc.org/ 
 
@@ -632,7 +635,7 @@ pep8.py
   
    
 Subversion (svn) usage
------------------------------------------------------------------------------   
+---------------------------
 Subversion provides an easy way to share code with each other. You can find all MinimalModbus files on the subversion repository on http://sourceforge.net/p/minimalmodbus/code/ Look in the trunk subfolder.
 
 
@@ -715,6 +718,33 @@ Go to the minimalmodbus/trunk directory::
 Test it using (adapt path to your system)::
 
    python /usr/local/lib/python2.6/dist-packages/minimalmodbus.py
+
+
+
+Git usage
+---------------------------
+
+Clone::
+
+    git clone https://github.com/pyhys/minimalmodbus.git
+
+Show details::
+
+    git remote -v
+    git status
+    git branch
+
+Stage changes::
+
+    git add testb.txt
+
+Commit locally::
+
+    git commit -m "test1"
+
+Commit remotely (will ask for Github username and password):
+
+    git push origin
 
 
 Sphinx usage
@@ -907,6 +937,6 @@ Maybe:
  * Logging instead of _print_out()
  * Timing based on time.clock() for Windows
  * Change 'message' to 'request' variable names in the source code
- * Developer: signature for hardware testing  ???
+
  
 

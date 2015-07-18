@@ -56,8 +56,6 @@ __author__  = "Jonas Berg"
 __email__   = "pyhys@users.sourceforge.net"
 __license__ = "Apache License, Version 2.0"
 
-__revision__  = "???"
-__date__      = "??"
 
 import sys
 import unittest

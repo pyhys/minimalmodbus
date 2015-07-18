@@ -20,10 +20,6 @@
 .. moduleauthor:: Jonas Berg <pyhys@users.sourceforge.net>
 
 MinimalModbus: A Python driver for the Modbus RTU protocol via serial port (via RS485 or RS232).
-
-This Python file was changed (committed) at $Date: 2014-08-31 14:54:31 +0200 $,
-which was $Revision: 205 $.
-
 """
 
 __author__   = 'Jonas Berg'
@@ -33,8 +29,7 @@ __license__  = 'Apache License, Version 2.0'
 
 __version__  = '0.6.2aa'
 __status__   = 'Beta'
-__revision__ = '$Rev: 205 $'
-__date__     = '$Date: 2014-08-31 14:54:31 +0200$'
+
 
 import logging
 import os
@@ -100,7 +95,7 @@ class Instrument():
     Args:
         * port (str): The serial port name, for example ``/dev/ttyUSB0`` (Linux), ``/dev/tty.usbserial`` (OS X) or ``COM4`` (Windows).
         * slaveaddress (int): Slave address in the range 1 to 247 (use decimal numbers, not hex).
-        * mode (str): Mode selection. Can be MODE_RTU or MODE_ASCII!
+        * mode (str): Mode selection. Can be MODE_RTU or MODE_ASCII.
 
     """
 
@@ -2511,8 +2506,6 @@ def _getDiagnosticString():
     text = '\n## Diagnostic output from minimalmodbus ## \n\n'
     text += 'Minimalmodbus version: ' + __version__ + '\n'
     text += 'Minimalmodbus status: ' + __status__ + '\n'
-    text += 'Revision: ' + __revision__ + '\n'
-    text += 'Revision date: ' + __date__ + '\n'
     text += 'File name (with relative path): ' + __file__ + '\n'
     text += 'Full file path: ' + os.path.abspath(__file__) + '\n\n'
     text += 'pySerial version: ' + serial.VERSION + '\n'

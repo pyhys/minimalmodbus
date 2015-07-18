@@ -21,19 +21,12 @@
 
 Driver for the Omega CN7500 process controller, for communication using the Modbus RTU protocol.
 
-This Python file was changed (committed) at 
-$Date: 2012-01-22 13:40:37 +0100  $, 
-which was $Revision: 122 $.
-
 """
 
 import minimalmodbus
 
 __author__  = "Aaron LaLonde "
 __license__ = "Apache License, Version 2.0"
-
-__revision__  = "$Rev: 122 $"
-__date__      = "$Date: 2012-01-22 13:40:37 +0100  $"
 
 
 SETPOINT_MAX = 999.9

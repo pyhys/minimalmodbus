@@ -1,3 +1,5 @@
+.. _troubleshooting:
+
 ================
 Trouble shooting
 ================
@@ -20,7 +22,7 @@ The corresponding settings should also be used in MinimalModbus. Check also your
 * Port name
 
 For troubleshooting, it is recommended to use interactive mode with debug 
-enabled. See http://minimalmodbus.sourceforge.net/usage.html#interactive-usage
+enabled. See :ref:`interactiveusage`.
 
 If there is no response from your instrument, you can try using a lower 
 baud rate, or to adjust the timeout setting.
@@ -57,13 +59,13 @@ echo can be done in a number of ways:
 * Shorting two of the pins in the 9-pole D-SUB connector turns off the echo for some models.
 * If based on a FTDI chip, some special program can be used to change a chip setting for disabling echo.
 
-To handle local echo, see http://minimalmodbus.sourceforge.net/usage.html 
+To handle local echo, see :ref:`handlelocalecho`.
 
 
 Empty bytes added in the beginning or the end on the received message
 ---------------------------------------------------------------------
-This is due to interfercece. Use biasing of modbus lines, by connecting resistors 
-to gnd and Vcc from the the two lines. This is sometimes named "failsafe".
+This is due to interference. Use biasing of modbus lines, by connecting resistors 
+to GND and Vcc from the the two lines. This is sometimes named "failsafe".
 
 
 Serial adaptors not recognized
@@ -112,6 +114,7 @@ it is still possible to make MinimalModbus close the serial port after each call
     instrument = minimalmodbus.Instrument('/dev/ttyUSB1', 1) # port name, slave address (in decimal)
     print instrument.read_register(289, 1) 
 
+.. _support:
 
 Support
 -------
@@ -123,7 +126,7 @@ Describe the problem in detail, and include any error messsages. Please also inc
   >>> print minimalmodbus._getDiagnosticString()
 
 Note that it can be very helpful to switch on the debug mode, where the communication 
-details are printed. See the 'Debug mode' section.
+details are printed. See :ref:`debugmode`.
 
 Describe which instrument model you are using, and possibly a link to online PDF documentation for it.
 

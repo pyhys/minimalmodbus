@@ -16,8 +16,8 @@
 #
 
 """
-
 .. moduleauthor:: Jonas Berg <pyhys@users.sourceforge.net>
+
 """
 
 __author__  = "Jonas Berg"

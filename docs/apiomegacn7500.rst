@@ -5,4 +5,3 @@ API for the Omega CN7500 example driver
    :members:
    :undoc-members:
    :show-inheritance:
-   :noindex:

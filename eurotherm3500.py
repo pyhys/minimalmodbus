@@ -21,10 +21,6 @@
 
 Driver for the Eurotherm3500 process controller, for communication via the Modbus RTU protocol.
 
-This Python file was changed (committed) at 
-$Date: 2012-08-26 16:14:30 +0200  $, 
-which was $Revision: 155 $.
-
 """
 
 import minimalmodbus
@@ -33,8 +29,6 @@ __author__  = "Jonas Berg"
 __email__   = "pyhys@users.sourceforge.net"
 __license__ = "Apache License, Version 2.0"
 
-__revision__  = "$Rev: 155 $"
-__date__      = "$Date: 2012-08-26 16:14:30 +0200 $"
 
 class Eurotherm3500( minimalmodbus.Instrument ):
     """Instrument class for Eurotherm 3500 process controller. 

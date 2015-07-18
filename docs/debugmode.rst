@@ -2,6 +2,7 @@
 Debug mode
 ==========
 
+.. _debugmode:
    
 Debug mode
 ----------
@@ -118,13 +119,13 @@ Special characters
 Some ASCII control characters have representations like ``\n``, 
 and their meanings are described in this table:
 
-=================== ================= =============== =============== ======================
-``repr()`` shows as Can be written as ASCII hex value ASCII dec value Description
-=================== ================= =============== =============== ======================
-``\t``              ``\x09``           09              9               Horizontal Tab (TAB)
-``\n``              ``\x0a``           0a              10              Linefeed (LF)
-``\r``              ``\x0d``           0d              13              Carriage Return (CR)
-=================== ================= =============== =============== ======================
+=================== ================= ========== ========== ======================
+``repr()`` shows as Can be written as ASCII hex  ASCII dec  Description
+=================== ================= ========== ========== ======================
+``\t``              ``\x09``          09         9          Horizontal Tab (TAB)
+``\n``              ``\x0a``          0a         10         Linefeed (LF)
+``\r``              ``\x0d``          0d         13         Carriage Return (CR)
+=================== ================= ========== ========== ======================
 
 It is also possible to write for example ASCII Bell (BEL, hex = 07, dec = 7) 
 as ``\a``, but its ``repr()`` will still print ``\x07``.

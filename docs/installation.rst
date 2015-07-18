@@ -12,20 +12,17 @@ Or, if you have virtualenvwrapper installed::
     $ pip install minimalmodbus
 
 
-
-
-
 Dependencies
 ------------
 Python versions 2.7 and higher are supported (including 3.x). 
-Tested with Python2.7 and Python3.2. This module is pure Python.
+Tested with Python2.7 and Python3.2. This module is pure Python. TODO update versions
 
 This module relies on `pySerial <http://pyserial.sourceforge.net/>`_ (also pure Python) 
 to do the heavy lifting, and it is the only dependency. 
 You can find it at the Python package index: https://pypi.python.org/pypi/pyserial
 
 
-Old text (Download and installation)
+Alternate installation
 -------------------------------------
 From command line (if you have the *pip installer*, available at https://pypi.python.org/pypi/pip)::
 
@@ -60,12 +57,18 @@ In that case, first manually install pySerial and then manually install MinimalM
 
 
 To make sure it is installed properly, print the _getDiagnosticString() message. 
-See the support section below for instructions.
+See the :ref:`support` section for instructions.
 
 You can also download the source directly from Linux command line::
 
     wget http://downloads.sourceforge.net/project/minimalmodbus/0.5/MinimalModbus-0.5.tar.gz
     wget https://pypi.python.org/packages/source/M/MinimalModbus/MinimalModbus-0.5.tar.gz
 
+TODO Change download links
+
 Change version number to the appropriate value.
+
+If everything else fails
+-------------------------
+You can download the raw minimalmodbus.py file from GitHub, and put it in the same directory as your other code. Note that you must have pySerial installed.
 

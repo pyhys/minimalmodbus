@@ -5,8 +5,9 @@ History
 
 0.7 (2015-0?-??)
 ---------------------
-* Moved to Github from Sourceforge
-* Reshuffled source files and documentation
+* Moved source to Github from Sourceforge.
+* Moved documentation to Readthedocs.
+* Reshuffled source files and documentation.
 * Using project setup by the cookie-cutter tool.
 
 

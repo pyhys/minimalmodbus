@@ -33,52 +33,78 @@ Some deviations from the official standard:
 Implemented functions
 ---------------------
 These are the functions to use for reading and writing registers and bits of your instrument. Study the 
-documentation of your instrument to find which Modbus function code to use. The function codes are 
+documentation of your instrument to find which Modbus function code to use. The function codes (F code) are 
 given in decimal in this table.
 
-+---------------------------------------+------------------+---------------+-------------------+---------------+
-| Data type in slave                    | Read             | Function code | Write             | Function code |
-+=======================================+==================+===============+===================+===============+
-| **Bit**                               | read_bit()       | 2 [or 1]      | write_bit()       | 5 [or 15]     |
-+---------------------------------------+------------------+---------------+-------------------+---------------+
-| **Register** Integer, possibly scaled | read_register()  | 3 [or 4]      | write_register()  | 16 [or 6]     |
-+---------------------------------------+------------------+---------------+-------------------+---------------+
-| **Long** (32 bits = 2 registers)      | read_long()      | 3 [or 4]      | write_long()      | 16            |
-+---------------------------------------+------------------+---------------+-------------------+---------------+
-| **Float** (32 or 64 bits)             | read_float()     | 3 [or 4]      | write_float()     | 16            |
-+---------------------------------------+------------------+---------------+-------------------+---------------+
-| **String**                            | read_string()    | 3 [or 4]      | write_string()    | 16            |
-+---------------------------------------+------------------+---------------+-------------------+---------------+
-| **Registers** Integers                | read_registers() | 3 [or 4]      | write_registers() | 16            |
-+---------------------------------------+------------------+---------------+-------------------+---------------+
++---------------------------------------+-------------------------+---------------+--------------------------+---------------+
+| Data type in slave                    | Read                    | F code        | Write                    | F code        |
++=======================================+=========================+===============+==========================+===============+
+| | **Bit**                             | :meth:`.read_bit`       | 2 [or 1]      | :meth:`.write_bit`       | 5 [or 15]     |
++---------------------------------------+-------------------------+---------------+--------------------------+---------------+
+| | **Register**                        | :meth:`.read_register`  | 3 [or 4]      | :meth:`.write_register`  | 16 [or 6]     |
+| | Integer, possibly scaled            |                         |               |                          |               |
++---------------------------------------+-------------------------+---------------+--------------------------+---------------+
+| | **Long**                            | :meth:`.read_long`      | 3 [or 4]      | :meth:`.write_long`      | 16            |
+| | (32 bits = 2 registers)             |                         |               |                          |               |
++---------------------------------------+-------------------------+---------------+--------------------------+---------------+
+| | **Float**                           | :meth:`.read_float`     | 3 [or 4]      | :meth:`.write_float`     | 16            |
+| | (32 or 64 bits)                     |                         |               |                          |               |
++---------------------------------------+-------------------------+---------------+--------------------------+---------------+
+| | **String**                          | :meth:`.read_string`    | 3 [or 4]      | :meth:`.write_string`    | 16            |
++---------------------------------------+-------------------------+---------------+--------------------------+---------------+
+| | **Registers**                       | :meth:`.read_registers` | 3 [or 4]      | :meth:`.write_registers` | 16            |
+| | Integers                            |                         |               |                          |               |
++---------------------------------------+-------------------------+---------------+--------------------------+---------------+
 
-TODO Links to methods!
-
-See the API for MinimalModbus on http://minimalmodbus.sourceforge.net/apiminimalmodbus.html TODO change!
+See the API for MinimalModbus: :ref:`apiminimalmodbus`.
 
   
 Modbus implementation details
 -----------------------------
-In Modbus RTU, the request message is sent from the master in this format::
+In Modbus RTU, the request message is sent from the master in this format:
     
-    Slave address [1 Byte], Function code [1 Byte], Payload data [0 to 252 Bytes], CRC [2 Bytes].
+ * Slave address [1 Byte]
+ * Function code [1 Byte]. Allowed range is 1 to 127 (in decimal).
+ * Payload data [0 to 252 Bytes]
+ * CRC [2 Bytes]. It is a Cyclic Redundancy Check code, for error checking of the message
 
-* For the function code, the allowed range is 1 to 127 (in decimal). 
-* The CRC is a cyclic redundancy check code, for error checking of the message. 
-* The response from the client is similar, but with other payload data.
+The response from the client is similar, but with other payload data.
 
-============================== ============================================================================================== ======================================================
-Function code (in decimal)     Payload data to slave (Request)                                                                Payload data from slave (Response)                  
-============================== ============================================================================================== ====================================================== 
-1 Read bits (coils)            Start address [2 Bytes], Number of coils [2 Bytes]                                             Byte count [1 Byte], Value [k Bytes] 
-2 Read discrete inputs         Start address [2 Bytes], Number of inputs [2 Bytes]                                            Byte count [1 Byte], Value [k Bytes]         
-3 Read holding registers       Start address [2 Bytes], Number of registers [2 Bytes]                                         Byte count [1 Byte], Value [n*2 Bytes]
-4 Read input registers         Start address [2 Bytes], Number of registers [2 Bytes]                                         Byte count [1 Byte], Value [n*2 Bytes]
-5 Write single bit (coil)      Output address [2 Bytes], Value [2 Bytes]                                                      Output address [2 Bytes], Value [2 Bytes]           
-6 Write single register        Register address [2 Bytes], Value [2 Bytes]                                                    Register address [2 Bytes], Value [2 Bytes] 
-15 Write multiple bits (coils) Start address [2 Bytes], Number of outputs [2 Bytes], Byte count [1 Byte], Value [k Bytes]     Start address [2 Bytes], Number of outputs [2 Bytes]
-16 Write multiple registers    Start address [2 Bytes], Number of registers [2 Bytes], Byte count [1 Byte], Value [n*2 Bytes] Start address [2 Bytes], Number of registers [2 Bytes]
-============================== ============================================================================================== ====================================================== 
++---------------------------------------+---------------------------------+---------------------------------+
+| | Function code                       | | Payload data to slave         | | Payload data from slave       | 
+| | (in decimal)                        | | (Request)                     | | (Response)                    | 
++=======================================+=================================+=================================+
+| | **1**                               | | Start address [2 Bytes]       | | Byte count [1 Byte]           | 
+| | Read bits (coils)                   | | Number of coils [2 Bytes]     | | Value [k Bytes]               | 
++---------------------------------------+---------------------------------+---------------------------------+
+| | **2**                               | | Start address [2 Bytes]       | | Byte count [1 Byte]           | 
+| | Read discrete inputs                | | Number of inputs [2 Bytes]    | | Value [k Bytes]               | 
++---------------------------------------+---------------------------------+---------------------------------+
+| | **3**                               | | Start address [2 Bytes]       | | Byte count [1 Byte]           | 
+| | Read holding registers              | | Number of registers [2 Bytes] | | Value [n*2 Bytes]             | 
++---------------------------------------+---------------------------------+---------------------------------+
+| | **4**                               | | Start address [2 Bytes]       | | Byte count [1 Byte]           | 
+| | Read input registers                | | Number of registers [2 Bytes] | | Value [n*2 Bytes]             | 
++---------------------------------------+---------------------------------+---------------------------------+
+| | **5**                               | | Output address [2 Bytes]      | | Output address [2 Bytes]      | 
+| | Write single bit (coil)             | | Value [2 Bytes]               | | Value [2 Bytes]               | 
++---------------------------------------+---------------------------------+---------------------------------+
+| | **6**                               | | Register address  [2 Bytes]   | | Register address [2 Bytes]    | 
+| | Write single register               | | Value [2 Bytes]               | | Value [2 Bytes]               | 
++---------------------------------------+---------------------------------+---------------------------------+
+| | **15**                              | | Start address [2 Bytes]       | | Start address [2 Bytes]       | 
+| | Write multiple bits (coils)         | | Number of outputs [2 Bytes]   | | Number of outputs [2 Bytes]   | 
+| |                                     | | Byte count [1 Byte]           | |                               | 
+| |                                     | | Value [k Bytes]               | |                               | 
++---------------------------------------+---------------------------------+---------------------------------+
+| | **16**                              | | Start address [2 Bytes]       | | Start address [2 Bytes]       | 
+| | Write multiple registers            | | Number of registers [2 Bytes] | | Number of regist [2 Bytes]    | 
+| |                                     | | Byte count [1 Byte]           | |                               | 
+| |                                     | | Value [n*2 Bytes]             | |                               | 
++---------------------------------------+---------------------------------+---------------------------------+
+
+ TODO Validate
+
 
 For function code 5, the only valid values are 0000 (hex) or FF00 (hex), representing OFF and ON respectively.
 
@@ -87,7 +113,6 @@ can be said about function code 5 and 6, and also about 15 and 16.
 
 For finding how the k Bytes for the value relates to the number of registers etc (n), see the Modbus documents referred to above.
     
-
 
 MODBUS ASCII format
 -----------------------
@@ -103,14 +128,16 @@ Thus for Modbus RTU this is sent: ``'\x4C'``, which is a string of length 1 and 
 The same value will in Modbus ASCII be sent as the string '4C', which has a length of 2.
 
 The frame format is slightly different for Modbus ASCII. The request message 
-is sent from the master in this format::
+is sent from the master in this format:
 
-    Start [1 character], Slave Address [2 characters], Function code [2 characters], Payload data [0 to 2*252 characters], LRC [2 characters], Stop [2 characters].
+ * Start [1 character]. It is the colon (:).
+ * Slave Address [2 characters]
+ * Function code [2 characters]
+ * Payload data [0 to 2*252 characters]
+ * LRC [2 characters]. The LRC is a Longitudinal Redundancy Check code, for error checking of the message.
+ * Stop [2 characters]. 
+   The stop characters are carriage return (``'\r'`` = ``'\x0D'``) and line feed (``'\n'`` = ``'\x0A'``).
 
-Where:
- * The start character is the colon (:).
- * The LRC is a longitudinal redundancy check code, for error checking of the message.
- * The stop characters are carriage return ('\r' = ``'\x0D'``) and line feed ('\n' = ``'\x0A'``).
 
 Manual testing of Modbus equipment
 ------------------------------------------
@@ -118,7 +145,7 @@ Look in your equipment's manual to find working communication examples.
 
 You can make a small Python program to test the communication::
 
-    TODO: RTU example
+    TODO: Change this to a RTU example
 
     import serial
     ser = serial.Serial('/dev/ttyUSB0', 19200, timeout=1)

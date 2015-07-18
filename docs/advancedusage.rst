@@ -1,6 +1,11 @@
+.. _detailedusage:
+
 Detailed usage documentation
 =============================
-For introductive usage documentation, see the main documentation page.
+For introductive usage documentation, see :ref:`usage`.
+
+
+.. _interactiveusage:
 
 Interactive usage
 --------------------------------------------------------------------------------
@@ -213,9 +218,9 @@ You should try this in interactive mode in Python, and to manually re-shuffle th
 
 Suggested work-around:
 
-* Read the register values directly using the read_registers function. 
+* Read the register values directly using the :meth:`.read_registers` function. 
 * Then reshuffle the bytes
-* Convert it to a float using the internal function _bytestringToFloat. 
+* Convert it to a float using the internal function :meth:`._bytestringToFloat`. 
 
 Something like::
 
@@ -223,7 +228,7 @@ Something like::
     registerstring = chr(values[2]) + chr(values[3]) + chr(values[0]) + chr(values[1])
     floatvalue = minimalmodbus._bytestringToFloat(registerstring)
 
-See :meth:`.read_registers` and http://minimalmodbus.sourceforge.net/_modules/minimalmodbus.html#_bytestringToFloat
+See :meth:`.read_registers` and :meth:`._bytestringToFloat`.
 
 
 
@@ -233,7 +238,7 @@ Some users have reported errors due to instruments not fulfilling the Modbus sta
 For example can some additional byte be pasted at the end of the response from the instrument.
 Here is an example how this can be handled by tweaking the minimalmodbus.py file.
 
-Add this to _extractPayload function, after the argument validity testing section::
+Add this to :func:`._extractPayload` function, after the argument validity testing section::
 
     # Fix for broken T3-PT10 which outputs extra 0xFE byte after some messages
     # Patch by Edwin van den Oetelaar 
@@ -247,9 +252,12 @@ Add this to _extractPayload function, after the argument validity testing sectio
         except IndexError:
             pass
 
+.. _handlelocalecho:
 
 Handle local echo
 -------------------------------------------------------------------------
+TODO This has been implemented in version 0.7.
+
 If you cannot disable the local echo of your RS485 adapter, you will receive your 
 own message before the message from the slave. Luca Di Gregorio has suggested how to solve this issue. 
 

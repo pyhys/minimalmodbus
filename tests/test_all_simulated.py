@@ -21,17 +21,12 @@
 
 test_all_simulated: Run all the unit tests (without any hardware)
 
-This Python file was changed (committed) at $Date: 2014-03-23 18:38:52 +0100 $, 
-which was $Revision: 179 $.
-
 """
 
 __author__  = "Jonas Berg"
 __email__   = "pyhys@users.sourceforge.net"
 __license__ = "Apache License, Version 2.0"
 
-__revision__  = "$Rev: 179 $"
-__date__      = "$Date: 2014-03-23 18:38:52 +0100 $"
 
 import unittest
 

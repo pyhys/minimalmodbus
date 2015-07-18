@@ -23,17 +23,12 @@ test_omegacn7500: Unittests for omegacn7500
 
 Uses a dummy serial port from the module :py:mod:`dummy_serial`.
 
-This Python file was changed (committed) at $Date: 2012-01-14 23:52:52 +0100 $, 
-which was $Revision: 113 $.
-
 """
 
 __author__  = "Jonas Berg"
 __email__   = "pyhys@users.sourceforge.net"
 __license__ = "Apache License, Version 2.0"
 
-__revision__  = "$Rev: 113 $"
-__date__      = "$Date: 2012-01-14 23:52:52 +0100 $"
 
 import sys
 import unittest

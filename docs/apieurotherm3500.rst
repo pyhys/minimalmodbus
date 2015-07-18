@@ -5,4 +5,4 @@ API for the Eurotherm3500 example driver
    :members:
    :undoc-members:
    :show-inheritance:
-   :noindex:
+

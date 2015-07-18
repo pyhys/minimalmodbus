@@ -39,7 +39,7 @@ Most often a common ground line is connected between the nodes as well.
 At idle, both line A and B rest at the same voltage (or almost the same voltage). 
 When a logic 1 is transmitted, line A is pulled towards lower voltage and 
 line B is pulled towards higher voltage. 
-Note that the A/B nameing is sometimes mixed up by some manufacturers.
+Note that the A/B naming is sometimes mixed up by some manufacturers.
 
 Each node uses a transceiver chip, containing a transmitter (sender) and a receiver. 
 Only one transmitter can be active on the bus simultaneously. 
@@ -97,7 +97,7 @@ when it comes to RS485 communication. There are some options:
     Some users have been reporting on success for this strategy. The problem is that the master and
     slaves have their transmitters enabled simultaneously. I guess for certain situations (and
     being lucky with the transceiver chip) it might work. Note that you will receive your own transmitted 
-    message (local echo). To handle local echo, see http://minimalmodbus.sourceforge.net/usage.html 
+    message (local echo). See :ref:`handlelocalecho`.
 
 **Controlling a separate GPIO pin from kernelspace software on embedded Linux machines** 
     See for example http://blog.savoirfairelinux.com/en/2013/rs-485-for-beaglebone-a-quick-peek-at-the-omap-uart/ 
@@ -107,26 +107,23 @@ when it comes to RS485 communication. There are some options:
     Beaglebone (September 2014).
 
 **Controlling a separate GPIO pin from userspace software on embedded Linux machines**
-    This will give large time delays, but might be acceptable for low speeds. See below.
+    This will give large time delays, but might be acceptable for low speeds. 
 
 **Controlling the RTS pin in the RS232 interface (from userspace), and connecting it to the TXENABLE pin of the transceiver**
-    This will give large time delays, but might be acceptable for low speeds. See below.
-    
-**RTS toggle on Windows machines**
-    TODO: Look into this
-    
+    This will give large time delays, but might be acceptable for low speeds. 
+       
 
 Controlling the RS-485 transceiver from userspace
 ----------------------------------------------------
 As described above, this should be avoided. Nevertheless, for low speeds (maybe up to 9600 bits/s) it might be useful.
 
-   This can be done from userspace, but will then lead to large time delays. 
-    I have tested this with a 3.3V FTDI  USB-to-serial cable using pySerial 
-    on a Linux laptop. The cable has a RTS output, 
-    but no TXDEN output. Note that the RTS output is +3.3 V at idle, and 0 V when 
-    RTS is set to True. The delay time is around 1 ms, as measured with an oscilloscope. 
-    This corresponds to approx 100 bit times when running at 115200 bps, but this 
-    value also includes delays caused by the Python intepreter.
+This can be done from userspace, but will then lead to large time delays. 
+I have tested this with a 3.3V FTDI  USB-to-serial cable using pySerial 
+on a Linux laptop. The cable has a RTS output, 
+but no TXDEN output. Note that the RTS output is +3.3 V at idle, and 0 V when 
+RTS is set to True. The delay time is around 1 ms, as measured with an oscilloscope. 
+This corresponds to approx 100 bit times when running at 115200 bps, but this 
+value also includes delays caused by the Python intepreter.
 
 
 

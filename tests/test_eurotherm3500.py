@@ -23,17 +23,12 @@ test_eurotherm3500: Unittests for eurotherm3500
 
 Uses a dummy serial port from the module :py:mod:`dummy_serial`.
 
-This Python file was changed (committed) at $Date: 2012-01-06 01:11:16 +0100 (fre, 06 jan 2012) $, 
-which was $Revision: 102 $.
-
 """
 
 __author__  = "Jonas Berg"
 __email__   = "pyhys@users.sourceforge.net"
 __license__ = "Apache License, Version 2.0"
 
-__revision__  = "$Rev: 102 $"
-__date__      = "$Date: 2012-01-06 01:11:16 +0100 (fre, 06 jan 2012) $"
 
 import unittest
 
