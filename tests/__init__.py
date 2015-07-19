@@ -26,9 +26,9 @@ __license__ = "Apache License, Version 2.0"
 
 import unittest
 
-import test_minimalmodbus
-import test_eurotherm3500
-import test_omegacn7500
+import tests.test_minimalmodbus
+import tests.test_eurotherm3500
+import tests.test_omegacn7500
 
 def suite_all_simulated():
     suite = unittest.TestLoader().loadTestsFromModule( test_minimalmodbus )

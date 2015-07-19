@@ -48,6 +48,7 @@ test:
 	python setup.py test
 
 test-all:
+	rm -fr .tox/	
 	tox
 
 coverage:

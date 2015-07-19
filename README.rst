@@ -43,5 +43,5 @@ This software supports the 'Modbus RTU' and 'Modbus ASCII' serial communication 
 and is intended for use on Linux, OS X and Windows platforms. 
 It is open source, and has the Apache License, Version 2.0. 
 
-Tested with Python2.7 and Python3.2.  TODO update versions
+Tested with Python 2.7, 3.2, 3.3 and 3.4.
 

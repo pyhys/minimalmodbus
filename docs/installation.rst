@@ -4,7 +4,7 @@ Installation
 
 At the command line::
 
-    $ easy_install minimalmodbus
+    $ pip install minimalmodbus
 
 Or, if you have virtualenvwrapper installed::
 
@@ -49,7 +49,6 @@ or possibly::
 If using Python 3, then install with::
 
    sudo python3 setup.py install
-
 
 
 For Python3 there might be problems with *easy_install* and *pip*. 

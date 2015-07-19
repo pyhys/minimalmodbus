@@ -31,10 +31,8 @@ setup(
     url          = metadata['url'],
     description="Easy-to-use Modbus RTU and Modbus ASCII implementation for Python",
     long_description=readme + '\n\n' + history,
-    include_package_data=True,
     install_requires = ['pyserial'],
     py_modules = ['minimalmodbus', 'eurotherm3500', 'omegacn7500', 'dummy_serial'],
-    zip_safe=False,
     keywords='minimalmodbus modbus serial RTU ASCII',
     classifiers=[
         'Development Status :: 4 - Beta',
@@ -51,6 +49,8 @@ setup(
         'Programming Language :: Python :: 2.7', 
         'Programming Language :: Python :: 3', 
         'Programming Language :: Python :: 3.2', 
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
         'Topic :: Communications',
         'Topic :: Home Automation',
         'Topic :: Scientific/Engineering',
@@ -59,6 +59,5 @@ setup(
         'Topic :: System :: Hardware :: Hardware Drivers',
         'Topic :: Terminals :: Serial',
     ],
-    test_suite='tests',
-    tests_require=[]
+    test_suite='tests'
 )
