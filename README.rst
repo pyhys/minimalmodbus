@@ -5,6 +5,10 @@ MinimalModbus
 .. image:: https://img.shields.io/travis/pyhys/minimalmodbus.svg
         :target: https://travis-ci.org/pyhys/minimalmodbus
 
+.. image:: https://readthedocs.org/projects/minimalmodbus/badge/?version=latest
+        :target: https://readthedocs.org/projects/minimalmodbus/?badge=latest
+        :alt: Documentation Status
+
 .. image:: https://img.shields.io/pypi/v/minimalmodbus.svg
         :target: https://pypi.python.org/pypi/minimalmodbus
 
