@@ -923,20 +923,24 @@ or::
 TODO
 ----
 Future releases:
- * Improve debug messages to include hex values, not just bytestrings.
- * Speeding up the code (new CRC calculation, disable some other checks)
- * Test with other Python versions  
+
+* Unittesting of handling local echo
+
+* Improve debug messages to include hex values, not just bytestrings.
+* Speeding up the code (new CRC calculation, disable some other checks)
+* Change 'message' to 'request' variable names in the source code
 
 Maybe:
- * Increase test coverage for minimalmodbus.py
- * Improve the dummy_serial behavior, to better mimic Windows behavior. 
+
+* Increase test coverage for minimalmodbus.py
+* Improve the dummy_serial behavior, to better mimic Windows behavior. 
    Also using the number_of_bytes_to_read in the unittests.
- * Unittests for measuring the sleep time in _communicate.
- * Serial port flushing
- * Floats with other byte order
- * Logging instead of _print_out()
- * Timing based on time.clock() for Windows
- * Change 'message' to 'request' variable names in the source code
+* Unittests for measuring the sleep time in _communicate.
+* Serial port flushing
+* Floats with other byte order
+* Logging instead of _print_out()
+* Timing based on time.clock() for Windows
+ 
 
  
 

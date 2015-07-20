@@ -19,7 +19,7 @@
 
 .. moduleauthor:: Jonas Berg <pyhys@users.sourceforge.net>
 
-MinimalModbus: A Python driver for the Modbus RTU protocol via serial port (via RS485 or RS232).
+MinimalModbus: A Python driver for the Modbus RTU and Modbus ASCII protocols via serial port (via RS485 or RS232).
 """
 
 __author__   = 'Jonas Berg'
@@ -90,7 +90,7 @@ MODE_ASCII = 'ascii'
 
 
 class Instrument():
-    """Instrument class for talking to instruments (slaves) via the Modbus RTU protocol (via RS485 or RS232).
+    """Instrument class for talking to instruments (slaves) via the Modbus RTU or ASCII protocols (via RS485 or RS232).
 
     Args:
         * port (str): The serial port name, for example ``/dev/ttyUSB0`` (Linux), ``/dev/tty.usbserial`` (OS X) or ``COM4`` (Windows).
@@ -547,9 +547,9 @@ class Instrument():
             * payloadformat (None or string): None, 'long', 'float', 'string', 'register', 'registers'. Not necessary for single registers or bits.
 
         If a value of 77.0 is stored internally in the slave register as 770,
-        then use ``numberOfDecimals=1`` which will divide the received data by 10
+        then use ``numberOfDecimals=1`` which will divide the received data from the slave by 10
         before returning the value. Similarly ``numberOfDecimals=2`` will divide
-        the received data by 100 before returning the value. Same functionality also
+        the received data by 100 before returning the value. Same functionality is also used
         when writing data to the slave.
 
         Returns:
@@ -814,7 +814,7 @@ class Instrument():
 
         Note that the answer might have strange ASCII control signs, which
         makes it difficult to print it in the promt (messes up a bit).
-        Use repr() to make the string printable (shows ascii values for control signs.)
+        Use repr() to make the string printable (shows ASCII values for control signs.)
 
         Will block until reaching *number_of_bytes_to_read* or timeout.
 

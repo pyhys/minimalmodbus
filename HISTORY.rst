@@ -5,11 +5,13 @@ History
 
 0.7 (2015-0?-??)
 ---------------------
-* Moved source to Github from Sourceforge.
-* Moved documentation to Readthedocs.
+* Handling of local echo
 * Using project setup by the cookie-cutter tool.
 * Reshuffled source files and documentation.
+* Moved source to Github from Sourceforge.
+* Moved documentation to Readthedocs.
 * Using the tox tool for testing on multiple Python versions.
+* Using Travis CI test framework
 * Dropped support for Python 2.6.
 
 
