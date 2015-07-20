@@ -12,6 +12,7 @@ History
 * Moved documentation to Readthedocs.
 * Using the tox tool for testing on multiple Python versions.
 * Using Travis CI test framework
+* Added support for Python 3.3 and 3.4.
 * Dropped support for Python 2.6.
 
 

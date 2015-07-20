@@ -4,13 +4,15 @@ MinimalModbus
 
 .. image:: https://img.shields.io/travis/pyhys/minimalmodbus.svg
         :target: https://travis-ci.org/pyhys/minimalmodbus
+        :alt: Build Status
 
-.. image:: https://readthedocs.org/projects/minimalmodbus/badge/?version=latest
-        :target: https://readthedocs.org/projects/minimalmodbus/?badge=latest
+.. image:: https://readthedocs.org/projects/minimalmodbus/badge/?version=master
+        :target: https://readthedocs.org/projects/minimalmodbus/?badge=master
         :alt: Documentation Status
 
 .. image:: https://img.shields.io/pypi/v/minimalmodbus.svg
         :target: https://pypi.python.org/pypi/minimalmodbus
+        :alt: PyPI page link
 
 
 Easy-to-use Modbus RTU and Modbus ASCII implementation for Python.

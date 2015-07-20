@@ -933,8 +933,9 @@ Maybe:
 
 * Tool for interpretation of Modbus messages
 * Increase test coverage for minimalmodbus.py
+* PEP8 fine tuning of source.
 * Improve the dummy_serial behavior, to better mimic Windows behavior. 
-   Also using the number_of_bytes_to_read in the unittests.
+  Also using the number_of_bytes_to_read in the unittests.
 * Unittests for measuring the sleep time in _communicate.
 * Serial port flushing
 * Floats with other byte order
