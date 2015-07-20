@@ -110,6 +110,7 @@ pygments_style = 'sphinx'
 # documents.
 #keep_warnings = False
 
+autodoc_member_order = 'bysource'
 
 # -- Options for HTML output -------------------------------------------
 

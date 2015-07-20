@@ -1,3 +1,5 @@
+.. _apidummyserial:
+
 Documentation for dummy_serial (which is a serial port mock)
 ======================================================================
 

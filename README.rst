@@ -15,7 +15,8 @@ MinimalModbus
 
 Easy-to-use Modbus RTU and Modbus ASCII implementation for Python.
 
-Web resources:
+Web resources
+-------------
 
 * **Documentation**: https://minimalmodbus.readthedocs.org.
 * Source code on **GitHub**: https://github.com/pyhys/minimalmodbus

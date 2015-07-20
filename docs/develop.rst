@@ -1,7 +1,7 @@
 Developer documentation
 =======================
 
-The details printed in debug mode (messages and responses) are very useful 
+The details printed in debug mode (requests and responses) are very useful 
 for using the included dummy_serial port for unit testing purposes. 
 For examples, see the file test/test_minimalmodbus.py.
 
@@ -11,7 +11,7 @@ Design considerations
 My take on the design is that is should be as simple as possible, hence the name MinimalModbus, 
 but it should implement the smallest number of functions needed for it to be useful. 
 The target audience for this driver simply wants to talk to Modbus clients 
-using a serial interface (RTU is good enough), using some simple driver (preferably MinimalModbus).
+using a serial interface using some simple driver.
 
 Only a few functions are implemented. It is very easy to implement lots of 
 (seldom used) functions, resulting in buggy code with large fractions of it almost never used. 
@@ -92,15 +92,13 @@ Unit tests are provided in the tests subfolder. To run them::
     python test_minimalmodbus.py
     
 Also a dummy/mock/stub for the serial port, dummy_serial, is provided for 
-test purposes. See http://minimalmodbus.sourceforge.net/apidummyserial.html
+test purposes. See :ref:`apidummyserial`.
 
-The test coverage analysis is found at http://minimalmodbus.sourceforge.net/htmlcov/index.html. 
+The test coverage analysis is found at ?? TODO 
 To see which parts of the code that have been tested, click the corresponding file name.    
         
-Hardware tests are performed using a Delta DTB4824 process controller. See the test subfolder for more information.
+Hardware tests are performed using a Delta DTB4824 process controller. See :ref:`testdtb4824` for more information.
         
-
-
 A brief introduction to unittesting is found here: https://docs.python.org/release/2.5.2/lib/minimal-example.html
 
 The :mod:`unittest` module is documented here: https://docs.python.org/2/library/unittest.html
@@ -111,9 +109,14 @@ Inside the unpacked folder go to :file:`test` and run the unit tests with::
     python test_all_simulated.py
     python3 test_all_simulated.py
 
+    python3.4 test_all_simulated.py
+    python3.3 test_all_simulated.py
     python3.2 test_all_simulated.py
-    python2.6 test_all_simulated.py
     python2.7 test_all_simulated.py
+
+To automatically run the tests for the different Python versions::
+    
+    tox
 
 It is also possible to run the individual test files::
 
@@ -132,8 +135,8 @@ The baudrate and portname can optionally be set from command line::
 
     python test_deltaDTB4824.py 19200 /dev/ttyUSB0
     
-For more details on testing with this hardware, see the source of the script :file:`test_deltaDTB4824.py` 
-in the :file:`test` folder.
+For more details on testing with this hardware, see :ref:`testdtb4824`.
+
 
 Making sure that error messages are informative for the user
 ------------------------------------------------------------------------------
@@ -408,13 +411,9 @@ Of course it is appreciated if you can spend a few moments trying to locate the 
 
 Webpage
 ------------------------------------------------------------------------------
-The HTML theme on http://minimalmodbus.sourceforge.net/ is the Sphinx 'Default' theme. 
+The HTML theme on http://minimalmodbus.sourceforge.net/ is the Sphinx 'sphinx_rtd_theme' theme. 
 
-* The colors etc are adjusted in the :file:`doc/config.py` file. 
-* Header sizes are adjusted in the :file:`doc/_static/default.css` file.
-* The sourceforge logo is displayed using the custom template :file:`doc/_templates/sourceforgelogo.html`. Add ``'sourceforgelogo.html'`` to ``html_sidebars`` in the :file:`doc/config.py` file.
-
-Note that Sphinx version 1.1.2 or later is required to build the documentation.
+Note that Sphinx version 1.3 or later is required to build the documentation.
 
 
 Notes on distribution
@@ -493,7 +492,7 @@ Run unit tests (in the :file:`trunk/test` directory)::
     python2.7 test_all_simulated.py
     python3.2 test_all_simulated.py
 
-Also make tests using Delta DTB4824 hardware. See the file :file:`test/test_deltaDTB4824.py`
+Also make tests using Delta DTB4824 hardware. See :ref:`testdtb4824`.
 
 Test the source distribution generation (look in the :file:`PKG-INFO` file)::
 
@@ -560,7 +559,7 @@ Test documentation
 `````````````````````
 Test links on the Sourceforge and PyPI pages. If adjustments are required 
 on the PyPI page, log in and manually adjust the text. This might be for 
-example parsing problems with the ReSTR text (allows no Sphinx-specific constructs).
+example parsing problems with the ReST text (allows no Sphinx-specific constructs).
 
 
 Generate Windows installer
@@ -754,7 +753,7 @@ This documentation is generated with the Sphinx tool: http://sphinx-doc.org/
 It is used to automatically generate HTML documentation from docstrings in the source code.
 See for example :ref:`internalminimalmodbus`. To see the source code of the Python 
 file, click [source] on the right part of that page. To see the source of the 
-Sphinx page definition file, click 'Show Source' in the left column.
+Sphinx page definition file, click 'View page Source' (or possibly 'Edit on Github') in the upper right corner.
 
 To install, use::
 
@@ -932,6 +931,7 @@ Future releases:
 
 Maybe:
 
+* Tool for interpretation of Modbus messages
 * Increase test coverage for minimalmodbus.py
 * Improve the dummy_serial behavior, to better mimic Windows behavior. 
    Also using the number_of_bytes_to_read in the unittests.

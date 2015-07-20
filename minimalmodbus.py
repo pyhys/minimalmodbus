@@ -939,7 +939,7 @@ def _embedPayload(slaveaddress, mode, functioncode, payloaddata):
 
     Args:
         * slaveaddress (int): The address of the slave.
-        * mode (str): The modbus protcol mode (rtu or ascii)
+        * mode (str): The modbus protcol mode (MODE_RTU or MODE_ASCII)
         * functioncode (int): The function code for the command to be performed. Can for example be 16 (Write register).
         * payloaddata (str): The byte string to be sent to the slave.
 
@@ -981,7 +981,7 @@ def _extractPayload(response, slaveaddress, mode, functioncode):
     Args:
         * response (str): The raw response byte string from the slave.
         * slaveaddress (int): The adress of the slave. Used here for error checking only.
-        * mode (str): The modbus protcol mode (rtu or ascii)
+        * mode (str): The modbus protcol mode (MODE_RTU or MODE_ASCII)
         * functioncode (int): Used here for error checking only.
 
     Returns:
@@ -991,8 +991,8 @@ def _extractPayload(response, slaveaddress, mode, functioncode):
         ValueError, TypeError. Raises an exception if there is any problem with the received address, the functioncode or the CRC.
 
     The received response should have the format:
-        RTU Mode: slaveaddress byte + functioncode byte + payloaddata + CRC (which is two bytes)
-        ASCII Mode: header (:) + slaveaddress byte + functioncode byte + payloaddata + LRC (which is two characters) + footer (CRLF)
+    * RTU Mode: slaveaddress byte + functioncode byte + payloaddata + CRC (which is two bytes)
+    * ASCII Mode: header (:) + slaveaddress byte + functioncode byte + payloaddata + LRC (which is two characters) + footer (CRLF)
 
     For development purposes, this function can also be used to extract the payload from the message sent TO the slave.
 
@@ -1109,8 +1109,8 @@ def _predictResponseSize(mode, functioncode, payloadToSlave):
     """Calculate the number of bytes that should be received from the slave.
 
     Args:
-     * mode (str) :
-     * functioncode (int):
+     * mode (str): The modbus protcol mode (MODE_RTU or MODE_ASCII)
+     * functioncode (int): Modbus function code.
      * payloadToSlave (str): The raw message that is to be sent to the slave (not hex encoded string)
 
     Returns:
@@ -1328,7 +1328,7 @@ def _longToBytestring(value, signed=False, numberOfRegisters=2):
 
     Args:
         * value (int): The numerical value to be converted.
-        * signed (bol): Whether large positive values should be interpreted as negative values.
+        * signed (bool): Whether large positive values should be interpreted as negative values.
         * numberOfRegisters (int): Should be 2. For error checking only.
 
     Returns:
@@ -1387,7 +1387,7 @@ def _floatToBytestring(value, numberOfRegisters=2):
     """Convert a numerical value to a bytestring.
 
     Floats are stored in two or more consecutive 16-bit registers in the slave. The
-        encoding is according to the standard IEEE 754.
+    encoding is according to the standard IEEE 754.
 
     ====================================== ================= =========== =================
     Type of floating point number in slave Size              Registers   Range
@@ -2007,7 +2007,7 @@ def _checkMode(mode):
     """Check that the Modbus mode is valie.
 
     Args:
-        mode (string): The Modbus mode (rtu or ascii)
+        mode (string): The Modbus mode (MODE_RTU or MODE_ASCII)
 
     Raises:
         TypeError, ValueError
