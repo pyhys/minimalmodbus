@@ -7,8 +7,10 @@ History
 ---------------------
 * Moved source to Github from Sourceforge.
 * Moved documentation to Readthedocs.
-* Reshuffled source files and documentation.
 * Using project setup by the cookie-cutter tool.
+* Reshuffled source files and documentation.
+* Using the tox tool for testing on multiple Python versions.
+* Dropped support for Python 2.6.
 
 
 Release 0.6 (2014-06-22)
