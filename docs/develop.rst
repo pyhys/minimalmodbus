@@ -927,7 +927,6 @@ Future releases:
 
 * Improve debug messages to include hex values, not just bytestrings.
 * Speeding up the code (new CRC calculation, disable some other checks)
-* Change 'message' to 'request' variable names in the source code
 
 Maybe:
 

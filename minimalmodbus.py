@@ -767,7 +767,7 @@ class Instrument():
         Raises:
             ValueError, TypeError.
 
-        Makes use of the :meth:`_communicate` method. The message is generated
+        Makes use of the :meth:`_communicate` method. The request is generated
         with the :func:`_embedPayload` function, and the parsing of the
         response is done with the :func:`_extractPayload` function.
 
@@ -777,8 +777,8 @@ class Instrument():
         _checkFunctioncode(functioncode, None)
         _checkString(payloadToSlave, description='payload')
 
-        # Build message
-        message = _embedPayload(self.address, self.mode, functioncode, payloadToSlave)
+        # Build request
+        request = _embedPayload(self.address, self.mode, functioncode, payloadToSlave)
 
         # Calculate number of bytes to read
         number_of_bytes_to_read = DEFAULT_NUMBER_OF_BYTES_TO_READ
@@ -788,22 +788,22 @@ class Instrument():
             except:
                 if self.debug:
                     template = 'MinimalModbus debug mode. Could not precalculate response size for Modbus {} mode. ' + \
-                        'Will read {} bytes. Message: {!r}'
-                    _print_out(template.format(self.mode, number_of_bytes_to_read, message))
+                        'Will read {} bytes. request: {!r}'
+                    _print_out(template.format(self.mode, number_of_bytes_to_read, request))
 
         # Communicate
-        response = self._communicate(message, number_of_bytes_to_read)
+        response = self._communicate(request, number_of_bytes_to_read)
 
         # Extract payload
         payloadFromSlave = _extractPayload(response, self.address, self.mode, functioncode)
         return payloadFromSlave
 
 
-    def _communicate(self, message, number_of_bytes_to_read):
+    def _communicate(self, request, number_of_bytes_to_read):
         """Talk to the slave via a serial port.
 
         Args:
-            message (str): The raw message that is to be sent to the slave.
+            request (str): The raw request that is to be sent to the slave.
             number_of_bytes_to_read (int): number of bytes to read
 
         Returns:
@@ -846,12 +846,12 @@ class Instrument():
 
         """
 
-        _checkString(message, minlength=1, description='message')
+        _checkString(request, minlength=1, description='request')
         _checkInt(number_of_bytes_to_read)
 
         if self.debug:
             _print_out('\nMinimalModbus debug mode. Writing to instrument (expecting {} bytes back): {!r}'. \
-                format(number_of_bytes_to_read, message))
+                format(number_of_bytes_to_read, request))
 
         if self.close_port_after_each_call:
             self.serial.open()
@@ -859,7 +859,7 @@ class Instrument():
         #self.serial.flushInput() TODO
 
         if sys.version_info[0] > 2:
-            message = bytes(message, encoding='latin1')  # Convert types to make it Python3 compatible
+            request = bytes(request, encoding='latin1')  # Convert types to make it Python3 compatible
 
         # Sleep to make sure 3.5 character times have passed
         minimum_silent_period   = _calculate_minimum_silent_period(self.serial.baudrate)
@@ -887,21 +887,21 @@ class Instrument():
                 minimum_silent_period * _SECONDS_TO_MILLISECONDS)
             _print_out(text)
 
-        # Write message
+        # Write request
         latest_write_time = time.time()
         
-        self.serial.write(message)
+        self.serial.write(request)
 
         if self.handle_local_echo:
-            localEchoToDiscard = self.serial.read(len(message))
+            localEchoToDiscard = self.serial.read(len(request))
             if self.debug:
                 template = 'MinimalModbus debug mode. Discarding this local echo: {!r} ({} bytes).' 
                 text = template.format(localEchoToDiscard, len(localEchoToDiscard))
                 _print_out(text)
-            if localEchoToDiscard != message:
-                template = 'Local echo handling is enabled, but the local echo does not match the sent message. ' + \
-                    'Message: {!r} ({} bytes), local echo: {!r} ({} bytes).' 
-                text = template.format(message, len(message), localEchoToDiscard, len(localEchoToDiscard))
+            if localEchoToDiscard != request:
+                template = 'Local echo handling is enabled, but the local echo does not match the sent request. ' + \
+                    'request: {!r} ({} bytes), local echo: {!r} ({} bytes).' 
+                text = template.format(request, len(request), localEchoToDiscard, len(localEchoToDiscard))
                 raise IOError(text)
 
         # Read response
@@ -935,7 +935,7 @@ class Instrument():
 
 
 def _embedPayload(slaveaddress, mode, functioncode, payloaddata):
-    """Build a message from the slaveaddress, the function code and the payload data.
+    """Build a request from the slaveaddress, the function code and the payload data.
 
     Args:
         * slaveaddress (int): The address of the slave.
@@ -944,12 +944,12 @@ def _embedPayload(slaveaddress, mode, functioncode, payloaddata):
         * payloaddata (str): The byte string to be sent to the slave.
 
     Returns:
-        The built (raw) message string for sending to the slave (including CRC etc).
+        The built (raw) request string for sending to the slave (including CRC etc).
 
     Raises:
         ValueError, TypeError.
 
-    The resulting message has the format:
+    The resulting request has the format:
      * RTU Mode: slaveaddress byte + functioncode byte + payloaddata + CRC (which is two bytes).
      * ASCII Mode: header (:) + slaveaddress (2 characters) + functioncode (2 characters) + payloaddata + LRC (which is two characters) + footer (CRLF)
 
@@ -965,14 +965,14 @@ def _embedPayload(slaveaddress, mode, functioncode, payloaddata):
     firstPart = _numToOneByteString(slaveaddress) + _numToOneByteString(functioncode) + payloaddata
 
     if mode == MODE_ASCII:
-        message = _ASCII_HEADER + \
+        request = _ASCII_HEADER + \
                 _hexencode(firstPart) + \
                 _hexencode(_calculateLrcString(firstPart)) + \
                 _ASCII_FOOTER
     else:
-        message = firstPart + _calculateCrcString(firstPart)
+        request = firstPart + _calculateCrcString(firstPart)
 
-    return message
+    return request
 
 
 def _extractPayload(response, slaveaddress, mode, functioncode):
@@ -994,7 +994,7 @@ def _extractPayload(response, slaveaddress, mode, functioncode):
     * RTU Mode: slaveaddress byte + functioncode byte + payloaddata + CRC (which is two bytes)
     * ASCII Mode: header (:) + slaveaddress byte + functioncode byte + payloaddata + LRC (which is two characters) + footer (CRLF)
 
-    For development purposes, this function can also be used to extract the payload from the message sent TO the slave.
+    For development purposes, this function can also be used to extract the payload from the request sent TO the slave.
 
     """
     BYTEPOSITION_FOR_ASCII_HEADER          = 0  # Relative to plain response
@@ -1111,7 +1111,7 @@ def _predictResponseSize(mode, functioncode, payloadToSlave):
     Args:
      * mode (str): The modbus protcol mode (MODE_RTU or MODE_ASCII)
      * functioncode (int): Modbus function code.
-     * payloadToSlave (str): The raw message that is to be sent to the slave (not hex encoded string)
+     * payloadToSlave (str): The raw request that is to be sent to the slave (not hex encoded string)
 
     Returns:
         The preducted number of bytes (int) in the response.
@@ -2534,3 +2534,4 @@ def _getDiagnosticString():
     text += '\n'.join(sys.path) + '\n'
     text += '\n## End of diagnostic output ## \n'
     return text
+
