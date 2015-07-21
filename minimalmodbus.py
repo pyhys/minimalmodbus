@@ -2393,7 +2393,7 @@ def _interpretRawMessage(inputstr):
           7:  'q'       71   113  Checksum, CRC MSB 
 
     """
-    
+    raise NotImplementedError()
     output = ''
     output += 'Modbus bytestring decoder\n'
     output += 'Input string (length {} characters): {!r} \n'.format(len(inputstr), inputstr)
@@ -2502,6 +2502,7 @@ def _interpretPayload(functioncode, payload):
     
 
     """
+    raise NotImplementedError()
     output = ''
     output += 'Modbus payload decoder\n'
     output += 'Input payload (length {} characters): {!r} \n'.format(len(payload), payload)
