@@ -3,13 +3,15 @@
 History
 =======
 
+
 0.7 (2015-0?-??)
 ---------------------
 * Handling of local echo
+* Improved behavior of dummy_serial (number of bytes to read)
 * Using project setup by the cookie-cutter tool.
 * Reshuffled source files and documentation.
 * Moved source to Github from Sourceforge.
-* Moved documentation to Readthedocs.
+* Moved documentation to readthedocs.org
 * Using the tox tool for testing on multiple Python versions.
 * Using Travis CI test framework
 * Added support for Python 3.3 and 3.4.

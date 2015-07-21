@@ -146,9 +146,10 @@ class Instrument():
         """
         
         self.handle_local_echo = False
-        """Enable this if your RS-485 adaptor has local echo enabled. 
-        Then the transmitted message will appear at the receive line of the RS-485 adaptor.
+        """Set to to :const:`True` if your RS-485 adaptor has local echo enabled. 
+        Then the transmitted message will immeadiately appear at the receive line of the RS-485 adaptor.
         MinimalModbus will then read and discard this data, before reading the data from the slave.
+        Defaults to :const:`False`.
 
         New in version 0.7.
         """
@@ -850,8 +851,8 @@ class Instrument():
         _checkInt(number_of_bytes_to_read)
 
         if self.debug:
-            _print_out('\nMinimalModbus debug mode. Writing to instrument (expecting {} bytes back): {!r}'. \
-                format(number_of_bytes_to_read, request))
+            _print_out('\nMinimalModbus debug mode. Writing to instrument (expecting {} bytes back): {!r} ({})'. \
+                format(number_of_bytes_to_read, request, _hexlify(request)))
 
         if self.close_port_after_each_call:
             self.serial.open()
@@ -892,6 +893,7 @@ class Instrument():
         
         self.serial.write(request)
 
+        # Read and discard local echo
         if self.handle_local_echo:
             localEchoToDiscard = self.serial.read(len(request))
             if self.debug:
@@ -900,7 +902,7 @@ class Instrument():
                 _print_out(text)
             if localEchoToDiscard != request:
                 template = 'Local echo handling is enabled, but the local echo does not match the sent request. ' + \
-                    'request: {!r} ({} bytes), local echo: {!r} ({} bytes).' 
+                    'Request: {!r} ({} bytes), local echo: {!r} ({} bytes).' 
                 text = template.format(request, len(request), localEchoToDiscard, len(localEchoToDiscard))
                 raise IOError(text)
 
@@ -915,10 +917,11 @@ class Instrument():
             answer = str(answer, encoding='latin1')  # Convert types to make it Python3 compatible
 
         if self.debug:
-            template = 'MinimalModbus debug mode. Response from instrument: {!r} ({} bytes), ' + \
+            template = 'MinimalModbus debug mode. Response from instrument: {!r} ({}) ({} bytes), ' + \
                 'roundtrip time: {:.1f} ms. Timeout setting: {:.1f} ms.\n'
             text = template.format(
                 answer,
+                _hexlify(answer),
                 len(answer),
                 (_LATEST_READ_TIMES.get(self.serial.port, 0) - latest_write_time) * _SECONDS_TO_MILLISECONDS,
                 self.serial.timeout * _SECONDS_TO_MILLISECONDS)
@@ -1660,16 +1663,18 @@ def _unpack(formatstring, packed):
     return value
 
 
-def _hexencode(bytestring):
+def _hexencode(bytestring, insert_spaces = False):
     """Convert a byte string to a hex encoded string.
 
     For example 'J' will return '4A', and ``'\\x04'`` will return '04'.
 
     Args:
         bytestring (str): Can be for example ``'A\\x01B\\x45'``.
+        insert_spaces (bool): Insert space characters between pair of characters to increase readability.
 
     Returns:
         A string of twice the length, with characters in the range '0' to '9' and 'A' to 'F'.
+        The string will be longert if spaces are inserted.
 
     Raises:
         TypeError, ValueError
@@ -1677,13 +1682,15 @@ def _hexencode(bytestring):
     """
     _checkString(bytestring, description='byte string')
 
+    separator = '' if not insert_spaces else ' '
+    
     # Use plain string formatting instead of binhex.hexlify,
     # in order to have it Python 2.x and 3.x compatible
 
-    outstring = ''
+    byte_representions = []
     for c in bytestring:
-        outstring += '{0:02X}'.format(ord(c))
-    return outstring
+        byte_representions.append( '{0:02X}'.format(ord(c)) )
+    return separator.join(byte_representions).strip()
 
 
 def _hexdecode(hexstring):
@@ -1692,8 +1699,8 @@ def _hexdecode(hexstring):
     For example '4A' will return 'J', and '04' will return ``'\\x04'`` (which has length 1).
 
     Args:
-        hexstring (str): Can be for example 'A3'. Must be of even length.
-        Allowed characters are '0' to '9', 'a' to 'f' and 'A' to 'F'.
+        hexstring (str): Can be for example 'A3' or 'A3B4'. Must be of even length.
+        Allowed characters are '0' to '9', 'a' to 'f' and 'A' to 'F' (not space).
 
     Returns:
         A string of half the length, with characters corresponding to all 0-255 values for each byte.
@@ -1725,6 +1732,17 @@ def _hexdecode(hexstring):
             return hexstring.decode('hex')
         except TypeError as err:
             raise TypeError('Hexdecode reported an error: {}. Input hexstring: {}'.format(err.message, hexstring))
+
+
+def _hexlify(bytestring):
+    """Convert a byte string to a hex encoded string, with spaces for easier reading.
+    
+    This is just a facade for _hexencode() with insert_spaces = True.
+    
+    See _hexencode() for details.
+
+    """
+    return _hexencode(bytestring, insert_spaces = True)
 
 
 def _bitResponseToValue(bytestring):

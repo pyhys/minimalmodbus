@@ -32,7 +32,7 @@ import sys
 import time
 
 DEFAULT_TIMEOUT = 5
-"""The default timeot value. Used if not set by the constructor."""
+"""The default timeot value in seconds. Used if not set by the constructor."""
 
 
 DEFAULT_BAUDRATE = 19200
@@ -56,16 +56,19 @@ from the dummy serial port.
 Intended to be monkey-patched in the calling test module.
 
 """
-RESPONSES['EXAMPLEMESSAGE'] = 'EXAMPLERESPONSE'
+RESPONSES['EXAMPLEREQUEST'] = 'EXAMPLERESPONSE'
 
 
-DEFAULT_RESPONSE = ''
+DEFAULT_RESPONSE = 'NONE'
 """Response when no matching message (key) is found in the look-up dictionary.
+
+Should not be an empty string, as that is interpreted as "no data available on port".
 
 Might be monkey-patched in the calling test module.
 
 """
 
+NO_DATA_PRESENT = ''
 
 class Serial():
     """Dummy (mock) serial port for testing purposes.
@@ -82,9 +85,10 @@ class Serial():
     """
 
     def __init__(self, *args, **kwargs):
-        self._latestWrite = ''
+        self._waiting_data = NO_DATA_PRESENT
         self._isOpen = True
-        self.port = self.initport = kwargs['port']
+        self.port = kwargs['port']  # Serial port name.
+        self.initial_port_name = self.port  # Initial name given to the serial port
         try:
             self.timeout = kwargs['timeout']
         except:
@@ -95,40 +99,40 @@ class Serial():
             self.baudrate = DEFAULT_BAUDRATE
 
         if VERBOSE:
-            _print_out('\nInitializing dummy_serial')
+            _print_out('\nDummy_serial: Initializing')
             _print_out('dummy_serial initialization args: ' + repr(args) )
             _print_out('dummy_serial initialization kwargs: ' + repr(kwargs) + '\n')
 
     def __repr__(self):
         """String representation of the dummy_serial object"""
-        return "{0}.{1}<id=0x{2:x}, open={3}>(port={4!r}, timeout={5!r}, latestWrite={6!r})".format(
+        return "{0}.{1}<id=0x{2:x}, open={3}>(port={4!r}, timeout={5!r}, waiting_data={6!r})".format(
             self.__module__,
             self.__class__.__name__,
             id(self),
             self._isOpen,
             self.port,
             self.timeout,
-            self._latestWrite,
-        )
+            self._waiting_data,
+        ) 
 
     def open(self):
         """Open a (previously initialized) port on dummy_serial."""
         if VERBOSE:
-            _print_out('\nOpening port on dummy_serial\n')
+            _print_out('\nDummy_serial: Opening port\n')
 
         if self._isOpen:
-            raise IOError('The port on dummy_serial is already open')
+            raise IOError('Dummy_serial: The port is already open')
             
         self._isOpen = True
-        self.port = self.initport
+        self.port = self.initial_port_name
 
     def close(self):
         """Close a port on dummy_serial."""
         if VERBOSE:
-            _print_out('\nClosing port on dummy_serial\n')
+            _print_out('\nDummy_serial: Closing port\n')
 
         if not self._isOpen:
-            raise IOError('The port on dummy_serial is already closed')
+            raise IOError('Dummy_serial: The port is already closed')
             
         self._isOpen = False
         self.port = None
@@ -138,13 +142,14 @@ class Serial():
         """Write to a port on dummy_serial.
 
         Args:
-            inputdata (string/bytes): data for sending to the port on dummy_serial. Will affect the response.
+            inputdata (string/bytes): data for sending to the port on dummy_serial. Will affect the response 
+            for subsequent read operations.
 
         Note that for Python2, the inputdata should be a **string**. For Python3 it should be of type **bytes**.
         
         """
         if VERBOSE:
-            _print_out('\nWriting to port on dummy_serial. Given:' + repr(inputdata) + '\n')
+            _print_out('\nDummy_serial: Writing to port. Given:' + repr(inputdata) + '\n')
             
         if sys.version_info[0] > 2:
             if not type(inputdata) == bytes:
@@ -154,9 +159,14 @@ class Serial():
             inputstring = inputdata
 
         if not self._isOpen:
-            raise IOError('Trying to write to dummy_serial, but the port is not open. Given:' + repr(inputdata))
+            raise IOError('Dummy_serial: Trying to write, but the port is not open. Given:' + repr(inputdata))
 
-        self._latestWrite = inputstring
+        # Look up which data that should be waiting for subsequent read commands
+        try:
+            response = RESPONSES[inputstring]
+        except:
+            response = DEFAULT_RESPONSE
+        self._waiting_data = response
 
 
     def read(self, numberOfBytes):
@@ -175,46 +185,47 @@ class Serial():
 
         """
         if VERBOSE:
-            _print_out('\nReading from port on dummy_serial (max length {!r} bytes)'.format(numberOfBytes))
+            _print_out('\nDummy_serial: Reading from port (max length {!r} bytes)'.format(numberOfBytes))
         
         if numberOfBytes < 0:
-            raise IOError('The numberOfBytes to read must not be negative. Given: {!r}'.format(numberOfBytes))
+            raise IOError('Dummy_serial: The numberOfBytes to read must not be negative. Given: {!r}'.format(numberOfBytes))
         
         if not self._isOpen:
-            raise IOError('Trying to read from dummy_serial, but the port is not open.')
+            raise IOError('Dummy_serial: Trying to read, but the port is not open.')
 
-        # Do the actual reading
-        try:
-            response = RESPONSES[self._latestWrite]
-        except:
-            response = DEFAULT_RESPONSE
+        # Do the actual reading from the waiting data, and simulate the influence of numberOfBytes
+
+        if self._waiting_data == DEFAULT_RESPONSE:
+            returnstring = self._waiting_data 
+        elif numberOfBytes == len(self._waiting_data):
+            returnstring = self._waiting_data 
+            self._waiting_data = NO_DATA_PRESENT
+        elif numberOfBytes < len(self._waiting_data):
+            if VERBOSE:
+                _print_out('Dummy_serial: The numberOfBytes to read is smaller than the available data. ' + \
+                    'Some bytes will be kept for later. Available data: {!r} (length = {}), numberOfBytes: {}'.format( \
+                    self._waiting_data, len(self._waiting_data), numberOfBytes))
+            returnstring = self._waiting_data[:numberOfBytes]
+            self._waiting_data = self._waiting_data[numberOfBytes:]
+        else: # Wait for timeout, as we have asked for more data than available
+            if VERBOSE:
+                _print_out('Dummy_serial: The numberOfBytes to read is larger than the available data. ' + \
+                    'Will sleep until timeout. Available  data: {!r} (length = {}), numberOfBytes: {}'.format( \
+                    self._waiting_data, len(self._waiting_data), numberOfBytes))
+            time.sleep(self.timeout)
+            returnstring = self._waiting_data 
+            self._waiting_data = NO_DATA_PRESENT
         
-        # TODO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        # Adapt the behavior to better mimic the Windows behavior
-        
-        # Simulate the influence of numberOfBytes
-        returnstring = response
-        #if response == DEFAULT_RESPONSE:
-            #pass
-        #elif len(response) < numberOfBytes: # Wait for timeout
-            #_print_out('WARNING!! The response is shorter than given numberOfBytes to read. ' + \
-                #'Response: {!r} (length = {}), numberOfBytes: {}'.format( \
-                #response, len(response), numberOfBytes))
-            #time.sleep(self.timeout)
-        #elif len(response) > numberOfBytes: # Loose trailing bytes
-            #_print_out('WARNING!! The response is longer than given numberOfBytes to read. ' + \
-                #'Some bytes will be lost! Response: {!r} (length = {}), numberOfBytes: {}'.format( \
-                #response, len(response), numberOfBytes))
-            #returnstring = response[:numberOfBytes]
+        # TODO Adapt the behavior to better mimic the Windows behavior
         
         if VERBOSE:
-            _print_out('dummy_serial latest written data: {!r}'.format(self._latestWrite))
-            _print_out('dummy_serial read return data: {!r} (has length {})\n'.format(returnstring, len(returnstring)))
+            _print_out('Dummy_serial read return data: {!r} (has length {})\n'.format(returnstring, len(returnstring)))
 
         if sys.version_info[0] > 2: # Convert types to make it python3 compatible
             return bytes(returnstring, encoding='latin1')
         else:
             return returnstring
+
 
 def _print_out( inputstring ):
     """Print the inputstring. To make it compatible with Python2 and Python3."""

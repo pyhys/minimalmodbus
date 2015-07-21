@@ -872,18 +872,27 @@ class TestSanityPackUnpack(ExtendedTestCase):
 class TestHexencode(ExtendedTestCase):
 
     knownValues=[     
-        ('',        ''),   
-        ('7',       '37'),
-        ('J',       '4A'),
-        ('\x5d',    '5D'),
-        ('\x04',    '04'),
-        ('mn',      '6D6E'),
-        ('Katt1',   '4B61747431'),
+        ('',        False, ''),   
+        ('7',       False, '37'),
+        ('J',       False, '4A'),
+        ('\x5d',    False, '5D'),
+        ('\x04',    False, '04'),
+        ('\x04\x5d',False, '045D'),
+        ('mn',      False, '6D6E'),
+        ('Katt1',   False, '4B61747431'),
+        ('',        True,  ''),   
+        ('7',       True,  '37'),
+        ('J',       True,  '4A'),
+        ('\x5d',    True,  '5D'),
+        ('\x04',    True,  '04'),
+        ('\x04\x5d',True,  '04 5D'),
+        ('mn',      True,  '6D 6E'),
+        ('Katt1',   True,  '4B 61 74 74 31'),
         ]
     
     def testKnownValues(self):
-        for value, knownstring in self.knownValues:
-            resultstring = minimalmodbus._hexencode(value)
+        for value, insert_spaces, knownstring in self.knownValues:
+            resultstring = minimalmodbus._hexencode(value, insert_spaces)
             self.assertEqual(resultstring, knownstring)
 
     def testWrongInputValue(self):
@@ -899,9 +908,10 @@ class TestHexdecode(ExtendedTestCase):
     knownValues=TestHexencode.knownValues
 
     def testKnownValues(self):
-        for knownstring, value in self.knownValues:
-            resultstring = minimalmodbus._hexdecode(value)
-            self.assertEqual(resultstring, knownstring)
+        for knownstring, insert_spaces, value in self.knownValues:
+            if not insert_spaces:
+                resultstring = minimalmodbus._hexdecode(value)
+                self.assertEqual(resultstring, knownstring)
             
         self.assertEqual(minimalmodbus._hexdecode('4A'), 'J')
         self.assertEqual(minimalmodbus._hexdecode('4a'), 'J')
@@ -925,9 +935,10 @@ class TestSanityHexencodeHexdecode(ExtendedTestCase):
     knownValues=TestHexencode.knownValues
 
     def testKnownValues(self):
-        for value, knownstring in self.knownValues:
-            resultstring = minimalmodbus._hexdecode(minimalmodbus._hexencode(value))
-            self.assertEqual(resultstring, value)
+        for value, insert_spaces, knownstring in self.knownValues:
+            if not insert_spaces:
+                resultstring = minimalmodbus._hexdecode(minimalmodbus._hexencode(value))
+                self.assertEqual(resultstring, value)
 
     def testKnownValuesLoop(self):
         """Loop through all bytestrings of length two."""
@@ -1545,9 +1556,10 @@ class TestDummyCommunication(ExtendedTestCase):
     def setUp(self):
 
         # Prepare a dummy serial port to have proper responses
-        dummy_serial.VERBOSE = False
+        dummy_serial.VERBOSE = False 
         dummy_serial.RESPONSES = RTU_RESPONSES
         dummy_serial.DEFAULT_RESPONSE = 'NotFoundInResponseDictionary'
+        dummy_serial.DEFAULT_TIMEOUT = 0.01
 
         # Monkey-patch a dummy serial port for testing purpose
         minimalmodbus.serial.Serial = dummy_serial.Serial
@@ -2001,7 +2013,7 @@ class TestDummyCommunication(ExtendedTestCase):
     ## Perform command ##
 
     def testPerformcommandKnownResponse(self):
-        self.assertEqual( self.instrument._performCommand(16, 'TESTCOMMAND'), 'TESTCOMMANDRESPONSE')
+        self.assertEqual( self.instrument._performCommand(16, 'TESTCOMMAND'), 'TRsp') # Total response length should be 8 bytes
         self.assertEqual( self.instrument._performCommand(75, 'TESTCOMMAND2'), 'TESTCOMMANDRESPONSE2')
         self.assertEqual( self.instrument._performCommand(2, '\x00\x3d\x00\x01'), '\x01\x01' ) # Read bit register 61 on slave 1 using function code 2.
 
@@ -2038,10 +2050,14 @@ class TestDummyCommunication(ExtendedTestCase):
     def testCommunicateNoResponse(self):
         self.assertRaises(IOError, self.instrument._communicate, 'MessageForEmptyResponse', _LARGE_NUMBER_OF_BYTES)
 
-    # TODO: test local echo
-    # Test Handle local echo
-    # Test local error not matching sent message
+    def testCommunicateLocalEcho(self):
+        self.instrument.handle_local_echo = True
+        self.assertEqual( self.instrument._communicate('TESTMESSAGE2', _LARGE_NUMBER_OF_BYTES), 'TESTRESPONSE2' )
 
+    def testCommunicateWrongLocalEcho(self):
+        self.instrument.handle_local_echo = True
+        self.assertRaises(IOError, self.instrument._communicate, 'TESTMESSAGE3', _LARGE_NUMBER_OF_BYTES)
+        
     ## __repr__ ##
 
     def testRepresentation(self):
@@ -2082,6 +2098,7 @@ class TestDummyCommunicationOmegaSlave1(ExtendedTestCase):
         dummy_serial.VERBOSE = False
         dummy_serial.RESPONSES = RTU_RESPONSES
         dummy_serial.DEFAULT_RESPONSE = 'NotFoundInResponseDictionary'
+        dummy_serial.DEFAULT_TIMEOUT = 0.01
         minimalmodbus.serial.Serial = dummy_serial.Serial
         minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = False
         self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1) # port name, slave address (in decimal)
@@ -2111,6 +2128,7 @@ class TestDummyCommunicationOmegaSlave10(ExtendedTestCase):
         dummy_serial.VERBOSE = False
         dummy_serial.RESPONSES = RTU_RESPONSES
         dummy_serial.DEFAULT_RESPONSE = 'NotFoundInResponseDictionary'
+        dummy_serial.DEFAULT_TIMEOUT = 0.01
         minimalmodbus.serial.Serial = dummy_serial.Serial
         minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = False
         self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 10) # port name, slave address (in decimal)
@@ -2142,6 +2160,7 @@ class TestDummyCommunicationDTB4824_RTU(ExtendedTestCase):
         dummy_serial.VERBOSE = False
         dummy_serial.RESPONSES = RTU_RESPONSES
         dummy_serial.DEFAULT_RESPONSE = 'NotFoundInResponseDictionary'
+        dummy_serial.DEFAULT_TIMEOUT = 0.01
         minimalmodbus.serial.Serial = dummy_serial.Serial
         minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = False
         self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 7) # port name, slave address (in decimal)
@@ -2190,6 +2209,7 @@ class TestDummyCommunicationDTB4824_ASCII(ExtendedTestCase):
         dummy_serial.VERBOSE = False
         dummy_serial.RESPONSES = ASCII_RESPONSES
         dummy_serial.DEFAULT_RESPONSE = 'NotFoundInResponseDictionary'
+        dummy_serial.DEFAULT_TIMEOUT = 0.01
         minimalmodbus.serial.Serial = dummy_serial.Serial
         minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = False
         self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 7, 'ascii') # port name, slave address (in decimal), mode
@@ -2238,7 +2258,7 @@ class TestDummyCommunicationWithPortClosure(ExtendedTestCase):
         dummy_serial.VERBOSE = False
         dummy_serial.RESPONSES = RTU_RESPONSES
         dummy_serial.DEFAULT_RESPONSE = 'NotFoundInResponseDictionary'
-
+        dummy_serial.DEFAULT_TIMEOUT = 0.01
         minimalmodbus.serial.Serial = dummy_serial.Serial
         minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = True # Mimic a WindowsXP serial port
         self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1) # port name, slave address (in decimal)
@@ -2272,7 +2292,7 @@ class TestVerboseDummyCommunicationWithPortClosure(ExtendedTestCase):
         dummy_serial.VERBOSE = True
         dummy_serial.RESPONSES = RTU_RESPONSES
         dummy_serial.DEFAULT_RESPONSE = 'NotFoundInResponseDictionary'
-
+        dummy_serial.DEFAULT_TIMEOUT = 0.01
         minimalmodbus.serial.Serial = dummy_serial.Serial
         minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = True # Mimic a WindowsXP serial port
         self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1) # port name, slave address (in decimal)
@@ -2295,7 +2315,7 @@ class TestDummyCommunicationDebugmode(ExtendedTestCase):
         dummy_serial.VERBOSE = False
         dummy_serial.RESPONSES = RTU_RESPONSES
         dummy_serial.DEFAULT_RESPONSE = 'NotFoundInResponseDictionary'
-
+        dummy_serial.DEFAULT_TIMEOUT = 0.01
         minimalmodbus.serial.Serial = dummy_serial.Serial
         minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = False
         self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1) # port name, slave address (in decimal)
@@ -2307,6 +2327,30 @@ class TestDummyCommunicationDebugmode(ExtendedTestCase):
     def tearDown(self):
         self.instrument = None
         del(self.instrument)
+
+class TestDummyCommunicationHandleLocalEcho(ExtendedTestCase):
+
+    def setUp(self):
+        dummy_serial.VERBOSE = True
+        dummy_serial.RESPONSES = RTU_RESPONSES
+        dummy_serial.DEFAULT_RESPONSE = 'NotFoundInResponseDictionary'
+        dummy_serial.DEFAULT_TIMEOUT = 0.01
+        minimalmodbus.serial.Serial = dummy_serial.Serial
+        minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = False
+        self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 20) # port name, slave address (in decimal)
+        self.instrument.debug = True
+        self.instrument.handle_local_echo = True
+
+    def testReadRegister(self):
+        self.assertEqual( self.instrument.read_register(289), 770 )
+
+    def testReadRegisterWrongEcho(self):
+        self.assertRaises(IOError, self.instrument.read_register, 290)
+
+    def tearDown(self):
+        self.instrument = None
+        del(self.instrument)
+
 
 
 RTU_RESPONSES = {}
@@ -2659,15 +2703,40 @@ WRONG_RTU_RESPONSES['MessageForEmptyResponse'] = ''
 # ---------------------------------------------------------------- #
 WRONG_RTU_RESPONSES['TESTMESSAGE'] = 'TESTRESPONSE'
 
+# Retrieve an known response with local echo (for testing the _communicate method) #
+# ---------------------------------------------------------------- #
+WRONG_RTU_RESPONSES['TESTMESSAGE2'] = 'TESTMESSAGE2TESTRESPONSE2'
+
+# Retrieve a response with wrong local echo (for testing the _communicate method) #
+# ---------------------------------------------------------------- #
+WRONG_RTU_RESPONSES['TESTMESSAGE3'] = 'TESTMeSSAGE3TESTRESPONSE3'
+
 # Retrieve an known response (for testing the _performCommand method) #
 # ---------------------------------------------------------------- #
-WRONG_RTU_RESPONSES['\x01\x10TESTCOMMAND\x08B']     = '\x01\x10TESTCOMMANDRESPONSE\xb4,'
+WRONG_RTU_RESPONSES['\x01\x10TESTCOMMAND\x08B']     = '\x01\x10TRspU<' # Response should be 8 bytes
 WRONG_RTU_RESPONSES['\x01\x4bTESTCOMMAND2\x18\xc8'] = '\x01\x4bTESTCOMMANDRESPONSE2K\x8c'
 WRONG_RTU_RESPONSES['\x01\x01TESTCOMMAND4~']        = '\x02\x01TESTCOMMANDRESPONSEx]'    # Wrong slave address in response
 WRONG_RTU_RESPONSES['\x01\x02TESTCOMMAND0z']        = '\x01\x03TESTCOMMANDRESPONSE2\x8c' # Wrong function code in response
 WRONG_RTU_RESPONSES['\x01\x03TESTCOMMAND\xcd\xb9']  = '\x01\x03TESTCOMMANDRESPONSEab'    # Wrong CRC in response
 WRONG_RTU_RESPONSES['\x01\x04TESTCOMMAND8r']        = 'A'                                # Too short response message
 WRONG_RTU_RESPONSES['\x01\x05TESTCOMMAND\xc5\xb1']  = '\x01\x85TESTCOMMANDRESPONSE\xa54' # Error indication from slave
+
+
+# Handle local echo: Read register 289 on slave 20 using function code 3 #
+# ---------------------------------------------------------------------- #
+# Message:  Slave address 20, function code 3. Register address 289, 1 register. CRC.
+# Response: Echo. Slave address 20, function code 3. 2 bytes, value=770. CRC.
+WRONG_RTU_RESPONSES['\x14\x03' + '\x01!\x00\x01' + '\xd79'] = \
+    ('\x14\x03' + '\x01!\x00\x01' + '\xd79') + '\x14\x03' + '\x02\x03\x02' + '4\xb6'
+
+# Handle local echo: Read register 290 on slave 20 using function code 3. Wrong echo #
+# ---------------------------------------------------------------------------------- #
+# Message:  Slave address 20, function code 3. Register address 290, 1 register. CRC.
+# Response: Wrong echo. Slave address 20, function code 3. 2 bytes, value=770. CRC.
+
+WRONG_RTU_RESPONSES['\x14\x03' + '\x01\x22\x00\x01' + '\x27\x39'] = \
+    ('\x14\x03' + '\x01\x22\x00\x02' + '\x27\x39') + '\x14\x03' + '\x02\x03\x02' + '4\xb6'
+
 
 
 ## Recorded data from OmegaCN7500 ##
@@ -2909,14 +2978,29 @@ ASCII_RESPONSES.update(GOOD_ASCII_RESPONSES)
 #################
 
 if __name__ == '__main__':
-    try:
-        unittest.main(verbosity=VERBOSITY)
-    except TypeError:
-        unittest.main() # For compatibility with Python2.6
 
-    # suite = unittest.TestLoader().loadTestsFromTestCase(TestDummyCommunicationWithPortClosure)
-    # unittest.TextTestRunner(verbosity=VERBOSITY).run(suite)
+        ## Run all tests ##
+    
+    unittest.main(verbosity=VERBOSITY)
+    
+    
+        ## Run a test class ##
+    
+    #suite = unittest.TestLoader().loadTestsFromTestCase(TestDummyCommunicationHandleLocalEcho)
+    #suite = unittest.TestLoader().loadTestsFromTestCase(TestHexdecode)
+    
+    #unittest.TextTestRunner(verbosity=2).run(suite)
 
-    # print repr(minimalmodbus._calculateCrcString('\x01\x4bTESTCOMMAND2'))
 
-
+        ## Run a single test ##
+    
+    #suite = unittest.TestSuite()
+    #suite.addTest(TestDummyCommunication("testReadLong"))
+    #suite.addTest(TestDummyCommunication("testCommunicateWrongLocalEcho"))
+    #unittest.TextTestRunner(verbosity=2).run(suite)
+    
+    
+        ## Run individual commands ##
+    
+    #print repr(minimalmodbus._calculateCrcString('\x01\x4bTESTCOMMAND2'))
+    
