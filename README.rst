@@ -14,6 +14,10 @@ MinimalModbus
         :target: https://pypi.python.org/pypi/minimalmodbus
         :alt: PyPI page link
 
+.. image:: https://codecov.io/github/pyhys/minimalmodbus/coverage.svg?branch=master
+        :target: https://codecov.io/github/pyhys/minimalmodbus?branch=master
+        :alt: Test coverage report
+
 
 Easy-to-use Modbus RTU and Modbus ASCII implementation for Python.
 

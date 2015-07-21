@@ -36,6 +36,7 @@ clean-pyc:
 clean-test:
 	rm -fr .tox/
 	rm -f .coverage
+	rm -f coverage.xml
 	rm -fr htmlcov/
 
 clean-docs:
@@ -55,7 +56,8 @@ coverage:
 	rm -fr htmlcov/
 	coverage run setup.py test
 	coverage report -m
-	coverage html --omit=/usr/*
+	coverage html
+	coverage xml
 	@echo "    "
 	@echo "    "
 	@echo "    "
