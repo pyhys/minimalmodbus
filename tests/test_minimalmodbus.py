@@ -58,6 +58,7 @@ __license__ = "Apache License, Version 2.0"
 
 
 import sys
+import time
 import unittest
 
 import minimalmodbus
@@ -1114,67 +1115,6 @@ class TestSetBitOn(ExtendedTestCase):
             self.assertRaises(TypeError, minimalmodbus._setBitOn, value, 1)
             self.assertRaises(TypeError, minimalmodbus._setBitOn, 1,     value)
 
-
-class TestXOR(ExtendedTestCase):
-
-    knownValues=[
-    (1,1,0),
-    (2,1,3),
-    (5,1,4),
-    ]
-
-    def testKnownValues(self):
-        for int1, int2, knownresult in self.knownValues:
-            result = minimalmodbus._XOR(int1, int2)
-            self.assertEqual(result, knownresult)
-
-    def testKnownLoop(self):
-        for i in range(10):
-            for k in range(10):
-                knownresult = i ^ k
-                result = minimalmodbus._XOR(i, k)
-                self.assertEqual(result, knownresult)
-
-    def testWrongInputValue(self):
-        self.assertRaises(ValueError, minimalmodbus._XOR, 1,  -1)
-        self.assertRaises(ValueError, minimalmodbus._XOR, -1, 1)
-
-    def testWrongInputType(self):
-        for value in _NOT_INTERGERS:
-            self.assertRaises(TypeError, minimalmodbus._XOR, value, 1)
-            self.assertRaises(TypeError, minimalmodbus._XOR, 1,     value)
-
-
-class TestRightshift(ExtendedTestCase):
-
-    knownValues=[
-    (9,4,1),
-    (5,2,1),
-    (6,3,0),
-    ]
-
-    def testKnownValues(self):
-        for x, knownshifted, knowncarry in self.knownValues:
-            resultshifted, resultcarry = minimalmodbus._rightshift(x)
-            self.assertEqual(resultshifted, knownshifted)
-            self.assertEqual(resultcarry, knowncarry)
-
-    def testKnownLoop(self):
-        for x in range(256):
-            knownshifted = x >> 1
-            knowncarry = x & 1
-            resultshifted, resultcarry = minimalmodbus._rightshift(x)
-            self.assertEqual(resultshifted, knownshifted)
-            self.assertEqual(resultcarry,   knowncarry)
-
-    def testWrongInputValue(self):
-        self.assertRaises(ValueError, minimalmodbus._rightshift, -1)
-
-    def testWrongInputType(self):
-        for value in _NOT_INTERGERS:
-            self.assertRaises(TypeError, minimalmodbus._rightshift, value)
-            
-
 ############################
 # Error checking functions #
 ############################
@@ -1190,6 +1130,17 @@ class TestCalculateCrcString(ExtendedTestCase):
         for inputstring, knownresult in self.knownValues:
             resultstring  = minimalmodbus._calculateCrcString(inputstring)
             self.assertEqual(resultstring, knownresult)
+
+    def testCalculationTime(self):
+        teststrings = [minimalmodbus._numToTwoByteString(i) for i in range(2**16)]
+        minimalmodbus._print_out("\n\n   Measuring CRC calculation time. Running {} calculations ...".format(
+                                    len(teststrings)))
+        start_time = time.time()
+        for teststring in teststrings:
+            minimalmodbus._calculateCrcString(teststring)
+        calculation_time = time.time() - start_time
+        minimalmodbus._print_out("CRC calculation time: {} calculations took {:.3f} s ({} s per calculation)\n\n".format(
+                                    len(teststrings), calculation_time, calculation_time/float(len(teststrings))))
 
     def testNotStringInput(self):
         for value in _NOT_STRINGS:
@@ -2987,6 +2938,7 @@ if __name__ == '__main__':
         ## Run a test class ##
     
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestDummyCommunicationHandleLocalEcho)
+    #suite = unittest.TestLoader().loadTestsFromTestCase(TestCalculateCrcString)
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestHexdecode)
     
     #unittest.TextTestRunner(verbosity=2).run(suite)
@@ -3003,4 +2955,4 @@ if __name__ == '__main__':
         ## Run individual commands ##
     
     #print repr(minimalmodbus._calculateCrcString('\x01\x4bTESTCOMMAND2'))
-    
+

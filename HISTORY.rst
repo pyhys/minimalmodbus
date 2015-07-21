@@ -6,15 +6,17 @@ History
 
 Release 0.7 (2015-07-??)
 -------------------------
-* Handling of local echo
+* Faster CRC calculation by using a lookup table (thanks to Peter)
+* Handling of local echo (thanks to Luca Di Gregorio)
 * Improved behavior of dummy_serial (number of bytes to read)
-* Improved debug messages.
+* Improved debug messages (thanks to Dino)
 * Using project setup by the cookie-cutter tool.
 * Reshuffled source files and documentation.
 * Moved source to Github from Sourceforge.
 * Moved documentation to readthedocs.org
 * Using the tox tool for testing on multiple Python versions.
 * Using Travis CI test framework
+* Using codecov.io code coverage measurement framework
 * Added support for Python 3.3 and 3.4.
 * Dropped support for Python 2.6.
 

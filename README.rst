@@ -28,6 +28,7 @@ Other web pages:
 
 * Readthedocs project page: https://readthedocs.org/projects/minimalmodbus/
 * Travis CI build status page: https://travis-ci.org/pyhys/minimalmodbus
+* codecov.io project page: https://codecov.io/github/pyhys/minimalmodbus
 
 Obsolete web pages:
 
