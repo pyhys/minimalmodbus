@@ -921,9 +921,13 @@ or::
 
 TODO
 ----
+
+* Acknowl.
+
 Future releases:
 
 * Speeding up the code (new CRC calculation, disable some other checks)
+* Acknowl.
 
 Maybe:
 

@@ -4,10 +4,11 @@ History
 =======
 
 
-0.7 (2015-0?-??)
----------------------
+Release 0.7 (2015-07-??)
+-------------------------
 * Handling of local echo
 * Improved behavior of dummy_serial (number of bytes to read)
+* Improved debug messages.
 * Using project setup by the cookie-cutter tool.
 * Reshuffled source files and documentation.
 * Moved source to Github from Sourceforge.
