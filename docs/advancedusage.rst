@@ -256,7 +256,7 @@ Add this to :func:`._extractPayload` function, after the argument validity testi
 
 Handle local echo
 -------------------------------------------------------------------------
-TODO This has been implemented in version 0.7.
+Note: This feature has been implemented in version 0.7. See the API.
 
 If you cannot disable the local echo of your RS485 adapter, you will receive your 
 own message before the message from the slave. Luca Di Gregorio has suggested how to solve this issue. 
