@@ -1,6 +1,5 @@
 [run]
 branch = True
-source = ., tests
 
 [report]
 exclude_lines =
