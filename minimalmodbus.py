@@ -31,7 +31,6 @@ __version__  = '0.6.2aa'
 __status__   = 'Beta'
 
 
-import logging
 import os
 import serial
 import struct

@@ -94,8 +94,7 @@ Unit tests are provided in the tests subfolder. To run them::
 Also a dummy/mock/stub for the serial port, dummy_serial, is provided for 
 test purposes. See :ref:`apidummyserial`.
 
-The test coverage analysis is found at ?? TODO 
-To see which parts of the code that have been tested, click the corresponding file name.    
+The test coverage analysis is found at https://codecov.io/github/pyhys/minimalmodbus?branch=master.
         
 Hardware tests are performed using a Delta DTB4824 process controller. See :ref:`testdtb4824` for more information.
         
@@ -484,7 +483,11 @@ Check the code::
 
 Unittesting
 ```````````
-Run unit tests (in the :file:`trunk/test` directory)::
+Run unit tests for all supported Python versions::
+
+    make test-all
+
+Alternatively, run unit tests (in the :file:`trunk/test` directory)::
     
     python test_all_simulated.py
     python3 test_all_simulated.py
@@ -523,7 +526,17 @@ Build the source distribution (as :file:`.gzip.tar` and :file:`.zip`) , and uplo
 
 Generate documentation
 ``````````````````````
-Build the HTML and PDF documentation  (in directory :file:`doc` after making sure that :envvar:`PYTHONPATH` is correct)::
+Use the top-level Make to generate HTML and PDF documentation::
+
+    make docs
+    make pdf
+    
+Do linkchecking and test coverage measurements:
+
+    make linkcheck
+    make coverage
+
+Alternatively, build the HTML and PDF documentation  (in directory :file:`doc` after making sure that :envvar:`PYTHONPATH` is correct)::
 
     make html
     make latexpdf
@@ -538,8 +551,8 @@ Build the test coverage report (in directory :file:`trunk`). First manually clea
     coverage html --omit=/usr/*
     
 
-Upload to Sourceforge
-``````````````````````
+(Upload to Sourceforge)
+`````````````````````````
 Upload the :file:`.gzip.tar` and :file:`.zip` files to Sourceforge by logging in and manually using the web form.
 
 Upload the generated documentation to Sourceforge. In directory :file:`trunk/doc/build/html`::

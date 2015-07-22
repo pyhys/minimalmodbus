@@ -15,7 +15,7 @@ Or, if you have virtualenvwrapper installed::
 Dependencies
 ------------
 Python versions 2.7 and higher are supported (including 3.x). 
-Tested with Python2.7 and Python3.2. This module is pure Python. TODO update versions
+Tested with Python 2.7, 3.2, 3.3 and 3.4. This module is pure Python.
 
 This module relies on `pySerial <http://pyserial.sourceforge.net/>`_ (also pure Python) 
 to do the heavy lifting, and it is the only dependency. 
