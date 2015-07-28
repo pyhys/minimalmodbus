@@ -1,14 +1,27 @@
 [run]
 branch = True
-include = *, tests/*
+include = 
+    *
+    tests/*
+omit =
+    /usr/*
+    *opt/*
+    eggs/*
 
 [report]
 exclude_lines =
     pragma: no cover
     def __repr__
     raise NotImplementedError
+    raise NotImplementedError()
     if __name__ == .__main__.:
+    except ImportError:
 ignore_errors = True
+presicion = 1
+include = 
+    *
+    tests/*
 omit =
     /usr/*
-include = *, tests/*
+    *opt/*
+    eggs/*
