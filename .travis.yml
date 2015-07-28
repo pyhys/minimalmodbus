@@ -12,7 +12,8 @@ python:
 install: pip install -r requirements.txt
 
 # command to run tests, e.g. python setup.py test
-script: python setup.py test
+#script: python setup.py test
+script: coverage run setup.py test
 
 # Command for online test coverage analysis
 before_install:
