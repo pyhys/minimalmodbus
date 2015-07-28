@@ -3,10 +3,6 @@ branch = True
 include = 
     *
     tests/*
-omit =
-    /usr/*
-    *opt/*
-    eggs/*
 
 [report]
 exclude_lines =
@@ -23,5 +19,5 @@ include =
     tests/*
 omit =
     /usr/*
-    *opt/*
-    eggs/*
+    *opt*
+    *eggs*
