@@ -22,7 +22,7 @@ to do the heavy lifting, and it is the only dependency.
 You can find it at the Python package index: https://pypi.python.org/pypi/pyserial
 
 
-Alternate installation
+Alternate installation on Linux
 -------------------------------------
 From command line (if you have the *pip installer*, available at https://pypi.python.org/pypi/pip)::
 
@@ -50,7 +50,6 @@ If using Python 3, then install with::
 
    sudo python3 setup.py install
 
-
 For Python3 there might be problems with *easy_install* and *pip*. 
 In that case, first manually install pySerial and then manually install MinimalModbus.
 
@@ -69,6 +68,25 @@ Downloading from Github::
     unzip master.zip
 
 This will create a directory 'minimalmodbus-master'.
+
+
+
+Alternate installation on Windows
+-------------------------------------
+Install from Github, using pip::
+
+    C:\Python34\Scripts>pip3.4 install https://github.com/pyhys/minimalmodbus/archive/master.zip
+
+It will be installed in::
+
+    C:\Python34\Lib\site-packages
+
+In order to run Python from command line, you might need::
+
+    set PATH=%PATH%;C:\Python34
+
+
+
 
 
 If everything else fails
