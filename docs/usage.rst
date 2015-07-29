@@ -156,7 +156,8 @@ or alternatively (to avoid import of ``serial``)::
 
 Using multiple instruments
 --------------------------
-Use a single script for talking to all your instruments. Create several instrument objects like::
+Use a single script for talking to all your instruments (if connected via the
+same serial port). Create several instrument objects like::
 
     instrumentA = minimalmodbus.Instrument('/dev/ttyUSB1', 1)
     instrumentB = minimalmodbus.Instrument('/dev/ttyUSB1', 2)

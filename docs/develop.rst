@@ -457,6 +457,22 @@ This will create a subfolder :file:`build`::
     python setup.py build
 
 
+Development installation
+`````````````````````````````````````````
+This will create a link to the project, instead of properly installing it::
+
+    sudo python setup.py develop 
+
+It will add the current path to the file:
+:file:`/usr/local/lib/python2.7/dist-packages/easy-install.pth`.
+
+To uninstall it::
+
+    sudo python setup.py develop --uninstall
+
+
+
+
 Preparation for release
 -------------------------------------------------------------------------------
 
@@ -736,7 +752,7 @@ Test it using (adapt path to your system)::
 Git usage
 ---------------------------
 
-Clone::
+Clone the repository from Github::
 
     git clone https://github.com/pyhys/minimalmodbus.git
 
@@ -757,6 +773,7 @@ Commit locally::
 Commit remotely (will ask for Github username and password):
 
     git push origin
+
 
 
 Sphinx usage
@@ -894,7 +911,7 @@ Unittest coverage measurement using coverage.py
 -----------------------------------------------------------------------------
 Install the script :file:`coverage.py`::
 
-    sudo easy_install coverage
+    sudo pip install coverage
 
 Collect test data::
 
@@ -911,6 +928,21 @@ Generate html report (ends up in :file:`trunk/test/htmlcov`)::
 Or to exclude some third party modules (adapt to your file structure)::
 
     coverage html --omit=/usr/*
+
+Alternatively, adjust the settings in the :file:`.coverage` file.
+
+
+Using the flake8 style checker tool
+--------------------------------------------
+This tool checks the coding style, using pep8 and flake. Install it::
+
+    sudo apt-get install python-flake8
+
+Run it::
+
+    flake8 minimalmodbus.py
+
+Configurations are made in a [flake8] section of the :file:`tox.ini` file.
 
 
 Using the pep8 style checker tool
@@ -937,6 +969,7 @@ TODO
 
 Maybe:
 
+* Improved documentation (especially the sections with TODO).
 * Tool for interpretation of Modbus messages
 * Increase test coverage for minimalmodbus.py
 * PEP8 fine tuning of source.
@@ -946,6 +979,7 @@ Maybe:
 * Floats with other byte order
 * Logging instead of _print_out()
 * Timing based on time.clock() for Windows
+* string templating compatible with python2.6 (use {2} in format).
  
 
  
