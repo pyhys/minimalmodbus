@@ -4,7 +4,7 @@ History
 =======
 
 
-Release 0.7 (2015-07-??)
+Release 0.7 (2015-07-30)
 -------------------------
 * Faster CRC calculation by using a lookup table (thanks to Peter)
 * Handling of local echo (thanks to Luca Di Gregorio)
