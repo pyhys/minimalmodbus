@@ -777,6 +777,36 @@ Commit remotely (will ask for Github username and password)::
 
     git push origin
 
+List tags:
+
+    git tag
+
+Make a tag in Git::
+
+    git tag -a 0.7 -m 'Release 0.7'
+
+Show info about a tag::
+    
+    git show 0.7
+    
+Commit tags to remote server::    
+    
+    git push origin --tags
+    
+Create a new branch::
+
+    git branch develop    
+    
+List branches::
+
+    git branch
+    
+Change branch::
+
+    git checkout develop   
+    
+
+
 
 
 Sphinx usage
