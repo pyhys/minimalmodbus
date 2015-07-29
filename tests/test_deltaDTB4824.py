@@ -21,7 +21,7 @@ Defaults to RTU mode.
 
 Recommended test sequence
 ---------------------------
-Make sure that RUN_VERIFY_EXAMPLES and corresponding flags are all 'True'.
+Make sure that RUN_VERIFY_EXAMPLES and similar flags are all 'True'.
 
  * Run the tests under Linux and Windows
  * Use 2400 bps and 38400 bps

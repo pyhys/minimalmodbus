@@ -401,6 +401,8 @@ Calculating the minimum silent interval (seconds) at a baudrate of 19200 bits/s:
 
 Note that the API might change, as this is outside the official API.
 
+
+
 Found a bug?
 ------------------------------------------------------------------------------
 Try to isolate the bug by running in interactive mode (Python interpreter) with debug mode activated. Send a mail to the mailing list with the output, and also the output from :meth:`._getDiagnosticString`.
@@ -408,11 +410,36 @@ Try to isolate the bug by running in interactive mode (Python interpreter) with 
 Of course it is appreciated if you can spend a few moments trying to locate the problem, as it might possibly be related to your particular instrument (and thus difficult to reproduce without it). The source code is very readable, so is should be straight-forward to work with. Then please send your findings to the mailing list.
 
 
+
+Generate documentation
+-----------------------------------
+Use the top-level Make to generate HTML and PDF documentation::
+
+    make docs
+    make pdf
+    
+Do linkchecking and test coverage measurements:
+
+    make linkcheck
+    make coverage
+
+Alternatively, build the HTML and PDF documentation  (in directory :file:`doc` after making sure that :envvar:`PYTHONPATH` is correct)::
+
+    make html
+    make latexpdf
+
+Verify all external links::
+
+    make linkcheck
+
+
+
 Webpage
 ------------------------------------------------------------------------------
 The HTML theme on http://minimalmodbus.sourceforge.net/ is the Sphinx 'sphinx_rtd_theme' theme. 
 
 Note that Sphinx version 1.3 or later is required to build the documentation.
+
 
 
 Notes on distribution
@@ -485,7 +512,7 @@ Change version number etc
 and in the file :file:`setup.py` are changed automatically. 
 Also the copyright year in :file:`doc/conf.py` is changed automatically).
 
-How to number releases are described in :pep:`386`.
+How to number releases are described in :pep:`440`.
 
 Code style checking etc
 ```````````````````````
@@ -521,8 +548,8 @@ Also make sure that these are functional (see sections below):
   * Documentation generation 
   * Test coverage report generation
 
-Prepare subversion
-```````````````````
+(Prepare subversion)
+``````````````````````
 Make sure the Subversion is updated::
 
     svn update
@@ -540,31 +567,7 @@ Build the source distribution (as :file:`.gzip.tar` and :file:`.zip`) , and uplo
     python setup.py sdist --formats=gztar,zip upload
 
 
-Generate documentation
-``````````````````````
-Use the top-level Make to generate HTML and PDF documentation::
 
-    make docs
-    make pdf
-    
-Do linkchecking and test coverage measurements:
-
-    make linkcheck
-    make coverage
-
-Alternatively, build the HTML and PDF documentation  (in directory :file:`doc` after making sure that :envvar:`PYTHONPATH` is correct)::
-
-    make html
-    make latexpdf
-
-Verify all external links::
-
-    make linkcheck
-
-Build the test coverage report (in directory :file:`trunk`). First manually clear the directory :file:`htmlcov`::
-   
-    coverage run ./test/test_all_simulated.py 
-    coverage html --omit=/usr/*
     
 
 (Upload to Sourceforge)
@@ -591,8 +594,8 @@ on the PyPI page, log in and manually adjust the text. This might be for
 example parsing problems with the ReST text (allows no Sphinx-specific constructs).
 
 
-Generate Windows installer
-``````````````````````````
+(Generate Windows installer)
+`````````````````````````````````````
 On a Windows machine, build the windows installer:: 
 
     python setup.py bdist_wininst
@@ -625,15 +628,15 @@ Marketing
   * Sourceforge project news
   
 
-Applying patches
+(Applying patches)
 -------------------------------------------------
 Apply the patch like::
 
     /minimalmodbus$ patch -Np0 -d trunk < concurrency_latency_tests_09-21.diff 
 
 
-Downloading backups from the Sourceforge server
------------------------------------------------
+(Downloading backups from the Sourceforge server)
+--------------------------------------------------
 To download the svn repository in archive format, type this in the destination directory on your computer::
 
     rsync -av minimalmodbus.svn.sourceforge.net::svn/minimalmodbus/* .
@@ -733,8 +736,8 @@ Language settings::
     export LC_ALL="en_US.utf8"
 
 
-Installing MinimalModbus from repository
-`````````````````````````````````````````
+(Installing MinimalModbus from SVN repository)
+``````````````````````````````````````````````
 Update your local copy by::
 
    svn update
@@ -752,7 +755,7 @@ Test it using (adapt path to your system)::
 Git usage
 ---------------------------
 
-Clone the repository from Github::
+Clone the repository from Github (it will create a directory)::
 
     git clone https://github.com/pyhys/minimalmodbus.git
 
@@ -770,7 +773,7 @@ Commit locally::
 
     git commit -m "test1"
 
-Commit remotely (will ask for Github username and password):
+Commit remotely (will ask for Github username and password)::
 
     git push origin
 
