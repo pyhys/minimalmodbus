@@ -777,7 +777,7 @@ Commit remotely (will ask for Github username and password)::
 
     git push origin
 
-List tags:
+List tags::
 
     git tag
 
@@ -805,7 +805,9 @@ Change branch::
 
     git checkout develop   
     
+Commit other branch remotely::
 
+    git push origin develop
 
 
 
