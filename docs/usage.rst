@@ -167,8 +167,18 @@ Running several scripts using the same port will give problems.
 
 Handling communication errors
 -----------------------------
-Your top-level code should be able to handle communication errors. This is typically done with try-except.
+Your top-level code should be able to handle communication errors. This is typically done with try-except. 
 
+Instead of running::
 
-TODO Add example!!!
+    print(instrument.read_register(4143))
+
+Use::
+ 
+    try:
+        print(instrument.read_register(4143))
+    except IOError:
+        print("Failed to read from instrument")
+
+Different types of errors should be handled separately.
 

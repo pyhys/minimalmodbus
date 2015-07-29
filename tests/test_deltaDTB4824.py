@@ -39,17 +39,21 @@ Make sure that RUN_VERIFY_EXAMPLES and corresponding flags are all 'True'.
 Settings in the temperature controller
 ------------------------------------------
 To change the settings on the temperature controller panel,
-hold the SET button for more than 3 seconds.
+hold the SET button for more than 3 seconds. Use the 'loop arrow' button for 
+moving to next parameter. Change the value with the up and down arrows, and 
+confirm using the SET button. Press SET again to exit setting mode.
 
 Use these setting values in the temperature controller:
  * SP   1    (Decimal point position)
  * CoSH on   (ON: communication write-in enabled)
- * C-SL rtu
+ * C-SL rtu  (use RTU or ASCII)
  * C-no 1    (Slave number)
  * BPS       (see the DEFAULT_BAUDRATE setting below, or the command line argument)
  * LEN  8
  * PRTY None
  * Stop 1
+ 
+When running, the setpoint is seen on the rightmost part of the display.
 
 
 USB-to-RS485 converter
@@ -80,6 +84,18 @@ From "DTB Series Temperature Controller Instruction Sheet":
  * 03H to read the contents of register (Max. 8 words).
  * 05H to write 1 (one) bit into register.
  * 06H to write 1 (one) word into register.
+
+
+Manual testing in interactive mode (at the Python prompt)
+----------------------------------------------------------
+Use a setting of 19200 bps, RTU mode and slave addess 1 for the DTB4824. 
+Run these commands::
+
+    import minimalmodbus
+    instrument = minimalmodbus.Instrument('/dev/ttyUSB0', 1)  # Adjust if necessary.
+    instrument.debug = True
+    instrument.read_register(4143)  # Read firmware version (address in hex is 0x102F)
+
 
 """
 import os
@@ -155,13 +171,14 @@ def main():
     text = '\n'
     text += '###############################################################\n'
     text += '## Hardware test with Delta DTB4824                          ##\n'
+    text += '## Minimalmodbus version: {:8}                           ##\n'.format(minimalmodbus.__version__)
     text += '##                                                           ##\n'
     text += '## Modbus mode:    {:15}                           ##\n'.format(instrument.mode)
     text += '## Python version: {}.{}.{}                                     ##\n'.format(sys.version_info[0], sys.version_info[1], sys.version_info[2])
-    text += '## Baudrate (-b):  {:>8} bits/s                           ##\n'.format(instrument.serial.baudrate)
+    text += '## Baudrate (-b):  {:>5} bits/s                              ##\n'.format(instrument.serial.baudrate)
     text += '## Platform:       {:15}                           ##\n'.format(sys.platform)
-    text += '## Port name (-D): {:15}                           ##\n'.format(instrument.serial.port)
     text += '##                                                           ##\n'
+    text += '## Port name (-D): {:15}                           ##\n'.format(instrument.serial.port)
     text += '## Slave address:  {:<15}                           ##\n'.format(instrument.address)
     text += '## Timeout:        {:0.3f} s                                   ##\n'.format(instrument.serial.timeout)
     text += '## Full file path: ' + os.path.abspath(__file__) + '\n'
@@ -214,22 +231,22 @@ def main():
         ###############################
         instrument.debug = False
         
-        minimalmodbus._print_out('\nPV:'                        + str(instrument.read_register(0x1000)))
-        minimalmodbus._print_out('Setpoint:'                    + str(instrument.read_register(0x1001, 1)))
-        minimalmodbus._print_out('Sensor type:'                 + str(instrument.read_register(0x1004)))
-        minimalmodbus._print_out('Control method:'              + str(instrument.read_register(0x1005)))
-        minimalmodbus._print_out('Heating/cooling selection:'   + str(instrument.read_register(0x1006)))
-        minimalmodbus._print_out('Output 1 value:'              + str(instrument.read_register(0x1012, 1)))
-        minimalmodbus._print_out('Output 2 value:'              + str(instrument.read_register(0x1013, 1)))
-        minimalmodbus._print_out('System alarm setting:'        + str(instrument.read_register(0x1023)))
-        minimalmodbus._print_out('LED status:'                  + str(instrument.read_register(0x102A)))
-        minimalmodbus._print_out('Pushbutton status:'           + str(instrument.read_register(0x102B)))
-        minimalmodbus._print_out('Firmware version:'            + str(instrument.read_register(0x102F)))
+        minimalmodbus._print_out('\nPV: '                        + str(instrument.read_register(0x1000)))
+        minimalmodbus._print_out('Setpoint: '                    + str(instrument.read_register(0x1001, 1)))
+        minimalmodbus._print_out('Sensor type: '                 + str(instrument.read_register(0x1004)))
+        minimalmodbus._print_out('Control method: '              + str(instrument.read_register(0x1005)))
+        minimalmodbus._print_out('Heating/cooling selection: '   + str(instrument.read_register(0x1006)))
+        minimalmodbus._print_out('Output 1 value: '              + str(instrument.read_register(0x1012, 1)))
+        minimalmodbus._print_out('Output 2 value: '              + str(instrument.read_register(0x1013, 1)))
+        minimalmodbus._print_out('System alarm setting: '        + str(instrument.read_register(0x1023)))
+        minimalmodbus._print_out('LED status: '                  + str(instrument.read_register(0x102A)))
+        minimalmodbus._print_out('Pushbutton status: '           + str(instrument.read_register(0x102B)))
+        minimalmodbus._print_out('Firmware version: '            + str(instrument.read_register(0x102F)))
 
-        minimalmodbus._print_out('LED AT:'                      + str(instrument.read_bit(0x0800)))
-        minimalmodbus._print_out('LED Out1:'                    + str(instrument.read_bit(0x0801)))
-        minimalmodbus._print_out('LED Out2:'                    + str(instrument.read_bit(0x0802)))
-        minimalmodbus._print_out('RUN/STOP setting:'            + str(instrument.read_bit(0x0814)))
+        minimalmodbus._print_out('LED AT: '                      + str(instrument.read_bit(0x0800)))
+        minimalmodbus._print_out('LED Out1: '                    + str(instrument.read_bit(0x0801)))
+        minimalmodbus._print_out('LED Out2: '                    + str(instrument.read_bit(0x0802)))
+        minimalmodbus._print_out('RUN/STOP setting: '            + str(instrument.read_bit(0x0814)))
 
     if RUN_START_AND_STOP_REGULATOR:
         ###################################################

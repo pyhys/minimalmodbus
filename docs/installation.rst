@@ -54,18 +54,22 @@ If using Python 3, then install with::
 For Python3 there might be problems with *easy_install* and *pip*. 
 In that case, first manually install pySerial and then manually install MinimalModbus.
 
-
 To make sure it is installed properly, print the _getDiagnosticString() message. 
 See the :ref:`support` section for instructions.
 
 You can also download the source directly from Linux command line::
 
-    wget http://downloads.sourceforge.net/project/minimalmodbus/0.5/MinimalModbus-0.5.tar.gz
-    wget https://pypi.python.org/packages/source/M/MinimalModbus/MinimalModbus-0.5.tar.gz
-
-TODO Change download links
+    wget https://pypi.python.org/packages/source/M/MinimalModbus/MinimalModbus-0.7.tar.gz
 
 Change version number to the appropriate value.
+
+Downloading from Github::
+ 
+    wget https://github.com/pyhys/minimalmodbus/archive/master.zip
+    unzip master.zip
+
+This will create a directory 'minimalmodbus-master'.
+
 
 If everything else fails
 -------------------------
