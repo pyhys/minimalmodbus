@@ -36,8 +36,8 @@ Other web pages:
 
 Obsolete web pages:
 
+* Old Sourceforge project page (still has mailing list): http://sourceforge.net/projects/minimalmodbus
 * Old Sourceforge documentation page: http://minimalmodbus.sourceforge.net/
-* Old Sourceforge project page: http://sourceforge.net/projects/minimalmodbus
 * Old Sourceforge repository: http://sourceforge.net/p/minimalmodbus/code/
 
 

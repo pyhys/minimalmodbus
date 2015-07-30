@@ -586,6 +586,21 @@ Upload the test coverage report. In directory :file:`trunk`::
 
     scp -r htmlcov pyhys,minimalmodbus@web.sourceforge.net:htdocs
 
+To see available files on Sourgeforce, log in using the sftp protocol::
+
+    sftp pyhys,minimalmodbus@web.sourceforge.net
+
+These commands can be used:
+* pwd
+* ls
+* cd
+* put
+* get
+* rm
+* rmdir
+* help
+
+
 
 Test documentation
 `````````````````````

@@ -23,7 +23,7 @@ with open('minimalmodbus.py') as mainfile:
 metadata = dict( re.findall(r"__([a-z]+)__ *= *'([^']+)'", main_py) )
 
 setup(
-    name='minimalmodbus',
+    name='MinimalModbus',
     version      = metadata['version'],
     license      = metadata['license'],
     author       = metadata['author'],
