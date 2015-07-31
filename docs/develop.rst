@@ -583,7 +583,7 @@ Burn a CD/DVD with these items:
 
 
 
- Obsolete: (Preparation for release)
+Obsolete: (Preparation for release)
 ---------------------------------------
   
 (Generate Windows installer)
@@ -642,6 +642,7 @@ To see available files on Sourgeforce, log in using the sftp protocol::
     sftp pyhys,minimalmodbus@web.sourceforge.net
 
 These commands can be used:
+
 * pwd
 * ls
 * cd
