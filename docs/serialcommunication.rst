@@ -44,18 +44,18 @@ Note that the A/B naming is sometimes mixed up by some manufacturers.
 Each node uses a transceiver chip, containing a transmitter (sender) and a receiver. 
 Only one transmitter can be active on the bus simultaneously. 
 
-Pins on the RS485 bus side of the transceiver chip:
+Pins on the transceiver chip, on the RS485 bus side of it:
 
 * A: inverting line
 * B: non-inverting line
 * GND
 
-Pins on the microcontroller side of the transceiver chip:
+Pins on transceiver chip, on the microcontroller side of it:
 
-* TX: Data to be transmitted
-* TXENABLE: For enabling/disabling the transmitter
-* RX: Received data
-* RXENABLE: For enabling/disabling the receiver
+* TX: Data to be transmitted (chip digital input)
+* TXENABLE: For enabling/disabling the transmitter (chip digital input)
+* RX: Received data (chip digital output)
+* RXENABLE: For enabling/disabling the receiver (chip digital input)
 
 If the receiver is enabled simultaneusly with the transmitter, the sent data 
 is echoed back to the microcontroller. This echo functionality is sometimes useful, 

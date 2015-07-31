@@ -35,8 +35,8 @@ The application for which I wrote this software is to read and write data
 from Eurotherm process controllers. 
 These come with different types of communication protocols, 
 but the controllers I prefer use the Modbus RTU protocol. 
-MinimalModbus is intended for general communication using the Modbus RTU protocol 
-(using a serial link), so there should be lots of applications.
+MinimalModbus is intended for general communication using the Modbus RTU or 
+Modbus ASCII protocol (using a serial link), so there should be lots of applications.
 
 As an example on the usage of MinimialModbus, the driver I use for an 
 Eurotherm 3504 process controller is included. It uses the MinimalModbus Python module 
