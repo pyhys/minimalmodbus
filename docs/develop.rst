@@ -501,7 +501,7 @@ To uninstall it::
 
 
 Preparation for release
--------------------------------------------------------------------------------
+---------------------------------------
 
 Change version number etc
 `````````````````````````
@@ -548,6 +548,55 @@ Also make sure that these are functional (see sections below):
   * Documentation generation 
   * Test coverage report generation
 
+
+Make a tag in Git
+````````````````````````````
+See the section on Git usage.
+
+The release is done in the 'master' branch, not the 'develop' branch.
+
+
+Upload to PyPI
+``````````````
+Build the source distribution (as :file:`.gzip.tar` and :file:`.zip`) , and upload it to PYPI (will use the :file:`README.txt` etc)::
+
+    python setup.py register
+    python setup.py sdist --formats=gztar,zip upload
+
+
+Test documentation
+`````````````````````
+Test links on the Sourceforge and PyPI pages. If adjustments are required 
+on the PyPI page, log in and manually adjust the text. This might be for 
+example parsing problems with the ReST text (allows no Sphinx-specific constructs).
+
+
+Backup
+``````
+Burn a CD/DVD with these items:
+
+* Source tree
+* Source distributions
+* Generated HTML files
+* PDF documentation
+* svn repository in archive format
+
+
+
+ Obsolete: (Preparation for release)
+---------------------------------------
+  
+(Generate Windows installer)
+`````````````````````````````````````
+On a Windows machine, build the windows installer:: 
+
+    python setup.py bdist_wininst
+
+Upload the Windows installer to PYPI by logging in, and uploading it manually.
+
+Upload the Windows installer to Sourceforge by manually using the web form.
+  
+  
 (Prepare subversion)
 ``````````````````````
 Make sure the Subversion is updated::
@@ -559,16 +608,18 @@ Make a tag in Subversion (adapt to version number)::
      
     svn copy https://svn.code.sf.net/p/minimalmodbus/code/trunk/ https://svn.code.sf.net/p/minimalmodbus/code/tags/0.5 -m "Release 0.5"
 
-Upload to PyPI
-``````````````
-Build the source distribution (as :file:`.gzip.tar` and :file:`.zip`) , and upload it to PYPI (will use the :file:`README.txt` etc)::
 
-    python setup.py register
-    python setup.py sdist --formats=gztar,zip upload
+(Downloading backups from the Sourceforge server)
+``````````````````````````````````````````````````````````````````````````
+To download the svn repository in archive format, type this in the destination directory on your computer::
+
+    rsync -av minimalmodbus.svn.sourceforge.net::svn/minimalmodbus/* .
 
 
+(Test installer)
+``````````````````
+Make sure that the installer works, and the dependencies are handled correctly.
 
-    
 
 (Upload to Sourceforge)
 `````````````````````````
@@ -602,46 +653,6 @@ These commands can be used:
 
 
 
-Test documentation
-`````````````````````
-Test links on the Sourceforge and PyPI pages. If adjustments are required 
-on the PyPI page, log in and manually adjust the text. This might be for 
-example parsing problems with the ReST text (allows no Sphinx-specific constructs).
-
-
-(Generate Windows installer)
-`````````````````````````````````````
-On a Windows machine, build the windows installer:: 
-
-    python setup.py bdist_wininst
-
-Upload the Windows installer to PYPI by logging in, and uploading it manually.
-
-Upload the Windows installer to Sourceforge by manually using the web form.
-
-
-Test installer
-``````````````
-Make sure that the installer works, and the dependencies are handled correctly.
-Try at least Linux and Windows.
-
-
-Backup
-``````
-Burn a CD/DVD with these items:
-
-* Source tree
-* Source distributions
-* Windows installer
-* Generated HTML files
-* PDF documentation
-* svn repository in archive format
-
-Marketing
-````````````
-  * Mailing list
-  * Sourceforge project news
-  
 
 (Applying patches)
 -------------------------------------------------
@@ -649,12 +660,6 @@ Apply the patch like::
 
     /minimalmodbus$ patch -Np0 -d trunk < concurrency_latency_tests_09-21.diff 
 
-
-(Downloading backups from the Sourceforge server)
---------------------------------------------------
-To download the svn repository in archive format, type this in the destination directory on your computer::
-
-    rsync -av minimalmodbus.svn.sourceforge.net::svn/minimalmodbus/* .
 
 
 Useful development tools
