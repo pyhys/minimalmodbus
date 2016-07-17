@@ -83,6 +83,19 @@ CLOSE_PORT_AFTER_EACH_CALL = False
 MODE_RTU   = 'rtu'
 MODE_ASCII = 'ascii'
 
+################
+## Exceptions ##
+################
+
+class ModBusError(ValueError):
+    pass
+
+class SlaveDeviceBusyError(ModBusError):
+    pass
+
+class NegativeAcknowledgeError(ModBusError):
+    pass
+
 ##############################
 ## Modbus instrument object ##
 ##############################
@@ -1003,6 +1016,7 @@ def _extractPayload(response, slaveaddress, mode, functioncode):
 
     BYTEPOSITION_FOR_SLAVEADDRESS          = 0  # Relative to (stripped) response
     BYTEPOSITION_FOR_FUNCTIONCODE          = 1
+    BYTEPOSITION_FOR_EXCEPTIONCODE         = 2
 
     NUMBER_OF_RESPONSE_STARTBYTES          = 2  # Number of bytes before the response payload (in stripped response)
     NUMBER_OF_CRC_BYTES                    = 2
@@ -1011,6 +1025,9 @@ def _extractPayload(response, slaveaddress, mode, functioncode):
 
     MINIMAL_RESPONSE_LENGTH_RTU            = NUMBER_OF_RESPONSE_STARTBYTES + NUMBER_OF_CRC_BYTES
     MINIMAL_RESPONSE_LENGTH_ASCII          = 9
+
+    EXCEPTIONCODE_SLAVEBUSY                = 6
+    EXCEPTIONCODE_NEGATIVEACKNOWLEDGE      = 7
 
     # Argument validity testing
     _checkString(response, description='response')
@@ -1085,7 +1102,12 @@ def _extractPayload(response, slaveaddress, mode, functioncode):
     receivedFunctioncode = ord(response[BYTEPOSITION_FOR_FUNCTIONCODE])
 
     if receivedFunctioncode == _setBitOn(functioncode, BITNUMBER_FUNCTIONCODE_ERRORINDICATION):
-        raise ValueError('The slave is indicating an error. The response is: {!r}'.format(response))
+        if ord(response[BYTEPOSITION_FOR_EXCEPTIONCODE]) == EXCEPTIONCODE_SLAVEBUSY:
+            raise SlaveDeviceBusyError('The slave is busy')
+        elif ord(response[BYTEPOSITION_FOR_EXCEPTIONCODE]) == EXCEPTIONCODE_NEGATIVEACKNOWLEDGE:
+            raise NegativeAcknowledgeError('The slave sent negative acknowledge')
+        else:
+            raise ModBusError('The slave is indicating an unknown error. The response is: {!r}'.format(response))
 
     elif receivedFunctioncode != functioncode:
         raise ValueError('Wrong functioncode: {} instead of {}. The response is: {!r}'.format( \
