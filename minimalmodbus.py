@@ -607,58 +607,10 @@ class Instrument():
         ## Communicate ##
         payloadFromSlave = self._performCommand(functioncode, payloadToSlave)
 
-        ## Check the contents in the response payload ##
-        if functioncode in [1, 2, 3, 4]:
-            _checkResponseByteCount(payloadFromSlave)  # response byte count
+        return _checkResponse(functioncode, registeraddress, numberOfRegisters,
+                              numberOfRegisterBytes, numberOfDecimals, value,
+                              signed, payloadformat, payloadFromSlave)
 
-        if functioncode in [5, 6, 15, 16]:
-            _checkResponseRegisterAddress(payloadFromSlave, registeraddress)  # response register address
-
-        if functioncode == 5:
-            _checkResponseWriteData(payloadFromSlave, _createBitpattern(functioncode, value))  # response write data
-
-        if functioncode == 6:
-            _checkResponseWriteData(payloadFromSlave, \
-                _numToTwoByteString(value, numberOfDecimals, signed=signed))  # response write data
-
-        if functioncode == 15:
-            _checkResponseNumberOfRegisters(payloadFromSlave, NUMBER_OF_BITS)  # response number of bits
-
-        if functioncode == 16:
-            _checkResponseNumberOfRegisters(payloadFromSlave, numberOfRegisters)  # response number of registers
-
-        ## Calculate return value ##
-        if functioncode in [1, 2]:
-            registerdata = payloadFromSlave[NUMBER_OF_BYTES_BEFORE_REGISTERDATA:]
-            if len(registerdata) != NUMBER_OF_BYTES_FOR_ONE_BIT:
-                raise ValueError('The registerdata length does not match NUMBER_OF_BYTES_FOR_ONE_BIT. ' + \
-                    'Given {0}.'.format(len(registerdata)))
-
-            return _bitResponseToValue(registerdata)
-
-        if functioncode in [3, 4]:
-            registerdata = payloadFromSlave[NUMBER_OF_BYTES_BEFORE_REGISTERDATA:]
-            if len(registerdata) != numberOfRegisterBytes:
-                raise ValueError('The registerdata length does not match number of register bytes. ' + \
-                    'Given {0!r} and {1!r}.'.format(len(registerdata), numberOfRegisterBytes))
-
-            if payloadformat == PAYLOADFORMAT_STRING:
-                return _bytestringToTextstring(registerdata, numberOfRegisters)
-
-            elif payloadformat == PAYLOADFORMAT_LONG:
-                return _bytestringToLong(registerdata, signed, numberOfRegisters)
-
-            elif payloadformat == PAYLOADFORMAT_FLOAT:
-                return _bytestringToFloat(registerdata, numberOfRegisters)
-
-            elif payloadformat == PAYLOADFORMAT_REGISTERS:
-                return _bytestringToValuelist(registerdata, numberOfRegisters)
-
-            elif payloadformat == PAYLOADFORMAT_REGISTER:
-                return _twoByteStringToNum(registerdata, numberOfDecimals, signed=signed)
-
-            raise ValueError('Wrong payloadformat for return value generation. ' + \
-                'Given {0}'.format(payloadformat))
 
     ##########################################
     ## Communication implementation details ##
@@ -897,6 +849,63 @@ def _buildPayloadToSlave(functioncode, registeraddress, numberOfRegisters,
                         registerdata
 
     return payloadToSlave
+
+
+def _checkResponse(functioncode, registeraddress, numberOfRegisters,
+                   numberOfRegisterBytes, numberOfDecimals, value, signed,
+                   payloadformat, payloadFromSlave):
+    ## Check the contents in the response payload ##
+    if functioncode in [1, 2, 3, 4]:
+        _checkResponseByteCount(payloadFromSlave)  # response byte count
+
+    if functioncode in [5, 6, 15, 16]:
+        _checkResponseRegisterAddress(payloadFromSlave, registeraddress)  # response register address
+
+    if functioncode == 5:
+        _checkResponseWriteData(payloadFromSlave, _createBitpattern(functioncode, value))  # response write data
+
+    if functioncode == 6:
+        _checkResponseWriteData(payloadFromSlave, \
+            _numToTwoByteString(value, numberOfDecimals, signed=signed))  # response write data
+
+    if functioncode == 15:
+        _checkResponseNumberOfRegisters(payloadFromSlave, NUMBER_OF_BITS)  # response number of bits
+
+    if functioncode == 16:
+        _checkResponseNumberOfRegisters(payloadFromSlave, numberOfRegisters)  # response number of registers
+
+    ## Calculate return value ##
+    if functioncode in [1, 2]:
+        registerdata = payloadFromSlave[NUMBER_OF_BYTES_BEFORE_REGISTERDATA:]
+        if len(registerdata) != NUMBER_OF_BYTES_FOR_ONE_BIT:
+            raise ValueError('The registerdata length does not match NUMBER_OF_BYTES_FOR_ONE_BIT. ' + \
+                'Given {0}.'.format(len(registerdata)))
+
+        return _bitResponseToValue(registerdata)
+
+    if functioncode in [3, 4]:
+        registerdata = payloadFromSlave[NUMBER_OF_BYTES_BEFORE_REGISTERDATA:]
+        if len(registerdata) != numberOfRegisterBytes:
+            raise ValueError('The registerdata length does not match number of register bytes. ' + \
+                'Given {0!r} and {1!r}.'.format(len(registerdata), numberOfRegisterBytes))
+
+        if payloadformat == PAYLOADFORMAT_STRING:
+            return _bytestringToTextstring(registerdata, numberOfRegisters)
+
+        elif payloadformat == PAYLOADFORMAT_LONG:
+            return _bytestringToLong(registerdata, signed, numberOfRegisters)
+
+        elif payloadformat == PAYLOADFORMAT_FLOAT:
+            return _bytestringToFloat(registerdata, numberOfRegisters)
+
+        elif payloadformat == PAYLOADFORMAT_REGISTERS:
+            return _bytestringToValuelist(registerdata, numberOfRegisters)
+
+        elif payloadformat == PAYLOADFORMAT_REGISTER:
+            return _twoByteStringToNum(registerdata, numberOfDecimals, signed=signed)
+
+        raise ValueError('Wrong payloadformat for return value generation. ' + \
+            'Given {0}'.format(payloadformat))
 
 
 def _embedPayload(slaveaddress, mode, functioncode, payloaddata):
