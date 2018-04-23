@@ -83,6 +83,25 @@ CLOSE_PORT_AFTER_EACH_CALL = False
 MODE_RTU   = 'rtu'
 MODE_ASCII = 'ascii'
 
+# Generic command constants
+NUMBER_OF_BITS = 1
+NUMBER_OF_BYTES_FOR_ONE_BIT = 1
+NUMBER_OF_BYTES_BEFORE_REGISTERDATA = 1
+ALL_ALLOWED_FUNCTIONCODES = list(range(1, 7)) + [15, 16]  # To comply with both Python2 and Python3
+MAX_NUMBER_OF_REGISTERS = 255
+
+# Payload format constants, so datatypes can be told apart.
+# Note that bit datatype not is included, because it uses other functioncodes.
+PAYLOADFORMAT_LONG      = 'long'
+PAYLOADFORMAT_FLOAT     = 'float'
+PAYLOADFORMAT_STRING    = 'string'
+PAYLOADFORMAT_REGISTER  = 'register'
+PAYLOADFORMAT_REGISTERS = 'registers'
+
+ALL_PAYLOADFORMATS = [PAYLOADFORMAT_LONG, PAYLOADFORMAT_FLOAT, \
+                      PAYLOADFORMAT_STRING, PAYLOADFORMAT_REGISTER, \
+                      PAYLOADFORMAT_REGISTERS]
+
 ##############################
 ## Modbus instrument object ##
 ##############################
@@ -559,22 +578,6 @@ class Instrument():
             ValueError, TypeError, IOError
 
         """
-        NUMBER_OF_BITS = 1
-        NUMBER_OF_BYTES_FOR_ONE_BIT = 1
-        NUMBER_OF_BYTES_BEFORE_REGISTERDATA = 1
-        ALL_ALLOWED_FUNCTIONCODES = list(range(1, 7)) + [15, 16]  # To comply with both Python2 and Python3
-        MAX_NUMBER_OF_REGISTERS = 255
-
-        # Payload format constants, so datatypes can be told apart.
-        # Note that bit datatype not is included, because it uses other functioncodes.
-        PAYLOADFORMAT_LONG      = 'long'
-        PAYLOADFORMAT_FLOAT     = 'float'
-        PAYLOADFORMAT_STRING    = 'string'
-        PAYLOADFORMAT_REGISTER  = 'register'
-        PAYLOADFORMAT_REGISTERS = 'registers'
-
-        ALL_PAYLOADFORMATS = [PAYLOADFORMAT_LONG, PAYLOADFORMAT_FLOAT, \
-            PAYLOADFORMAT_STRING, PAYLOADFORMAT_REGISTER, PAYLOADFORMAT_REGISTERS]
 
         ## Check input values ##
         _checkFunctioncode(functioncode, ALL_ALLOWED_FUNCTIONCODES)  # Note: The calling facade functions should validate this
