@@ -143,7 +143,7 @@ class Instrument():
 
         New in version 0.5.
         """
-        
+
         self.handle_local_echo = False
         """Set to to :const:`True` if your RS-485 adaptor has local echo enabled. 
         Then the transmitted message will immeadiately appear at the receive line of the RS-485 adaptor.
@@ -841,8 +841,8 @@ class Instrument():
 
         For Python3, the information sent to and from pySerial should be of the type bytes.
         This is taken care of automatically by MinimalModbus.
-        
-        
+
+
 
         """
 
@@ -889,7 +889,7 @@ class Instrument():
 
         # Write request
         latest_write_time = time.time()
-        
+
         self.serial.write(request)
 
         # Read and discard local echo
@@ -1682,7 +1682,7 @@ def _hexencode(bytestring, insert_spaces = False):
     _checkString(bytestring, description='byte string')
 
     separator = '' if not insert_spaces else ' '
-    
+
     # Use plain string formatting instead of binhex.hexlify,
     # in order to have it Python 2.x and 3.x compatible
 
@@ -1735,9 +1735,9 @@ def _hexdecode(hexstring):
 
 def _hexlify(bytestring):
     """Convert a byte string to a hex encoded string, with spaces for easier reading.
-    
+
     This is just a facade for _hexencode() with insert_spaces = True.
-    
+
     See _hexencode() for details.
 
     """
@@ -1939,8 +1939,8 @@ _CRC16TABLE = (
     34177, 17728, 34561, 18368, 18048, 34369, 33281, 17088, 17280, 33601, 16640, 
     33217, 32897, 16448)
 """CRC-16 lookup table with 256 elements.
-    Built with this code:    
-    
+    Built with this code:
+
     poly=0xA001
     table = []
     for index in range(256):
@@ -1973,13 +1973,13 @@ def _calculateCrcString(inputstring):
 
     """
     _checkString(inputstring, description='input CRC string')
- 
+
     # Preload a 16-bit register with ones
     register = 0xFFFF
 
     for char in inputstring:
         register = (register >> 8) ^ _CRC16TABLE[(register ^ ord(char)) & 0xFF]
- 
+
     return _numToTwoByteString(register, LsbFirst=True)
 
 
@@ -2359,7 +2359,7 @@ def _print_out(inputstring):
 
 def _interpretRawMessage(inputstr):
     r"""Generate a human readable description of a Modbus bytestring.
-    
+
     Args:
         inputstr (str): The bytestring that should be interpreted.
 
@@ -2367,25 +2367,25 @@ def _interpretRawMessage(inputstr):
         A descriptive string.
 
     For example, the string ``'\n\x03\x10\x01\x00\x01\xd0q'`` should give something like::
-        
+
         TODO: update
-    
+
         Modbus bytestring decoder
         Input string (length 8 characters): '\n\x03\x10\x01\x00\x01\xd0q'
         Probably modbus RTU mode.
         Slave address: 10 (dec). Function code: 3 (dec).
         Valid message. Extracted payload: '\x10\x01\x00\x01'
 
-        Pos   Character Hex  Dec  Probable interpretation 
+        Pos   Character Hex  Dec  Probable interpretation
         -------------------------------------------------
-          0:  '\n'      0A    10  Slave address 
-          1:  '\x03'    03     3  Function code 
-          2:  '\x10'    10    16  Payload    
-          3:  '\x01'    01     1  Payload    
-          4:  '\x00'    00     0  Payload    
-          5:  '\x01'    01     1  Payload    
-          6:  '\xd0'    D0   208  Checksum, CRC LSB 
-          7:  'q'       71   113  Checksum, CRC MSB 
+          0:  '\n'      0A    10  Slave address
+          1:  '\x03'    03     3  Function code
+          2:  '\x10'    10    16  Payload
+          3:  '\x01'    01     1  Payload
+          4:  '\x00'    00     0  Payload
+          5:  '\x01'    01     1  Payload
+          6:  '\xd0'    D0   208  Checksum, CRC LSB
+          7:  'q'       71   113  Checksum, CRC MSB
 
     """
     raise NotImplementedError()
@@ -2437,23 +2437,23 @@ def _interpretRawMessage(inputstr):
             else:
                 description = 'Payload'
             output += '{0:3.0f}:  {1!r:<8}  {2:02X}  {2: 4.0f}  {3:<10} \n'.format(i, character, ord(character), description)
-        
+
     elif mode == MODE_ASCII:
         output += '\nPos   Character(s) Converted  Hex  Dec  Probable interpretation \n'
         output += '--------------------------------------------------------------- \n'
-        
+
         i = 0
         while i < len(inputstr):
-            
+
             if inputstr[i] in [':', '\r', '\n']:
-                if inputstr[i] == ':': 
+                if inputstr[i] == ':':
                     description = 'Start character'
                 else:
                     description = 'Stop character'
-                    
+
                 output += '{0:3.0f}:  {1!r:<8}                          {2} \n'.format(i, inputstr[i], description)
                 i += 1
-                
+
             else:
                 if i == 1:
                     description = 'Slave address'
@@ -2463,27 +2463,27 @@ def _interpretRawMessage(inputstr):
                     description = 'Checksum (LRC)'
                 else:
                     description = 'Payload'
-                
+
                 try:
                     hexvalue = _hexdecode(inputstr[i:i+2])
                     output +=  '{0:3.0f}:  {1!r:<8}     {2!r}     {3:02X}  {3: 4.0f}  {4} \n'.format(i, inputstr[i:i+2], hexvalue, ord(hexvalue), description)
                 except:
                     output +=  '{0:3.0f}:  {1!r:<8}     ?           ?     ?  {2} \n'.format(i, inputstr[i:i+2], description)
                 i += 2
-        
+
     # Generate description for the payload
     output += '\n\n'
     try:
         output += _interpretPayload(functioncode, extractedpayload)
     except:
         output += '\nCould not interpret the payload. \n\n' # Payload or function code not available
-    
+
     return output
-    
+
 
 def _interpretPayload(functioncode, payload):
     r"""Generate a human readable description of a Modbus payload.
-    
+
     Args:
       * functioncode (int): Function code
       * payload (str): The payload that should be interpreted. It should be a byte string.
@@ -2492,9 +2492,9 @@ def _interpretPayload(functioncode, payload):
         A descriptive string.
 
     For example, the payload ``'\x10\x01\x00\x01'`` for functioncode 3 should give something like::
-    
+
         TODO: Update
-    
+
 
     """
     raise NotImplementedError()
@@ -2502,7 +2502,7 @@ def _interpretPayload(functioncode, payload):
     output += 'Modbus payload decoder\n'
     output += 'Input payload (length {} characters): {!r} \n'.format(len(payload), payload)
     output += 'Function code: {} (dec).\n'.format(functioncode)
-    
+
     if len(payload) == 4:
         FourbyteMessageFirstHalfValue = _twoByteStringToNum(payload[0:2])
         FourbyteMessageSecondHalfValue = _twoByteStringToNum(payload[2:4])
@@ -2548,4 +2548,3 @@ def _getDiagnosticString():
     text += '\n'.join(sys.path) + '\n'
     text += '\n## End of diagnostic output ## \n'
     return text
-
