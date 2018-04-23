@@ -590,55 +590,19 @@ class Instrument():
         if functioncode in [3, 4, 6, 16] and payloadformat is None:
             payloadformat = PAYLOADFORMAT_REGISTER
 
-        _checkFormats(functioncode, payloadformat, numberOfRegisters, value, numberOfDecimals, signed)
-
         ## Check combinations of input parameters ##
         numberOfRegisterBytes = numberOfRegisters * _NUMBER_OF_BYTES_PER_REGISTER
 
-        ## Build payload to slave ##
-        if functioncode in [1, 2]:
-            payloadToSlave = _numToTwoByteString(registeraddress) + \
-                            _numToTwoByteString(NUMBER_OF_BITS)
+        ## Check if everyting is correct with the input
+        _checkFormats(functioncode, payloadformat, numberOfRegisters,
+                      numberOfRegisterBytes, value, numberOfDecimals, signed)
 
-        elif functioncode in [3, 4]:
-            payloadToSlave = _numToTwoByteString(registeraddress) + \
-                            _numToTwoByteString(numberOfRegisters)
-
-        elif functioncode == 5:
-            payloadToSlave = _numToTwoByteString(registeraddress) + \
-                            _createBitpattern(functioncode, value)
-
-        elif functioncode == 6:
-            payloadToSlave = _numToTwoByteString(registeraddress) + \
-                            _numToTwoByteString(value, numberOfDecimals, signed=signed)
-
-        elif functioncode == 15:
-            payloadToSlave = _numToTwoByteString(registeraddress) + \
-                            _numToTwoByteString(NUMBER_OF_BITS) + \
-                            _numToOneByteString(NUMBER_OF_BYTES_FOR_ONE_BIT) + \
-                            _createBitpattern(functioncode, value)
-
-        elif functioncode == 16:
-            if payloadformat == PAYLOADFORMAT_REGISTER:
-                registerdata = _numToTwoByteString(value, numberOfDecimals, signed=signed)
-
-            elif payloadformat == PAYLOADFORMAT_STRING:
-                registerdata = _textstringToBytestring(value, numberOfRegisters)
-
-            elif payloadformat == PAYLOADFORMAT_LONG:
-                registerdata = _longToBytestring(value, signed, numberOfRegisters)
-
-            elif payloadformat == PAYLOADFORMAT_FLOAT:
-                registerdata = _floatToBytestring(value, numberOfRegisters)
-
-            elif payloadformat == PAYLOADFORMAT_REGISTERS:
-                registerdata = _valuelistToBytestring(value, numberOfRegisters)
-
-            assert len(registerdata) == numberOfRegisterBytes
-            payloadToSlave = _numToTwoByteString(registeraddress) + \
-                            _numToTwoByteString(numberOfRegisters) + \
-                            _numToOneByteString(numberOfRegisterBytes) + \
-                            registerdata
+        ## Create payload
+        payloadToSlave = _buildPayloadToSlave(functioncode, registeraddress,
+                                              numberOfRegisters,
+                                              numberOfRegisterBytes,
+                                              numberOfDecimals, value, signed,
+                                              payloadformat)
 
         ## Communicate ##
         payloadFromSlave = self._performCommand(functioncode, payloadToSlave)
@@ -878,9 +842,61 @@ class Instrument():
 
         return answer
 
+
 ####################
 # Payload handling #
 ####################
+
+
+def _buildPayloadToSlave(functioncode, registeraddress, numberOfRegisters,
+                         numberOfRegisterBytes, numberOfDecimals, value, signed,
+                         payloadformat):
+
+    if functioncode in [1, 2]:
+        payloadToSlave = _numToTwoByteString(registeraddress) + \
+                        _numToTwoByteString(NUMBER_OF_BITS)
+
+    elif functioncode in [3, 4]:
+        payloadToSlave = _numToTwoByteString(registeraddress) + \
+                        _numToTwoByteString(numberOfRegisters)
+
+    elif functioncode == 5:
+        payloadToSlave = _numToTwoByteString(registeraddress) + \
+                        _createBitpattern(functioncode, value)
+
+    elif functioncode == 6:
+        payloadToSlave = _numToTwoByteString(registeraddress) + \
+                        _numToTwoByteString(value, numberOfDecimals, signed=signed)
+
+    elif functioncode == 15:
+        payloadToSlave = _numToTwoByteString(registeraddress) + \
+                        _numToTwoByteString(NUMBER_OF_BITS) + \
+                        _numToOneByteString(NUMBER_OF_BYTES_FOR_ONE_BIT) + \
+                        _createBitpattern(functioncode, value)
+
+    elif functioncode == 16:
+        if payloadformat == PAYLOADFORMAT_REGISTER:
+            registerdata = _numToTwoByteString(value, numberOfDecimals, signed=signed)
+
+        elif payloadformat == PAYLOADFORMAT_STRING:
+            registerdata = _textstringToBytestring(value, numberOfRegisters)
+
+        elif payloadformat == PAYLOADFORMAT_LONG:
+            registerdata = _longToBytestring(value, signed, numberOfRegisters)
+
+        elif payloadformat == PAYLOADFORMAT_FLOAT:
+            registerdata = _floatToBytestring(value, numberOfRegisters)
+
+        elif payloadformat == PAYLOADFORMAT_REGISTERS:
+            registerdata = _valuelistToBytestring(value, numberOfRegisters)
+
+        assert len(registerdata) == numberOfRegisterBytes
+        payloadToSlave = _numToTwoByteString(registeraddress) + \
+                        _numToTwoByteString(numberOfRegisters) + \
+                        _numToOneByteString(numberOfRegisterBytes) + \
+                        registerdata
+
+    return payloadToSlave
 
 
 def _embedPayload(slaveaddress, mode, functioncode, payloaddata):
@@ -1962,13 +1978,12 @@ def _calculateLrcString(inputstring):
     lrcString = _numToOneByteString(lrc)
     return lrcString
 
-def _checkFormats(functioncode, payloadformat, numberOfRegisters, value, numberOfDecimals, signed):
+def _checkFormats(functioncode, payloadformat, numberOfRegisters,
+                  numberOfRegisterBytes, value, numberOfDecimals, signed):
+
     if payloadformat is not None:
         if payloadformat not in ALL_PAYLOADFORMATS:
             raise ValueError('Wrong payload format variable. Given: {0!r}'.format(payloadformat))
-
-    ## Check combinations of input parameters ##
-    numberOfRegisterBytes = numberOfRegisters * _NUMBER_OF_BYTES_PER_REGISTER
 
     if functioncode in [3, 4, 6, 16]:
         if payloadformat not in ALL_PAYLOADFORMATS:
