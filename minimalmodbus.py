@@ -586,70 +586,14 @@ class Instrument():
         _checkInt(numberOfRegisters, minvalue=1, maxvalue=MAX_NUMBER_OF_REGISTERS, description='number of registers')
         _checkBool(signed, description='signed')
 
-        if payloadformat is not None:
-            if payloadformat not in ALL_PAYLOADFORMATS:
-                raise ValueError('Wrong payload format variable. Given: {0!r}'.format(payloadformat))
-
-        ## Check combinations of input parameters ##
-        numberOfRegisterBytes = numberOfRegisters * _NUMBER_OF_BYTES_PER_REGISTER
-
-                    # Payload format
+        # Payload format
         if functioncode in [3, 4, 6, 16] and payloadformat is None:
             payloadformat = PAYLOADFORMAT_REGISTER
 
-        if functioncode in [3, 4, 6, 16]:
-            if payloadformat not in ALL_PAYLOADFORMATS:
-                raise ValueError('The payload format is unknown. Given format: {0!r}, functioncode: {1!r}.'.\
-                    format(payloadformat, functioncode))
-        else:
-            if payloadformat is not None:
-                raise ValueError('The payload format given is not allowed for this function code. ' + \
-                    'Given format: {0!r}, functioncode: {1!r}.'.format(payloadformat, functioncode))
+        _checkFormats(functioncode, payloadformat, numberOfRegisters, value, numberOfDecimals, signed)
 
-                    # Signed and numberOfDecimals
-        if signed:
-            if payloadformat not in [PAYLOADFORMAT_REGISTER, PAYLOADFORMAT_LONG]:
-                raise ValueError('The "signed" parameter can not be used for this data format. ' + \
-                    'Given format: {0!r}.'.format(payloadformat))
-
-        if numberOfDecimals > 0 and payloadformat != PAYLOADFORMAT_REGISTER:
-            raise ValueError('The "numberOfDecimals" parameter can not be used for this data format. ' + \
-                'Given format: {0!r}.'.format(payloadformat))
-
-                    # Number of registers
-        if functioncode not in [3, 4, 16] and numberOfRegisters != 1:
-            raise ValueError('The numberOfRegisters is not valid for this function code. ' + \
-                'NumberOfRegisters: {0!r}, functioncode {1}.'.format(numberOfRegisters, functioncode))
-
-        if functioncode == 16 and payloadformat == PAYLOADFORMAT_REGISTER and numberOfRegisters != 1:
-            raise ValueError('Wrong numberOfRegisters when writing to a ' + \
-                'single register. Given {0!r}.'.format(numberOfRegisters))
-            # Note: For function code 16 there is checking also in the content conversion functions.
-
-                    # Value
-        if functioncode in [5, 6, 15, 16] and value is None:
-            raise ValueError('The input value is not valid for this function code. ' + \
-                'Given {0!r} and {1}.'.format(value, functioncode))
-
-        if functioncode == 16 and payloadformat in [PAYLOADFORMAT_REGISTER, PAYLOADFORMAT_FLOAT, PAYLOADFORMAT_LONG]:
-            _checkNumerical(value, description='input value')
-
-        if functioncode == 6 and payloadformat == PAYLOADFORMAT_REGISTER:
-            _checkNumerical(value, description='input value')
-
-                    # Value for string
-        if functioncode == 16 and payloadformat == PAYLOADFORMAT_STRING:
-            _checkString(value, 'input string', minlength=1, maxlength=numberOfRegisterBytes)
-            # Note: The string might be padded later, so the length might be shorter than numberOfRegisterBytes.
-
-                    # Value for registers
-        if functioncode == 16 and payloadformat == PAYLOADFORMAT_REGISTERS:
-            if not isinstance(value, list):
-                raise TypeError('The value parameter must be a list. Given {0!r}.'.format(value))
-
-            if len(value) != numberOfRegisters:
-                raise ValueError('The list length does not match number of registers. ' + \
-                    'List: {0!r},  Number of registers: {1!r}.'.format(value, numberOfRegisters))
+        ## Check combinations of input parameters ##
+        numberOfRegisterBytes = numberOfRegisters * _NUMBER_OF_BYTES_PER_REGISTER
 
         ## Build payload to slave ##
         if functioncode in [1, 2]:
@@ -2018,6 +1962,67 @@ def _calculateLrcString(inputstring):
     lrcString = _numToOneByteString(lrc)
     return lrcString
 
+def _checkFormats(functioncode, payloadformat, numberOfRegisters, value, numberOfDecimals, signed):
+    if payloadformat is not None:
+        if payloadformat not in ALL_PAYLOADFORMATS:
+            raise ValueError('Wrong payload format variable. Given: {0!r}'.format(payloadformat))
+
+    ## Check combinations of input parameters ##
+    numberOfRegisterBytes = numberOfRegisters * _NUMBER_OF_BYTES_PER_REGISTER
+
+    if functioncode in [3, 4, 6, 16]:
+        if payloadformat not in ALL_PAYLOADFORMATS:
+            raise ValueError('The payload format is unknown. Given format: {0!r}, functioncode: {1!r}.'.\
+                format(payloadformat, functioncode))
+    else:
+        if payloadformat is not None:
+            raise ValueError('The payload format given is not allowed for this function code. ' + \
+                'Given format: {0!r}, functioncode: {1!r}.'.format(payloadformat, functioncode))
+
+                # Signed and numberOfDecimals
+    if signed:
+        if payloadformat not in [PAYLOADFORMAT_REGISTER, PAYLOADFORMAT_LONG]:
+            raise ValueError('The "signed" parameter can not be used for this data format. ' + \
+                'Given format: {0!r}.'.format(payloadformat))
+
+    if numberOfDecimals > 0 and payloadformat != PAYLOADFORMAT_REGISTER:
+        raise ValueError('The "numberOfDecimals" parameter can not be used for this data format. ' + \
+            'Given format: {0!r}.'.format(payloadformat))
+
+                # Number of registers
+    if functioncode not in [3, 4, 16] and numberOfRegisters != 1:
+        raise ValueError('The numberOfRegisters is not valid for this function code. ' + \
+            'NumberOfRegisters: {0!r}, functioncode {1}.'.format(numberOfRegisters, functioncode))
+
+    if functioncode == 16 and payloadformat == PAYLOADFORMAT_REGISTER and numberOfRegisters != 1:
+        raise ValueError('Wrong numberOfRegisters when writing to a ' + \
+            'single register. Given {0!r}.'.format(numberOfRegisters))
+        # Note: For function code 16 there is checking also in the content conversion functions.
+
+                # Value
+    if functioncode in [5, 6, 15, 16] and value is None:
+        raise ValueError('The input value is not valid for this function code. ' + \
+            'Given {0!r} and {1}.'.format(value, functioncode))
+
+    if functioncode == 16 and payloadformat in [PAYLOADFORMAT_REGISTER, PAYLOADFORMAT_FLOAT, PAYLOADFORMAT_LONG]:
+        _checkNumerical(value, description='input value')
+
+    if functioncode == 6 and payloadformat == PAYLOADFORMAT_REGISTER:
+        _checkNumerical(value, description='input value')
+
+                # Value for string
+    if functioncode == 16 and payloadformat == PAYLOADFORMAT_STRING:
+        _checkString(value, 'input string', minlength=1, maxlength=numberOfRegisterBytes)
+        # Note: The string might be padded later, so the length might be shorter than numberOfRegisterBytes.
+
+                # Value for registers
+    if functioncode == 16 and payloadformat == PAYLOADFORMAT_REGISTERS:
+        if not isinstance(value, list):
+            raise TypeError('The value parameter must be a list. Given {0!r}.'.format(value))
+
+        if len(value) != numberOfRegisters:
+            raise ValueError('The list length does not match number of registers. ' + \
+                'List: {0!r},  Number of registers: {1!r}.'.format(value, numberOfRegisters))
 
 def _checkMode(mode):
     """Check that the Modbus mode is valie.
