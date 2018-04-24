@@ -1964,17 +1964,57 @@ class TestDummyCommunication(ExtendedTestCase):
     ## Perform command ##
 
     def testPerformcommandKnownResponse(self):
-        self.assertEqual( self.instrument._performCommand(16, 'TESTCOMMAND'), 'TRsp') # Total response length should be 8 bytes
-        self.assertEqual( self.instrument._performCommand(75, 'TESTCOMMAND2'), 'TESTCOMMANDRESPONSE2')
-        self.assertEqual( self.instrument._performCommand(2, '\x00\x3d\x00\x01'), '\x01\x01' ) # Read bit register 61 on slave 1 using function code 2.
+        self.assertEqual(
+                minimalmodbus._extractPayload(
+                        self.instrument._performCommand(16, 'TESTCOMMAND'),
+                        self.instrument.address,
+                        self.instrument.mode,
+                        16), 'TRsp') # Total response length should be 8 bytes
+        self.assertEqual(
+                minimalmodbus._extractPayload(
+                        self.instrument._performCommand(75, 'TESTCOMMAND2'),
+                        self.instrument.address,
+                        self.instrument.mode,
+                        75), 'TESTCOMMANDRESPONSE2')
+        self.assertEqual(
+                minimalmodbus._extractPayload(
+                        self.instrument._performCommand(2, '\x00\x3d\x00\x01'),
+                        self.instrument.address,
+                        self.instrument.mode,
+                        2), '\x01\x01')
 
     def testPerformcommandWrongSlaveResponse(self):
-        self.assertRaises(ValueError, self.instrument._performCommand, 1,  'TESTCOMMAND') # Wrong slave address in response
-        self.assertRaises(ValueError, self.instrument._performCommand, 2,  'TESTCOMMAND') # Wrong function code in response
-        self.assertRaises(ValueError, self.instrument._performCommand, 3,  'TESTCOMMAND') # Wrong crc in response
-        self.assertRaises(ValueError, self.instrument._performCommand, 4,  'TESTCOMMAND') # Too short response message from slave
-        self.assertRaises(ValueError, self.instrument._performCommand, 5,  'TESTCOMMAND') # Error indication from slave
-        
+        self.assertRaises(ValueError,
+                          minimalmodbus._extractPayload,
+                          self.instrument._performCommand(1, 'TESTCOMMAND'),
+                          self.instrument.address,
+                          self.instrument.mode,
+                          1) # Wrong slave address in response
+        self.assertRaises(ValueError,
+                          minimalmodbus._extractPayload,
+                          self.instrument._performCommand(2, 'TESTCOMMAND'),
+                          self.instrument.address,
+                          self.instrument.mode,
+                          2) # Wrong function code in response
+        self.assertRaises(ValueError,
+                          minimalmodbus._extractPayload,
+                          self.instrument._performCommand(3, 'TESTCOMMAND'),
+                          self.instrument.address,
+                          self.instrument.mode,
+                          3) # Wrong crc in response
+        self.assertRaises(ValueError,
+                          minimalmodbus._extractPayload,
+                          self.instrument._performCommand(4, 'TESTCOMMAND'),
+                          self.instrument.address,
+                          self.instrument.mode,
+                          4) # Too short response message from slave
+        self.assertRaises(ValueError,
+                          minimalmodbus._extractPayload,
+                          self.instrument._performCommand(5, 'TESTCOMMAND'),
+                          self.instrument.address,
+                          self.instrument.mode,
+                          5) # Error indication from slave
+
     def testPerformcommandWrongInputValue(self):
         self.assertRaises(ValueError, self.instrument._performCommand, -1,  'TESTCOMMAND') # Wrong function code
         self.assertRaises(ValueError, self.instrument._performCommand, 128, 'TESTCOMMAND')
@@ -2126,9 +2166,14 @@ class TestDummyCommunicationDTB4824_RTU(ExtendedTestCase):
         self.instrument.write_bit(0x0810, 1) # "Communication write in enabled".
         self.instrument.write_bit(0x0814, 0) # STOP
         self.instrument.write_bit(0x0814, 1) # RUN
-        
+
     def testReadBits(self):
-        self.assertEqual( self.instrument._performCommand(2, '\x08\x10\x00\x09'), '\x02\x07\x00') 
+        self.assertEqual(
+                minimalmodbus._extractPayload(
+                        self.instrument._performCommand(2, '\x08\x10\x00\x09'),
+                        self.instrument.address,
+                        self.instrument.mode,
+                        2), '\x02\x07\x00')
 
     def testReadRegister(self):
         self.assertEqual( self.instrument.read_register(0x1000), 64990) # Process value (PV)
@@ -2175,9 +2220,14 @@ class TestDummyCommunicationDTB4824_ASCII(ExtendedTestCase):
         self.instrument.write_bit(0x0810, 1) # "Communication write in enabled".
         self.instrument.write_bit(0x0814, 0) # STOP
         self.instrument.write_bit(0x0814, 1) # RUN
-        
+
     def testReadBits(self):
-        self.assertEqual( self.instrument._performCommand(2, '\x08\x10\x00\x09'), '\x02\x17\x00') 
+        self.assertEqual(
+                minimalmodbus._extractPayload(
+                        self.instrument._performCommand(2, '\x08\x10\x00\x09'),
+                        self.instrument.address,
+                        self.instrument.mode,
+                        2), '\x02\x17\x00')
 
     def testReadRegister(self):
         self.assertEqual( self.instrument.read_register(0x1000), 64990) # Process value (PV)

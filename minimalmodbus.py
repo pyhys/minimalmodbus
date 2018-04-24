@@ -605,7 +605,11 @@ class Instrument():
                                               payloadformat)
 
         ## Communicate ##
-        payloadFromSlave = self._performCommand(functioncode, payloadToSlave)
+        response = self._performCommand(functioncode, payloadToSlave)
+
+        # Extract payload
+        payloadFromSlave = _extractPayload(response, self.address, self.mode,
+                                           functioncode)
 
         return _checkResponse(functioncode, registeraddress, numberOfRegisters,
                               numberOfRegisterBytes, numberOfDecimals, value,
@@ -655,11 +659,7 @@ class Instrument():
                     _print_out(template.format(self.mode, number_of_bytes_to_read, request))
 
         # Communicate
-        response = self._communicate(request, number_of_bytes_to_read)
-
-        # Extract payload
-        payloadFromSlave = _extractPayload(response, self.address, self.mode, functioncode)
-        return payloadFromSlave
+        return self._communicate(request, number_of_bytes_to_read)
 
 
     def _communicate(self, request, number_of_bytes_to_read):
