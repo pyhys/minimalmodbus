@@ -83,6 +83,25 @@ CLOSE_PORT_AFTER_EACH_CALL = False
 MODE_RTU   = 'rtu'
 MODE_ASCII = 'ascii'
 
+# Generic command constants
+NUMBER_OF_BITS = 1
+NUMBER_OF_BYTES_FOR_ONE_BIT = 1
+NUMBER_OF_BYTES_BEFORE_REGISTERDATA = 1
+ALL_ALLOWED_FUNCTIONCODES = list(range(1, 7)) + [15, 16]  # To comply with both Python2 and Python3
+MAX_NUMBER_OF_REGISTERS = 255
+
+# Payload format constants, so datatypes can be told apart.
+# Note that bit datatype not is included, because it uses other functioncodes.
+PAYLOADFORMAT_LONG      = 'long'
+PAYLOADFORMAT_FLOAT     = 'float'
+PAYLOADFORMAT_STRING    = 'string'
+PAYLOADFORMAT_REGISTER  = 'register'
+PAYLOADFORMAT_REGISTERS = 'registers'
+
+ALL_PAYLOADFORMATS = [PAYLOADFORMAT_LONG, PAYLOADFORMAT_FLOAT, \
+                      PAYLOADFORMAT_STRING, PAYLOADFORMAT_REGISTER, \
+                      PAYLOADFORMAT_REGISTERS]
+
 ##############################
 ## Modbus instrument object ##
 ##############################
@@ -131,6 +150,9 @@ class Instrument():
         New in version 0.6.
         """
 
+        self.asynchron = False
+        """Set this to True if you do not want to read after writing a command. """
+
         self.debug = False
         """Set this to :const:`True` to print the communication details. Defaults to :const:`False`."""
 
@@ -143,7 +165,7 @@ class Instrument():
 
         New in version 0.5.
         """
-        
+
         self.handle_local_echo = False
         """Set to to :const:`True` if your RS-485 adaptor has local echo enabled. 
         Then the transmitted message will immeadiately appear at the receive line of the RS-485 adaptor.
@@ -554,27 +576,12 @@ class Instrument():
 
         Returns:
             The register data in numerical value (int or float), or the bit value 0 or 1 (int), or ``None``.
+            If asynchron is set this will alway return None.
 
         Raises:
             ValueError, TypeError, IOError
 
         """
-        NUMBER_OF_BITS = 1
-        NUMBER_OF_BYTES_FOR_ONE_BIT = 1
-        NUMBER_OF_BYTES_BEFORE_REGISTERDATA = 1
-        ALL_ALLOWED_FUNCTIONCODES = list(range(1, 7)) + [15, 16]  # To comply with both Python2 and Python3
-        MAX_NUMBER_OF_REGISTERS = 255
-
-        # Payload format constants, so datatypes can be told apart.
-        # Note that bit datatype not is included, because it uses other functioncodes.
-        PAYLOADFORMAT_LONG      = 'long'
-        PAYLOADFORMAT_FLOAT     = 'float'
-        PAYLOADFORMAT_STRING    = 'string'
-        PAYLOADFORMAT_REGISTER  = 'register'
-        PAYLOADFORMAT_REGISTERS = 'registers'
-
-        ALL_PAYLOADFORMATS = [PAYLOADFORMAT_LONG, PAYLOADFORMAT_FLOAT, \
-            PAYLOADFORMAT_STRING, PAYLOADFORMAT_REGISTER, PAYLOADFORMAT_REGISTERS]
 
         ## Check input values ##
         _checkFunctioncode(functioncode, ALL_ALLOWED_FUNCTIONCODES)  # Note: The calling facade functions should validate this
@@ -583,181 +590,88 @@ class Instrument():
         _checkInt(numberOfRegisters, minvalue=1, maxvalue=MAX_NUMBER_OF_REGISTERS, description='number of registers')
         _checkBool(signed, description='signed')
 
-        if payloadformat is not None:
-            if payloadformat not in ALL_PAYLOADFORMATS:
-                raise ValueError('Wrong payload format variable. Given: {0!r}'.format(payloadformat))
+        # Payload format
+        if functioncode in [3, 4, 6, 16] and payloadformat is None:
+            payloadformat = PAYLOADFORMAT_REGISTER
 
         ## Check combinations of input parameters ##
         numberOfRegisterBytes = numberOfRegisters * _NUMBER_OF_BYTES_PER_REGISTER
 
-                    # Payload format
-        if functioncode in [3, 4, 6, 16] and payloadformat is None:
-            payloadformat = PAYLOADFORMAT_REGISTER
+        ## Check if everyting is correct with the input
+        _checkFormats(functioncode, payloadformat, numberOfRegisters,
+                      numberOfRegisterBytes, value, numberOfDecimals, signed)
 
-        if functioncode in [3, 4, 6, 16]:
-            if payloadformat not in ALL_PAYLOADFORMATS:
-                raise ValueError('The payload format is unknown. Given format: {0!r}, functioncode: {1!r}.'.\
-                    format(payloadformat, functioncode))
-        else:
-            if payloadformat is not None:
-                raise ValueError('The payload format given is not allowed for this function code. ' + \
-                    'Given format: {0!r}, functioncode: {1!r}.'.format(payloadformat, functioncode))
-
-                    # Signed and numberOfDecimals
-        if signed:
-            if payloadformat not in [PAYLOADFORMAT_REGISTER, PAYLOADFORMAT_LONG]:
-                raise ValueError('The "signed" parameter can not be used for this data format. ' + \
-                    'Given format: {0!r}.'.format(payloadformat))
-
-        if numberOfDecimals > 0 and payloadformat != PAYLOADFORMAT_REGISTER:
-            raise ValueError('The "numberOfDecimals" parameter can not be used for this data format. ' + \
-                'Given format: {0!r}.'.format(payloadformat))
-
-                    # Number of registers
-        if functioncode not in [3, 4, 16] and numberOfRegisters != 1:
-            raise ValueError('The numberOfRegisters is not valid for this function code. ' + \
-                'NumberOfRegisters: {0!r}, functioncode {1}.'.format(numberOfRegisters, functioncode))
-
-        if functioncode == 16 and payloadformat == PAYLOADFORMAT_REGISTER and numberOfRegisters != 1:
-            raise ValueError('Wrong numberOfRegisters when writing to a ' + \
-                'single register. Given {0!r}.'.format(numberOfRegisters))
-            # Note: For function code 16 there is checking also in the content conversion functions.
-
-                    # Value
-        if functioncode in [5, 6, 15, 16] and value is None:
-            raise ValueError('The input value is not valid for this function code. ' + \
-                'Given {0!r} and {1}.'.format(value, functioncode))
-
-        if functioncode == 16 and payloadformat in [PAYLOADFORMAT_REGISTER, PAYLOADFORMAT_FLOAT, PAYLOADFORMAT_LONG]:
-            _checkNumerical(value, description='input value')
-
-        if functioncode == 6 and payloadformat == PAYLOADFORMAT_REGISTER:
-            _checkNumerical(value, description='input value')
-
-                    # Value for string
-        if functioncode == 16 and payloadformat == PAYLOADFORMAT_STRING:
-            _checkString(value, 'input string', minlength=1, maxlength=numberOfRegisterBytes)
-            # Note: The string might be padded later, so the length might be shorter than numberOfRegisterBytes.
-
-                    # Value for registers
-        if functioncode == 16 and payloadformat == PAYLOADFORMAT_REGISTERS:
-            if not isinstance(value, list):
-                raise TypeError('The value parameter must be a list. Given {0!r}.'.format(value))
-
-            if len(value) != numberOfRegisters:
-                raise ValueError('The list length does not match number of registers. ' + \
-                    'List: {0!r},  Number of registers: {1!r}.'.format(value, numberOfRegisters))
-
-        ## Build payload to slave ##
-        if functioncode in [1, 2]:
-            payloadToSlave = _numToTwoByteString(registeraddress) + \
-                            _numToTwoByteString(NUMBER_OF_BITS)
-
-        elif functioncode in [3, 4]:
-            payloadToSlave = _numToTwoByteString(registeraddress) + \
-                            _numToTwoByteString(numberOfRegisters)
-
-        elif functioncode == 5:
-            payloadToSlave = _numToTwoByteString(registeraddress) + \
-                            _createBitpattern(functioncode, value)
-
-        elif functioncode == 6:
-            payloadToSlave = _numToTwoByteString(registeraddress) + \
-                            _numToTwoByteString(value, numberOfDecimals, signed=signed)
-
-        elif functioncode == 15:
-            payloadToSlave = _numToTwoByteString(registeraddress) + \
-                            _numToTwoByteString(NUMBER_OF_BITS) + \
-                            _numToOneByteString(NUMBER_OF_BYTES_FOR_ONE_BIT) + \
-                            _createBitpattern(functioncode, value)
-
-        elif functioncode == 16:
-            if payloadformat == PAYLOADFORMAT_REGISTER:
-                registerdata = _numToTwoByteString(value, numberOfDecimals, signed=signed)
-
-            elif payloadformat == PAYLOADFORMAT_STRING:
-                registerdata = _textstringToBytestring(value, numberOfRegisters)
-
-            elif payloadformat == PAYLOADFORMAT_LONG:
-                registerdata = _longToBytestring(value, signed, numberOfRegisters)
-
-            elif payloadformat == PAYLOADFORMAT_FLOAT:
-                registerdata = _floatToBytestring(value, numberOfRegisters)
-
-            elif payloadformat == PAYLOADFORMAT_REGISTERS:
-                registerdata = _valuelistToBytestring(value, numberOfRegisters)
-
-            assert len(registerdata) == numberOfRegisterBytes
-            payloadToSlave = _numToTwoByteString(registeraddress) + \
-                            _numToTwoByteString(numberOfRegisters) + \
-                            _numToOneByteString(numberOfRegisterBytes) + \
-                            registerdata
+        ## Create payload
+        payloadToSlave = _buildPayloadToSlave(functioncode, registeraddress,
+                                              numberOfRegisters,
+                                              numberOfRegisterBytes,
+                                              numberOfDecimals, value, signed,
+                                              payloadformat)
 
         ## Communicate ##
-        payloadFromSlave = self._performCommand(functioncode, payloadToSlave)
+        request = self._writeCommandRequest(self.address,
+                                            functioncode,
+                                            payloadToSlave)
 
-        ## Check the contents in the response payload ##
-        if functioncode in [1, 2, 3, 4]:
-            _checkResponseByteCount(payloadFromSlave)  # response byte count
+        if self.asynchron:
+            return
 
-        if functioncode in [5, 6, 15, 16]:
-            _checkResponseRegisterAddress(payloadFromSlave, registeraddress)  # response register address
+        response = self._readCommandResponse(request,
+                                             functioncode,
+                                             payloadToSlave)
 
-        if functioncode == 5:
-            _checkResponseWriteData(payloadFromSlave, _createBitpattern(functioncode, value))  # response write data
+        # Extract payload
+        payloadFromSlave = _extractPayload(response, self.address, self.mode,
+                                           functioncode)
 
-        if functioncode == 6:
-            _checkResponseWriteData(payloadFromSlave, \
-                _numToTwoByteString(value, numberOfDecimals, signed=signed))  # response write data
+        _checkResponse(functioncode, registeraddress, numberOfRegisters,
+                       numberOfDecimals, value, signed, payloadFromSlave)
 
-        if functioncode == 15:
-            _checkResponseNumberOfRegisters(payloadFromSlave, NUMBER_OF_BITS)  # response number of bits
-
-        if functioncode == 16:
-            _checkResponseNumberOfRegisters(payloadFromSlave, numberOfRegisters)  # response number of registers
-
-        ## Calculate return value ##
-        if functioncode in [1, 2]:
-            registerdata = payloadFromSlave[NUMBER_OF_BYTES_BEFORE_REGISTERDATA:]
-            if len(registerdata) != NUMBER_OF_BYTES_FOR_ONE_BIT:
-                raise ValueError('The registerdata length does not match NUMBER_OF_BYTES_FOR_ONE_BIT. ' + \
-                    'Given {0}.'.format(len(registerdata)))
-
-            return _bitResponseToValue(registerdata)
-
-        if functioncode in [3, 4]:
-            registerdata = payloadFromSlave[NUMBER_OF_BYTES_BEFORE_REGISTERDATA:]
-            if len(registerdata) != numberOfRegisterBytes:
-                raise ValueError('The registerdata length does not match number of register bytes. ' + \
-                    'Given {0!r} and {1!r}.'.format(len(registerdata), numberOfRegisterBytes))
-
-            if payloadformat == PAYLOADFORMAT_STRING:
-                return _bytestringToTextstring(registerdata, numberOfRegisters)
-
-            elif payloadformat == PAYLOADFORMAT_LONG:
-                return _bytestringToLong(registerdata, signed, numberOfRegisters)
-
-            elif payloadformat == PAYLOADFORMAT_FLOAT:
-                return _bytestringToFloat(registerdata, numberOfRegisters)
-
-            elif payloadformat == PAYLOADFORMAT_REGISTERS:
-                return _bytestringToValuelist(registerdata, numberOfRegisters)
-
-            elif payloadformat == PAYLOADFORMAT_REGISTER:
-                return _twoByteStringToNum(registerdata, numberOfDecimals, signed=signed)
-
-            raise ValueError('Wrong payloadformat for return value generation. ' + \
-                'Given {0}'.format(payloadformat))
+        return _calculateReturn(functioncode, numberOfRegisters,
+                                numberOfDecimals, numberOfRegisterBytes, signed,
+                                payloadformat, payloadFromSlave)
 
     ##########################################
     ## Communication implementation details ##
     ##########################################
 
 
-    def _performCommand(self, functioncode, payloadToSlave):
+    def _writeCommandRequest(self, slaveaddress, functioncode, payloadToSlave):
         """Performs the command having the *functioncode*.
 
         Args:
+            * slaveaddress (int): The address of the slave the data should be send to.
+            * functioncode (int): The function code for the command to be performed. Can for example be 'Write register' = 16.
+            * payloadToSlave (str): Data to be transmitted to the slave (will be embedded in slaveaddress, CRC etc)
+
+        Returns:
+            The generated Request that was send to the slave.
+
+        Raises:
+            ValueError, TypeError.
+
+        Makes use of the :meth:`_writeRequest` method. The request is generated
+        with the :func:`_embedPayload` function, and the parsing of the
+        response is done with the :func:`_extractPayload` function.
+
+        """
+        _checkFunctioncode(functioncode, None)
+        _checkString(payloadToSlave, description='payload')
+
+        # Build request
+        request = _embedPayload(slaveaddress,
+                                self.mode,
+                                functioncode,
+                                payloadToSlave)
+
+        return self._writeRequest(request)
+
+
+    def _readCommandResponse(self, request, functioncode, payloadToSlave):
+        """Read the response of the command having the *functioncode*.
+
+        Args:
+            *  The request that was generated with the :func:`_embedPayload` function.
             * functioncode (int): The function code for the command to be performed. Can for example be 'Write register' = 16.
             * payloadToSlave (str): Data to be transmitted to the slave (will be embedded in slaveaddress, CRC etc)
 
@@ -767,18 +681,11 @@ class Instrument():
         Raises:
             ValueError, TypeError.
 
-        Makes use of the :meth:`_communicate` method. The request is generated
-        with the :func:`_embedPayload` function, and the parsing of the
+        Makes use of the :meth:`_readResponse` method. The parsing of the
         response is done with the :func:`_extractPayload` function.
 
         """
         DEFAULT_NUMBER_OF_BYTES_TO_READ = 1000
-
-        _checkFunctioncode(functioncode, None)
-        _checkString(payloadToSlave, description='payload')
-
-        # Build request
-        request = _embedPayload(self.address, self.mode, functioncode, payloadToSlave)
 
         # Calculate number of bytes to read
         number_of_bytes_to_read = DEFAULT_NUMBER_OF_BYTES_TO_READ
@@ -792,18 +699,98 @@ class Instrument():
                     _print_out(template.format(self.mode, number_of_bytes_to_read, request))
 
         # Communicate
-        response = self._communicate(request, number_of_bytes_to_read)
-
-        # Extract payload
-        payloadFromSlave = _extractPayload(response, self.address, self.mode, functioncode)
-        return payloadFromSlave
+        return self._readResponse(request, number_of_bytes_to_read)
 
 
-    def _communicate(self, request, number_of_bytes_to_read):
-        """Talk to the slave via a serial port.
+    def _writeRequest(self, request):
+        """Wrtie a request to the slave via a serial port.
 
         Args:
             request (str): The raw request that is to be sent to the slave.
+
+        Returns:
+            The request that was sent to the client.
+
+        Raises:
+            TypeError, ValueError, IOError
+
+        Use repr() to make the string printable (shows ASCII values for control signs.)
+
+        If the attribute :attr:`Instrument.debug` is :const:`True`, the communication details are printed.
+
+        Timing::
+
+                                                  Request from master (Master is writing)
+                                                  |
+                                                  |       Response from slave (Master is reading)
+                                                  |       |
+            ----W----R----------------------------W-------R----------------------------------------
+                     |                            |       |
+                     |<----- Silent period ------>|       |
+                                                  |       |
+                             Roundtrip time  ---->|-------|<--
+
+        The resolution for Python's time.time() is lower on Windows than on Linux.
+        It is about 16 ms on Windows according to
+        http://stackoverflow.com/questions/157359/accurate-timestamping-in-python
+
+        For Python3, the information sent to and from pySerial should be of the type bytes.
+        This is taken care of automatically by MinimalModbus.
+        """
+
+        _checkString(request, minlength=1, description='request')
+
+        if self.debug:
+            _print_out('\nMinimalModbus debug mode. Writing to instrument: {!r} ({})'. \
+                format(request, _hexlify(request)))
+
+        if sys.version_info[0] > 2:
+            request = bytes(request, encoding='latin1')  # Convert types to make it Python3 compatible
+
+
+        if self.close_port_after_each_call:
+            self.serial.open()
+
+        #self.serial.flushInput() TODO
+
+        # Sleep to make sure 3.5 character times have passed
+        minimum_silent_period   = _calculate_minimum_silent_period(self.serial.baudrate)
+        time_since_read         = time.time() - _LATEST_READ_TIMES.get(self.serial.port, 0)
+
+        if time_since_read < minimum_silent_period:
+            sleep_time = minimum_silent_period - time_since_read
+
+            if self.debug:
+                template = 'MinimalModbus debug mode. Sleeping for {:.1f} ms. ' + \
+                        'Minimum silent period: {:.1f} ms, time since read: {:.1f} ms.'
+                text = template.format(
+                    sleep_time * _SECONDS_TO_MILLISECONDS,
+                    minimum_silent_period * _SECONDS_TO_MILLISECONDS,
+                    time_since_read * _SECONDS_TO_MILLISECONDS)
+                _print_out(text)
+
+            time.sleep(sleep_time)
+
+        elif self.debug:
+            template = 'MinimalModbus debug mode. No sleep required before write. ' + \
+                'Time since previous read: {:.1f} ms, minimum silent period: {:.2f} ms.'
+            text = template.format(
+                time_since_read * _SECONDS_TO_MILLISECONDS,
+                minimum_silent_period * _SECONDS_TO_MILLISECONDS)
+            _print_out(text)
+
+        # Write request
+        self._latest_write_time = time.time()
+
+        self.serial.write(request)
+        return request
+
+
+    def _readResponse(self, request, number_of_bytes_to_read):
+        """Receive data from the slave via a serial port.
+
+        Args:
+            request (str): The raw request that has been send the slave.
             number_of_bytes_to_read (int): number of bytes to read
 
         Returns:
@@ -841,56 +828,13 @@ class Instrument():
 
         For Python3, the information sent to and from pySerial should be of the type bytes.
         This is taken care of automatically by MinimalModbus.
-        
-        
-
         """
 
-        _checkString(request, minlength=1, description='request')
         _checkInt(number_of_bytes_to_read)
 
         if self.debug:
-            _print_out('\nMinimalModbus debug mode. Writing to instrument (expecting {} bytes back): {!r} ({})'. \
-                format(number_of_bytes_to_read, request, _hexlify(request)))
-
-        if self.close_port_after_each_call:
-            self.serial.open()
-
-        #self.serial.flushInput() TODO
-
-        if sys.version_info[0] > 2:
-            request = bytes(request, encoding='latin1')  # Convert types to make it Python3 compatible
-
-        # Sleep to make sure 3.5 character times have passed
-        minimum_silent_period   = _calculate_minimum_silent_period(self.serial.baudrate)
-        time_since_read         = time.time() - _LATEST_READ_TIMES.get(self.serial.port, 0)
-
-        if time_since_read < minimum_silent_period:
-            sleep_time = minimum_silent_period - time_since_read
-
-            if self.debug:
-                template = 'MinimalModbus debug mode. Sleeping for {:.1f} ms. ' + \
-                        'Minimum silent period: {:.1f} ms, time since read: {:.1f} ms.'
-                text = template.format(
-                    sleep_time * _SECONDS_TO_MILLISECONDS,
-                    minimum_silent_period * _SECONDS_TO_MILLISECONDS,
-                    time_since_read * _SECONDS_TO_MILLISECONDS)
-                _print_out(text)
-
-            time.sleep(sleep_time)
-
-        elif self.debug:
-            template = 'MinimalModbus debug mode. No sleep required before write. ' + \
-                'Time since previous read: {:.1f} ms, minimum silent period: {:.2f} ms.'
-            text = template.format(
-                time_since_read * _SECONDS_TO_MILLISECONDS,
-                minimum_silent_period * _SECONDS_TO_MILLISECONDS)
-            _print_out(text)
-
-        # Write request
-        latest_write_time = time.time()
-        
-        self.serial.write(request)
+            _print_out('\nMinimalModbus debug mode. Eexpecting {} bytes back!'. \
+                format(number_of_bytes_to_read))
 
         # Read and discard local echo
         if self.handle_local_echo:
@@ -922,7 +866,7 @@ class Instrument():
                 answer,
                 _hexlify(answer),
                 len(answer),
-                (_LATEST_READ_TIMES.get(self.serial.port, 0) - latest_write_time) * _SECONDS_TO_MILLISECONDS,
+                (_LATEST_READ_TIMES.get(self.serial.port, 0) - self._latest_write_time) * _SECONDS_TO_MILLISECONDS,
                 self.serial.timeout * _SECONDS_TO_MILLISECONDS)
             _print_out(text)
 
@@ -931,9 +875,190 @@ class Instrument():
 
         return answer
 
+
 ####################
 # Payload handling #
 ####################
+
+
+def _buildPayloadToSlave(functioncode, registeraddress, numberOfRegisters,
+                         numberOfRegisterBytes, numberOfDecimals, value, signed,
+                         payloadformat):
+    """Build the payload that will be send to the slave.
+
+    Args:
+        * functioncode (int): The function code for the command to be performed.
+          Can for example be 16 (Write register).
+        * registeraddress (int): The register address  (use decimal numbers, not
+          hex).
+        * numberOfRegisters (int): The number of registers to read/write. Only
+          certain values allowed, depends on payloadformat.
+        * numberOfRegisterBytes (int): The total number of bytes used. This is
+          calculated out of the number of Registes and the register with.
+        * numberOfDecimals (int): The number of decimals for content conversion.
+          Only for a single register.
+        * value (numerical or string or None or list of int): The value to store
+          in the register. Depends on payloadformat.
+        * signed (bol): Whether negative values should be accepted.
+        * payloadformat (None or string): None, 'long', 'float', 'string',
+          'register', 'registers'. Not necessary for single registers or bits.
+
+    Returns:
+        * payloadToSlave (str): The byte string that can be send to the slave.
+
+    Raises:
+        ValueError
+
+    """
+
+    if functioncode in [1, 2]:
+        payloadToSlave = _numToTwoByteString(registeraddress) + \
+                        _numToTwoByteString(NUMBER_OF_BITS)
+
+    elif functioncode in [3, 4]:
+        payloadToSlave = _numToTwoByteString(registeraddress) + \
+                        _numToTwoByteString(numberOfRegisters)
+
+    elif functioncode == 5:
+        payloadToSlave = _numToTwoByteString(registeraddress) + \
+                        _createBitpattern(functioncode, value)
+
+    elif functioncode == 6:
+        payloadToSlave = _numToTwoByteString(registeraddress) + \
+                        _numToTwoByteString(value, numberOfDecimals, signed=signed)
+
+    elif functioncode == 15:
+        payloadToSlave = _numToTwoByteString(registeraddress) + \
+                        _numToTwoByteString(NUMBER_OF_BITS) + \
+                        _numToOneByteString(NUMBER_OF_BYTES_FOR_ONE_BIT) + \
+                        _createBitpattern(functioncode, value)
+
+    elif functioncode == 16:
+        if payloadformat == PAYLOADFORMAT_REGISTER:
+            registerdata = _numToTwoByteString(value, numberOfDecimals, signed=signed)
+
+        elif payloadformat == PAYLOADFORMAT_STRING:
+            registerdata = _textstringToBytestring(value, numberOfRegisters)
+
+        elif payloadformat == PAYLOADFORMAT_LONG:
+            registerdata = _longToBytestring(value, signed, numberOfRegisters)
+
+        elif payloadformat == PAYLOADFORMAT_FLOAT:
+            registerdata = _floatToBytestring(value, numberOfRegisters)
+
+        elif payloadformat == PAYLOADFORMAT_REGISTERS:
+            registerdata = _valuelistToBytestring(value, numberOfRegisters)
+
+        assert len(registerdata) == numberOfRegisterBytes
+        payloadToSlave = _numToTwoByteString(registeraddress) + \
+                        _numToTwoByteString(numberOfRegisters) + \
+                        _numToOneByteString(numberOfRegisterBytes) + \
+                        registerdata
+
+    return payloadToSlave
+
+
+def _checkResponse(functioncode, registeraddress, numberOfRegisters,
+                   numberOfDecimals, value, signed, payloadFromSlave):
+    """Check if the data received by the slave is correct.
+
+    Args:
+        * functioncode (int): The function code for the command to be performed.
+          Can for example be 16 (Write register).
+        * registeraddress (int): The register address  (use decimal numbers, not
+          hex).
+        * numberOfRegisters (int): The number of registers to read/write. Only
+          certain values allowed, depends on payloadformat.
+        * numberOfDecimals (int): The number of decimals for content conversion.
+          Only for a single register.
+        * value (numerical or string or None or list of int): The value to store
+          in the register. Depends on payloadformat.
+        * signed (bol): Whether negative values should be accepted.
+        * payloadFromSlave (str): The byte string that was sent by the slave.
+
+    Returns:
+        None
+
+    Raises:
+        ValueError, TypeError
+    """
+
+    if functioncode in [1, 2, 3, 4]:
+        _checkResponseByteCount(payloadFromSlave)  # response byte count
+
+    if functioncode in [5, 6, 15, 16]:
+        _checkResponseRegisterAddress(payloadFromSlave, registeraddress)  # response register address
+
+    if functioncode == 5:
+        _checkResponseWriteData(payloadFromSlave, _createBitpattern(functioncode, value))  # response write data
+
+    if functioncode == 6:
+        _checkResponseWriteData(payloadFromSlave, \
+            _numToTwoByteString(value, numberOfDecimals, signed=signed))  # response write data
+
+    if functioncode == 15:
+        _checkResponseNumberOfRegisters(payloadFromSlave, NUMBER_OF_BITS)  # response number of bits
+
+    if functioncode == 16:
+        _checkResponseNumberOfRegisters(payloadFromSlave, numberOfRegisters)  # response number of registers
+
+
+def _calculateReturn(functioncode, numberOfRegisters, numberOfDecimals,
+                     numberOfRegisterBytes, signed, payloadformat, payloadFromSlave):
+    """Calculate the value embedded in the payload received from the slave.
+
+    Args:
+        * functioncode (int): The function code for the command to be performed.
+          Can for example be 16 (Write register).
+        * numberOfRegisters (int): The number of registers to read/write. Only
+          certain values allowed, depends on payloadformat.
+        * numberOfDecimals (int): The number of decimals for content conversion.
+          Only for a single register.
+        * numberOfRegisterBytes (int): The total number of bytes used. This is
+          calculated out of the number of Registes and the register with.
+        * signed (bol): Whether negative values should be accepted.
+        * payloadformat (None or string): None, 'long', 'float', 'string',
+          'register', 'registers'. Not necessary for single registers or bits.
+        * payloadFromSlave (str): The byte string that was sent by the slave.
+
+    Returns:
+        The return value depending on the functioncode.
+
+    Raises:
+        ValueError
+    """
+
+    if functioncode in [1, 2]:
+        registerdata = payloadFromSlave[NUMBER_OF_BYTES_BEFORE_REGISTERDATA:]
+        if len(registerdata) != NUMBER_OF_BYTES_FOR_ONE_BIT:
+            raise ValueError('The registerdata length does not match NUMBER_OF_BYTES_FOR_ONE_BIT. ' + \
+                'Given {0}.'.format(len(registerdata)))
+
+        return _bitResponseToValue(registerdata)
+
+    if functioncode in [3, 4]:
+        registerdata = payloadFromSlave[NUMBER_OF_BYTES_BEFORE_REGISTERDATA:]
+        if len(registerdata) != numberOfRegisterBytes:
+            raise ValueError('The registerdata length does not match number of register bytes. ' + \
+                'Given {0!r} and {1!r}.'.format(len(registerdata), numberOfRegisterBytes))
+
+        if payloadformat == PAYLOADFORMAT_STRING:
+            return _bytestringToTextstring(registerdata, numberOfRegisters)
+
+        elif payloadformat == PAYLOADFORMAT_LONG:
+            return _bytestringToLong(registerdata, signed, numberOfRegisters)
+
+        elif payloadformat == PAYLOADFORMAT_FLOAT:
+            return _bytestringToFloat(registerdata, numberOfRegisters)
+
+        elif payloadformat == PAYLOADFORMAT_REGISTERS:
+            return _bytestringToValuelist(registerdata, numberOfRegisters)
+
+        elif payloadformat == PAYLOADFORMAT_REGISTER:
+            return _twoByteStringToNum(registerdata, numberOfDecimals, signed=signed)
+
+        raise ValueError('Wrong payloadformat for return value generation. ' + \
+            'Given {0}'.format(payloadformat))
 
 
 def _embedPayload(slaveaddress, mode, functioncode, payloaddata):
@@ -1682,7 +1807,7 @@ def _hexencode(bytestring, insert_spaces = False):
     _checkString(bytestring, description='byte string')
 
     separator = '' if not insert_spaces else ' '
-    
+
     # Use plain string formatting instead of binhex.hexlify,
     # in order to have it Python 2.x and 3.x compatible
 
@@ -1735,9 +1860,9 @@ def _hexdecode(hexstring):
 
 def _hexlify(bytestring):
     """Convert a byte string to a hex encoded string, with spaces for easier reading.
-    
+
     This is just a facade for _hexencode() with insert_spaces = True.
-    
+
     See _hexencode() for details.
 
     """
@@ -1939,8 +2064,8 @@ _CRC16TABLE = (
     34177, 17728, 34561, 18368, 18048, 34369, 33281, 17088, 17280, 33601, 16640, 
     33217, 32897, 16448)
 """CRC-16 lookup table with 256 elements.
-    Built with this code:    
-    
+    Built with this code:
+
     poly=0xA001
     table = []
     for index in range(256):
@@ -1973,13 +2098,13 @@ def _calculateCrcString(inputstring):
 
     """
     _checkString(inputstring, description='input CRC string')
- 
+
     # Preload a 16-bit register with ones
     register = 0xFFFF
 
     for char in inputstring:
         register = (register >> 8) ^ _CRC16TABLE[(register ^ ord(char)) & 0xFF]
- 
+
     return _numToTwoByteString(register, LsbFirst=True)
 
 
@@ -2015,6 +2140,66 @@ def _calculateLrcString(inputstring):
     lrcString = _numToOneByteString(lrc)
     return lrcString
 
+def _checkFormats(functioncode, payloadformat, numberOfRegisters,
+                  numberOfRegisterBytes, value, numberOfDecimals, signed):
+
+    if payloadformat is not None:
+        if payloadformat not in ALL_PAYLOADFORMATS:
+            raise ValueError('Wrong payload format variable. Given: {0!r}'.format(payloadformat))
+
+    if functioncode in [3, 4, 6, 16]:
+        if payloadformat not in ALL_PAYLOADFORMATS:
+            raise ValueError('The payload format is unknown. Given format: {0!r}, functioncode: {1!r}.'.\
+                format(payloadformat, functioncode))
+    else:
+        if payloadformat is not None:
+            raise ValueError('The payload format given is not allowed for this function code. ' + \
+                'Given format: {0!r}, functioncode: {1!r}.'.format(payloadformat, functioncode))
+
+                # Signed and numberOfDecimals
+    if signed:
+        if payloadformat not in [PAYLOADFORMAT_REGISTER, PAYLOADFORMAT_LONG]:
+            raise ValueError('The "signed" parameter can not be used for this data format. ' + \
+                'Given format: {0!r}.'.format(payloadformat))
+
+    if numberOfDecimals > 0 and payloadformat != PAYLOADFORMAT_REGISTER:
+        raise ValueError('The "numberOfDecimals" parameter can not be used for this data format. ' + \
+            'Given format: {0!r}.'.format(payloadformat))
+
+                # Number of registers
+    if functioncode not in [3, 4, 16] and numberOfRegisters != 1:
+        raise ValueError('The numberOfRegisters is not valid for this function code. ' + \
+            'NumberOfRegisters: {0!r}, functioncode {1}.'.format(numberOfRegisters, functioncode))
+
+    if functioncode == 16 and payloadformat == PAYLOADFORMAT_REGISTER and numberOfRegisters != 1:
+        raise ValueError('Wrong numberOfRegisters when writing to a ' + \
+            'single register. Given {0!r}.'.format(numberOfRegisters))
+        # Note: For function code 16 there is checking also in the content conversion functions.
+
+                # Value
+    if functioncode in [5, 6, 15, 16] and value is None:
+        raise ValueError('The input value is not valid for this function code. ' + \
+            'Given {0!r} and {1}.'.format(value, functioncode))
+
+    if functioncode == 16 and payloadformat in [PAYLOADFORMAT_REGISTER, PAYLOADFORMAT_FLOAT, PAYLOADFORMAT_LONG]:
+        _checkNumerical(value, description='input value')
+
+    if functioncode == 6 and payloadformat == PAYLOADFORMAT_REGISTER:
+        _checkNumerical(value, description='input value')
+
+                # Value for string
+    if functioncode == 16 and payloadformat == PAYLOADFORMAT_STRING:
+        _checkString(value, 'input string', minlength=1, maxlength=numberOfRegisterBytes)
+        # Note: The string might be padded later, so the length might be shorter than numberOfRegisterBytes.
+
+                # Value for registers
+    if functioncode == 16 and payloadformat == PAYLOADFORMAT_REGISTERS:
+        if not isinstance(value, list):
+            raise TypeError('The value parameter must be a list. Given {0!r}.'.format(value))
+
+        if len(value) != numberOfRegisters:
+            raise ValueError('The list length does not match number of registers. ' + \
+                'List: {0!r},  Number of registers: {1!r}.'.format(value, numberOfRegisters))
 
 def _checkMode(mode):
     """Check that the Modbus mode is valie.
@@ -2359,7 +2544,7 @@ def _print_out(inputstring):
 
 def _interpretRawMessage(inputstr):
     r"""Generate a human readable description of a Modbus bytestring.
-    
+
     Args:
         inputstr (str): The bytestring that should be interpreted.
 
@@ -2367,25 +2552,25 @@ def _interpretRawMessage(inputstr):
         A descriptive string.
 
     For example, the string ``'\n\x03\x10\x01\x00\x01\xd0q'`` should give something like::
-        
+
         TODO: update
-    
+
         Modbus bytestring decoder
         Input string (length 8 characters): '\n\x03\x10\x01\x00\x01\xd0q'
         Probably modbus RTU mode.
         Slave address: 10 (dec). Function code: 3 (dec).
         Valid message. Extracted payload: '\x10\x01\x00\x01'
 
-        Pos   Character Hex  Dec  Probable interpretation 
+        Pos   Character Hex  Dec  Probable interpretation
         -------------------------------------------------
-          0:  '\n'      0A    10  Slave address 
-          1:  '\x03'    03     3  Function code 
-          2:  '\x10'    10    16  Payload    
-          3:  '\x01'    01     1  Payload    
-          4:  '\x00'    00     0  Payload    
-          5:  '\x01'    01     1  Payload    
-          6:  '\xd0'    D0   208  Checksum, CRC LSB 
-          7:  'q'       71   113  Checksum, CRC MSB 
+          0:  '\n'      0A    10  Slave address
+          1:  '\x03'    03     3  Function code
+          2:  '\x10'    10    16  Payload
+          3:  '\x01'    01     1  Payload
+          4:  '\x00'    00     0  Payload
+          5:  '\x01'    01     1  Payload
+          6:  '\xd0'    D0   208  Checksum, CRC LSB
+          7:  'q'       71   113  Checksum, CRC MSB
 
     """
     raise NotImplementedError()
@@ -2437,23 +2622,23 @@ def _interpretRawMessage(inputstr):
             else:
                 description = 'Payload'
             output += '{0:3.0f}:  {1!r:<8}  {2:02X}  {2: 4.0f}  {3:<10} \n'.format(i, character, ord(character), description)
-        
+
     elif mode == MODE_ASCII:
         output += '\nPos   Character(s) Converted  Hex  Dec  Probable interpretation \n'
         output += '--------------------------------------------------------------- \n'
-        
+
         i = 0
         while i < len(inputstr):
-            
+
             if inputstr[i] in [':', '\r', '\n']:
-                if inputstr[i] == ':': 
+                if inputstr[i] == ':':
                     description = 'Start character'
                 else:
                     description = 'Stop character'
-                    
+
                 output += '{0:3.0f}:  {1!r:<8}                          {2} \n'.format(i, inputstr[i], description)
                 i += 1
-                
+
             else:
                 if i == 1:
                     description = 'Slave address'
@@ -2463,27 +2648,27 @@ def _interpretRawMessage(inputstr):
                     description = 'Checksum (LRC)'
                 else:
                     description = 'Payload'
-                
+
                 try:
                     hexvalue = _hexdecode(inputstr[i:i+2])
                     output +=  '{0:3.0f}:  {1!r:<8}     {2!r}     {3:02X}  {3: 4.0f}  {4} \n'.format(i, inputstr[i:i+2], hexvalue, ord(hexvalue), description)
                 except:
                     output +=  '{0:3.0f}:  {1!r:<8}     ?           ?     ?  {2} \n'.format(i, inputstr[i:i+2], description)
                 i += 2
-        
+
     # Generate description for the payload
     output += '\n\n'
     try:
         output += _interpretPayload(functioncode, extractedpayload)
     except:
         output += '\nCould not interpret the payload. \n\n' # Payload or function code not available
-    
+
     return output
-    
+
 
 def _interpretPayload(functioncode, payload):
     r"""Generate a human readable description of a Modbus payload.
-    
+
     Args:
       * functioncode (int): Function code
       * payload (str): The payload that should be interpreted. It should be a byte string.
@@ -2492,9 +2677,9 @@ def _interpretPayload(functioncode, payload):
         A descriptive string.
 
     For example, the payload ``'\x10\x01\x00\x01'`` for functioncode 3 should give something like::
-    
+
         TODO: Update
-    
+
 
     """
     raise NotImplementedError()
@@ -2502,7 +2687,7 @@ def _interpretPayload(functioncode, payload):
     output += 'Modbus payload decoder\n'
     output += 'Input payload (length {} characters): {!r} \n'.format(len(payload), payload)
     output += 'Function code: {} (dec).\n'.format(functioncode)
-    
+
     if len(payload) == 4:
         FourbyteMessageFirstHalfValue = _twoByteStringToNum(payload[0:2])
         FourbyteMessageSecondHalfValue = _twoByteStringToNum(payload[2:4])
@@ -2548,4 +2733,3 @@ def _getDiagnosticString():
     text += '\n'.join(sys.path) + '\n'
     text += '\n## End of diagnostic output ## \n'
     return text
-
