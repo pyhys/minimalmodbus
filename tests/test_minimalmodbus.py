@@ -1965,65 +1965,90 @@ class TestDummyCommunication(ExtendedTestCase):
 
     def testPerformcommandKnownResponse(self):
         self.assertEqual(
-                minimalmodbus._extractPayload(
-                        self.instrument._performCommand(16, 'TESTCOMMAND'),
-                        self.instrument.address,
-                        self.instrument.mode,
-                        16), 'TRsp') # Total response length should be 8 bytes
+            minimalmodbus._extractPayload(
+                self.instrument._readCommandResponse(
+                    self.instrument._writeCommandRequest(16, 'TESTCOMMAND'),
+                    16, 'TESTCOMMAND'),
+                self.instrument.address,
+                self.instrument.mode, 16), 'TRsp') # Total response length should be 8 bytes
         self.assertEqual(
-                minimalmodbus._extractPayload(
-                        self.instrument._performCommand(75, 'TESTCOMMAND2'),
-                        self.instrument.address,
-                        self.instrument.mode,
-                        75), 'TESTCOMMANDRESPONSE2')
+            minimalmodbus._extractPayload(
+                self.instrument._readCommandResponse(
+                    self.instrument._writeCommandRequest(75, 'TESTCOMMAND2'),
+                    75, 'TESTCOMMAND2'),
+                self.instrument.address,
+                self.instrument.mode, 75), 'TESTCOMMANDRESPONSE2')
         self.assertEqual(
-                minimalmodbus._extractPayload(
-                        self.instrument._performCommand(2, '\x00\x3d\x00\x01'),
-                        self.instrument.address,
-                        self.instrument.mode,
-                        2), '\x01\x01')
+            minimalmodbus._extractPayload(
+                self.instrument._readCommandResponse(
+                    self.instrument._writeCommandRequest(2, '\x00\x3d\x00\x01'),
+                    2, '\x00\x3d\x00\x01'),
+                self.instrument.address,
+                self.instrument.mode, 2), '\x01\x01')
 
     def testPerformcommandWrongSlaveResponse(self):
         self.assertRaises(ValueError,
                           minimalmodbus._extractPayload,
-                          self.instrument._performCommand(1, 'TESTCOMMAND'),
+                          self.instrument._readCommandResponse(
+                              self.instrument._writeCommandRequest(1, 'TESTCOMMAND'),
+                              1, 'TESTCOMMAND'),
                           self.instrument.address,
                           self.instrument.mode,
                           1) # Wrong slave address in response
         self.assertRaises(ValueError,
                           minimalmodbus._extractPayload,
-                          self.instrument._performCommand(2, 'TESTCOMMAND'),
+                          self.instrument._readCommandResponse(
+                              self.instrument._writeCommandRequest(2, 'TESTCOMMAND'),
+                              2, 'TESTCOMMAND'),
                           self.instrument.address,
                           self.instrument.mode,
                           2) # Wrong function code in response
         self.assertRaises(ValueError,
                           minimalmodbus._extractPayload,
-                          self.instrument._performCommand(3, 'TESTCOMMAND'),
+                          self.instrument._readCommandResponse(
+                              self.instrument._writeCommandRequest(3, 'TESTCOMMAND'),
+                              3, 'TESTCOMMAND'),
                           self.instrument.address,
                           self.instrument.mode,
                           3) # Wrong crc in response
         self.assertRaises(ValueError,
                           minimalmodbus._extractPayload,
-                          self.instrument._performCommand(4, 'TESTCOMMAND'),
+                          self.instrument._readCommandResponse(
+                              self.instrument._writeCommandRequest(4, 'TESTCOMMAND'),
+                              4, 'TESTCOMMAND'),
                           self.instrument.address,
                           self.instrument.mode,
                           4) # Too short response message from slave
         self.assertRaises(ValueError,
                           minimalmodbus._extractPayload,
-                          self.instrument._performCommand(5, 'TESTCOMMAND'),
+                          self.instrument._readCommandResponse(
+                              self.instrument._writeCommandRequest(5, 'TESTCOMMAND'),
+                              5, 'TESTCOMMAND'),
                           self.instrument.address,
                           self.instrument.mode,
                           5) # Error indication from slave
 
     def testPerformcommandWrongInputValue(self):
-        self.assertRaises(ValueError, self.instrument._performCommand, -1,  'TESTCOMMAND') # Wrong function code
-        self.assertRaises(ValueError, self.instrument._performCommand, 128, 'TESTCOMMAND')
+        self.assertRaises(ValueError,
+                          self.instrument._writeCommandRequest,
+                          -1,
+                          'TESTCOMMAND') # Wrong function code
+        self.assertRaises(ValueError,
+                          self.instrument._writeCommandRequest,
+                          128,
+                          'TESTCOMMAND')
 
     def testPerformcommandWrongInputType(self):
         for value in _NOT_INTERGERS:
-            self.assertRaises(TypeError, self.instrument._performCommand, value, 'TESTCOMMAND')
+            self.assertRaises(TypeError,
+                              self.instrument._writeCommandRequest,
+                              value,
+                              'TESTCOMMAND')
         for value in _NOT_STRINGS:
-            self.assertRaises(TypeError, self.instrument._performCommand, 16,     value)
+            self.assertRaises(TypeError,
+                              self.instrument._writeCommandRequest,
+                              16,
+                              value)
 
 
     ## Communicate ##
@@ -2155,7 +2180,7 @@ class TestDummyCommunicationDTB4824_RTU(ExtendedTestCase):
         minimalmodbus.serial.Serial = dummy_serial.Serial
         minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = False
         self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 7) # port name, slave address (in decimal)
-    
+
     def testReadBit(self):
         self.assertEqual( self.instrument.read_bit(0x0800), 0) # LED AT
         self.assertEqual( self.instrument.read_bit(0x0801), 0) # LED Out1
@@ -2170,7 +2195,9 @@ class TestDummyCommunicationDTB4824_RTU(ExtendedTestCase):
     def testReadBits(self):
         self.assertEqual(
                 minimalmodbus._extractPayload(
-                        self.instrument._performCommand(2, '\x08\x10\x00\x09'),
+                        self.instrument._readCommandResponse(
+                            self.instrument._writeCommandRequest(2, '\x08\x10\x00\x09'),
+                            2, '\x08\x10\x00\x09'),
                         self.instrument.address,
                         self.instrument.mode,
                         2), '\x02\x07\x00')
@@ -2224,7 +2251,9 @@ class TestDummyCommunicationDTB4824_ASCII(ExtendedTestCase):
     def testReadBits(self):
         self.assertEqual(
                 minimalmodbus._extractPayload(
-                        self.instrument._performCommand(2, '\x08\x10\x00\x09'),
+                        self.instrument._readCommandResponse(
+                            self.instrument._writeCommandRequest(2, '\x08\x10\x00\x09'),
+                            2, '\x08\x10\x00\x09'),
                         self.instrument.address,
                         self.instrument.mode,
                         2), '\x02\x17\x00')

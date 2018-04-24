@@ -605,7 +605,8 @@ class Instrument():
                                               payloadformat)
 
         ## Communicate ##
-        response = self._performCommand(functioncode, payloadToSlave)
+        request = self._writeCommandRequest(functioncode, payloadToSlave)
+        response = self._readCommandResponse(request, functioncode, payloadToSlave)
 
         # Extract payload
         payloadFromSlave = _extractPayload(response, self.address, self.mode,
@@ -621,7 +622,7 @@ class Instrument():
     ##########################################
 
 
-    def _performCommand(self, functioncode, payloadToSlave):
+    def _writeCommandRequest(self, functioncode, payloadToSlave):
         """Performs the command having the *functioncode*.
 
         Args:
@@ -639,10 +640,6 @@ class Instrument():
         response is done with the :func:`_extractPayload` function.
 
         """
-        request = self._writeCommandRequest(functioncode, payloadToSlave)
-        return self._readCommandResponse(request, functioncode, payloadToSlave)
-
-    def _writeCommandRequest(self, functioncode, payloadToSlave):
         _checkFunctioncode(functioncode, None)
         _checkString(payloadToSlave, description='payload')
 
