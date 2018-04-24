@@ -663,10 +663,6 @@ class Instrument():
 
 
     def _communicate(self, request, number_of_bytes_to_read):
-        request = self._writeRequest(request, number_of_bytes_to_read)
-        return self._readResponse(request, number_of_bytes_to_read)
-
-    def _writeRequest(self, request, number_of_bytes_to_read):
         """Talk to the slave via a serial port.
 
         Args:
@@ -708,10 +704,12 @@ class Instrument():
 
         For Python3, the information sent to and from pySerial should be of the type bytes.
         This is taken care of automatically by MinimalModbus.
-
-
-
         """
+
+        request = self._writeRequest(request, number_of_bytes_to_read)
+        return self._readResponse(request, number_of_bytes_to_read)
+
+    def _writeRequest(self, request, number_of_bytes_to_read):
 
         _checkString(request, minlength=1, description='request')
         _checkInt(number_of_bytes_to_read)
