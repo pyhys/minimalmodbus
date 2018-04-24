@@ -663,6 +663,10 @@ class Instrument():
 
 
     def _communicate(self, request, number_of_bytes_to_read):
+        request = self._writeRequest(request, number_of_bytes_to_read)
+        return self._readResponse(request, number_of_bytes_to_read)
+
+    def _writeRequest(self, request, number_of_bytes_to_read):
         """Talk to the slave via a serial port.
 
         Args:
@@ -751,9 +755,13 @@ class Instrument():
             _print_out(text)
 
         # Write request
-        latest_write_time = time.time()
+        self._latest_write_time = time.time()
 
         self.serial.write(request)
+        return request
+
+
+    def _readResponse(self, request, number_of_bytes_to_read):
 
         # Read and discard local echo
         if self.handle_local_echo:
@@ -785,7 +793,7 @@ class Instrument():
                 answer,
                 _hexlify(answer),
                 len(answer),
-                (_LATEST_READ_TIMES.get(self.serial.port, 0) - latest_write_time) * _SECONDS_TO_MILLISECONDS,
+                (_LATEST_READ_TIMES.get(self.serial.port, 0) - self._latest_write_time) * _SECONDS_TO_MILLISECONDS,
                 self.serial.timeout * _SECONDS_TO_MILLISECONDS)
             _print_out(text)
 
