@@ -623,10 +623,12 @@ class Instrument():
         payloadFromSlave = _extractPayload(response, self.address, self.mode,
                                            functioncode)
 
-        return _checkResponse(functioncode, registeraddress, numberOfRegisters,
-                              numberOfRegisterBytes, numberOfDecimals, value,
-                              signed, payloadformat, payloadFromSlave)
+        _checkResponse(functioncode, registeraddress, numberOfRegisters,
+                       numberOfDecimals, value, signed, payloadFromSlave)
 
+        return _calculateReturn(functioncode, numberOfRegisters,
+                                numberOfDecimals, numberOfRegisterBytes, signed,
+                                payloadformat, payloadFromSlave)
 
     ##########################################
     ## Communication implementation details ##
@@ -930,9 +932,8 @@ def _buildPayloadToSlave(functioncode, registeraddress, numberOfRegisters,
 
 
 def _checkResponse(functioncode, registeraddress, numberOfRegisters,
-                   numberOfRegisterBytes, numberOfDecimals, value, signed,
-                   payloadformat, payloadFromSlave):
-    ## Check the contents in the response payload ##
+                   numberOfDecimals, value, signed, payloadFromSlave):
+
     if functioncode in [1, 2, 3, 4]:
         _checkResponseByteCount(payloadFromSlave)  # response byte count
 
@@ -952,7 +953,10 @@ def _checkResponse(functioncode, registeraddress, numberOfRegisters,
     if functioncode == 16:
         _checkResponseNumberOfRegisters(payloadFromSlave, numberOfRegisters)  # response number of registers
 
-    ## Calculate return value ##
+
+def _calculateReturn(functioncode, numberOfRegisters, numberOfDecimals,
+                     numberOfRegisterBytes, signed, payloadformat, payloadFromSlave):
+
     if functioncode in [1, 2]:
         registerdata = payloadFromSlave[NUMBER_OF_BYTES_BEFORE_REGISTERDATA:]
         if len(registerdata) != NUMBER_OF_BYTES_FOR_ONE_BIT:
