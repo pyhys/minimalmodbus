@@ -639,13 +639,29 @@ class Instrument():
         response is done with the :func:`_extractPayload` function.
 
         """
-        DEFAULT_NUMBER_OF_BYTES_TO_READ = 1000
+        request = self._writeCommandRequest(functioncode, payloadToSlave)
+        return self._readCommandResponse(request, functioncode, payloadToSlave)
 
+    def _writeCommandRequest(self, functioncode, payloadToSlave):
         _checkFunctioncode(functioncode, None)
         _checkString(payloadToSlave, description='payload')
 
         # Build request
         request = _embedPayload(self.address, self.mode, functioncode, payloadToSlave)
+
+        _checkString(request, minlength=1, description='request')
+
+        if self.debug:
+            _print_out('\nMinimalModbus debug mode. Writing to instrument: {!r} ({})'. \
+                format(request, _hexlify(request)))
+
+        if sys.version_info[0] > 2:
+            request = bytes(request, encoding='latin1')  # Convert types to make it Python3 compatible
+
+        return self._writeRequest(request)
+
+    def _readCommandResponse(self, request, functioncode, payloadToSlave):
+        DEFAULT_NUMBER_OF_BYTES_TO_READ = 1000
 
         # Calculate number of bytes to read
         number_of_bytes_to_read = DEFAULT_NUMBER_OF_BYTES_TO_READ
@@ -659,7 +675,7 @@ class Instrument():
                     _print_out(template.format(self.mode, number_of_bytes_to_read, request))
 
         # Communicate
-        return self._communicate(request, number_of_bytes_to_read)
+        return self._readResponse(request, number_of_bytes_to_read)
 
 
     def _communicate(self, request, number_of_bytes_to_read):
@@ -706,25 +722,24 @@ class Instrument():
         This is taken care of automatically by MinimalModbus.
         """
 
-        request = self._writeRequest(request, number_of_bytes_to_read)
-        return self._readResponse(request, number_of_bytes_to_read)
-
-    def _writeRequest(self, request, number_of_bytes_to_read):
-
         _checkString(request, minlength=1, description='request')
-        _checkInt(number_of_bytes_to_read)
 
         if self.debug:
-            _print_out('\nMinimalModbus debug mode. Writing to instrument (expecting {} bytes back): {!r} ({})'. \
-                format(number_of_bytes_to_read, request, _hexlify(request)))
+            _print_out('\nMinimalModbus debug mode. Writing to instrument: {!r} ({})'. \
+                format(request, _hexlify(request)))
+
+        if sys.version_info[0] > 2:
+            request = bytes(request, encoding='latin1')  # Convert types to make it Python3 compatible
+
+        request = self._writeRequest(request)
+        return self._readResponse(request, number_of_bytes_to_read)
+
+    def _writeRequest(self, request):
 
         if self.close_port_after_each_call:
             self.serial.open()
 
         #self.serial.flushInput() TODO
-
-        if sys.version_info[0] > 2:
-            request = bytes(request, encoding='latin1')  # Convert types to make it Python3 compatible
 
         # Sleep to make sure 3.5 character times have passed
         minimum_silent_period   = _calculate_minimum_silent_period(self.serial.baudrate)
@@ -760,6 +775,12 @@ class Instrument():
 
 
     def _readResponse(self, request, number_of_bytes_to_read):
+
+        _checkInt(number_of_bytes_to_read)
+
+        if self.debug:
+            _print_out('\nMinimalModbus debug mode. Eexpecting {} bytes back!'. \
+                format(number_of_bytes_to_read))
 
         # Read and discard local echo
         if self.handle_local_echo:
