@@ -605,8 +605,13 @@ class Instrument():
                                               payloadformat)
 
         ## Communicate ##
-        request = self._writeCommandRequest(functioncode, payloadToSlave)
-        response = self._readCommandResponse(request, functioncode, payloadToSlave)
+        request = self._writeCommandRequest(self.address,
+                                            functioncode,
+                                            payloadToSlave)
+
+        response = self._readCommandResponse(request,
+                                             functioncode,
+                                             payloadToSlave)
 
         # Extract payload
         payloadFromSlave = _extractPayload(response, self.address, self.mode,
@@ -622,10 +627,11 @@ class Instrument():
     ##########################################
 
 
-    def _writeCommandRequest(self, functioncode, payloadToSlave):
+    def _writeCommandRequest(self, slaveaddress, functioncode, payloadToSlave):
         """Performs the command having the *functioncode*.
 
         Args:
+            * slaveaddress (int): The address of the slave the data should be send to.
             * functioncode (int): The function code for the command to be performed. Can for example be 'Write register' = 16.
             * payloadToSlave (str): Data to be transmitted to the slave (will be embedded in slaveaddress, CRC etc)
 
@@ -644,7 +650,10 @@ class Instrument():
         _checkString(payloadToSlave, description='payload')
 
         # Build request
-        request = _embedPayload(self.address, self.mode, functioncode, payloadToSlave)
+        request = _embedPayload(slaveaddress,
+                                self.mode,
+                                functioncode,
+                                payloadToSlave)
 
         return self._writeRequest(request)
 
