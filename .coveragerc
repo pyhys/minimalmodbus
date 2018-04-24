@@ -13,7 +13,6 @@ exclude_lines =
     if __name__ == .__main__.:
     except ImportError:
 ignore_errors = True
-presicion = 1
 include = 
     *
     tests/*
