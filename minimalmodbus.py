@@ -576,6 +576,7 @@ class Instrument():
 
         Returns:
             The register data in numerical value (int or float), or the bit value 0 or 1 (int), or ``None``.
+            If asynchron is set this will alway return None.
 
         Raises:
             ValueError, TypeError, IOError
@@ -883,6 +884,32 @@ class Instrument():
 def _buildPayloadToSlave(functioncode, registeraddress, numberOfRegisters,
                          numberOfRegisterBytes, numberOfDecimals, value, signed,
                          payloadformat):
+    """Build the payload that will be send to the slave.
+
+    Args:
+        * functioncode (int): The function code for the command to be performed.
+          Can for example be 16 (Write register).
+        * registeraddress (int): The register address  (use decimal numbers, not
+          hex).
+        * numberOfRegisters (int): The number of registers to read/write. Only
+          certain values allowed, depends on payloadformat.
+        * numberOfRegisterBytes (int): The total number of bytes used. This is
+          calculated out of the number of Registes and the register with.
+        * numberOfDecimals (int): The number of decimals for content conversion.
+          Only for a single register.
+        * value (numerical or string or None or list of int): The value to store
+          in the register. Depends on payloadformat.
+        * signed (bol): Whether negative values should be accepted.
+        * payloadformat (None or string): None, 'long', 'float', 'string',
+          'register', 'registers'. Not necessary for single registers or bits.
+
+    Returns:
+        * payloadToSlave (str): The byte string that can be send to the slave.
+
+    Raises:
+        ValueError
+
+    """
 
     if functioncode in [1, 2]:
         payloadToSlave = _numToTwoByteString(registeraddress) + \
@@ -933,6 +960,28 @@ def _buildPayloadToSlave(functioncode, registeraddress, numberOfRegisters,
 
 def _checkResponse(functioncode, registeraddress, numberOfRegisters,
                    numberOfDecimals, value, signed, payloadFromSlave):
+    """Check if the data received by the slave is correct.
+
+    Args:
+        * functioncode (int): The function code for the command to be performed.
+          Can for example be 16 (Write register).
+        * registeraddress (int): The register address  (use decimal numbers, not
+          hex).
+        * numberOfRegisters (int): The number of registers to read/write. Only
+          certain values allowed, depends on payloadformat.
+        * numberOfDecimals (int): The number of decimals for content conversion.
+          Only for a single register.
+        * value (numerical or string or None or list of int): The value to store
+          in the register. Depends on payloadformat.
+        * signed (bol): Whether negative values should be accepted.
+        * payloadFromSlave (str): The byte string that was sent by the slave.
+
+    Returns:
+        None
+
+    Raises:
+        ValueError, TypeError
+    """
 
     if functioncode in [1, 2, 3, 4]:
         _checkResponseByteCount(payloadFromSlave)  # response byte count
@@ -956,6 +1005,28 @@ def _checkResponse(functioncode, registeraddress, numberOfRegisters,
 
 def _calculateReturn(functioncode, numberOfRegisters, numberOfDecimals,
                      numberOfRegisterBytes, signed, payloadformat, payloadFromSlave):
+    """Calculate the value embedded in the payload received from the slave.
+
+    Args:
+        * functioncode (int): The function code for the command to be performed.
+          Can for example be 16 (Write register).
+        * numberOfRegisters (int): The number of registers to read/write. Only
+          certain values allowed, depends on payloadformat.
+        * numberOfDecimals (int): The number of decimals for content conversion.
+          Only for a single register.
+        * numberOfRegisterBytes (int): The total number of bytes used. This is
+          calculated out of the number of Registes and the register with.
+        * signed (bol): Whether negative values should be accepted.
+        * payloadformat (None or string): None, 'long', 'float', 'string',
+          'register', 'registers'. Not necessary for single registers or bits.
+        * payloadFromSlave (str): The byte string that was sent by the slave.
+
+    Returns:
+        The return value depending on the functioncode.
+
+    Raises:
+        ValueError
+    """
 
     if functioncode in [1, 2]:
         registerdata = payloadFromSlave[NUMBER_OF_BYTES_BEFORE_REGISTERDATA:]
