@@ -630,12 +630,12 @@ class Instrument():
             * payloadToSlave (str): Data to be transmitted to the slave (will be embedded in slaveaddress, CRC etc)
 
         Returns:
-            The extracted data payload from the slave (a string). It has been stripped of CRC etc.
+            The generated Request that was send to the slave.
 
         Raises:
             ValueError, TypeError.
 
-        Makes use of the :meth:`_communicate` method. The request is generated
+        Makes use of the :meth:`_writeRequest` method. The request is generated
         with the :func:`_embedPayload` function, and the parsing of the
         response is done with the :func:`_extractPayload` function.
 
@@ -650,6 +650,23 @@ class Instrument():
 
 
     def _readCommandResponse(self, request, functioncode, payloadToSlave):
+        """Read the response of the command having the *functioncode*.
+
+        Args:
+            *  The request that was generated with the :func:`_embedPayload` function.
+            * functioncode (int): The function code for the command to be performed. Can for example be 'Write register' = 16.
+            * payloadToSlave (str): Data to be transmitted to the slave (will be embedded in slaveaddress, CRC etc)
+
+        Returns:
+            The extracted data payload from the slave (a string). It has been stripped of CRC etc.
+
+        Raises:
+            ValueError, TypeError.
+
+        Makes use of the :meth:`_readResponse` method. The parsing of the
+        response is done with the :func:`_extractPayload` function.
+
+        """
         DEFAULT_NUMBER_OF_BYTES_TO_READ = 1000
 
         # Calculate number of bytes to read
@@ -668,28 +685,20 @@ class Instrument():
 
 
     def _writeRequest(self, request):
-        """Talk to the slave via a serial port.
+        """Wrtie a request to the slave via a serial port.
 
         Args:
             request (str): The raw request that is to be sent to the slave.
-            number_of_bytes_to_read (int): number of bytes to read
 
         Returns:
-            The raw data (string) returned from the slave.
+            The request that was sent to the client.
 
         Raises:
             TypeError, ValueError, IOError
 
-        Note that the answer might have strange ASCII control signs, which
-        makes it difficult to print it in the promt (messes up a bit).
         Use repr() to make the string printable (shows ASCII values for control signs.)
 
-        Will block until reaching *number_of_bytes_to_read* or timeout.
-
         If the attribute :attr:`Instrument.debug` is :const:`True`, the communication details are printed.
-
-        If the attribute :attr:`Instrument.close_port_after_each_call` is :const:`True` the
-        serial port is closed after each call.
 
         Timing::
 
@@ -760,6 +769,48 @@ class Instrument():
 
 
     def _readResponse(self, request, number_of_bytes_to_read):
+        """Receive data from the slave via a serial port.
+
+        Args:
+            request (str): The raw request that has been send the slave.
+            number_of_bytes_to_read (int): number of bytes to read
+
+        Returns:
+            The raw data (string) returned from the slave.
+
+        Raises:
+            TypeError, ValueError, IOError
+
+        Note that the answer might have strange ASCII control signs, which
+        makes it difficult to print it in the promt (messes up a bit).
+        Use repr() to make the string printable (shows ASCII values for control signs.)
+
+        Will block until reaching *number_of_bytes_to_read* or timeout.
+
+        If the attribute :attr:`Instrument.debug` is :const:`True`, the communication details are printed.
+
+        If the attribute :attr:`Instrument.close_port_after_each_call` is :const:`True` the
+        serial port is closed after each call.
+
+        Timing::
+
+                                                  Request from master (Master is writing)
+                                                  |
+                                                  |       Response from slave (Master is reading)
+                                                  |       |
+            ----W----R----------------------------W-------R----------------------------------------
+                     |                            |       |
+                     |<----- Silent period ------>|       |
+                                                  |       |
+                             Roundtrip time  ---->|-------|<--
+
+        The resolution for Python's time.time() is lower on Windows than on Linux.
+        It is about 16 ms on Windows according to
+        http://stackoverflow.com/questions/157359/accurate-timestamping-in-python
+
+        For Python3, the information sent to and from pySerial should be of the type bytes.
+        This is taken care of automatically by MinimalModbus.
+        """
 
         _checkInt(number_of_bytes_to_read)
 
