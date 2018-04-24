@@ -646,16 +646,8 @@ class Instrument():
         # Build request
         request = _embedPayload(self.address, self.mode, functioncode, payloadToSlave)
 
-        _checkString(request, minlength=1, description='request')
-
-        if self.debug:
-            _print_out('\nMinimalModbus debug mode. Writing to instrument: {!r} ({})'. \
-                format(request, _hexlify(request)))
-
-        if sys.version_info[0] > 2:
-            request = bytes(request, encoding='latin1')  # Convert types to make it Python3 compatible
-
         return self._writeRequest(request)
+
 
     def _readCommandResponse(self, request, functioncode, payloadToSlave):
         DEFAULT_NUMBER_OF_BYTES_TO_READ = 1000
@@ -675,7 +667,7 @@ class Instrument():
         return self._readResponse(request, number_of_bytes_to_read)
 
 
-    def _communicate(self, request, number_of_bytes_to_read):
+    def _writeRequest(self, request):
         """Talk to the slave via a serial port.
 
         Args:
@@ -728,10 +720,6 @@ class Instrument():
         if sys.version_info[0] > 2:
             request = bytes(request, encoding='latin1')  # Convert types to make it Python3 compatible
 
-        request = self._writeRequest(request)
-        return self._readResponse(request, number_of_bytes_to_read)
-
-    def _writeRequest(self, request):
 
         if self.close_port_after_each_call:
             self.serial.open()

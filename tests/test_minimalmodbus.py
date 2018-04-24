@@ -2054,26 +2054,44 @@ class TestDummyCommunication(ExtendedTestCase):
     ## Communicate ##
 
     def testCommunicateKnownResponse(self):
-        self.assertEqual( self.instrument._communicate('TESTMESSAGE', _LARGE_NUMBER_OF_BYTES), 'TESTRESPONSE' )
+        self.assertEqual(
+            self.instrument._readResponse(
+                self.instrument._writeRequest('TESTMESSAGE'),
+                _LARGE_NUMBER_OF_BYTES),
+            'TESTRESPONSE')
 
     def testCommunicateWrongType(self):
         for value in _NOT_STRINGS:
-            self.assertRaises(TypeError, self.instrument._communicate, value, _LARGE_NUMBER_OF_BYTES)
+            self.assertRaises(TypeError,
+                              self.instrument._writeRequest,
+                              value)
 
     def testCommunicateNoMessage(self):
-        self.assertRaises(ValueError, self.instrument._communicate, '', _LARGE_NUMBER_OF_BYTES)
+        self.assertRaises(ValueError,
+                          self.instrument._writeRequest,
+                          '')
 
     def testCommunicateNoResponse(self):
-        self.assertRaises(IOError, self.instrument._communicate, 'MessageForEmptyResponse', _LARGE_NUMBER_OF_BYTES)
+        self.assertRaises(IOError,
+                          self.instrument._readResponse,
+                          self.instrument._writeRequest('MessageForEmptyResponse'),
+                          _LARGE_NUMBER_OF_BYTES)
 
     def testCommunicateLocalEcho(self):
         self.instrument.handle_local_echo = True
-        self.assertEqual( self.instrument._communicate('TESTMESSAGE2', _LARGE_NUMBER_OF_BYTES), 'TESTRESPONSE2' )
+        self.assertEqual(
+            self.instrument._readResponse(
+                self.instrument._writeRequest('TESTMESSAGE2'),
+                _LARGE_NUMBER_OF_BYTES),
+            'TESTRESPONSE2')
 
     def testCommunicateWrongLocalEcho(self):
         self.instrument.handle_local_echo = True
-        self.assertRaises(IOError, self.instrument._communicate, 'TESTMESSAGE3', _LARGE_NUMBER_OF_BYTES)
-        
+        self.assertRaises(IOError,
+                          self.instrument._readResponse,
+                          self.instrument._writeRequest('TESTMESSAGE3'),
+                          _LARGE_NUMBER_OF_BYTES)
+
     ## __repr__ ##
 
     def testRepresentation(self):
