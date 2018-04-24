@@ -150,6 +150,9 @@ class Instrument():
         New in version 0.6.
         """
 
+        self.asynchron = False
+        """Set this to True if you do not want to read after writing a command. """
+
         self.debug = False
         """Set this to :const:`True` to print the communication details. Defaults to :const:`False`."""
 
@@ -608,6 +611,9 @@ class Instrument():
         request = self._writeCommandRequest(self.address,
                                             functioncode,
                                             payloadToSlave)
+
+        if self.asynchron:
+            return
 
         response = self._readCommandResponse(request,
                                              functioncode,
