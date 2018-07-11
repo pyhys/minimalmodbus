@@ -152,7 +152,7 @@ class Instrument():
 
         New in version 0.7.
         """
-
+        
         if  self.close_port_after_each_call:
             self.serial.close()
 
@@ -296,7 +296,7 @@ class Instrument():
         self._genericCommand(functioncode, registeraddress, value, numberOfDecimals, signed=signed)
 
 
-    def read_long(self, registeraddress, functioncode=3, signed=False):
+    def read_long(self, registeraddress, functioncode=3, signed=False, little=False):
         """Read a long integer (32 bits) from the slave.
 
         Long integers (32 bits = 4 bytes) are stored in two consecutive 16-bit registers in the slave.
@@ -322,10 +322,10 @@ class Instrument():
         """
         _checkFunctioncode(functioncode, [3, 4])
         _checkBool(signed, description='signed')
-        return self._genericCommand(functioncode, registeraddress, numberOfRegisters=2, signed=signed, payloadformat='long')
+        return self._genericCommand(functioncode, registeraddress, numberOfRegisters=2, signed=signed, payloadformat='long', little=little)
 
 
-    def write_long(self, registeraddress, value, signed=False):
+    def write_long(self, registeraddress, value, signed=False, little=False):
         """Write a long integer (32 bits) to the slave.
 
         Long integers (32 bits = 4 bytes) are stored in two consecutive 16-bit registers in the slave.
@@ -352,10 +352,10 @@ class Instrument():
 
         _checkInt(value, minvalue=MIN_VALUE_LONG, maxvalue=MAX_VALUE_LONG, description='input value')
         _checkBool(signed, description='signed')
-        self._genericCommand(16, registeraddress, value, numberOfRegisters=2, signed=signed, payloadformat='long')
+        self._genericCommand(16, registeraddress, value, numberOfRegisters=2, signed=signed, payloadformat='long', little=little)
 
 
-    def read_float(self, registeraddress, functioncode=3, numberOfRegisters=2):
+    def read_float(self, registeraddress, functioncode=3, numberOfRegisters=2, little=False):
         """Read a floating point number from the slave.
 
         Floats are stored in two or more consecutive 16-bit registers in the slave. The
@@ -389,10 +389,10 @@ class Instrument():
         """
         _checkFunctioncode(functioncode, [3, 4])
         _checkInt(numberOfRegisters, minvalue=2, maxvalue=4, description='number of registers')
-        return self._genericCommand(functioncode, registeraddress, numberOfRegisters=numberOfRegisters, payloadformat='float')
+        return self._genericCommand(functioncode, registeraddress, numberOfRegisters=numberOfRegisters, payloadformat='float', little=little)
 
 
-    def write_float(self, registeraddress, value, numberOfRegisters=2):
+    def write_float(self, registeraddress, value, numberOfRegisters=2, little=False):
         """Write a floating point number to the slave.
 
         Floats are stored in two or more consecutive 16-bit registers in the slave.
@@ -416,7 +416,7 @@ class Instrument():
         _checkNumerical(value, description='input value')
         _checkInt(numberOfRegisters, minvalue=2, maxvalue=4, description='number of registers')
         self._genericCommand(16, registeraddress, value, \
-            numberOfRegisters=numberOfRegisters, payloadformat='float')
+            numberOfRegisters=numberOfRegisters, payloadformat='float', little=little)
 
 
     def read_string(self, registeraddress, numberOfRegisters=16, functioncode=3):
@@ -534,7 +534,7 @@ class Instrument():
 
 
     def _genericCommand(self, functioncode, registeraddress, value=None, \
-            numberOfDecimals=0, numberOfRegisters=1, signed=False, payloadformat=None):
+            numberOfDecimals=0, numberOfRegisters=1, signed=False, payloadformat=None, little= False):
         """Generic command for reading and writing registers and bits.
 
         Args:
@@ -679,10 +679,10 @@ class Instrument():
                 registerdata = _textstringToBytestring(value, numberOfRegisters)
 
             elif payloadformat == PAYLOADFORMAT_LONG:
-                registerdata = _longToBytestring(value, signed, numberOfRegisters)
+                registerdata = _longToBytestring(value, signed, numberOfRegisters, little)
 
             elif payloadformat == PAYLOADFORMAT_FLOAT:
-                registerdata = _floatToBytestring(value, numberOfRegisters)
+                registerdata = _floatToBytestring(value, numberOfRegisters, little)
 
             elif payloadformat == PAYLOADFORMAT_REGISTERS:
                 registerdata = _valuelistToBytestring(value, numberOfRegisters)
@@ -735,10 +735,10 @@ class Instrument():
                 return _bytestringToTextstring(registerdata, numberOfRegisters)
 
             elif payloadformat == PAYLOADFORMAT_LONG:
-                return _bytestringToLong(registerdata, signed, numberOfRegisters)
+                return _bytestringToLong(registerdata, signed, numberOfRegisters, little)
 
             elif payloadformat == PAYLOADFORMAT_FLOAT:
-                return _bytestringToFloat(registerdata, numberOfRegisters)
+                return _bytestringToFloat(registerdata, numberOfRegisters, little)
 
             elif payloadformat == PAYLOADFORMAT_REGISTERS:
                 return _bytestringToValuelist(registerdata, numberOfRegisters)
@@ -1323,7 +1323,7 @@ def _twoByteStringToNum(bytestring, numberOfDecimals=0, signed=False):
     return fullregister / float(divisor)
 
 
-def _longToBytestring(value, signed=False, numberOfRegisters=2):
+def _longToBytestring(value, signed=False, numberOfRegisters=2, little=False):
     """Convert a long integer to a bytestring.
 
     Long integers (32 bits = 4 bytes) are stored in two consecutive 16-bit registers in the slave.
@@ -1352,10 +1352,12 @@ def _longToBytestring(value, signed=False, numberOfRegisters=2):
 
     outstring = _pack(formatcode, value)
     assert len(outstring) == 4
+    if little :
+        outstring = ''.join([outstring[2],outstring[3],outstring[0],outstring[1]]) 
     return outstring
 
 
-def _bytestringToLong(bytestring, signed=False, numberOfRegisters=2):
+def _bytestringToLong(bytestring, signed=False, numberOfRegisters=2, little=False):
     """Convert a bytestring to a long integer.
 
     Long integers (32 bits = 4 bytes) are stored in two consecutive 16-bit registers in the slave.
@@ -1375,7 +1377,9 @@ def _bytestringToLong(bytestring, signed=False, numberOfRegisters=2):
     _checkString(bytestring, 'byte string', minlength=4, maxlength=4)
     _checkBool(signed, description='signed parameter')
     _checkInt(numberOfRegisters, minvalue=2, maxvalue=2, description='number of registers')
-
+    if little :
+        bytestring = ''.join([bytestring[2],bytestring[3],bytestring[0],bytestring[1]])
+        
     formatcode = '>'  # Big-endian
     if signed:
         formatcode += 'l'  # (Signed) long (4 bytes)
@@ -1385,7 +1389,7 @@ def _bytestringToLong(bytestring, signed=False, numberOfRegisters=2):
     return _unpack(formatcode, bytestring)
 
 
-def _floatToBytestring(value, numberOfRegisters=2):
+def _floatToBytestring(value, numberOfRegisters=2, little=False):
     """Convert a numerical value to a bytestring.
 
     Floats are stored in two or more consecutive 16-bit registers in the slave. The
@@ -1427,10 +1431,12 @@ def _floatToBytestring(value, numberOfRegisters=2):
 
     outstring = _pack(formatcode, value)
     assert len(outstring) == lengthtarget
+    if little and numberOfRegisters==2:
+        outstring = ''.join([outstring[2],outstring[3],outstring[0],outstring[1]])        
     return outstring
 
 
-def _bytestringToFloat(bytestring, numberOfRegisters=2):
+def _bytestringToFloat(bytestring, numberOfRegisters=2, little=False):
     """Convert a four-byte string to a float.
 
     Floats are stored in two or more consecutive 16-bit registers in the slave.
@@ -1453,7 +1459,9 @@ def _bytestringToFloat(bytestring, numberOfRegisters=2):
     _checkInt(numberOfRegisters, minvalue=2, maxvalue=4, description='number of registers')
 
     numberOfBytes = _NUMBER_OF_BYTES_PER_REGISTER * numberOfRegisters
-
+    if little and numberOfRegisters==2:
+        bytestring = ''.join([bytestring[2],bytestring[3],bytestring[0],bytestring[1]])
+        
     formatcode = '>'  # Big-endian
     if numberOfRegisters == 2:
         formatcode += 'f'  # Float (4 bytes)
@@ -2548,4 +2556,5 @@ def _getDiagnosticString():
     text += '\n'.join(sys.path) + '\n'
     text += '\n## End of diagnostic output ## \n'
     return text
+
 
