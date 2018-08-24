@@ -76,6 +76,9 @@ TIMEOUT  = 0.05
 CLOSE_PORT_AFTER_EACH_CALL = False
 """Default value for port closure setting."""
 
+CLEAR_BUFFERS_BEFORE_EACH_TRANSACTION = True
+"""Default value for buffer clearing setting."""
+
 #####################
 ## Named constants ##
 #####################
@@ -137,15 +140,18 @@ class Instrument():
         self.close_port_after_each_call = CLOSE_PORT_AFTER_EACH_CALL
         """If this is :const:`True`, the serial port will be closed after each call. Defaults to :data:`CLOSE_PORT_AFTER_EACH_CALL`. To change it, set the value ``minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL=True`` ."""
 
+        self.clear_buffers_before_each_transaction = CLEAR_BUFFERS_BEFORE_EACH_TRANSACTION
+        """If this is :const:`True`, the I/O buffers will be cleared before each call to avoid cumulative byte sync errors across multiple messages. Defaults to :data:`CLEAR_BUFFERS_BEFORE_EACH_TRANSACTION`. To change it, set the value ``minimalmodbus.CLEAR_BUFFERS_BEFORE_EACH_TRANSACTION=False`` ."""
+
         self.precalculate_read_size = True
         """If this is :const:`False`, the serial port reads until timeout
         instead of just reading a specific number of bytes. Defaults to :const:`True`.
 
         New in version 0.5.
         """
-        
+
         self.handle_local_echo = False
-        """Set to to :const:`True` if your RS-485 adaptor has local echo enabled. 
+        """Set to to :const:`True` if your RS-485 adaptor has local echo enabled.
         Then the transmitted message will immeadiately appear at the receive line of the RS-485 adaptor.
         MinimalModbus will then read and discard this data, before reading the data from the slave.
         Defaults to :const:`False`.
@@ -165,6 +171,7 @@ class Instrument():
             self.address,
             self.mode,
             self.close_port_after_each_call,
+            self.clear_buffers_before_each_transaction,
             self.precalculate_read_size,
             self.debug,
             self.serial,
@@ -528,6 +535,16 @@ class Instrument():
 
         self._genericCommand(16, registeraddress, values, numberOfRegisters=len(values), payloadformat='registers')
 
+    #######################
+    ## Flush I/O buffers ##
+    #######################
+
+    def clear_serial_buffers(self):
+        if self.debug:
+            _print_out("Clearing buffers ...")
+        self.serial.reset_input_buffer()
+        self.serial.reset_output_buffer()
+
     #####################
     ## Generic command ##
     #####################
@@ -693,6 +710,10 @@ class Instrument():
                             _numToOneByteString(numberOfRegisterBytes) + \
                             registerdata
 
+        ## Clear buffers ##
+        if self.clear_buffers_before_each_transaction:
+            self.clear_serial_buffers()
+
         ## Communicate ##
         payloadFromSlave = self._performCommand(functioncode, payloadToSlave)
 
@@ -855,8 +876,6 @@ class Instrument():
 
         if self.close_port_after_each_call:
             self.serial.open()
-
-        #self.serial.flushInput() TODO
 
         if sys.version_info[0] > 2:
             request = bytes(request, encoding='latin1')  # Convert types to make it Python3 compatible
