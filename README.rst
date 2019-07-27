@@ -24,9 +24,9 @@ Easy-to-use Modbus RTU and Modbus ASCII implementation for Python.
 Web resources
 -------------
 
-* **Documentation**: https://minimalmodbus.readthedocs.org.
+* **Documentation**: https://minimalmodbus.readthedocs.io
 * Source code on **GitHub**: https://github.com/pyhys/minimalmodbus
-* Python package index (PyPI) with download: https://pypi.python.org/pypi/MinimalModbus/ 
+* Python package index (PyPI) with download: https://pypi.org/project/MinimalModbus/ 
 
 Other web pages:
 
@@ -52,5 +52,6 @@ This software supports the 'Modbus RTU' and 'Modbus ASCII' serial communication 
 and is intended for use on Linux, OS X and Windows platforms. 
 It is open source, and has the Apache License, Version 2.0. 
 
-Tested with Python 2.7, 3.2, 3.3 and 3.4.
+Tested with Python 2.7, 3.5, 3.6 and 3.7.
 
+Support for Python2 will be dropped in 2020.

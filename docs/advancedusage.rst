@@ -252,31 +252,6 @@ Add this to :func:`._extractPayload` function, after the argument validity testi
         except IndexError:
             pass
 
-.. _handlelocalecho:
-
-Handle local echo
--------------------------------------------------------------------------
-Note: This feature has been implemented in version 0.7. See the API.
-
-If you cannot disable the local echo of your RS485 adapter, you will receive your 
-own message before the message from the slave. Luca Di Gregorio has suggested how to solve this issue. 
-
-In the method _communicate(), change this::
-
-    self.serial.write(message)
-
-    # Read response
-    answer = self.serial.read(number_of_bytes_to_read)
-
-to::
-    
-    self.serial.write(message)
-
-    # Read response
-    echo_to_be_discarded = self.serial.read(len(message))
-    answer = self.serial.read(number_of_bytes_to_read)
-
-
 
 Install or uninstalling a distribution
 --------------------------------------------------------------------------

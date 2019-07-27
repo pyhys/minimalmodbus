@@ -2,6 +2,9 @@
 
 History
 =======
+Release 1.0 (2019-08-??)
+-------------------------
+* Improved documentation
 
 
 Release 0.7 (2015-07-30)

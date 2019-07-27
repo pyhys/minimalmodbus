@@ -402,15 +402,6 @@ Calculating the minimum silent interval (seconds) at a baudrate of 19200 bits/s:
 Note that the API might change, as this is outside the official API.
 
 
-
-Found a bug?
-------------------------------------------------------------------------------
-Try to isolate the bug by running in interactive mode (Python interpreter) with debug mode activated. Send a mail to the mailing list with the output, and also the output from :meth:`._getDiagnosticString`.
-
-Of course it is appreciated if you can spend a few moments trying to locate the problem, as it might possibly be related to your particular instrument (and thus difficult to reproduce without it). The source code is very readable, so is should be straight-forward to work with. Then please send your findings to the mailing list.
-
-
-
 Generate documentation
 -----------------------------------
 Use the top-level Make to generate HTML and PDF documentation::
@@ -568,25 +559,6 @@ Build the source distribution (as :file:`.gzip.tar` and :file:`.zip`) , and uplo
 
 
 
-    
-
-(Upload to Sourceforge)
-`````````````````````````
-Upload the :file:`.gzip.tar` and :file:`.zip` files to Sourceforge by logging in and manually using the web form.
-
-Upload the generated documentation to Sourceforge. In directory :file:`trunk/doc/build/html`::
-
-    scp -r * pyhys,minimalmodbus@web.sourceforge.net:htdocs
-
-Upload the documentation PDF. In directory :file:`trunk/doc/build/latex`::
-
-    scp minimalmodbus.pdf pyhys,minimalmodbus@web.sourceforge.net:htdocs
-
-Upload the test coverage report. In directory :file:`trunk`::
-
-    scp -r htmlcov pyhys,minimalmodbus@web.sourceforge.net:htdocs
-
-
 Test documentation
 `````````````````````
 Test links on the Sourceforge and PyPI pages. If adjustments are required 
@@ -620,35 +592,16 @@ Burn a CD/DVD with these items:
 * Windows installer
 * Generated HTML files
 * PDF documentation
-* svn repository in archive format
 
-Marketing
-````````````
-  * Mailing list
-  * Sourceforge project news
   
 
-(Applying patches)
--------------------------------------------------
-Apply the patch like::
 
-    /minimalmodbus$ patch -Np0 -d trunk < concurrency_latency_tests_09-21.diff 
-
-
-(Downloading backups from the Sourceforge server)
---------------------------------------------------
-To download the svn repository in archive format, type this in the destination directory on your computer::
-
-    rsync -av minimalmodbus.svn.sourceforge.net::svn/minimalmodbus/* .
 
 
 Useful development tools
 ------------------------------------------------------------------------------
 Each of these have some additional information below on this page.
 
-SVN
-   Version control software. See http://subversion.apache.org/  
-   
 Git
    Version control software. See https://git-scm.com/
 
@@ -665,92 +618,6 @@ pep8.py
    Code style checker. See https://github.com/PyCQA/pep8#readme
   
    
-Subversion (svn) usage
----------------------------
-Subversion provides an easy way to share code with each other. You can find all MinimalModbus files on the subversion repository on http://sourceforge.net/p/minimalmodbus/code/ Look in the trunk subfolder.
-
-
-Install SVN on some Linux machines
-``````````````````````````````````
-Install it with::
-
-    sudo apt-get install subversion
-
-Download the files
-```````````````````   
-The usage is::
-
-    svn checkout URL NewSubfolder
-
-where *NewSubfolder* is the name of a subfolder that will be created in present directory. You can also write ``svn co`` instead of ``svn checkout``.
-
-In a proper directory on your computer, download the files (not only the :file:`trunk` subfolder) using::
-   
-  svn checkout svn://svn.code.sf.net/p/minimalmodbus/code/ minimalmodbus
-   
-Submit contributions
-``````````````````````
-First run the ``svn update`` command to download the latest changes from the repository. Then make the changes in the files. Use the ``svn status`` command to see which files you have changed. Then upload your changes with the ``svn commit -m 'comment'`` command. Note that it easy to revert any changes in SVN, so feel free to test.
-
-   
-Shortlist of frequently used SVN commands
-``````````````````````````````````````````
-These are the most used commands::
-
-    svn update
-    svn status 
-    svn status -v
-    svn status -v --no-ignore
-    svn diff
-    svn log
-    svn add FILENAME or DIRECTORYNAME
-    svn remove FILENAME or DIRECTORYNAME
-    svn commit -m 'Write your log message here'
-
-In the 'trunk' directory::
-
-    svn propset svn:ignore html .
-    svn proplist
-    svn propget svn:ignore
-
-or if ignoring multiple items, edit the list using:: 
-
-    svn propedit svn:ignore .
-
-Automatic keyword substitution::
-
-    svn propset svn:keywords "Date Revision" minimalmodbus.py
-    svn propset svn:keywords "Date Revision" eurotherm3500.py
-    svn propset svn:keywords "Date Revision" README.txt
-    svn propget svn:keywords minimalmodbus.py
-
-
-SVN settings
-`````````````
-SVN uses the computer ``locale`` settings for selecting the language (including keyword substitution). 
-
-Language settings::
-
-    locale      # Shows present locale settings
-    locale -a   # Shows available locales
-    export LC_ALL="en_US.utf8"
-
-
-(Installing MinimalModbus from SVN repository)
-``````````````````````````````````````````````
-Update your local copy by::
-
-   svn update
-
-Go to the minimalmodbus/trunk directory::
-
-   sudo python setup.py install
-
-Test it using (adapt path to your system)::
-
-   python /usr/local/lib/python2.6/dist-packages/minimalmodbus.py
-
-
 
 Git usage
 ---------------------------
@@ -790,15 +657,11 @@ Sphinx page definition file, click 'View page Source' (or possibly 'Edit on Gith
 
 To install, use::
 
-   easy_install sphinx
-   
-or possibly::
-
-    sudo easy_install sphinx
+   sudo pip3 install sphinx sphinx_rtd_theme
 
 Check installed version by typing::
 
-    sphinx-build   
+    sphinx-build --version  
 
 Spinx formatting conventions
 ````````````````````````````
@@ -862,13 +725,7 @@ Useful Sphinx-related links
 Online resources for the formatting used (reStructuredText):
 
 Sphinx reStructuredText Primer
-    http://sphinx-doc.org/rest.html
-
-Spinx autodoc features
-    http://sphinx-doc.org/ext/autodoc.html
-
-Sphinx cross-referencing Python objects
-    http://sphinx-doc.org/domains.html#python-roles
+    http://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html
 
 Example usage for API documentation
     https://pythonhosted.org/an_example_pypi_project/sphinx.html
@@ -878,32 +735,15 @@ reStructuredText Markup Specification
 
 Sphinx build commands
 `````````````````````
-To build the documentation, go to the directory :file:`trunk/doc` and then run::
+To build the documentation, in the top project directory run::
 
-   make html
+   make docs
 
-That should generate HTML files to the directory :file:`trunk/doc/build/html`. 
+That should generate HTML files to the directory :file:`docs/_build/html`. 
 
 To generate PDF::
 
-   make latexpdf
-
-Note that the :envvar:`PYTHONPATH` must be set properly, so that Sphinx can import the modules to document. See below.
-
-It is also possible to run without the :command:`make` command. In the :file:`trunk/doc` directory::
-
-    sphinx-build -b html -d build/doctrees  -a . build/html
-    
-If the python source files not are updated in the HTML output, then remove the contents of :file:`trunk/doc/build/doctrees` and rebuild the documentation. (This has now been included in the :file:`Makefile`).
-
-Remember that the :file:`Makefile` uses tabs for indentation, not spaces.
-
-Sometimes there are warnings and errors when  generating the HTML pages. They can appear different, but are most often related to problems importing files. In that case start the Python interpreter and try to import the module, for example::
-
-   >>> import test_minimalmodbus
- 
-From there you can most often solve the problem.
-
+   make pdf
 
 In order to generate PDF documentation, you need to install pdflatex (approx 1 GByte!)::
 
@@ -974,6 +814,7 @@ Maybe:
 
 * Improved documentation (especially the sections with TODO).
 * Tool for interpretation of Modbus messages
+* Better parsing of error messages from the slave
 * Increase test coverage for minimalmodbus.py
 * PEP8 fine tuning of source.
 * Improve the dummy_serial behavior, to better mimic Windows behavior. 
@@ -982,8 +823,8 @@ Maybe:
 * Floats with other byte order
 * Logging instead of _print_out()
 * Timing based on time.clock() for Windows
-* string templating compatible with python2.6 (use {2} in format).
- 
+* Change to Python3 only, and:
+    * Change internal representation to byterray
+    * Add type hinting
 
  
-

@@ -5,6 +5,11 @@ Contributing
 Contributions are welcome, and they are greatly appreciated! Every
 little bit helps, and credit will always be given.
 
+Note that MinimalModbus is released very infrequently, but your issues are not 
+forgotten. Do not use GitHub issues for problems getting the Modbus communication
+to your instrument to work. For that Stack Overflow is much better, see :ref:`support`.
+
+
 You can contribute in many ways:
 
 Types of Contributions
@@ -15,34 +20,40 @@ Report Bugs
 
 Report bugs at https://github.com/pyhys/minimalmodbus/issues.
 
+
+Try to isolate the bug by running in interactive mode (Python interpreter) 
+with debug mode activated. 
+
+Of course it is appreciated if you can spend a few moments trying to locate 
+the problem, as it might possibly be related to your particular instrument 
+(and thus difficult to reproduce without it). 
+The source code is very readable, so is should be straight-forward to work with. 
+
 If you are reporting a bug, please include:
 
 * Your operating system name and version.
 * Any details about your local setup that might be helpful in troubleshooting.
 * Detailed steps to reproduce the bug.
+* The output from :meth:`._getDiagnosticString`.
 
 Fix Bugs
 ~~~~~~~~
-
 Look through the GitHub issues for bugs. Anything tagged with "bug"
 is open to whoever wants to implement it.
 
 Implement Features
 ~~~~~~~~~~~~~~~~~~
-
 Look through the GitHub issues for features. Anything tagged with "feature"
 is open to whoever wants to implement it.
 
 Write Documentation
 ~~~~~~~~~~~~~~~~~~~
-
 MinimalModbus could always use more documentation, whether as part of the
 official MinimalModbus docs, in docstrings, or even on the web in blog posts,
 articles, and such.
 
 Submit Feedback
 ~~~~~~~~~~~~~~~
-
 The best way to send feedback is to file an issue at https://github.com/pyhys/minimalmodbus/issues.
 
 If you are proposing a feature:
@@ -74,7 +85,8 @@ Ready to contribute? Here's how to set up `minimalmodbus` for local development.
 
    Now you can make your changes locally.
 
-5. When you're done making changes, check that your changes pass flake8 and the tests, including testing other Python versions with tox::
+5. When you're done making changes, check that your changes pass flake8 and the 
+   tests, including testing other Python versions with tox::
 
     $ flake8 minimalmodbus tests
     $ python setup.py test

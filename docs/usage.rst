@@ -19,7 +19,7 @@ Modbus ASCII
     A serial protocol that uses ASCII representation of the data. **Supported by this software**.
 
 Modbus TCP, and variants
-    A protocol for communication over TCP/IP networks. Not supported by this software, consider donating some Modbus TCP equipment.
+    A protocol for communication over TCP/IP networks. Not supported by this software.
 
 For full documentation on the Modbus protocol, see `www.modbus.com <http://www.modbus.com/>`_.
 
@@ -28,6 +28,7 @@ Two important documents are:
   * `Modbus over serial line specification and implementation guide V1.02 <http://www.modbus.com/docs/Modbus_over_serial_line_V1_02.pdf>`_ 
 
 Note that the computer (master) actually is a client, and the instruments (slaves) are servers.
+
 
 Typical hardware
 ----------------
@@ -42,13 +43,13 @@ As an example on the usage of MinimialModbus, the driver I use for an
 Eurotherm 3504 process controller is included. It uses the MinimalModbus Python module 
 for its communication. Also a driver for Omega CN7500 is included. 
 For hardware details on these process controllers, see 
-`Eurotherm 3500 <http://www.eurotherm.com/products/controllers/multi-loop/>`_ and 
+`Eurotherm 3500 <https://www.eurotherm.com/en/products/temperature-controllers/multi-loop-temperature-controllers/3500-advanced-temperature-controller-and-programmer/>`_ and 
 `Omega CN7500 <http://www.omega.com/pptst/CN7500.html>`_.
 
 There can be several instruments (slaves, nodes) on a single bus, 
 and the slaves have addresses in the range 1 to 247. In the Modbus RTU protocol, 
 only the master can initiate communication. The physical layer is most often 
-the serial bus RS485, which is described at https://en.wikipedia.org/wiki/Rs485.
+the serial bus RS485, which is described at https://en.wikipedia.org/wiki/RS-485.
 
 To connect your computer to the RS485 bus, a serial port is required. 
 There are direct USB-to-RS485 converters, but I use a USB-to-RS232 converter 
@@ -60,7 +61,7 @@ Typical usage
 -------------
 The instrument is typically connected via a serial port, and a USB-to-serial 
 adaptor should be used on most modern computers. How to configure such a serial 
-port is described on the pySerial page: http://pyserial.sourceforge.net/
+port is described on the pySerial page: https://pythonhosted.org/pyserial/
 
 For example, consider an instrument (slave) with Modbus RTU mode and address number 1 
 to which we are to communicate via a serial port with the name 
@@ -68,18 +69,20 @@ to which we are to communicate via a serial port with the name
 For this instrument a temperature of 77.2 C is stored as (the integer) 772, 
 why we use 1 decimal. To read this data from the instrument::
 
-    #!/usr/bin/env python
+    #!/usr/bin/env python3
     import minimalmodbus
 
     instrument = minimalmodbus.Instrument('/dev/ttyUSB1', 1) # port name, slave address (in decimal)
 
     ## Read temperature (PV = ProcessValue) ##
     temperature = instrument.read_register(289, 1) # Registernumber, number of decimals
-    print temperature
+    print(temperature)
 
     ## Change temperature setpoint (SP) ##
     NEW_TEMPERATURE = 95
     instrument.write_register(24, NEW_TEMPERATURE, 1) # Registernumber, value, number of decimals for storage
+
+The valid slave address range for normal usage is 1 to 247.
 
 The full API for MinimalModbus is available in :ref:`apiminimalmodbus`.
 
@@ -87,35 +90,6 @@ Correspondingly for Modbus ASCII mode::
 
     instrument = minimalmodbus.Instrument('/dev/ttyUSB1', 1, minimalmodbus.MODE_ASCII)
 
-
-Subclassing
------------
-It is better to put the details in a driver for the specific instrument. 
-An example driver for Eurotherm3500 is included in this library, 
-and it is recommended to have a look at its source code. 
-To get the process value (PV from loop1)::
-
-    #!/usr/bin/env python
-    import eurotherm3500
-
-    heatercontroller = eurotherm3500.Eurotherm3500('/dev/ttyUSB1', 1)  # port name, slave address
-
-    ## Read temperature (PV) ##
-    temperature = heatercontroller.get_pv_loop1()
-    print temperature
-
-    ## Change temperature setpoint (SP) ##
-    NEW_TEMPERATURE = 95.0
-    heatercontroller.set_sp_loop1(NEW_TEMPERATURE)
-
-Correspondingly, to use the driver for Omega CN7500::
-
-    #!/usr/bin/env python 
-    import omegacn7500
-
-    instrument = omegacn7500.OmegaCN7500('/dev/ttyUSB1', 1) # port name, slave address
-    
-    print instrument.get_pv() # print temperature
 
 More on the usage of MinimalModbus is found in :ref:`detailedusage`. 
 
@@ -140,7 +114,7 @@ These can be overridden::
     
 To see which settings you actually are using::
 
-    print instrument     
+    print(instrument)     
 
 For details on the allowed parity values, see http://pyserial.sourceforge.net/pyserial_api.html#constants 
 
@@ -154,6 +128,20 @@ or alternatively (to avoid import of ``serial``)::
     instrument.serial.parity = minimalmodbus.serial.PARITY_EVEN
 
 
+Confusing Modbus register addresses
+-----------------------------------
+Sometimes "entity numbers" are used in documentation for Modbus instruments. These 
+numbers are typically 5 or six digits long, and contains info about both 
+the register type and the register address. The first digit describes the register type,
+for example 4 is a holding register. The rest of the digits describes the address plus one 
+(yes, very confusing). 
+
+According to the example on https://en.wikipedia.org/wiki/Modbus, an entity number of
+40100 describes a holding register with address 99.
+
+More details on different types of Modbus registers are found in :ref:`modbusdetails`.
+
+
 Using multiple instruments
 --------------------------
 Use a single script for talking to all your instruments (if connected via the
@@ -162,12 +150,21 @@ same serial port). Create several instrument objects like::
     instrumentA = minimalmodbus.Instrument('/dev/ttyUSB1', 1)
     instrumentB = minimalmodbus.Instrument('/dev/ttyUSB1', 2)
 
-Running several scripts using the same port will give problems. 
+The instruments sharing the same serial port has the same ``serial`` object, so 
+it is 
+TODO
+example with 3 instruments on 2 ports
+
+TODO See gihub issue 22
+
+You can use instruments on different serial ports in the same script. However, 
+running several scripts using the same port will give problems. 
 
 
 Handling communication errors
 -----------------------------
-Your top-level code should be able to handle communication errors. This is typically done with try-except. 
+Your top-level code should be able to handle communication errors. 
+Glitches in the serial communication might happen now and then.
 
 Instead of running::
 
@@ -181,4 +178,34 @@ Use::
         print("Failed to read from instrument")
 
 Different types of errors should be handled separately.
+
+
+Subclassing
+-----------
+It is better to put the details in a driver for the specific instrument. 
+An example driver for Eurotherm3500 is included in this library, 
+and it is recommended to have a look at its source code. 
+To get the process value (PV from loop1)::
+
+    #!/usr/bin/env python3
+    import eurotherm3500
+
+    heatercontroller = eurotherm3500.Eurotherm3500('/dev/ttyUSB1', 1)  # port name, slave address
+
+    ## Read temperature (PV) ##
+    temperature = heatercontroller.get_pv_loop1()
+    print(temperature)
+
+    ## Change temperature setpoint (SP) ##
+    NEW_TEMPERATURE = 95.0
+    heatercontroller.set_sp_loop1(NEW_TEMPERATURE)
+
+Correspondingly, to use the driver for Omega CN7500::
+
+    #!/usr/bin/env python 
+    import omegacn7500
+
+    instrument = omegacn7500.OmegaCN7500('/dev/ttyUSB1', 1)  # port name, slave address
+    
+    print(instrument.get_pv())  # print temperature
 

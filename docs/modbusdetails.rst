@@ -1,3 +1,5 @@
+.. _modbusdetails:
+
 ==============
 Modbus details
 ==============
@@ -12,22 +14,42 @@ The Modbus standard defines storage in:
 Some deviations from the official standard:
 
 **Scaling of register values**
-    Some manufacturers store a temperature value of 77.0 C as 770 in the register, to allow room for one decimal.
+    Some manufacturers store a temperature value of 77.0 C as 770 in the register, 
+    to allow room for one decimal.
 
 **Negative numbers (INT16 = short)**
-    Some manufacturers allow negative values for some registers. Instead of an allowed integer range 0-65535, a range -32768 to 32767 is allowed. This is implemented as any received value in the upper range (32768-65535) is interpreted as negative value (in the range -32768 to -1). This is two's complement and is described at https://en.wikipedia.org/wiki/Two%27s_complement. Help functions to calculate the two's complement value (and back) are provided in MinimalModbus.
+    Some manufacturers allow negative values for some registers. Instead of an 
+    allowed integer range 0-65535, a range -32768 to 32767 is allowed. This is 
+    implemented as any received value in the upper range (32768-65535) is 
+    interpreted as negative value (in the range -32768 to -1). This is two's 
+    complement and is described at https://en.wikipedia.org/wiki/Two%27s_complement. 
+    Help functions to calculate the two's complement value (and back) are 
+    provided in MinimalModbus.
     
 **Long integers ('Unsigned INT32' or 'INT32')**
-    These require 32 bits, and are implemented as two consecutive 16-bit registers. The range is 0 to 4294967295, which is called 'unsigned INT32'. Alternatively negative values can be stored if the instrument is defined that way, and is then called 'INT32' which has the range -2147483648 to 2147483647.
+    These require 32 bits, and are implemented as two consecutive 16-bit registers. 
+    The range is 0 to 4294967295, which is called 'unsigned INT32'. Alternatively 
+    negative values can be stored if the instrument is defined that way, and is 
+    then called 'INT32' which has the range -2147483648 to 2147483647.
     
 **Floats (single or double precision)**
-    Single precision floating point values (binary32) are defined by 32 bits (4 bytes), and are implemented as two consecutive 16-bit registers. Correspondingly, double precision floating point values (binary64) use 64 bits (8 bytes) and are implemented as four consecutive 16-bit registers. How to convert from the bit values to the floating point value is described in the standard IEEE 754, as seen in https://en.wikipedia.org/wiki/Floating_point. Unfortunately the byte order might differ between manufacturers of Modbus instruments.    
+    Single precision floating point values (binary32) are defined by 32 bits (4 bytes), 
+    and are implemented as two consecutive 16-bit registers. 
+    Correspondingly, double precision floating point values (binary64) use 
+    64 bits (8 bytes) and are implemented as four consecutive 16-bit registers. 
+    How to convert from the bit values to the floating point value is described in 
+    the standard IEEE 754, as seen in https://en.wikipedia.org/wiki/Floating_point. 
+    Unfortunately the byte order might differ between manufacturers of Modbus instruments.    
     
 **Strings**
-    Each register (16 bits) is interpreted as two characters (each 1 byte = 8 bits). Often 16 consecutive registers are used, allowing 32 characters in the string. 
+    Each register (16 bits) is interpreted as two ASCII characters (each 1 byte = 8 bits). 
+    Often 16 consecutive registers are used, allowing 32 characters in the string. 
+    Unicode/UTF-8 is typically not supported.
 
 **8-bit registers**
-    For example Danfoss use 8-bit registers for storage of some settings internally in the instruments. The data is nevertherless transmitted as 16 bit over the serial link, so you can read and write like normal (but with values limited to the range 0-255).
+    For example Danfoss use 8-bit registers for storage of some settings internally 
+    in the instruments. The data is nevertherless transmitted as 16 bit over the serial link, 
+    so you can read and write like normal (but with values limited to the range 0-255).
     
 
 Implemented functions

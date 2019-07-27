@@ -270,10 +270,16 @@ class Instrument():
             * functioncode (int): Modbus function code. Can be 6 or 16.
             * signed (bool): Whether the data should be interpreted as unsigned or signed.
 
-        To store for example ``value=77.0``, use ``numberOfDecimals=1`` if the slave register will hold it as 770 internally.
-        This will multiply ``value`` by 10 before sending it to the slave register.
+        To store for example ``value=77.0``, use ``numberOfDecimals=1`` if the slave register 
+        will hold it as 770 internally. This will multiply ``value`` by 10 before sending it 
+        to the slave register.
 
-        Similarly ``numberOfDecimals=2`` will multiply ``value`` by 100 before sending it to the slave register.
+        Similarly ``numberOfDecimals=2`` will multiply ``value`` by 100 before sending 
+        it to the slave register.
+
+        As the largest number that can be written to a register is 0xFFFF = 65535,
+        the *value* and *numberOfDecimals* should max be 65535 when combined.
+        So when using *numberOfDecimals*=3 the maximum *value* is 65.535.
 
         For discussion on negative values, the range and on alternative names, see :meth:`.read_register`.
 
@@ -420,10 +426,14 @@ class Instrument():
 
 
     def read_string(self, registeraddress, numberOfRegisters=16, functioncode=3):
-        """Read a string from the slave.
+        """Read an ASCII string from the slave.
 
         Each 16-bit register in the slave are interpreted as two characters (1 byte = 8 bits).
         For example 16 consecutive registers can hold 32 characters (32 bytes).
+
+        International characters (Unicode/UTF-8) are not supported.
+
+        TODO check unicode
 
         Args:
             * registeraddress (int): The slave register start address (use decimal numbers, not hex).
@@ -444,12 +454,16 @@ class Instrument():
 
 
     def write_string(self, registeraddress, textstring, numberOfRegisters=16):
-        """Write a string to the slave.
+        """Write an ASCII string to the slave.
 
         Each 16-bit register in the slave are interpreted as two characters (1 byte = 8 bits).
         For example 16 consecutive registers can hold 32 characters (32 bytes).
 
         Uses Modbus function code 16.
+
+        International characters (Unicode/UTF-8) are not supported.
+
+        TODO check unicode
 
         Args:
             * registeraddress (int): The slave register start address  (use decimal numbers, not hex).
@@ -559,7 +573,7 @@ class Instrument():
             ValueError, TypeError, IOError
 
         """
-        NUMBER_OF_BITS = 1
+        NUMBER_OF_BITS = 1    # TODO    NUMBER_OF_REQUESTED_BITS
         NUMBER_OF_BYTES_FOR_ONE_BIT = 1
         NUMBER_OF_BYTES_BEFORE_REGISTERDATA = 1
         ALL_ALLOWED_FUNCTIONCODES = list(range(1, 7)) + [15, 16]  # To comply with both Python2 and Python3

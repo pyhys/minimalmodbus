@@ -118,16 +118,16 @@ it is still possible to make MinimalModbus close the serial port after each call
 
 Support
 -------
-Send a mail to minimalmodbus-list@lists.sourceforge.net
+Ask a question on https://stackoverflow.com/. Use the tags "modbus", "python" and "minimalmodbus".
 
-Describe the problem in detail, and include any error messsages. Please also include the output after running::
-
-  >>> import minimalmodbus 
-  >>> print minimalmodbus._getDiagnosticString()
+Describe the problem in detail, and include any error messsages. 
 
 Note that it can be very helpful to switch on the debug mode, where the communication 
 details are printed. See :ref:`debugmode`.
 
+Please also include the output after running::
+
+  >>> import minimalmodbus 
+  >>> print minimalmodbus._getDiagnosticString()
+
 Describe which instrument model you are using, and possibly a link to online PDF documentation for it.
-
-

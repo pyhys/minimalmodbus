@@ -17,6 +17,9 @@ serial ``read()`` function wait for timeout.
 
 The character time corresponds to 11 bit times, according to http://www.automation.com/library/articles-white-papers/fieldbus-serial-bus-io-networks/introduction-to-modbus.
 
+According to the Modbus RTU standard, the minimum silent period should be 1.75 ms 
+regardless of the baud rate.
+
 ========== ============== ========== =============== ======================
 Baud rate  Bit rate       Bit time   Character time  3.5 character times
 ========== ============== ========== =============== ======================
@@ -24,8 +27,8 @@ Baud rate  Bit rate       Bit time   Character time  3.5 character times
 4800       4800 bits/s    208 us     2.3 ms          8.0 ms
 9600       9600 bits/s    104 us     1.2 ms          4.0 ms
 19200      19200 bits/s   52 us      573 us          2.0 ms
-38400      38400 bits/s   26 us      286 us          1.0 ms
-115200     115200 bit/s   8.7 us     95 us           0.33 ms
+38400      38400 bits/s   26 us      286 us          1.75 ms (1.0 ms)
+115200     115200 bit/s   8.7 us     95 us           1.75 ms (0.33 ms)
 ========== ============== ========== =============== ======================
 
 
@@ -108,6 +111,8 @@ when it comes to RS485 communication. There are some options:
 
 **Controlling a separate GPIO pin from userspace software on embedded Linux machines**
     This will give large time delays, but might be acceptable for low speeds. 
+    It will probaby take 1-3 ms turn off the transciver. For this to fit in the 3.5 character 
+    time before the slave starts transmitting, max speed can be 9600 bps.
 
 **Controlling the RTS pin in the RS232 interface (from userspace), and connecting it to the TXENABLE pin of the transceiver**
     This will give large time delays, but might be acceptable for low speeds. 
