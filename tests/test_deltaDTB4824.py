@@ -58,7 +58,9 @@ When running, the setpoint is seen on the rightmost part of the display.
 
 USB-to-RS485 converter
 ----------------------------
+
 BOB-09822 USB to RS-485 Converter:
+
  * https://www.sparkfun.com/products/9822
  * SP3485 RS-485 transceiver
  * FT232RL USB UART IC

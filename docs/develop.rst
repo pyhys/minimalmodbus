@@ -810,21 +810,18 @@ or::
 TODO
 ----
 
-Maybe:
+See also Github issues: https://github.com/pyhys/minimalmodbus/issues
 
 * Improved documentation (especially the sections with TODO).
 * Tool for interpretation of Modbus messages
-* Better parsing of error messages from the slave
 * Increase test coverage for minimalmodbus.py
-* PEP8 fine tuning of source.
 * Improve the dummy_serial behavior, to better mimic Windows behavior. 
 * Unittests for measuring the sleep time in _communicate.
-* Serial port flushing
-* Floats with other byte order
 * Logging instead of _print_out()
-* Timing based on time.clock() for Windows
 * Change to Python3 only, and:
     * Change internal representation to byterray
+    * Better printout of the bytearray in error messages
     * Add type hinting
+    * Run mypy checks
 
  

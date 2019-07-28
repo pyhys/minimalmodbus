@@ -5,7 +5,7 @@ Credits
 Development Lead
 ----------------
 
-* Jonas Berg <pyhys@users.sourceforge.net>
+* Jonas Berg https://github.com/pyhys
 
 Contributors
 ------------

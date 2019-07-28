@@ -24,6 +24,7 @@ Modbus TCP, and variants
 For full documentation on the Modbus protocol, see `www.modbus.com <http://www.modbus.com/>`_.
 
 Two important documents are:
+
   * `Modbus application protocol V1.1b <http://www.modbus.com/docs/Modbus_Application_Protocol_V1_1b.pdf>`_ 
   * `Modbus over serial line specification and implementation guide V1.02 <http://www.modbus.com/docs/Modbus_over_serial_line_V1_02.pdf>`_ 
 
@@ -72,15 +73,15 @@ why we use 1 decimal. To read this data from the instrument::
     #!/usr/bin/env python3
     import minimalmodbus
 
-    instrument = minimalmodbus.Instrument('/dev/ttyUSB1', 1) # port name, slave address (in decimal)
+    instrument = minimalmodbus.Instrument('/dev/ttyUSB1', 1)  # port name, slave address (in decimal)
 
     ## Read temperature (PV = ProcessValue) ##
-    temperature = instrument.read_register(289, 1) # Registernumber, number of decimals
+    temperature = instrument.read_register(289, 1)  # Registernumber, number of decimals
     print(temperature)
 
     ## Change temperature setpoint (SP) ##
     NEW_TEMPERATURE = 95
-    instrument.write_register(24, NEW_TEMPERATURE, 1) # Registernumber, value, number of decimals for storage
+    instrument.write_register(24, NEW_TEMPERATURE, 1)  # Registernumber, value, number of decimals for storage
 
 The valid slave address range for normal usage is 1 to 247.
 
@@ -116,7 +117,8 @@ To see which settings you actually are using::
 
     print(instrument)     
 
-For details on the allowed parity values, see http://pyserial.sourceforge.net/pyserial_api.html#constants 
+For details on the allowed parity values, see 
+https://pyserial.readthedocs.io/en/latest/pyserial_api.html#constants
 
 To change the parity setting, use::
 
@@ -148,16 +150,19 @@ Use a single script for talking to all your instruments (if connected via the
 same serial port). Create several instrument objects like::
 
     instrumentA = minimalmodbus.Instrument('/dev/ttyUSB1', 1)
+    instrumentA.serial.baudrate = 9600
+    instrumentA.serial.timeout = 0.2
+    instrumentA.mode = minimalmodbus.MODE_RTU
+
     instrumentB = minimalmodbus.Instrument('/dev/ttyUSB1', 2)
+    instrumentB.mode = minimalmodbus.MODE_ASCII
 
-The instruments sharing the same serial port has the same ``serial`` object, so 
-it is 
-TODO
-example with 3 instruments on 2 ports
+    instrumentC = minimalmodbus.Instrument('/dev/ttyUSB2', 1)
 
-TODO See gihub issue 22
+The instruments sharing the same serial port share the same ``serial`` Python object, so 
+``instrumentB`` will have the same baudrate and timeout as ``instrumentA``.
 
-You can use instruments on different serial ports in the same script. However, 
+You can use instruments on different serial ports in the same script, but
 running several scripts using the same port will give problems. 
 
 
@@ -182,6 +187,7 @@ Different types of errors should be handled separately.
 
 Subclassing
 -----------
+
 It is better to put the details in a driver for the specific instrument. 
 An example driver for Eurotherm3500 is included in this library, 
 and it is recommended to have a look at its source code. 

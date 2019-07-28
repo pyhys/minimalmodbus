@@ -13,7 +13,7 @@ To switch on the debug mode, where the communication details are printed::
 
     instrument = minimalmodbus.Instrument('/dev/ttyUSB1', 1) # port name, slave address (in decimal)
     instrument.debug = True
-    print instrument.read_register(289, 1)  # Remember to use print() for Python3
+    print(instrument.read_register(289, 1))
 
 With this you can easily see what is sent to and from your instrument, and immediately see what is wrong. 
 This is very useful also if developing your own Modbus compatible electronic instruments.
@@ -41,7 +41,7 @@ The byte strings can look pretty strange when printed, as values 0 to 31 (dec) a
 ASCII control signs (not corresponding to any letter). For example 'vertical tab' 
 and 'line feed' are among those. To make the output easier to understand, print the representation, ``repr()``. Use::
 
-    print repr(bytestringname)
+    print(repr(bytestringname))
 
 Registers are 16 bit wide (2 bytes), and the data is sent with the most 
 significant byte (MSB) before the least significant byte (LSB). This is 

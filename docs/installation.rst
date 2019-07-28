@@ -8,7 +8,7 @@ At the command line::
 
 or possibly::
 
-    pip3 install -U minimalmodbus
+    sudo pip3 install -U minimalmodbus
 
 For legacy Python (2.7), use ``pip`` instead of ``pip3``.
 
@@ -19,14 +19,14 @@ Tested with Python 2.7, 3.5, 3.6 and 3.7. This module is pure Python.
 
 This module relies on `pySerial <https://github.com/pyserial/pyserial>`_ (also pure Python) 
 to do the heavy lifting, and it is the only dependency. 
-You can find it at the Python package index: https://pypi.org/project/pyserial/
+You can find it at the Python package index: https://pypi.org/project/pyserial
 
 
 Alternate installation on Linux
 -------------------------------------
 You can also manually download the compressed source files from 
 https://pypi.org/project/MinimalModbus/.
-In that case you first need to manually install pySerial from https://pypi.python.org/pypi/pyserial.
+In that case you first need to manually install pySerial from https://pypi.org/project/pyserial.
 
 There are compressed source files for Unix/Linux (.tar.gz) and Windows (.zip). 
 To install a manually downloaded file, uncompress it and run (from within the directory)::
@@ -39,7 +39,7 @@ or possibly::
 
 If using Python2, use ``python`` instead of ``python3``.
 
-To make sure it is installed properly, print the _getDiagnosticString() message. 
+To make sure it is installed properly, print the :func:`._getDiagnosticString` message. 
 See the :ref:`support` section for instructions.
 
 You can also download the source directly from Linux command line::

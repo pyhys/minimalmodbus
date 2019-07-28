@@ -59,7 +59,7 @@ echo can be done in a number of ways:
 * Shorting two of the pins in the 9-pole D-SUB connector turns off the echo for some models.
 * If based on a FTDI chip, some special program can be used to change a chip setting for disabling echo.
 
-To handle local echo, see :ref:`handlelocalecho`.
+To handle local echo, see :class:`minimalmodbus.Instrument`.
 
 
 Empty bytes added in the beginning or the end on the received message
@@ -80,19 +80,12 @@ serial adaptor, to verify that the proper kernel driver is loaded.
 
 Known issues
 --------------
-For the data types involving more than one register (float, long etc), 
-there are differences in the byte order used by different manufacturers. 
-A floating point value of 1.0 is encoded (in single precision) as 3f800000 (hex). 
-In this implementation the data will be sent as ``'\x3f\x80'`` and ``'\x00\x00'`` to two consecutetive registers. 
-Make sure to test that it makes sense for your instrument. 
-It is pretty straight-forward to change this code if some other byte order is required by anyone (see support section).
 
 Changing ``close_port_after_each_call`` after instantiation of ``Instrument`` might be 
 problematic. Set the value ``minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL=True`` 
 immediately after ``import minimalmodbus`` instead.
 
-When running under Python2.6, for some conversion errors no exception is raised. 
-For example when trying to convert a negative value to a bytestring representing an unsigned long.
+TODO
 
 
 Issues when running under Windows
@@ -103,6 +96,8 @@ serial port has been improved for Windows.
 It should no longer be necessary to use ````minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = True```` 
 when running on Windows, as this now is handled in a better way internally. 
 This gives a significantly increased communication speed.
+
+TODO
 
 If the underlying pySerial complains that the serial port is already open, 
 it is still possible to make MinimalModbus close the serial port after each call. Use it like::
@@ -128,6 +123,6 @@ details are printed. See :ref:`debugmode`.
 Please also include the output after running::
 
   >>> import minimalmodbus 
-  >>> print minimalmodbus._getDiagnosticString()
+  >>> print(minimalmodbus._getDiagnosticString())
 
 Describe which instrument model you are using, and possibly a link to online PDF documentation for it.

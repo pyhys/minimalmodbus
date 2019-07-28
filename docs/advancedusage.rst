@@ -28,7 +28,7 @@ Note that when you call a function, in interactive mode the representation of th
 
 To see how the string look when printed, use instead::
 
-    >>> print instrument.get_all_pattern_variables(0)
+    >>> print(instrument.get_all_pattern_variables(0))
     SP0: 10.0  Time0: 10
     SP1: 20.0  Time1: 20
     SP2: 30.0  Time2: 30
@@ -43,7 +43,7 @@ To see how the string look when printed, use instead::
 
 It is possible to show the representation also when printing, if you use the function ``repr()``::
 
-    >>> print repr(instrument.get_all_pattern_variables(0))
+    >>> print(repr(instrument.get_all_pattern_variables(0)))
     'SP0: 10.0  Time0: 10\nSP1: 20.0  Time1: 20\nSP2: 30.0  Time2: 30\nSP3: 333.3  Time3: 45\nSP4: 50.0  Time4: 50\nSP5: 60.0  Time5: 60\nSP6: 70.0  Time6: 70\nSP7: 80.0  Time7: 80\nActual step:        7\nAdditional cycles:  4\nLinked pattern:     1\n'
 
 In case of problems using MinimalModbus, it is useful to switch on the debug mode to see the 
@@ -178,60 +178,6 @@ If you have a temperature text box where a user has entered ``255`` (possibly de
 This way it is easy to test the measurement program and the GUI separately.
 
 
-Workaround for floats with wrong byte order
-------------------------------------------------------
-If your instrument responds with floats implemented in the other byte order 
-than MinimalModbus, here is a workaroud that can be used.
-
-For example you are reading two registers (starting with register 3924) 
-from slave number 2, and the result should be a float of approximately 208::
-  
-    MinimalModbus debug mode. Response from instrument: '\x02\x03\x04\x93\x9dCPD\x95'
-
-    \x02 Slave address (here 2)
-    \x03 Function code (here 3 = read registers)
-    \x04 Byte count (here 4 bytes)
-    \x93 Payload. Here 93 (hex) = 147 (dec)
-    \x9d Payload. Here 9d (hex) = 157 (dec)
-    C    Payload. Here ASCII letter C = 43 (hex) = 67 (dec).
-    P    Payload. Here ASCII letter P = 50 (hex) = 80 (dec).
-    D    CRC LSB
-    \x95 CRC MSB
-
-So the payload is ``\x93\x9dCP``, which is 4 bytes (as each register stores 2 bytes). 
-See http://minimalmodbus.sourceforge.net/index.html#example
-
-You should try this in interactive mode in Python, and to manually re-shuffle the bytes::
-
-    ~$ python
-    Python 2.7.3 (default, Sep 26 2013, 20:08:41)
-    [GCC 4.6.3] on linux2
-    Type "help", "copyright", "credits" or "license" for more information.
-    >>> import minimalmodbus
-    >>>
-    >>> minimalmodbus._bytestringToFloat("\x93\x9dCP")
-    -3.9698747127906995e-27
-    >>>
-    >>> minimalmodbus._bytestringToFloat("CP\x93\x9d")
-    208.5766143798828
-    >>>
-
-Suggested work-around:
-
-* Read the register values directly using the :meth:`.read_registers` function. 
-* Then reshuffle the bytes
-* Convert it to a float using the internal function :meth:`._bytestringToFloat`. 
-
-Something like::
-
-    values = read_registers(3924, numberOfRegisters=2)
-    registerstring = chr(values[2]) + chr(values[3]) + chr(values[0]) + chr(values[1])
-    floatvalue = minimalmodbus._bytestringToFloat(registerstring)
-
-See :meth:`.read_registers` and :meth:`._bytestringToFloat`.
-
-
-
 Handling extra 0xFE byte after some messages
 --------------------------------------------------------------------------
 Some users have reported errors due to instruments not fulfilling the Modbus standard.
@@ -257,10 +203,6 @@ Install or uninstalling a distribution
 --------------------------------------------------------------------------
 To install a python (downloaded) package, uncompress it and use::
 
-    sudo python setup.py install
-
-or::
-
     sudo python3 setup.py install
 
 On a development machine, go to the :file:`trunk` directory before running the command.
@@ -270,14 +212,14 @@ Uninstall
 ``````````
 Pip-installed packages can be unistalled with::
 
-    sudo pip uninstall minimalmodbus
+    sudo pip3 uninstall minimalmodbus
 
 
 Show versions of all installed packages
 ```````````````````````````````````````
 Use::
 
-    pip freeze
+    pip3 freeze
 
 
 Installation target
@@ -285,7 +227,7 @@ Installation target
 The location of the installed files is seen in the :meth:`._getDiagnosticString` output::
 
     import minimalmodbus
-    print minimalmodbus._getDiagnosticString() 
+    print(minimalmodbus._getDiagnosticString())
 
 On Linux machines, for example::
 
@@ -325,7 +267,7 @@ To find locations::
 
 To see which python version that is used::
 
-    python --version
+    python3 --version
 
 
 Setting the PYTHONPATH

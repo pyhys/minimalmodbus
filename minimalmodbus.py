@@ -17,18 +17,16 @@
 
 """
 
-.. moduleauthor:: Jonas Berg <pyhys@users.sourceforge.net>
+.. moduleauthor:: Jonas Berg 
 
 MinimalModbus: A Python driver for the Modbus RTU and Modbus ASCII protocols via serial port (via RS485 or RS232).
 """
 
 __author__   = 'Jonas Berg'
-__email__    = 'pyhys@users.sourceforge.net'
-__url__      = 'https://github.com/pyhys/minimalmodbus'
 __license__  = 'Apache License, Version 2.0'
-
-__version__  = '0.7'
-__status__   = 'Beta'
+__status__   = 'Production'
+__url__      = 'https://github.com/pyhys/minimalmodbus'
+__version__  = '1.0a1'
 
 
 import os
@@ -51,29 +49,30 @@ _ASCII_HEADER = ':'
 _ASCII_FOOTER = '\r\n'
 
 # Several instrument instances can share the same serialport
-_SERIALPORTS = {}
-_LATEST_READ_TIMES = {}
+_SERIALPORTS = {}  # TODO rename _serialports
+_LATEST_READ_TIMES = {} # TODO rename _latest_read_times
 
 ####################
 ## Default values ##
 ####################
 
-BAUDRATE = 19200
-"""Default value for the baudrate in Baud (int)."""
+BAUDRATE = 19200 # TODO rename DEFAULT_BAUDRATE
+"""Default value for the baudrate in Baud (int). Do not modify."""
 
-PARITY   = serial.PARITY_NONE
-"""Default value for the parity. See the pySerial module for documentation. Defaults to serial.PARITY_NONE"""
+PARITY = serial.PARITY_NONE  # TODO remove
+"""Default value for the parity. See the pySerial module for documentation. Defaults to serial.PARITY_NONE. Do not modify."""
 
-BYTESIZE = 8
-"""Default value for the bytesize (int)."""
 
-STOPBITS = 1
-"""Default value for the number of stopbits (int)."""
+BYTESIZE = 8  # TODO rename DEFAULT_BYTESIZE
+"""Default value for the bytesize (int). Do not modify."""
 
-TIMEOUT  = 0.05
-"""Default value for the timeout value in seconds (float)."""
+STOPBITS = 1  # TODO rename DEFAULT_STOPBITS
+"""Default value for the number of stopbits (int). Do not modify."""
 
-CLOSE_PORT_AFTER_EACH_CALL = False
+TIMEOUT  = 0.05  # TODO rename DEFAULT_TIMEOUT
+"""Default value for the timeout value in seconds (float). Do not modify."""
+
+CLOSE_PORT_AFTER_EACH_CALL = False  # TODO remove
 """Default value for port closure setting."""
 
 #####################
@@ -93,18 +92,13 @@ class Instrument():
 
     Args:
         * port (str): The serial port name, for example ``/dev/ttyUSB0`` (Linux), ``/dev/tty.usbserial`` (OS X) or ``COM4`` (Windows).
-        * slaveaddress (int): Slave address in the range 1 to 247 (use decimal numbers, not hex).
+        * slaveaddress (int): Slave address in the range 1 to 247 (use decimal numbers, not hex). Address 0 is for broadcast, and 248-255 are reserved.
         * mode (str): Mode selection. Can be MODE_RTU or MODE_ASCII.
 
     """
 
     def __init__(self, port, slaveaddress, mode=MODE_RTU):
-        if port not in _SERIALPORTS or not _SERIALPORTS[port]:
-            self.serial = _SERIALPORTS[port] = serial.Serial(port=port, baudrate=BAUDRATE, parity=PARITY, bytesize=BYTESIZE, stopbits=STOPBITS, timeout=TIMEOUT)
-        else:
-            self.serial = _SERIALPORTS[port]
-            if self.serial.port is None:
-                self.serial.open()
+        self.serial = None
         """The serial port object as defined by the pySerial module. Created by the constructor.
 
         Attributes:
@@ -121,6 +115,12 @@ class Instrument():
             - timeout (float): Timeout value in seconds.
                 - Defaults to :data:`TIMEOUT`.
         """
+        if port not in _SERIALPORTS or not _SERIALPORTS[port]:
+            self.serial = _SERIALPORTS[port] = serial.Serial(port=port, baudrate=BAUDRATE, parity=PARITY, bytesize=BYTESIZE, stopbits=STOPBITS, timeout=TIMEOUT)
+        else:
+            self.serial = _SERIALPORTS[port]
+            if self.serial.port is None:
+                self.serial.open()
 
         self.address = slaveaddress
         """Slave address (int). Most often set by the constructor (see the class documentation). """
@@ -134,8 +134,9 @@ class Instrument():
         self.debug = False
         """Set this to :const:`True` to print the communication details. Defaults to :const:`False`."""
 
-        self.close_port_after_each_call = CLOSE_PORT_AFTER_EACH_CALL
+        self.close_port_after_each_call = CLOSE_PORT_AFTER_EACH_CALL  # TODO modify
         """If this is :const:`True`, the serial port will be closed after each call. Defaults to :data:`CLOSE_PORT_AFTER_EACH_CALL`. To change it, set the value ``minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL=True`` ."""
+
 
         self.precalculate_read_size = True
         """If this is :const:`False`, the serial port reads until timeout
@@ -278,8 +279,8 @@ class Instrument():
         it to the slave register.
 
         As the largest number that can be written to a register is 0xFFFF = 65535,
-        the *value* and *numberOfDecimals* should max be 65535 when combined.
-        So when using *numberOfDecimals*=3 the maximum *value* is 65.535.
+        the ``value`` and ``numberOfDecimals`` should max be 65535 when combined.
+        So when using ``numberOfDecimals=3`` the maximum ``value`` is 65.535.
 
         For discussion on negative values, the range and on alternative names, see :meth:`.read_register`.
 
@@ -428,12 +429,10 @@ class Instrument():
     def read_string(self, registeraddress, numberOfRegisters=16, functioncode=3):
         """Read an ASCII string from the slave.
 
-        Each 16-bit register in the slave are interpreted as two characters (1 byte = 8 bits).
+        Each 16-bit register in the slave are interpreted as two characters (each 1 byte = 8 bits).
         For example 16 consecutive registers can hold 32 characters (32 bytes).
 
         International characters (Unicode/UTF-8) are not supported.
-
-        TODO check unicode
 
         Args:
             * registeraddress (int): The slave register start address (use decimal numbers, not hex).
@@ -456,21 +455,19 @@ class Instrument():
     def write_string(self, registeraddress, textstring, numberOfRegisters=16):
         """Write an ASCII string to the slave.
 
-        Each 16-bit register in the slave are interpreted as two characters (1 byte = 8 bits).
+        Each 16-bit register in the slave are interpreted as two characters (each 1 byte = 8 bits).
         For example 16 consecutive registers can hold 32 characters (32 bytes).
 
         Uses Modbus function code 16.
 
         International characters (Unicode/UTF-8) are not supported.
 
-        TODO check unicode
-
         Args:
             * registeraddress (int): The slave register start address  (use decimal numbers, not hex).
             * textstring (str): The string to store in the slave
             * numberOfRegisters (int): The number of registers allocated for the string.
 
-        If the textstring is longer than the 2*numberOfRegisters, an error is raised.
+        If the ``textstring`` is longer than the ``2*numberOfRegisters``, an error is raised.
         Shorter strings are padded with spaces.
 
         Returns:
@@ -493,7 +490,7 @@ class Instrument():
 
         Args:
             * registeraddress (int): The slave register start address (use decimal numbers, not hex).
-            * numberOfRegisters (int): The number of registers to read.
+            * numberOfRegisters (int): The number of registers to read, max 125 registers.
             * functioncode (int): Modbus function code. Can be 3 or 4.
 
         Any scaling of the register data, or converting it to negative number (two's complement)
@@ -507,7 +504,7 @@ class Instrument():
 
         """
         _checkFunctioncode(functioncode, [3, 4])
-        _checkInt(numberOfRegisters, minvalue=1, description='number of registers')
+        _checkInt(numberOfRegisters, minvalue=1, description='number of registers') # TODO max 125
         return self._genericCommand(functioncode, registeraddress, \
             numberOfRegisters=numberOfRegisters, payloadformat='registers')
 
@@ -523,7 +520,7 @@ class Instrument():
 
         Args:
             * registeraddress (int): The slave register start address (use decimal numbers, not hex).
-            * values (list of int): The values to store in the slave registers.
+            * values (list of int): The values to store in the slave registers, max 123 values.
 
         Any scaling of the register data, or converting it to negative number (two's complement)
         must be done manually.
@@ -537,7 +534,7 @@ class Instrument():
         """
         if not isinstance(values, list):
             raise TypeError('The "values parameter" must be a list. Given: {0!r}'.format(values))
-        _checkInt(len(values), minvalue=1, description='length of input list')
+        _checkInt(len(values), minvalue=1, description='length of input list')  # TODO max 123 registers
         # Note: The content of the list is checked at content conversion.
 
         self._genericCommand(16, registeraddress, values, numberOfRegisters=len(values), payloadformat='registers')
@@ -1952,9 +1949,10 @@ _CRC16TABLE = (
     19008, 19968, 36545, 36737, 20288, 36097, 19904, 19584, 35905, 17408, 33985, 
     34177, 17728, 34561, 18368, 18048, 34369, 33281, 17088, 17280, 33601, 16640, 
     33217, 32897, 16448)
-"""CRC-16 lookup table with 256 elements.
-    Built with this code:    
-    
+r"""CRC-16 lookup table with 256 elements.
+
+Built with this code::
+
     poly=0xA001
     table = []
     for index in range(256):
@@ -1973,8 +1971,7 @@ _CRC16TABLE = (
             output += "\n"
         output += "{:5.0f}, ".format(m)
     print output
-    """
-
+"""
 
 def _calculateCrcString(inputstring):
     """Calculate CRC-16 for Modbus.
@@ -2089,7 +2086,7 @@ def _checkSlaveaddress(slaveaddress):
         TypeError, ValueError
 
     """
-    SLAVEADDRESS_MAX = 247
+    SLAVEADDRESS_MAX = 247  #TODO
     SLAVEADDRESS_MIN = 0
 
     _checkInt(slaveaddress, SLAVEADDRESS_MIN, SLAVEADDRESS_MAX, description='slaveaddress')

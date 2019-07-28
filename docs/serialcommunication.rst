@@ -100,7 +100,7 @@ when it comes to RS485 communication. There are some options:
     Some users have been reporting on success for this strategy. The problem is that the master and
     slaves have their transmitters enabled simultaneously. I guess for certain situations (and
     being lucky with the transceiver chip) it might work. Note that you will receive your own transmitted 
-    message (local echo). See :ref:`handlelocalecho`.
+    message (local echo). See :class:`minimalmodbus.Instrument` for echo detais.
 
 **Controlling a separate GPIO pin from kernelspace software on embedded Linux machines** 
     See for example http://blog.savoirfairelinux.com/en/2013/rs-485-for-beaglebone-a-quick-peek-at-the-omap-uart/ 
@@ -111,7 +111,7 @@ when it comes to RS485 communication. There are some options:
 
 **Controlling a separate GPIO pin from userspace software on embedded Linux machines**
     This will give large time delays, but might be acceptable for low speeds. 
-    It will probaby take 1-3 ms turn off the transciver. For this to fit in the 3.5 character 
+    It will probaby take 1-3 ms to turn off the transciver. For this to fit in the 3.5 character 
     time before the slave starts transmitting, max speed can be 9600 bps.
 
 **Controlling the RTS pin in the RS232 interface (from userspace), and connecting it to the TXENABLE pin of the transceiver**
@@ -120,7 +120,8 @@ when it comes to RS485 communication. There are some options:
 
 Controlling the RS-485 transceiver from userspace
 ----------------------------------------------------
-As described above, this should be avoided. Nevertheless, for low speeds (maybe up to 9600 bits/s) it might be useful.
+As described above, this should be avoided. Nevertheless, for low speeds (maybe up 
+to 9600 bits/s) it might be useful.
 
 This can be done from userspace, but will then lead to large time delays. 
 I have tested this with a 3.3V FTDI  USB-to-serial cable using pySerial 

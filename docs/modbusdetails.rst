@@ -9,9 +9,46 @@ Modbus data types
 The Modbus standard defines storage in:
 
 * Bits
-* Registers (16-bit). Can hold integers in the range 0 to 65535 (dec), which is 0 to ffff (hex). Also called 'unsigned INT16' or 'unsigned short'.
+* Registers (16-bit). Can hold integers in the range 0 to 65535 (dec), 
+  which is 0 to ffff (hex). Also called 'unsigned INT16' or 'unsigned short'.
 
-Some deviations from the official standard:
+Modbus defines "table" names dependent on whether the storage is single bit or 16-bit registers,
+and whether it is possible to write to the storage.
+
++-----------------+----------------+------------------------+-------------------------------------------------+
+| Storage in      | Access         | Modbus "table"         | Example use on instrument                       |
++=================+================+========================+=================================================+
+| Bits            | Read only      | Discrete inputs        | A digital input                                 |
++-----------------+----------------+------------------------+-------------------------------------------------+
+| Bits            | Read and write | Coils                  | A digital output                                |
++-----------------+----------------+------------------------+-------------------------------------------------+
+| 16-bit register | Read only      | Input registers        | Several digital inputs, or an analog input      |
++-----------------+----------------+------------------------+-------------------------------------------------+
+| 16-bit register | Read and write | Holding registers      | Several digital outputs, or a setting parameter |
++-----------------+----------------+------------------------+-------------------------------------------------+
+
+Function codes are used to describe the read or write operations (shown in decimal in the table below)
+
++----------------------------------------------+--------+----------+---------+----------+
+|                                              |      Read         |       Write        |
+|                                              +--------+----------+---------+----------+
+| Storage                                      | Single | Multiple | Single  | Multiple |
++==============================================+========+==========+=========+==========+ 
+| Read-and-write bits (coils)                  |        | 1        | 5       | 15       |
++----------------------------------------------+--------+----------+---------+----------+
+| Read-only bits (discrete inputs)             |        | 2        | None    | None     |
++----------------------------------------------+--------+----------+---------+----------+
+| Read-and-write registers (holding registers) |        | 3, 23    | 6       | 16, 23   | 
++----------------------------------------------+--------+----------+---------+----------+
+| Read-only registers (input registers)        |        | 4, 23    | None    | None     |
++----------------------------------------------+--------+----------+---------+----------+ 
+
+Note that function code 23 not is implemented by this software.
+
+Function codes 128 and larger are used by slaves to indicate errors.
+
+Some extensions not covered by the official standard
+----------------------------------------------------
 
 **Scaling of register values**
     Some manufacturers store a temperature value of 77.0 C as 770 in the register, 
@@ -51,6 +88,10 @@ Some deviations from the official standard:
     in the instruments. The data is nevertherless transmitted as 16 bit over the serial link, 
     so you can read and write like normal (but with values limited to the range 0-255).
     
+**32-bit registers**
+    "Enron Modbus" allows larger registers where you can store 32 bits in a single register 
+    (instead of two consecutive 16 bit registers). Not supported by this software.
+
 
 Implemented functions
 ---------------------
@@ -63,16 +104,21 @@ given in decimal in this table.
 +=======================================+=========================+===============+==========================+===============+
 | | **Bit**                             | :meth:`.read_bit`       | 2 [or 1]      | :meth:`.write_bit`       | 5 [or 15]     |
 +---------------------------------------+-------------------------+---------------+--------------------------+---------------+
+| | **Bits**                            | Not implemented         | 2 [or 1]      | Not implemented          | 15            |
+| | Simultaneous reading                |                         |               |                          |               |
++---------------------------------------+-------------------------+---------------+--------------------------+---------------+
 | | **Register**                        | :meth:`.read_register`  | 3 [or 4]      | :meth:`.write_register`  | 16 [or 6]     |
 | | Integer, possibly scaled            |                         |               |                          |               |
 +---------------------------------------+-------------------------+---------------+--------------------------+---------------+
-| | **Long**                            | :meth:`.read_long`      | 3 [or 4]      | :meth:`.write_long`      | 16            |
+| | **Long integer**                            | :meth:`.read_long`      | 3 [or 4]      | :meth:`.write_long`      | 16            |
 | | (32 bits = 2 registers)             |                         |               |                          |               |
 +---------------------------------------+-------------------------+---------------+--------------------------+---------------+
 | | **Float**                           | :meth:`.read_float`     | 3 [or 4]      | :meth:`.write_float`     | 16            |
-| | (32 or 64 bits)                     |                         |               |                          |               |
+| | (32 or 64 bits =                    |                         |               |                          |               |
+| | 2 or 4 registers)                   |                         |               |                          |               |
 +---------------------------------------+-------------------------+---------------+--------------------------+---------------+
 | | **String**                          | :meth:`.read_string`    | 3 [or 4]      | :meth:`.write_string`    | 16            |
+| | 2 characters per register           |                         |               |                          |               |
 +---------------------------------------+-------------------------+---------------+--------------------------+---------------+
 | | **Registers**                       | :meth:`.read_registers` | 3 [or 4]      | :meth:`.write_registers` | 16            |
 | | Integers                            |                         |               |                          |               |
@@ -124,9 +170,11 @@ The response from the client is similar, but with other payload data.
 | |                                     | | Byte count [1 Byte]           | |                               | 
 | |                                     | | Value [n*2 Bytes]             | |                               | 
 +---------------------------------------+---------------------------------+---------------------------------+
-
- TODO Validate
-
+| | **23**                              | | ?                             | | ?                             | 
+| | Read and write multiple registers   | |                               | |                               | 
+| |                                     | |                               | |                               | 
+| |                                     | |                               | |                               | 
++---------------------------------------+---------------------------------+---------------------------------+
 
 For function code 5, the only valid values are 0000 (hex) or FF00 (hex), representing OFF and ON respectively.
 
@@ -135,6 +183,36 @@ can be said about function code 5 and 6, and also about 15 and 16.
 
 For finding how the k Bytes for the value relates to the number of registers etc (n), see the Modbus documents referred to above.
     
+
+Reading individual bits from a 16-bit register
+----------------------------------------------
+
+Some manufacturers use 16-bit registers to store individual boolean values (bits), so with 
+a single read from a single address, 16 booleans could be retrieved.
+This is sometimes called a flag register.
+
+You need to read the register as an integer, and then 
+extract the bit you are interested in. For example to extract the 
+third bit from right::
+
+    registervalue = instrument.read_register(4143)
+    is_my_bit_set = (registervalue & 0b0000000000000100) > 0
+
+or if using hexadecimal numbers in your code instead::
+
+    is_my_bit_set = (registervalue & 0x0004) > 0
+
+More information on bit manipulation in Python, see the "Single bits" section 
+of https://wiki.python.org/moin/BitManipulation
+
+
+Known deviations from the standard
+-----------------------------------
+Some instruments:
+
+* sets more than one bit in the response when one bit is requested.
+* add an extra 0xFE byte after some messages.
+
 
 MODBUS ASCII format
 -----------------------
@@ -161,6 +239,7 @@ is sent from the master in this format:
    The stop characters are carriage return (``'\r'`` = ``'\x0D'``) and line feed (``'\n'`` = ``'\x0A'``).
 
 
+
 Manual testing of Modbus equipment
 ------------------------------------------
 Look in your equipment's manual to find working communication examples.
@@ -171,10 +250,10 @@ You can make a small Python program to test the communication::
 
     import serial
     ser = serial.Serial('/dev/ttyUSB0', 19200, timeout=1)
-    print ser
+    print(ser)
 
     ser.write(':010310010001EA\r\n')
-    print repr(ser.read(1000)) # Read 1000 bytes, or wait for timeout
+    print(repr(ser.read(1000)))  # Read 1000 bytes, or wait for timeout
 
 It should print something like::
 
@@ -210,7 +289,3 @@ To send out a Modbus ASCII request (read register 0x1001 on slave 1), and print 
 The reponse will be something like::
 
     :0103020136C3
-    
-
-
-
