@@ -449,7 +449,7 @@ class Instrument():
 
         Args:
             * registeraddress (int): The slave register start address  (use decimal numbers, not hex).
-            * textstring (str): The string to store in the slave
+            * textstring (str): The string to store in the slave, must be ASCII.
             * numberOfRegisters (int): The number of registers allocated for the string.
 
         If the ``textstring`` is longer than the ``2*numberOfRegisters``, an error is raised.
