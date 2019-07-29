@@ -463,7 +463,7 @@ class Instrument():
 
         """
         _checkInt(numberOfRegisters, minvalue=1, description='number of registers for write string')
-        _checkString(textstring, 'input string', minlength=1, maxlength=2 * numberOfRegisters)
+        _checkString(textstring, 'input string', minlength=1, maxlength=2*numberOfRegisters, force_ascii=True)
         self._genericCommand(16, registeraddress, textstring, \
             numberOfRegisters=numberOfRegisters, payloadformat='string')
 
@@ -2206,7 +2206,7 @@ def _checkResponseWriteData(payload, writedata):
             receivedWritedata, writedata, payload))
 
 
-def _checkString(inputstring, description, minlength=0, maxlength=None):
+def _checkString(inputstring, description, minlength=0, maxlength=None, force_ascii=False):
     """Check that the given string is valid.
 
     Args:
@@ -2214,7 +2214,10 @@ def _checkString(inputstring, description, minlength=0, maxlength=None):
         * description (string): Used in error messages for the checked inputstring
         * minlength (int): Minimum length of the string
         * maxlength (int or None): Maximum length of the string
+        * force_ascii (bool): Enforce that the string is ASCII
 
+    The force_ascii argument is valid only for Python3, as all strings are ASCII in Python2.
+    
     Raises:
         TypeError, ValueError
 
@@ -2250,6 +2253,11 @@ def _checkString(inputstring, description, minlength=0, maxlength=None):
             raise ValueError('The {0} is too long: {1}, but maximum value is {2}. Given: {3!r}'.format( \
                 description, len(inputstring), maxlength, inputstring))
 
+    if force_ascii and sys.version > '3':
+        try:
+            inputstring.encode("ascii")
+        except UnicodeEncodeError:
+            raise ValueError('The {0} must be ASCII. Given: {1!r}'.format(description, inputstring))
 
 def _checkInt(inputvalue, minvalue=None, maxvalue=None, description='inputvalue'):
     """Check that the given integer is valid.

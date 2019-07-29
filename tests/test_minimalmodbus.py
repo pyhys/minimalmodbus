@@ -1364,8 +1364,9 @@ class TestCheckResponseWriteData(ExtendedTestCase):
 class TestCheckString(ExtendedTestCase):
 
     def testKnownValues(self):
-        minimalmodbus._checkString('DEF', minlength=3, maxlength=3, description='ABC' )
-        minimalmodbus._checkString('DEF', minlength=0, maxlength=100, description='ABC' )
+        minimalmodbus._checkString('DEF', minlength=3, maxlength=3, description='ABC')
+        minimalmodbus._checkString('DEF', minlength=3, maxlength=3, description='ABC', force_ascii=True)
+        minimalmodbus._checkString('DEF', minlength=0, maxlength=100, description='ABC')
 
     def testTooShort(self):
         self.assertRaises(ValueError, minimalmodbus._checkString, 'DE',  minlength=3,  maxlength=3, description='ABC')
@@ -1373,6 +1374,10 @@ class TestCheckString(ExtendedTestCase):
 
     def testTooLong(self):
         self.assertRaises(ValueError, minimalmodbus._checkString, 'DEFG', minlength=1, maxlength=3, description='ABC')
+
+    def testNotAscii(self):
+        # TODO When Python3 only, check the force_ascii mechanism
+        pass
 
     def testInconsistentLengthlimits(self):
         self.assertRaises(ValueError, minimalmodbus._checkString, 'DEFG', minlength=4,  maxlength=3, description='ABC')
@@ -1817,6 +1822,7 @@ class TestDummyCommunication(ExtendedTestCase):
         self.assertRaises(ValueError, self.instrument.write_string, 104,   'ABCDEFGHI', 4)
         self.assertRaises(ValueError, self.instrument.write_string, 104,   'A',         -1) # Wrong number of registers
         self.assertRaises(ValueError, self.instrument.write_string, 104,   'A',         256)
+        # TODO When Python3 only, add test with non-ASCII characters and force_ascii=True
 
     def testWriteStringWrongType(self):
         for value in _NOT_INTERGERS:
@@ -2970,7 +2976,7 @@ if __name__ == '__main__':
     
     #suite = unittest.TestSuite()
     #suite.addTest(TestDummyCommunication("testReadLong"))
-    #suite.addTest(TestDummyCommunication("testWriteBit"))
+    #suite.addTest(TestDummyCommunication("testWriteString"))
     #unittest.TextTestRunner(verbosity=2).run(suite)
     
     
