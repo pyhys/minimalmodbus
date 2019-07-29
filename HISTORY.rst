@@ -2,11 +2,13 @@
 
 History
 =======
+
 Release 1.0 (2019-08-??)
 -------------------------
 * Removed example drivers for Eurotherm 3500 and Omegacn 7500, as I no longer have 
   access for these instruments for testing. It would great if someone would pick
   up support for these instruments in a separate project.
+* Removed module level constants for default values, as they were confusingly named.
 * Improved documentation
 
 

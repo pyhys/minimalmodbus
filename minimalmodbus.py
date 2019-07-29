@@ -53,29 +53,6 @@ _serialports = {}
 _latest_read_times = {} 
 
 ####################
-## Default values ##
-####################
-
-BAUDRATE = 19200 # TODO rename DEFAULT_BAUDRATE
-"""Default value for the baudrate in Baud (int). Do not modify."""
-
-PARITY = serial.PARITY_NONE  # TODO remove
-"""Default value for the parity. See the pySerial module for documentation. Defaults to serial.PARITY_NONE. Do not modify."""
-
-
-BYTESIZE = 8  # TODO rename DEFAULT_BYTESIZE
-"""Default value for the bytesize (int). Do not modify."""
-
-STOPBITS = 1  # TODO rename DEFAULT_STOPBITS
-"""Default value for the number of stopbits (int). Do not modify."""
-
-TIMEOUT  = 0.05  # TODO rename DEFAULT_TIMEOUT
-"""Default value for the timeout value in seconds (float). Do not modify."""
-
-CLOSE_PORT_AFTER_EACH_CALL = False  # TODO remove
-"""Default value for port closure setting."""
-
-#####################
 ## Named constants ##
 #####################
 
@@ -86,6 +63,7 @@ MODE_ASCII = 'ascii'
 ## Modbus instrument object ##
 ##############################
 
+CLOSE_PORT_AFTER_EACH_CALL = False  # TODO remove
 
 class Instrument():
     """Instrument class for talking to instruments (slaves) via the Modbus RTU or ASCII protocols (via RS485 or RS232).
@@ -105,23 +83,23 @@ class Instrument():
             - port (str):      Serial port name.
                 - Most often set by the constructor (see the class documentation).
             - baudrate (int):  Baudrate in Baud.
-                - Defaults to :data:`BAUDRATE`.
+                - Defaults to 19200.
             - parity (probably int): Parity. See the pySerial module for documentation.
-                - Defaults to :data:`PARITY`.
+                - Defaults to serial.PARITY_NONE.
             - bytesize (int):  Bytesize in bits.
-                - Defaults to :data:`BYTESIZE`.
+                - Defaults to 8.
             - stopbits (int):  The number of stopbits.
-                - Defaults to :data:`STOPBITS`.
+                - Defaults to 1.
             - timeout (float): Timeout value in seconds.
-                - Defaults to :data:`TIMEOUT`.
+                - Defaults to 0.05 s.
         """
         if port not in _serialports or not _serialports[port]:
             self.serial = _serialports[port] = serial.Serial(port=port, 
-                                                             baudrate=BAUDRATE, 
-                                                             parity=PARITY, 
-                                                             bytesize=BYTESIZE, 
-                                                             stopbits=STOPBITS, 
-                                                             timeout=TIMEOUT)
+                                                             baudrate=19200, 
+                                                             parity=serial.PARITY_NONE, 
+                                                             bytesize=8, 
+                                                             stopbits=1, 
+                                                             timeout=0.05)
         else:
             self.serial = _serialports[port]
             if self.serial.port is None:
@@ -140,7 +118,9 @@ class Instrument():
         """Set this to :const:`True` to print the communication details. Defaults to :const:`False`."""
 
         self.close_port_after_each_call = CLOSE_PORT_AFTER_EACH_CALL  # TODO modify
-        """If this is :const:`True`, the serial port will be closed after each call. Defaults to :data:`CLOSE_PORT_AFTER_EACH_CALL`. To change it, set the value ``minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL=True`` ."""
+        #self.close_port_after_each_call = False
+        """If this is :const:`True`, the serial port will be closed after each call. Defaults to :const:`False`. 
+        To change it, set the value ``minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL=True`` .""" #TODO
 
 
         self.precalculate_read_size = True
