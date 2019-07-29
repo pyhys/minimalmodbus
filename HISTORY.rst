@@ -12,6 +12,7 @@ Release 1.0 (2019-08-??)
 * Allow slave addresses also in the reserved range (up to 255). Reported by Github user gnbl.
 * Silent period between messages is at least 1.75 ms to fulfill Modbus standard. Reported
   by Github user draput.
+* Use time.monotonic if available. Suggested by Matthias Bolte.
 * Improved documentation
 
 

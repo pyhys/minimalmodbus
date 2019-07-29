@@ -49,8 +49,8 @@ _ASCII_HEADER = ':'
 _ASCII_FOOTER = '\r\n'
 
 # Several instrument instances can share the same serialport
-_serialports = {}
-_latest_read_times = {} 
+_serialports = {}  # Key: port name (str), value: port instance
+_latest_read_times = {}  # Key: port name (str), value: timestamp (float)
 
 ####################
 ## Named constants ##
@@ -821,15 +821,15 @@ class Instrument():
 
         Timing::
 
-                                                  Request from master (Master is writing)
-                                                  |
-                                                  |       Response from slave (Master is reading)
-                                                  |       |
-            ----W----R----------------------------W-------R----------------------------------------
-                     |                            |       |
-                     |<----- Silent period ------>|       |
-                                                  |       |
-                             Roundtrip time  ---->|-------|<--
+                            Request from master (Master is writing)
+                            |
+                            |                             Response from slave (Master is reading)
+                            |                             |
+            --------R-------W-----------------------------R-------W-----------------------------
+                     |     |                               |
+                     |     |<------- Roundtrip time ------>|         
+                     |     |
+                  -->|-----|<----- Silent period
 
         The resolution for Python's time.time() is lower on Windows than on Linux.
         It is about 16 ms on Windows according to
@@ -837,16 +837,13 @@ class Instrument():
 
         For Python3, the information sent to and from pySerial should be of the type bytes.
         This is taken care of automatically by MinimalModbus.
-        
-        
 
         """
-
         _checkString(request, minlength=1, description='request')
         _checkInt(number_of_bytes_to_read)
 
         if self.debug:
-            _print_out('\nMinimalModbus debug mode. Writing to instrument (expecting {} bytes back): {!r} ({})'. \
+            _print_out('\nMinimalModbus debug mode. Will write to instrument (expecting {} bytes back): {!r} ({})'. \
                 format(number_of_bytes_to_read, request, _hexlify(request)))
 
         if self.close_port_after_each_call:
@@ -858,15 +855,15 @@ class Instrument():
             request = bytes(request, encoding='latin1')  # Convert types to make it Python3 compatible
 
         # Sleep to make sure 3.5 character times have passed
-        minimum_silent_period   = _calculate_minimum_silent_period(self.serial.baudrate)
-        time_since_read         = time.time() - _latest_read_times.get(self.serial.port, 0)
+        minimum_silent_period = _calculate_minimum_silent_period(self.serial.baudrate)
+        time_since_read = _now() - _latest_read_times.get(self.serial.port, 0)
 
         if time_since_read < minimum_silent_period:
             sleep_time = minimum_silent_period - time_since_read
 
             if self.debug:
-                template = 'MinimalModbus debug mode. Sleeping for {:.1f} ms. ' + \
-                        'Minimum silent period: {:.1f} ms, time since read: {:.1f} ms.'
+                template = 'MinimalModbus debug mode. Sleeping {:.2f} ms before sending. ' + \
+                        'Minimum silent period: {:.2f} ms, time since read: {:.2f} ms.'
                 text = template.format(
                     sleep_time * _SECONDS_TO_MILLISECONDS,
                     minimum_silent_period * _SECONDS_TO_MILLISECONDS,
@@ -877,33 +874,32 @@ class Instrument():
 
         elif self.debug:
             template = 'MinimalModbus debug mode. No sleep required before write. ' + \
-                'Time since previous read: {:.1f} ms, minimum silent period: {:.2f} ms.'
+                'Time since previous read: {:.2f} ms, minimum silent period: {:.2f} ms.'
             text = template.format(
                 time_since_read * _SECONDS_TO_MILLISECONDS,
                 minimum_silent_period * _SECONDS_TO_MILLISECONDS)
             _print_out(text)
 
         # Write request
-        latest_write_time = time.time()
-        
+        latest_write_time = _now()
         self.serial.write(request)
 
         # Read and discard local echo
         if self.handle_local_echo:
-            localEchoToDiscard = self.serial.read(len(request))
+            local_echo_to_discard = self.serial.read(len(request))
             if self.debug:
                 template = 'MinimalModbus debug mode. Discarding this local echo: {!r} ({} bytes).' 
-                text = template.format(localEchoToDiscard, len(localEchoToDiscard))
+                text = template.format(local_echo_to_discard, len(local_echo_to_discard))
                 _print_out(text)
-            if localEchoToDiscard != request:
+            if local_echo_to_discard != request:
                 template = 'Local echo handling is enabled, but the local echo does not match the sent request. ' + \
                     'Request: {!r} ({} bytes), local echo: {!r} ({} bytes).' 
-                text = template.format(request, len(request), localEchoToDiscard, len(localEchoToDiscard))
+                text = template.format(request, len(request), local_echo_to_discard, len(local_echo_to_discard))
                 raise IOError(text)
 
         # Read response
         answer = self.serial.read(number_of_bytes_to_read)
-        _latest_read_times[self.serial.port] = time.time()
+        _latest_read_times[self.serial.port] = _now()
 
         if self.close_port_after_each_call:
             self.serial.close()
@@ -1590,6 +1586,17 @@ def _bytestringToValuelist(bytestring, numberOfRegisters):
         values.append(_twoByteStringToNum(substring))
 
     return values
+
+
+def _now():
+    """Return a timestamp for time duration measurements
+
+    Returns a float, that increases with 1.0 per second. 
+    The starting point is undefined.
+    """
+    if hasattr(time, 'monotonic'):
+        return time.monotonic()
+    return time.time()
 
 
 def _pack(formatstring, value):

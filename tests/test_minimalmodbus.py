@@ -789,6 +789,14 @@ class TestSanityTextstring(ExtendedTestCase):
             self.assertEqual( resultstring.strip(), textstring )
 
 
+class TestTimestamp(ExtendedTestCase):
+
+    def testGood(self):
+        timestamp = minimalmodbus._now()
+        self.assertGreater(timestamp, 1.0)
+        self.assertLess(timestamp, 1.0e11)  # Should be less than UNIX timestap also in future
+
+
 class TestPack(ExtendedTestCase):
 
     knownValues=[        

@@ -10,8 +10,18 @@ Development Lead
 Contributors
 ------------
 
-Significant contributions by Angelo Compagnucci, Aaron LaLonde, Asier Abalos, 
-Simon Funke, Edwin van den Oetelaar, Dominik Socha, Luca Di Gregorio, Dino, 
-Peter and Michael Penza.
+Significant contributions by:
 
-And from these Github users: draput, gnbl
+Aaron LaLonde
+Angelo Compagnucci
+Asier Abalos
+Dino
+Dominik Socha
+Edwin van den Oetelaar
+Github user: draput
+Github user: gnbl
+Luca Di Gregorio
+Matthias Bolte
+Michael Penza
+Peter
+Simon Funke
