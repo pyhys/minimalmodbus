@@ -121,7 +121,7 @@ given in decimal in this table.
 | | **Register**                        | :meth:`.read_register`  | 3 [or 4]      | :meth:`.write_register`  | 16 [or 6]     |
 | | Integer, possibly scaled            |                         |               |                          |               |
 +---------------------------------------+-------------------------+---------------+--------------------------+---------------+
-| | **Long integer**                            | :meth:`.read_long`      | 3 [or 4]      | :meth:`.write_long`      | 16            |
+| | **Long integer**                    | :meth:`.read_long`      | 3 [or 4]      | :meth:`.write_long`      | 16            |
 | | (32 bits = 2 registers)             |                         |               |                          |               |
 +---------------------------------------+-------------------------+---------------+--------------------------+---------------+
 | | **Float**                           | :meth:`.read_float`     | 3 [or 4]      | :meth:`.write_float`     | 16            |

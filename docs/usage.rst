@@ -40,13 +40,6 @@ but the controllers I prefer use the Modbus RTU protocol.
 MinimalModbus is intended for general communication using the Modbus RTU protocol 
 (using a serial link), so there should be lots of applications.
 
-As an example on the usage of MinimialModbus, the driver I use for an 
-Eurotherm 3504 process controller is included. It uses the MinimalModbus Python module 
-for its communication. Also a driver for Omega CN7500 is included. 
-For hardware details on these process controllers, see 
-`Eurotherm 3500 <https://www.eurotherm.com/en/products/temperature-controllers/multi-loop-temperature-controllers/3500-advanced-temperature-controller-and-programmer/>`_ and 
-`Omega CN7500 <http://www.omega.com/pptst/CN7500.html>`_.
-
 There can be several instruments (slaves, nodes) on a single bus, 
 and the slaves have addresses in the range 1 to 247. In the Modbus RTU protocol, 
 only the master can initiate communication. The physical layer is most often 
@@ -188,30 +181,9 @@ Different types of errors should be handled separately.
 Subclassing
 -----------
 
-It is better to put the details in a driver for the specific instrument. 
-An example driver for Eurotherm3500 is included in this library, 
-and it is recommended to have a look at its source code. 
-To get the process value (PV from loop1)::
+It is better to put the details on registers etc in a driver for the specific instrument. 
+See :ref:`specificdrivers`.
 
-    #!/usr/bin/env python3
-    import eurotherm3500
 
-    heatercontroller = eurotherm3500.Eurotherm3500('/dev/ttyUSB1', 1)  # port name, slave address
 
-    ## Read temperature (PV) ##
-    temperature = heatercontroller.get_pv_loop1()
-    print(temperature)
-
-    ## Change temperature setpoint (SP) ##
-    NEW_TEMPERATURE = 95.0
-    heatercontroller.set_sp_loop1(NEW_TEMPERATURE)
-
-Correspondingly, to use the driver for Omega CN7500::
-
-    #!/usr/bin/env python 
-    import omegacn7500
-
-    instrument = omegacn7500.OmegaCN7500('/dev/ttyUSB1', 1)  # port name, slave address
-    
-    print(instrument.get_pv())  # print temperature
 

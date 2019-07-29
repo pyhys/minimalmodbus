@@ -16,23 +16,18 @@
 #
 
 """
-.. moduleauthor:: Jonas Berg <pyhys@users.sourceforge.net>
+.. moduleauthor:: Jonas Berg 
 
 """
 
 __author__  = "Jonas Berg"
-__email__   = "pyhys@users.sourceforge.net"
 __license__ = "Apache License, Version 2.0"
 
 import unittest
 
 import tests.test_minimalmodbus
-import tests.test_eurotherm3500
-import tests.test_omegacn7500
 
 def suite_all_simulated():
     suite = unittest.TestLoader().loadTestsFromModule( test_minimalmodbus )
-    suite.addTest( unittest.TestLoader().loadTestsFromModule(test_eurotherm3500) )
-    suite.addTest( unittest.TestLoader().loadTestsFromModule(test_omegacn7500) )
     return suite
     

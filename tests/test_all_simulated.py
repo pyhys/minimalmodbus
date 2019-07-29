@@ -17,14 +17,13 @@
 
 """
 
-.. moduleauthor:: Jonas Berg <pyhys@users.sourceforge.net>
+.. moduleauthor:: Jonas Berg 
 
 test_all_simulated: Run all the unit tests (without any hardware)
 
 """
 
 __author__  = "Jonas Berg"
-__email__   = "pyhys@users.sourceforge.net"
 __license__ = "Apache License, Version 2.0"
 
 

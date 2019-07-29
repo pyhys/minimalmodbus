@@ -31,7 +31,6 @@ Contents:
    history
 
    internaltoc
-   exampledriverstoc
 
 
 Indices and tables

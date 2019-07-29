@@ -230,9 +230,7 @@ into the test code (for use with a mock/dummy serial port). See for example
    MinimalModbus debug mode. Writing to instrument: '\n\x05\x08\x14\xff\x00\xcf%'
    MinimalModbus debug mode. Response from instrument: '\n\x05\x08\x14\xff\x00\xcf%'
 
-This is also very useful for debugging drivers built on top of MinimalModbus. See 
-for example the test code for omegacn7500 :ref:`testomegacn7500` (click '[source]', 
-see RESPONSES at end of the page).
+This is also very useful for debugging drivers built on top of MinimalModbus. 
 
 
 Using the dummy serial port

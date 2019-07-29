@@ -21,7 +21,10 @@ To use interactive mode, start the Python interpreter and import minimalmodbus::
     >>> instr.read_register(24, 1)
     450.0
 
-Note that when you call a function, in interactive mode the representation of the return value is printed. The representation is kind of a debug information, like seen here for the returned string (example from Omega CN7500 driver)::
+Note that when you call a function, in interactive mode the representation of the 
+return value is printed. The representation is kind of a debug information, 
+like seen here for the returned string (example from Omega CN7500 driver, 
+which previously was included in this package)::
 
     >>> instrument.get_all_pattern_variables(0)
     'SP0: 10.0  Time0: 10\nSP1: 20.0  Time1: 20\nSP2: 30.0  Time2: 30\nSP3: 333.3  Time3: 45\nSP4: 50.0  Time4: 50\nSP5: 60.0  Time5: 60\nSP6: 70.0  Time6: 70\nSP7: 80.0  Time7: 80\nActual step:        7\nAdditional cycles:  4\nLinked pattern:     1\n'
@@ -55,13 +58,16 @@ communication details::
     MinimalModbus debug mode. Response from instrument: '\x01\x03\x02\x11\x94µ»'
     450.0
 
+.. _specificdrivers:
+
 Making drivers for specific instruments
 ------------------------------------------------------------------------------
 With proper instrument drivers you can use commands like ``getTemperatureCenter()`` in your code 
 instead of ``read_register(289, 1)``. So the driver is a basically a collection of 
 numerical constants to make your code more readable.
 
-This segment is part of the example driver :mod:`eurotherm3500` which is included in this distribution::
+This segment is part of the example driver eurotherm3500 which previously was included 
+in this distribution::
 
     import minimalmodbus
 
@@ -108,14 +114,30 @@ This segment is part of the example driver :mod:`eurotherm3500` which is include
             VALUE = 1
             self.write_register(78, VALUE, 0) 
 
+To get the process value (PV from loop1)::
 
-See :mod:`eurotherm3500` (click [source]) for more details.
+    #!/usr/bin/env python3
+    import eurotherm3500
 
-Note that I have one additional driver layer on top of :mod:`eurotherm3500` (which is one layer on top of :mod:`minimalmodbus`). 
-I use this process controller to run a heater, so I have a driver :file:`heater.py` in which all my settings are done.
+    heatercontroller = eurotherm3500.Eurotherm3500('/dev/ttyUSB1', 1)  # port name, slave address
 
-The idea is that :mod:`minimalmodbus` should be useful to most Modbus users, and :mod:`eurotherm3500` should be useful to most users of that controller type. 
-So my :file:`heater.py` driver has functions like ``getTemperatureCenter()`` and ``getTemperatureEdge()``, and there I also define resistance values etc.
+    ## Read temperature (PV) ##
+    temperature = heatercontroller.get_pv_loop1()
+    print(temperature)
+
+    ## Change temperature setpoint (SP) ##
+    NEW_TEMPERATURE = 95.0
+    heatercontroller.set_sp_loop1(NEW_TEMPERATURE)
+
+
+Note that I have one additional driver layer on top of eurotherm3500 (which is one layer on 
+top of :mod:`minimalmodbus`). I use this process controller to run a heater, so I have 
+a driver :file:`heater.py` in which all my settings are done.
+
+The idea is that :mod:`minimalmodbus` should be useful to most Modbus users, and eurotherm3500
+should be useful to most users of that controller type. 
+So my :file:`heater.py` driver has functions like ``getTemperatureCenter()`` 
+and ``getTemperatureEdge()``, and there I also define resistance values etc.
 
 Here is a part of :file:`heater.py`::
      
@@ -168,12 +190,17 @@ Using this module as part of a measurement system
 ----------------------------------------------------------------------------
 It is very useful to make a graphical user interface (GUI) for your control/measurement program. 
 
-One library for making GUIs is wxPython, found on http://www.wxpython.org/. One good tutorial (it starts from the basics) is: http://zetcode.com/wxpython/
+One library for making GUIs is wxPython, found on http://www.wxpython.org/. One good tutorial 
+(it starts from the basics) is: http://zetcode.com/wxpython/
 
-I strongly suggest that your measurement program should be possible to run without any GUI, as it then is much easier to actually get the GUI version of it to work. Your program should have some function like ``setTemperature(255)``.
+I strongly suggest that your measurement program should be possible to run without any GUI, 
+as it then is much easier to actually get the GUI version of it to work. Your program 
+should have some function like ``setTemperature(255)``.
 
 The role of the GUI is this:
-If you have a temperature text box where a user has entered ``255`` (possibly degrees C), and a button 'Run!' or 'Go!' or something similar, then the GUI program should read ``255`` from the box when the user presses the button, and call the function ``setTemperature(255)``.
+If you have a temperature text box where a user has entered ``255`` (possibly degrees C), 
+and a button 'Run!' or 'Go!' or something similar, then the GUI program should read ``255`` 
+from the box when the user presses the button, and call the function ``setTemperature(255)``.
 
 This way it is easy to test the measurement program and the GUI separately.
 
@@ -205,7 +232,7 @@ To install a python (downloaded) package, uncompress it and use::
 
     sudo python3 setup.py install
 
-On a development machine, go to the :file:`trunk` directory before running the command.
+On a development machine, go to the package top directory before running the command.
 
 
 Uninstall
