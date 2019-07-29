@@ -1,6 +1,5 @@
-#!/usr/bin/env python
 #
-#   Copyright 2015 Jonas Berg
+#   Copyright 2019 Jonas Berg
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -19,7 +18,8 @@
 
 .. moduleauthor:: Jonas Berg 
 
-MinimalModbus: A Python driver for the Modbus RTU and Modbus ASCII protocols via serial port (via RS485 or RS232).
+MinimalModbus: A Python driver for the Modbus RTU and Modbus ASCII protocols via 
+serial port (via RS485 or RS232).
 """
 
 __author__   = 'Jonas Berg'
@@ -49,8 +49,8 @@ _ASCII_HEADER = ':'
 _ASCII_FOOTER = '\r\n'
 
 # Several instrument instances can share the same serialport
-_SERIALPORTS = {}  # TODO rename _serialports
-_LATEST_READ_TIMES = {} # TODO rename _latest_read_times
+_serialports = {}
+_latest_read_times = {} 
 
 ####################
 ## Default values ##
@@ -115,10 +115,15 @@ class Instrument():
             - timeout (float): Timeout value in seconds.
                 - Defaults to :data:`TIMEOUT`.
         """
-        if port not in _SERIALPORTS or not _SERIALPORTS[port]:
-            self.serial = _SERIALPORTS[port] = serial.Serial(port=port, baudrate=BAUDRATE, parity=PARITY, bytesize=BYTESIZE, stopbits=STOPBITS, timeout=TIMEOUT)
+        if port not in _serialports or not _serialports[port]:
+            self.serial = _serialports[port] = serial.Serial(port=port, 
+                                                             baudrate=BAUDRATE, 
+                                                             parity=PARITY, 
+                                                             bytesize=BYTESIZE, 
+                                                             stopbits=STOPBITS, 
+                                                             timeout=TIMEOUT)
         else:
-            self.serial = _SERIALPORTS[port]
+            self.serial = _serialports[port]
             if self.serial.port is None:
                 self.serial.open()
 
@@ -570,10 +575,10 @@ class Instrument():
             ValueError, TypeError, IOError
 
         """
-        NUMBER_OF_BITS = 1    # TODO    NUMBER_OF_REQUESTED_BITS
+        NUMBER_OF_REQUESTED_BITS = 1    
         NUMBER_OF_BYTES_FOR_ONE_BIT = 1
         NUMBER_OF_BYTES_BEFORE_REGISTERDATA = 1
-        ALL_ALLOWED_FUNCTIONCODES = list(range(1, 7)) + [15, 16]  # To comply with both Python2 and Python3
+        ALL_ALLOWED_FUNCTIONCODES = [1, 2, 3, 4, 5, 6, 15, 16]
         MAX_NUMBER_OF_REGISTERS = 255
 
         # Payload format constants, so datatypes can be told apart.
@@ -662,7 +667,7 @@ class Instrument():
         ## Build payload to slave ##
         if functioncode in [1, 2]:
             payloadToSlave = _numToTwoByteString(registeraddress) + \
-                            _numToTwoByteString(NUMBER_OF_BITS)
+                            _numToTwoByteString(NUMBER_OF_REQUESTED_BITS)
 
         elif functioncode in [3, 4]:
             payloadToSlave = _numToTwoByteString(registeraddress) + \
@@ -678,7 +683,7 @@ class Instrument():
 
         elif functioncode == 15:
             payloadToSlave = _numToTwoByteString(registeraddress) + \
-                            _numToTwoByteString(NUMBER_OF_BITS) + \
+                            _numToTwoByteString(NUMBER_OF_REQUESTED_BITS) + \
                             _numToOneByteString(NUMBER_OF_BYTES_FOR_ONE_BIT) + \
                             _createBitpattern(functioncode, value)
 
@@ -722,7 +727,7 @@ class Instrument():
                 _numToTwoByteString(value, numberOfDecimals, signed=signed))  # response write data
 
         if functioncode == 15:
-            _checkResponseNumberOfRegisters(payloadFromSlave, NUMBER_OF_BITS)  # response number of bits
+            _checkResponseNumberOfRegisters(payloadFromSlave, NUMBER_OF_REQUESTED_BITS)  # response number of bits
 
         if functioncode == 16:
             _checkResponseNumberOfRegisters(payloadFromSlave, numberOfRegisters)  # response number of registers
@@ -874,7 +879,7 @@ class Instrument():
 
         # Sleep to make sure 3.5 character times have passed
         minimum_silent_period   = _calculate_minimum_silent_period(self.serial.baudrate)
-        time_since_read         = time.time() - _LATEST_READ_TIMES.get(self.serial.port, 0)
+        time_since_read         = time.time() - _latest_read_times.get(self.serial.port, 0)
 
         if time_since_read < minimum_silent_period:
             sleep_time = minimum_silent_period - time_since_read
@@ -918,7 +923,7 @@ class Instrument():
 
         # Read response
         answer = self.serial.read(number_of_bytes_to_read)
-        _LATEST_READ_TIMES[self.serial.port] = time.time()
+        _latest_read_times[self.serial.port] = time.time()
 
         if self.close_port_after_each_call:
             self.serial.close()
@@ -933,7 +938,7 @@ class Instrument():
                 answer,
                 _hexlify(answer),
                 len(answer),
-                (_LATEST_READ_TIMES.get(self.serial.port, 0) - latest_write_time) * _SECONDS_TO_MILLISECONDS,
+                (_latest_read_times.get(self.serial.port, 0) - latest_write_time) * _SECONDS_TO_MILLISECONDS,
                 self.serial.timeout * _SECONDS_TO_MILLISECONDS)
             _print_out(text)
 

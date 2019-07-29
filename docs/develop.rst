@@ -436,18 +436,16 @@ Note that Sphinx version 1.3 or later is required to build the documentation.
 Notes on distribution
 -------------------------------------------------------------------------------
 
-Installing the module from local svn files
-````````````````````````````````````````````
-In the trunk directory::
+Installing the module from local files
+``````````````````````````````````````
+In the top directory::
 
-    sudo python setup.py install
+    sudo python3 setup.py install
+
+or during development (so you do not need to constantly re-install)::
+
+    sudo python3 setup.py develop
     
-If there are conditional ``__name__ == '__main__'`` clauses in the module, 
-these can be tested using (adapt path to your system)::
-
-    python /usr/local/lib/python2.6/dist-packages/eurotherm3500.py
-    python /usr/local/lib/python2.6/dist-packages/minimalmodbus.py    
-
 
 How to generate a source distribution from the present development code
 `````````````````````````````````````````````````````````````````````````
@@ -813,7 +811,6 @@ TODO
 See also Github issues: https://github.com/pyhys/minimalmodbus/issues
 
 * Improved documentation (especially the sections with TODO).
-* Tool for interpretation of Modbus messages
 * Increase test coverage for minimalmodbus.py
 * Improve the dummy_serial behavior, to better mimic Windows behavior. 
 * Unittests for measuring the sleep time in _communicate.
@@ -821,6 +818,7 @@ See also Github issues: https://github.com/pyhys/minimalmodbus/issues
 * Change to Python3 only, and:
     * Change internal representation to byterray
     * Better printout of the bytearray in error messages
+    * Tool for interpretation of Modbus messages
     * Add type hinting
     * Run mypy checks
 

@@ -17,14 +17,13 @@
 
 """
 
-.. moduleauthor:: Jonas Berg <pyhys@users.sourceforge.net>
+.. moduleauthor:: Jonas Berg
 
 dummy_serial: A dummy/mock implementation of a serial port for testing purposes.
 
 """
 
 __author__  = 'Jonas Berg'
-__email__   = 'pyhys@users.sourceforge.net'
 __license__ = 'Apache License, Version 2.0'
 
 
