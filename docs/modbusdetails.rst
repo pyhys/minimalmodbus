@@ -92,6 +92,17 @@ Some extensions not covered by the official standard
     "Enron Modbus" allows larger registers where you can store 32 bits in a single register 
     (instead of two consecutive 16 bit registers). Not supported by this software.
 
+**Bit fields in integers**
+    Some manufacturers store multiple bits in a 16-bit register, instead of as individually
+    adressable bits. This is also known as flag registers. See below for how to use them 
+    with this software.
+
+**JBUS adressing**
+    From Eurotherm Modbus/ProfibusCommunications Handbook: "The JBUS protocol is identical 
+    in all respects but one to the Modbus protocol. The one difference concerns the parameter
+    or register address. Both use a numeric index but the JBUS index starts at 0 while 
+    the Modbus index starts at 1."
+
 
 Implemented functions
 ---------------------
