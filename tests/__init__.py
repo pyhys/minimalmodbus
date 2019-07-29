@@ -20,14 +20,14 @@
 
 """
 
-__author__  = "Jonas Berg"
+__author__ = "Jonas Berg"
 __license__ = "Apache License, Version 2.0"
 
 import unittest
 
 import tests.test_minimalmodbus
 
+
 def suite_all_simulated():
-    suite = unittest.TestLoader().loadTestsFromModule( test_minimalmodbus )
+    suite = unittest.TestLoader().loadTestsFromModule(test_minimalmodbus)
     return suite
-    

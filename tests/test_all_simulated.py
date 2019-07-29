@@ -23,7 +23,7 @@ test_all_simulated: Run all the unit tests (without any hardware)
 
 """
 
-__author__  = "Jonas Berg"
+__author__ = "Jonas Berg"
 __license__ = "Apache License, Version 2.0"
 
 
@@ -31,7 +31,6 @@ import unittest
 
 import tests
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     suite = tests.suite_all_simulated()
     unittest.TextTestRunner(verbosity=0).run(suite)
-
