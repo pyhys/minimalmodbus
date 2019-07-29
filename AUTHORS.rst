@@ -14,4 +14,4 @@ Significant contributions by Angelo Compagnucci, Aaron LaLonde, Asier Abalos,
 Simon Funke, Edwin van den Oetelaar, Dominik Socha, Luca Di Gregorio, Dino, 
 Peter and Michael Penza.
 
-And from these Github users: gnbl
+And from these Github users: draput, gnbl

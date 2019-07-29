@@ -10,6 +10,8 @@ Release 1.0 (2019-08-??)
   up support for these instruments in a separate project.
 * Removed module level constants for default values, as they were confusingly named.
 * Allow slave addresses also in the reserved range (up to 255). Reported by Github user gnbl.
+* Silent period between messages is at least 1.75 ms to fulfill Modbus standard. Reported
+  by Github user draput.
 * Improved documentation
 
 

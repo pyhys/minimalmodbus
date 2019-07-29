@@ -1185,9 +1185,11 @@ def _calculate_minimum_silent_period(baudrate):
 
     BITTIMES_PER_CHARACTERTIME = 11
     MINIMUM_SILENT_CHARACTERTIMES = 3.5
+    MINIMUM_SILENT_TIME_SECONDS = 0.00175  # See Modbus standard
 
     bittime = 1 / float(baudrate)
-    return bittime * BITTIMES_PER_CHARACTERTIME * MINIMUM_SILENT_CHARACTERTIMES
+    return max(bittime * BITTIMES_PER_CHARACTERTIME * MINIMUM_SILENT_CHARACTERTIMES, 
+               MINIMUM_SILENT_TIME_SECONDS)
 
 ##############################
 # String and num conversions #
