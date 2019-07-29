@@ -13,6 +13,8 @@ Release 1.0 (2019-08-??)
 * Silent period between messages is at least 1.75 ms to fulfill Modbus standard. Reported
   by Github user draput.
 * Use time.monotonic if available. Suggested by Matthias Bolte.
+* Implemented write timeout, to avoid hanging when writing. Instead it will raise an exception.
+  Reported by Austin Stover.
 * Improved documentation
 
 

@@ -80,7 +80,7 @@ class Instrument:
         self.serial = None
         """The serial port object as defined by the pySerial module. Created by the constructor.
 
-        Attributes:
+        Attributes that could be changed after initialisation:
             - port (str):      Serial port name.
                 - Most often set by the constructor (see the class documentation).
             - baudrate (int):  Baudrate in Baud.
@@ -91,8 +91,10 @@ class Instrument:
                 - Defaults to 8.
             - stopbits (int):  The number of stopbits.
                 - Defaults to 1.
-            - timeout (float): Timeout value in seconds.
+            - timeout (float): Read timeout value in seconds.
                 - Defaults to 0.05 s.
+            - write_timeout (float): Write timeout value in seconds.
+                - Defaults to 2.0 s.
         """
         if port not in _serialports or not _serialports[port]:
             self.serial = _serialports[port] = serial.Serial(
@@ -102,6 +104,7 @@ class Instrument:
                 bytesize=8,
                 stopbits=1,
                 timeout=0.05,
+                write_timeout=2.0
             )
         else:
             self.serial = _serialports[port]
@@ -1061,7 +1064,8 @@ class Instrument:
 
         # Write request
         latest_write_time = _now()
-        self.serial.write(request)
+        
+        self.serial.write(request)  # TODO might raise SerialTimeoutException 
 
         # Read and discard local echo
         if self.handle_local_echo:

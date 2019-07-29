@@ -344,9 +344,11 @@ class TestCalculateMinimumSilentPeriod(ExtendedTestCase):
     (9600,      0.004),
     (19200,     0.002), 
     (38400,     0.00175),
+    (57600,     0.00175),
     (115200,    0.00175),
     (128000,    0.00175),
     (230400,    0.00175),
+    (4000000,   0.00175),
     ]
     
     def testKnownValues(self):
