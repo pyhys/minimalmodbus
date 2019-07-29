@@ -7,6 +7,7 @@ help:
 	@echo "clean-test - remove test and coverage artifacts"
 	@echo "clean-docs - remove docs artifacts"
 	@echo "lint - check style with flake8"
+	@echo "black - modify code style using the black tool
 	@echo "test - run tests quickly with the default Python"
 	@echo "test-all - run tests on every Python version with tox"
 	@echo "coverage - check code coverage quickly with the default Python"
@@ -44,6 +45,9 @@ clean-docs:
 
 lint:
 	flake8 minimalmodbus tests
+
+black:
+	black minimalmodbus.py dummyserial.py
 
 test:
 	python setup.py test

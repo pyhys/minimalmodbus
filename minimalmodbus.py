@@ -1093,9 +1093,8 @@ class Instrument:
             self.serial.close()
 
         if sys.version_info[0] > 2:
-            answer = str(
-                answer, encoding="latin1"
-            )  # Convert types to make it Python3 compatible
+            # Convert types to make it Python3 compatible
+            answer = str(answer, encoding="latin1")  
 
         if self.debug:
             template = (

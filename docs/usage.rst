@@ -123,6 +123,8 @@ or alternatively (to avoid import of ``serial``)::
     instrument.serial.parity = minimalmodbus.serial.PARITY_EVEN
 
 
+.. warning:: The module level constats minimalmodbus.BAUDRATE etc were removed in version 1.0
+
 Confusing Modbus register addresses
 -----------------------------------
 Sometimes "entity numbers" are used in documentation for Modbus instruments. These 

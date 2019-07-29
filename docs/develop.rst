@@ -425,7 +425,7 @@ Verify all external links::
 
 Webpage
 ------------------------------------------------------------------------------
-The HTML theme on http://minimalmodbus.sourceforge.net/ is the Sphinx 'sphinx_rtd_theme' theme. 
+The HTML theme used is the Sphinx 'sphinx_rtd_theme' theme. 
 
 Note that Sphinx version 1.3 or later is required to build the documentation.
 
