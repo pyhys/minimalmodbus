@@ -170,9 +170,9 @@ class TestEmbedPayload(ExtendedTestCase):
             self.assertEqual(result, knownresult)
 
     def testWrongInputValue(self):
-        self.assertRaises(ValueError, minimalmodbus._embedPayload, 248, 'rtu',   16,  'ABC') # Wrong slave address
+        self.assertRaises(ValueError, minimalmodbus._embedPayload, 256, 'rtu',   16,  'ABC') # Wrong slave address
         self.assertRaises(ValueError, minimalmodbus._embedPayload, -1,  'rtu',   16,  'ABC')
-        self.assertRaises(ValueError, minimalmodbus._embedPayload, 248, 'ascii', 16,  'ABC')
+        self.assertRaises(ValueError, minimalmodbus._embedPayload, 256, 'ascii', 16,  'ABC')
         self.assertRaises(ValueError, minimalmodbus._embedPayload, -1,  'ascii', 16,  'ABC')
         
         self.assertRaises(ValueError, minimalmodbus._embedPayload, 1, 'rtuu',  16,  'ABC') # Wrong Modbus mode
@@ -1203,14 +1203,15 @@ class TestCheckFunctioncode(ExtendedTestCase):
 class TestCheckSlaveaddress(ExtendedTestCase):
 
     def testKnownValues(self):
-        minimalmodbus._checkSlaveaddress( 0 )
-        minimalmodbus._checkSlaveaddress( 1 )
-        minimalmodbus._checkSlaveaddress( 10 )
-        minimalmodbus._checkSlaveaddress( 247 )
+        minimalmodbus._checkSlaveaddress(0)  # Broadcast
+        minimalmodbus._checkSlaveaddress(1)
+        minimalmodbus._checkSlaveaddress(10)
+        minimalmodbus._checkSlaveaddress(247)
+        minimalmodbus._checkSlaveaddress(255)  # Reserved
 
     def testWrongValues(self):
         self.assertRaises(ValueError, minimalmodbus._checkSlaveaddress, -1)
-        self.assertRaises(ValueError, minimalmodbus._checkSlaveaddress, 248)
+        self.assertRaises(ValueError, minimalmodbus._checkSlaveaddress, 256)
 
     def testNotIntegerInput(self):
         for value in _NOT_INTERGERS:

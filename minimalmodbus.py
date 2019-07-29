@@ -2071,7 +2071,7 @@ def _checkSlaveaddress(slaveaddress):
         TypeError, ValueError
 
     """
-    SLAVEADDRESS_MAX = 247  #TODO
+    SLAVEADDRESS_MAX = 255  # Allows usage also of reserved addresses
     SLAVEADDRESS_MIN = 0
 
     _checkInt(slaveaddress, SLAVEADDRESS_MIN, SLAVEADDRESS_MAX, description='slaveaddress')

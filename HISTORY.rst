@@ -9,6 +9,7 @@ Release 1.0 (2019-08-??)
   access for these instruments for testing. It would great if someone would pick
   up support for these instruments in a separate project.
 * Removed module level constants for default values, as they were confusingly named.
+* Allow slave addresses also in the reserved range (up to 255). Reported by Github user gnbl.
 * Improved documentation
 
 
