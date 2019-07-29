@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#   Copyright 2012 Jonas Berg
+#   Copyright 2019 Jonas Berg
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 
 """
 
-.. moduleauthor:: Jonas Berg <pyhys@users.sourceforge.net>
+.. moduleauthor:: Jonas Berg
 
 test_minimalmodbus: Unittests for the :mod:`minimalmodbus` module.
 
@@ -53,7 +53,6 @@ Wrong write data in response           write_register        6
 """
 
 __author__  = "Jonas Berg"
-__email__   = "pyhys@users.sourceforge.net"
 __license__ = "Apache License, Version 2.0"
 
 
@@ -61,8 +60,8 @@ import sys
 import time
 import unittest
 
-import minimalmodbus
 import dummy_serial
+import minimalmodbus
 
 ALSO_TIME_CONSUMING_TESTS = True
 """Set this to :const:`False` to skip the most time consuming tests"""
@@ -1552,8 +1551,12 @@ class TestDummyCommunication(ExtendedTestCase):
     ## Write bit ##
 
     def testWriteBit(self):
+        self.instrument.write_bit(71, 0)
+        self.instrument.write_bit(71, False)
         self.instrument.write_bit(71, 1)
+        self.instrument.write_bit(71, True)
         self.instrument.write_bit(71, 1, 5)
+        self.instrument.write_bit(71, True, 5)
         self.instrument.write_bit(71, 1, functioncode=5)
         self.instrument.write_bit(72, 1, 15)
         self.instrument.write_bit(72, 1, functioncode=15)
@@ -2060,6 +2063,8 @@ class TestDummyCommunicationOmegaSlave1(ExtendedTestCase):
     def testWriteBit(self):
         self.instrument.write_bit(2068, 0)
         self.instrument.write_bit(2068, 1)
+        self.instrument.write_bit(2068, True)
+        self.instrument.write_bit(2068, False)
 
     def testReadRegister(self):
         self.assertAlmostEqual( self.instrument.read_register(4097, 1), 823.6 )
@@ -2349,11 +2354,17 @@ WRONG_RTU_RESPONSES['\x01\x02' + '\x00\x40\x00\x01' + '\xb8\x1e'] = ''
 
 #                ##  WRITE BIT  ##
 
-# Write bit register 71 on slave 1 using function code 5 #
-# ------------------------------------------------------ #
+# Write bit=1 register 71 on slave 1 using function code 5 #
+# -------------------------------------------------------- #
 # Message:  Slave address 1, function code 5. Register address 71, value 1 (FF00). CRC.
 # Response: Slave address 1, function code 5. Register address 71, value 1 (FF00). CRC.
 GOOD_RTU_RESPONSES['\x01\x05' + '\x00\x47\xff\x00' + '</'] = '\x01\x05' + '\x00\x47\xff\x00' + '</'
+
+# Write bit=0 register 71 on slave 1 using function code 5 #
+# -------------------------------------------------------- #
+# Message:  Slave address 1, function code 5. Register address 71, value 0 (0000). CRC.
+# Response: Slave address 1, function code 5. Register address 71, value 0 (0000). CRC.
+GOOD_RTU_RESPONSES['\x01\x05' + '\x00\x47\x00\x00' + '}ß'] = '\x01\x05' + '\x00\x47\x00\x00' + '}ß'
 
 # Write bit register 72 on slave 1 using function code 15 #
 # ------------------------------------------------------ #
@@ -2948,11 +2959,11 @@ if __name__ == '__main__':
     
     #suite = unittest.TestSuite()
     #suite.addTest(TestDummyCommunication("testReadLong"))
-    #suite.addTest(TestDummyCommunication("testCommunicateWrongLocalEcho"))
+    #suite.addTest(TestDummyCommunication("testWriteBit"))
     #unittest.TextTestRunner(verbosity=2).run(suite)
     
     
         ## Run individual commands ##
     
-    #print repr(minimalmodbus._calculateCrcString('\x01\x4bTESTCOMMAND2'))
+    #print(repr(minimalmodbus._calculateCrcString('\x01\x05' + '\x00\x47\x00\x00')))
 

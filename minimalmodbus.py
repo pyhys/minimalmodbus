@@ -184,7 +184,7 @@ class Instrument():
 
         Args:
             * registeraddress (int): The slave register address (use decimal numbers, not hex).
-            * value (int): 0 or 1
+            * value (int or bool): 0 or 1, or True or False
             * functioncode (int): Modbus function code. Can be 5 or 15.
 
         Returns:

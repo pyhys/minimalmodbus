@@ -819,5 +819,6 @@ See also Github issues: https://github.com/pyhys/minimalmodbus/issues
     * Tool for interpretation of Modbus messages
     * Add type hinting
     * Run mypy checks
+    * Possibly use pytest istead
 
  
