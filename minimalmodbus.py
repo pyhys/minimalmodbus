@@ -45,26 +45,29 @@ _ASCII_FOOTER = "\r\n"
 _serialports = {}  # Key: port name (str), value: port instance
 _latest_read_times = {}  # Key: port name (str), value: timestamp (float)
 
-####################
-## Named constants ##
-#####################
+# ############### #
+# Named constants #
+# ############### #
 
 MODE_RTU = "rtu"
 MODE_ASCII = "ascii"
 
-##############################
-## Modbus instrument object ##
-##############################
+# ######################## #
+# Modbus instrument object #
+# ######################## #
 
 CLOSE_PORT_AFTER_EACH_CALL = False  # TODO remove
 
 
 class Instrument:
-    """Instrument class for talking to instruments (slaves) via the Modbus RTU or ASCII protocols (via RS485 or RS232).
+    """Instrument class for talking to instruments (slaves) via the Modbus RTU or ASCII
+    protocols (via RS485 or RS232).
 
     Args:
-        * port (str): The serial port name, for example ``/dev/ttyUSB0`` (Linux), ``/dev/tty.usbserial`` (OS X) or ``COM4`` (Windows).
-        * slaveaddress (int): Slave address in the range 1 to 247 (use decimal numbers, not hex). Address 0 is for broadcast, and 248-255 are reserved.
+        * port (str): The serial port name, for example ``/dev/ttyUSB0`` (Linux),
+          ``/dev/tty.usbserial`` (OS X) or ``COM4`` (Windows).
+        * slaveaddress (int): Slave address in the range 1 to 247 (use decimal numbers,
+          not hex). Address 0 is for broadcast, and 248-255 are reserved.
         * mode (str): Mode selection. Can be MODE_RTU or MODE_ASCII.
 
     """
@@ -106,21 +109,25 @@ class Instrument:
                 self.serial.open()
 
         self.address = slaveaddress
-        """Slave address (int). Most often set by the constructor (see the class documentation). """
+        """Slave address (int). Most often set by the constructor
+        (see the class documentation). """
 
         self.mode = mode
-        """Slave mode (str), can be MODE_RTU or MODE_ASCII.  Most often set by the constructor (see the class documentation).
+        """Slave mode (str), can be MODE_RTU or MODE_ASCII.
+        Most often set by the constructor (see the class documentation).
 
         New in version 0.6.
         """
 
         self.debug = False
-        """Set this to :const:`True` to print the communication details. Defaults to :const:`False`."""
+        """Set this to :const:`True` to print the communication details.
+        Defaults to :const:`False`."""
 
         self.close_port_after_each_call = CLOSE_PORT_AFTER_EACH_CALL  # TODO modify
         # self.close_port_after_each_call = False
-        """If this is :const:`True`, the serial port will be closed after each call. Defaults to :const:`False`. 
-        To change it, set the value ``minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL=True`` ."""  # TODO
+        """If this is :const:`True`, the serial port will be closed after each
+        call. Defaults to :const:`False`. To change it, set the value
+        ``minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL=True`` ."""  # TODO
 
         self.precalculate_read_size = True
         """If this is :const:`False`, the serial port reads until timeout
@@ -130,9 +137,10 @@ class Instrument:
         """
 
         self.handle_local_echo = False
-        """Set to to :const:`True` if your RS-485 adaptor has local echo enabled. 
-        Then the transmitted message will immeadiately appear at the receive line of the RS-485 adaptor.
-        MinimalModbus will then read and discard this data, before reading the data from the slave.
+        """Set to to :const:`True` if your RS-485 adaptor has local echo enabled.
+        Then the transmitted message will immeadiately appear at the receive
+        line of the RS-485 adaptor. MinimalModbus will then read and discard
+        this data, before reading the data from the slave.
         Defaults to :const:`False`.
 
         New in version 0.7.
@@ -143,7 +151,13 @@ class Instrument:
 
     def __repr__(self):
         """Give string representation of the :class:`.Instrument` object."""
-        return "{}.{}<id=0x{:x}, address={}, mode={}, close_port_after_each_call={}, precalculate_read_size={}, debug={}, serial={}>".format(
+        return "{}.{}<id=0x{:x}, \
+                    address={}, \
+                    mode={}, \
+                    close_port_after_each_call={}, \
+                    precalculate_read_size={}, \
+                    debug={}, \
+                    serial={}>".format(
             self.__module__,
             self.__class__.__name__,
             id(self),
@@ -155,9 +169,9 @@ class Instrument:
             self.serial,
         )
 
-    ######################################
-    ## Methods for talking to the slave ##
-    ######################################
+    # ################################# #
+    #  Methods for talking to the slave #
+    # ################################# #
 
     def read_bit(self, registeraddress, functioncode=2):
         """Read one bit from the slave.
@@ -200,7 +214,8 @@ class Instrument:
     ):
         """Read an integer from one 16-bit register in the slave, possibly scaling it.
 
-        The slave register can hold integer values in the range 0 to 65535 ("Unsigned INT16").
+        The slave register can hold integer values in the range 0 to 65535
+        ("Unsigned INT16").
 
         Args:
             * registeraddress (int): The slave register address (use decimal numbers, not hex).
@@ -208,15 +223,17 @@ class Instrument:
             * functioncode (int): Modbus function code. Can be 3 or 4.
             * signed (bool): Whether the data should be interpreted as unsigned or signed.
 
-        If a value of 77.0 is stored internally in the slave register as 770, then use ``numberOfDecimals=1``
-        which will divide the received data by 10 before returning the value.
+        If a value of 77.0 is stored internally in the slave register as 770,
+        then use ``numberOfDecimals=1`` which will divide the received data by 10
+        before returning the value.
 
-        Similarly ``numberOfDecimals=2`` will divide the received data by 100 before returning the value.
+        Similarly ``numberOfDecimals=2`` will divide the received data by 100 before
+        returning the value.
 
         Some manufacturers allow negative values for some registers. Instead of
-        an allowed integer range 0 to 65535, a range -32768 to 32767 is allowed. This is
-        implemented as any received value in the upper range (32768 to 65535) is
-        interpreted as negative value (in the range -32768 to -1).
+        an allowed integer range 0 to 65535, a range -32768 to 32767 is allowed.
+        This is implemented as any received value in the upper range (32768 to
+        65535) is interpreted as negative value (in the range -32768 to -1).
 
         Use the parameter ``signed=True`` if reading from a register that can hold
         negative values. Then upper range data will be automatically converted into
@@ -253,27 +270,31 @@ class Instrument:
     ):
         """Write an integer to one 16-bit register in the slave, possibly scaling it.
 
-        The slave register can hold integer values in the range 0 to 65535 ("Unsigned INT16").
+        The slave register can hold integer values in the range 0 to
+        65535 ("Unsigned INT16").
 
         Args:
-            * registeraddress (int): The slave register address  (use decimal numbers, not hex).
-            * value (int or float): The value to store in the slave register (might be scaled before sending).
+            * registeraddress (int): The slave register address  (use decimal
+              numbers, not hex).
+            * value (int or float): The value to store in the slave register (might be
+              scaled before sending).
             * numberOfDecimals (int): The number of decimals for content conversion.
             * functioncode (int): Modbus function code. Can be 6 or 16.
             * signed (bool): Whether the data should be interpreted as unsigned or signed.
 
-        To store for example ``value=77.0``, use ``numberOfDecimals=1`` if the slave register 
-        will hold it as 770 internally. This will multiply ``value`` by 10 before sending it 
+        To store for example ``value=77.0``, use ``numberOfDecimals=1`` if the slave register
+        will hold it as 770 internally. This will multiply ``value`` by 10 before sending it
         to the slave register.
 
-        Similarly ``numberOfDecimals=2`` will multiply ``value`` by 100 before sending 
+        Similarly ``numberOfDecimals=2`` will multiply ``value`` by 100 before sending
         it to the slave register.
 
         As the largest number that can be written to a register is 0xFFFF = 65535,
         the ``value`` and ``numberOfDecimals`` should max be 65535 when combined.
         So when using ``numberOfDecimals=3`` the maximum ``value`` is 65.535.
 
-        For discussion on negative values, the range and on alternative names, see :meth:`.read_register`.
+        For discussion on negative values, the range and on alternative names,
+        see :meth:`.read_register`.
 
         Use the parameter ``signed=True`` if writing to a register that can hold
         negative values. Then negative input will be automatically converted into
@@ -300,10 +321,12 @@ class Instrument:
     def read_long(self, registeraddress, functioncode=3, signed=False):
         """Read a long integer (32 bits) from the slave.
 
-        Long integers (32 bits = 4 bytes) are stored in two consecutive 16-bit registers in the slave.
+        Long integers (32 bits = 4 bytes) are stored in two consecutive 16-bit
+        registers in the slave.
 
         Args:
-            * registeraddress (int): The slave register start address (use decimal numbers, not hex).
+            * registeraddress (int): The slave register start address (use decimal numbers,
+              not hex).
             * functioncode (int): Modbus function code. Can be 3 or 4.
             * signed (bool): Whether the data should be interpreted as unsigned or signed.
 
@@ -334,7 +357,8 @@ class Instrument:
     def write_long(self, registeraddress, value, signed=False):
         """Write a long integer (32 bits) to the slave.
 
-        Long integers (32 bits = 4 bytes) are stored in two consecutive 16-bit registers in the slave.
+        Long integers (32 bits = 4 bytes) are stored in two consecutive 16-bit
+        registers in the slave.
 
         Uses Modbus function code 16.
 
@@ -342,7 +366,8 @@ class Instrument:
         and on alternative names, see :meth:`.read_long`.
 
         Args:
-            * registeraddress (int): The slave register start address  (use decimal numbers, not hex).
+            * registeraddress (int): The slave register start address  (use decimal
+              numbers, not hex).
             * value (int or long): The value to store in the slave.
             * signed (bool): Whether the data should be interpreted as unsigned or signed.
 
@@ -375,20 +400,21 @@ class Instrument:
     def read_float(self, registeraddress, functioncode=3, numberOfRegisters=2):
         r"""Read a floating point number from the slave.
 
-        Floats are stored in two or more consecutive 16-bit registers in the slave. The
-        encoding is according to the standard IEEE 754.
+        Floats are stored in two or more consecutive 16-bit registers in the slave.
+        The encoding is according to the standard IEEE 754.
 
-        There are differences in the byte order used by different manufacturers. A floating
-        point value of 1.0 is encoded (in single precision) as 3f800000 (hex). In this
-        implementation the data will be sent as ``'\x3f\x80'`` and ``'\x00\x00'``
-        to two consecutetive registers . Make sure to test that it makes sense for your instrument.
-        It is pretty straight-forward to change this code if some other byte order is
-        required by anyone (see support section).
+        There are differences in the byte order used by different manufacturers.
+        A floating point value of 1.0 is encoded (in single precision) as 3f800000
+        (hex). In this implementation the data will be sent as ``'\x3f\x80'``
+        and ``'\x00\x00'`` to two consecutetive registers . Make sure to test that
+        it makes sense for your instrument.
 
         Args:
-            * registeraddress (int): The slave register start address (use decimal numbers, not hex).
+            * registeraddress (int): The slave register start address (use decimal
+              numbers, not hex).
             * functioncode (int): Modbus function code. Can be 3 or 4.
-            * numberOfRegisters (int): The number of registers allocated for the float. Can be 2 or 4.
+            * numberOfRegisters (int): The number of registers allocated for the float.
+              Can be 2 or 4.
 
         ====================================== ================= =========== =================
         Type of floating point number in slave Size              Registers   Range
@@ -422,12 +448,15 @@ class Instrument:
 
         Uses Modbus function code 16.
 
-        For discussion on precision, number of registers and on byte order, see :meth:`.read_float`.
+        For discussion on precision, number of registers and on byte order,
+        see :meth:`.read_float`.
 
         Args:
-            * registeraddress (int): The slave register start address (use decimal numbers, not hex).
+            * registeraddress (int): The slave register start address (use decimal
+              numbers, not hex).
             * value (float or int): The value to store in the slave
-            * numberOfRegisters (int): The number of registers allocated for the float. Can be 2 or 4.
+            * numberOfRegisters (int): The number of registers allocated for the float.
+              Can be 2 or 4.
 
         Returns:
             None
@@ -451,13 +480,15 @@ class Instrument:
     def read_string(self, registeraddress, numberOfRegisters=16, functioncode=3):
         """Read an ASCII string from the slave.
 
-        Each 16-bit register in the slave are interpreted as two characters (each 1 byte = 8 bits).
-        For example 16 consecutive registers can hold 32 characters (32 bytes).
+        Each 16-bit register in the slave are interpreted as two characters
+        (each 1 byte = 8 bits). For example 16 consecutive registers can hold 32
+        characters (32 bytes).
 
         International characters (Unicode/UTF-8) are not supported.
 
         Args:
-            * registeraddress (int): The slave register start address (use decimal numbers, not hex).
+            * registeraddress (int): The slave register start address (use decimal
+              numbers, not hex).
             * numberOfRegisters (int): The number of registers allocated for the string.
             * functioncode (int): Modbus function code. Can be 3 or 4.
 
@@ -484,15 +515,17 @@ class Instrument:
     def write_string(self, registeraddress, textstring, numberOfRegisters=16):
         """Write an ASCII string to the slave.
 
-        Each 16-bit register in the slave are interpreted as two characters (each 1 byte = 8 bits).
-        For example 16 consecutive registers can hold 32 characters (32 bytes).
+        Each 16-bit register in the slave are interpreted as two characters
+        (each 1 byte = 8 bits). For example 16 consecutive registers can hold 32
+        characters (32 bytes).
 
         Uses Modbus function code 16.
 
         International characters (Unicode/UTF-8) are not supported.
 
         Args:
-            * registeraddress (int): The slave register start address  (use decimal numbers, not hex).
+            * registeraddress (int): The slave register start address  (use decimal
+              numbers, not hex).
             * textstring (str): The string to store in the slave, must be ASCII.
             * numberOfRegisters (int): The number of registers allocated for the string.
 
@@ -529,15 +562,17 @@ class Instrument:
     def read_registers(self, registeraddress, numberOfRegisters, functioncode=3):
         """Read integers from 16-bit registers in the slave.
 
-        The slave registers can hold integer values in the range 0 to 65535 ("Unsigned INT16").
+        The slave registers can hold integer values in the range 0 to
+        65535 ("Unsigned INT16").
 
         Args:
-            * registeraddress (int): The slave register start address (use decimal numbers, not hex).
+            * registeraddress (int): The slave register start address (use decimal
+              numbers, not hex).
             * numberOfRegisters (int): The number of registers to read, max 125 registers.
             * functioncode (int): Modbus function code. Can be 3 or 4.
 
-        Any scaling of the register data, or converting it to negative number (two's complement)
-        must be done manually.
+        Any scaling of the register data, or converting it to negative number
+        (two's complement) must be done manually.
 
         Returns:
             The register data (a list of int).
@@ -560,18 +595,22 @@ class Instrument:
     def write_registers(self, registeraddress, values):
         """Write integers to 16-bit registers in the slave.
 
-        The slave register can hold integer values in the range 0 to 65535 ("Unsigned INT16").
+        The slave register can hold integer values in the range 0 to
+        65535 ("Unsigned INT16").
 
         Uses Modbus function code 16.
 
-        The number of registers that will be written is defined by the length of the ``values`` list.
+        The number of registers that will be written is defined by the length of
+        the ``values`` list.
 
         Args:
-            * registeraddress (int): The slave register start address (use decimal numbers, not hex).
-            * values (list of int): The values to store in the slave registers, max 123 values.
+            * registeraddress (int): The slave register start address (use decimal
+              numbers, not hex).
+            * values (list of int): The values to store in the slave registers,
+              max 123 values.
 
-        Any scaling of the register data, or converting it to negative number (two's complement)
-        must be done manually.
+        Any scaling of the register data, or converting it to negative number
+        (two's complement) must be done manually.
 
         Returns:
             None
@@ -597,9 +636,9 @@ class Instrument:
             payloadformat="registers",
         )
 
-    #####################
-    ## Generic command ##
-    #####################
+    # ############### #
+    # Generic command #
+    # ############### #
 
     def _genericCommand(
         self,
@@ -616,20 +655,26 @@ class Instrument:
         Args:
             * functioncode (int): Modbus function code.
             * registeraddress (int): The register address  (use decimal numbers, not hex).
-            * value (numerical or string or None or list of int): The value to store in the register. Depends on payloadformat.
-            * numberOfDecimals (int): The number of decimals for content conversion. Only for a single register.
-            * numberOfRegisters (int): The number of registers to read/write. Only certain values allowed, depends on payloadformat.
-            * signed (bool): Whether the data should be interpreted as unsigned or signed. Only for a single register or for payloadformat='long'.
-            * payloadformat (None or string): None, 'long', 'float', 'string', 'register', 'registers'. Not necessary for single registers or bits.
+            * value (numerical or string or None or list of int): The value to store
+              in the register. Depends on payloadformat.
+            * numberOfDecimals (int): The number of decimals for content conversion.
+              Only for a single register.
+            * numberOfRegisters (int): The number of registers to read/write.
+              Only certain values allowed, depends on payloadformat.
+            * signed (bool): Whether the data should be interpreted as unsigned or
+              signed. Only for a single register or for payloadformat='long'.
+            * payloadformat (None or string): None, 'long', 'float', 'string',
+              'register', 'registers'. Not necessary for single registers or bits.
 
         If a value of 77.0 is stored internally in the slave register as 770,
-        then use ``numberOfDecimals=1`` which will divide the received data from the slave by 10
-        before returning the value. Similarly ``numberOfDecimals=2`` will divide
-        the received data by 100 before returning the value. Same functionality is also used
-        when writing data to the slave.
+        then use ``numberOfDecimals=1`` which will divide the received data
+        from the slave by 10 before returning the value. Similarly
+        ``numberOfDecimals=2`` will divide the received data by 100 before returning
+        the value. Same functionality is also used when writing data to the slave.
 
         Returns:
-            The register data in numerical value (int or float), or the bit value 0 or 1 (int), or ``None``.
+            The register data in numerical value (int or float), or the bit value 0 or
+            1 (int), or ``None``.
 
         Raises:
             ValueError, TypeError, IOError
@@ -657,7 +702,7 @@ class Instrument:
             PAYLOADFORMAT_REGISTERS,
         ]
 
-        ## Check input values ##
+        # # Check input values # #
         _checkFunctioncode(
             functioncode, ALL_ALLOWED_FUNCTIONCODES
         )  # Note: The calling facade functions should validate this
@@ -677,7 +722,7 @@ class Instrument:
                     "Wrong payload format variable. Given: {0!r}".format(payloadformat)
                 )
 
-        ## Check combinations of input parameters ##
+        # # Check combinations of input parameters # #
         numberOfRegisterBytes = numberOfRegisters * _NUMBER_OF_BYTES_PER_REGISTER
 
         # Payload format
@@ -687,7 +732,8 @@ class Instrument:
         if functioncode in [3, 4, 6, 16]:
             if payloadformat not in ALL_PAYLOADFORMATS:
                 raise ValueError(
-                    "The payload format is unknown. Given format: {0!r}, functioncode: {1!r}.".format(
+                    "The payload format is unknown. Given format: {0!r}, \
+                        functioncode: {1!r}.".format(
                         payloadformat, functioncode
                     )
                 )
@@ -732,7 +778,8 @@ class Instrument:
                 "Wrong numberOfRegisters when writing to a "
                 + "single register. Given {0!r}.".format(numberOfRegisters)
             )
-            # Note: For function code 16 there is checking also in the content conversion functions.
+            # Note: For function code 16 there is checking also in the content
+            # conversion functions.
 
             # Value
         if functioncode in [5, 6, 15, 16] and value is None:
@@ -756,7 +803,8 @@ class Instrument:
             _checkString(
                 value, "input string", minlength=1, maxlength=numberOfRegisterBytes
             )
-            # Note: The string might be padded later, so the length might be shorter than numberOfRegisterBytes.
+            # Note: The string might be padded later, so the length might be shorter
+            # than numberOfRegisterBytes.
 
             # Value for registers
         if functioncode == 16 and payloadformat == PAYLOADFORMAT_REGISTERS:
@@ -773,7 +821,7 @@ class Instrument:
                     )
                 )
 
-        ## Build payload to slave ##
+        # # Build payload to slave # #
         if functioncode in [1, 2]:
             payloadToSlave = _numToTwoByteString(registeraddress) + _numToTwoByteString(
                 NUMBER_OF_REQUESTED_BITS
@@ -828,10 +876,10 @@ class Instrument:
                 + registerdata
             )
 
-        ## Communicate ##
+        # # Communicate # #
         payloadFromSlave = self._performCommand(functioncode, payloadToSlave)
 
-        ## Check the contents in the response payload ##
+        # # Check the contents in the response payload # #
         if functioncode in [1, 2, 3, 4]:
             _checkResponseByteCount(payloadFromSlave)  # response byte count
 
@@ -861,7 +909,7 @@ class Instrument:
                 payloadFromSlave, numberOfRegisters
             )  # response number of registers
 
-        ## Calculate return value ##
+        # # Calculate return value # #
         if functioncode in [1, 2]:
             registerdata = payloadFromSlave[NUMBER_OF_BYTES_BEFORE_REGISTERDATA:]
             if len(registerdata) != NUMBER_OF_BYTES_FOR_ONE_BIT:
@@ -904,19 +952,22 @@ class Instrument:
                 + "Given {0}".format(payloadformat)
             )
 
-    ##########################################
-    ## Communication implementation details ##
-    ##########################################
+    # #################################### #
+    # Communication implementation details #
+    # #################################### #
 
     def _performCommand(self, functioncode, payloadToSlave):
         """Perform the command having the *functioncode*.
 
         Args:
-            * functioncode (int): The function code for the command to be performed. Can for example be 'Write register' = 16.
-            * payloadToSlave (str): Data to be transmitted to the slave (will be embedded in slaveaddress, CRC etc)
+            * functioncode (int): The function code for the command to be performed.
+              Can for example be 'Write register' = 16.
+            * payloadToSlave (str): Data to be transmitted to the slave (will be
+              embedded in slaveaddress, CRC etc)
 
         Returns:
-            The extracted data payload from the slave (a string). It has been stripped of CRC etc.
+            The extracted data payload from the slave (a string). It has been
+            stripped of CRC etc.
 
         Raises:
             ValueError, TypeError.
@@ -941,10 +992,11 @@ class Instrument:
                 number_of_bytes_to_read = _predictResponseSize(
                     self.mode, functioncode, payloadToSlave
                 )
-            except:
+            except Exception:
                 if self.debug:
                     template = (
-                        "MinimalModbus debug mode. Could not precalculate response size for Modbus {} mode. "
+                        "MinimalModbus debug mode. Could not precalculate response "
+                        + "size for Modbus {} mode. "
                         + "Will read {} bytes. request: {!r}"
                     )
                     _print_out(
@@ -979,7 +1031,8 @@ class Instrument:
 
         Will block until reaching *number_of_bytes_to_read* or timeout.
 
-        If the attribute :attr:`Instrument.debug` is :const:`True`, the communication details are printed.
+        If the attribute :attr:`Instrument.debug` is :const:`True`, the communication
+        details are printed.
 
         If the attribute :attr:`Instrument.close_port_after_each_call` is :const:`True` the
         serial port is closed after each call.
@@ -992,7 +1045,7 @@ class Instrument:
                             |                             |
             --------R-------W-----------------------------R-------W-----------------------------
                      |     |                               |
-                     |     |<------- Roundtrip time ------>|         
+                     |     |<------- Roundtrip time ------>|
                      |     |
                   -->|-----|<----- Silent period
 
@@ -1009,7 +1062,8 @@ class Instrument:
 
         if self.debug:
             _print_out(
-                "\nMinimalModbus debug mode. Will write to instrument (expecting {} bytes back): {!r} ({})".format(
+                "\nMinimalModbus debug mode. Will write to instrument (expecting"
+                + " {} bytes back): {!r} ({})".format(
                     number_of_bytes_to_read, request, _hexlify(request)
                 )
             )
@@ -1072,7 +1126,8 @@ class Instrument:
                 _print_out(text)
             if local_echo_to_discard != request:
                 template = (
-                    "Local echo handling is enabled, but the local echo does not match the sent request. "
+                    "Local echo handling is enabled, but the local echo does "
+                    + "not match the sent request. "
                     + "Request: {!r} ({} bytes), local echo: {!r} ({} bytes)."
                 )
                 text = template.format(
@@ -1115,10 +1170,9 @@ class Instrument:
         return answer
 
 
-####################
+# ################ #
 # Payload handling #
-####################
-
+# ################ #
 
 def _embedPayload(slaveaddress, mode, functioncode, payloaddata):
     """Build a request from the slaveaddress, the function code and the payload data.
@@ -1126,7 +1180,8 @@ def _embedPayload(slaveaddress, mode, functioncode, payloaddata):
     Args:
         * slaveaddress (int): The address of the slave.
         * mode (str): The modbus protcol mode (MODE_RTU or MODE_ASCII)
-        * functioncode (int): The function code for the command to be performed. Can for example be 16 (Write register).
+        * functioncode (int): The function code for the command to be performed.
+          Can for example be 16 (Write register).
         * payloaddata (str): The byte string to be sent to the slave.
 
     Returns:
@@ -1137,9 +1192,11 @@ def _embedPayload(slaveaddress, mode, functioncode, payloaddata):
 
     The resulting request has the format:
      * RTU Mode: slaveaddress byte + functioncode byte + payloaddata + CRC (which is two bytes).
-     * ASCII Mode: header (:) + slaveaddress (2 characters) + functioncode (2 characters) + payloaddata + LRC (which is two characters) + footer (CRLF)
+     * ASCII Mode: header (:) + slaveaddress (2 characters) + functioncode
+       (2 characters) + payloaddata + LRC (which is two characters) + footer (CRLF)
 
-    The LRC or CRC is calculated from the byte string made up of slaveaddress + functioncode + payloaddata.
+    The LRC or CRC is calculated from the byte string made up of slaveaddress +
+    functioncode + payloaddata.
     The header, LRC/CRC, and footer are excluded from the calculation.
 
     """
@@ -1180,13 +1237,16 @@ def _extractPayload(response, slaveaddress, mode, functioncode):
         The payload part of the *response* string.
 
     Raises:
-        ValueError, TypeError. Raises an exception if there is any problem with the received address, the functioncode or the CRC.
+        ValueError, TypeError. Raises an exception if there is any problem with
+        the received address, the functioncode or the CRC.
 
     The received response should have the format:
     * RTU Mode: slaveaddress byte + functioncode byte + payloaddata + CRC (which is two bytes)
-    * ASCII Mode: header (:) + slaveaddress byte + functioncode byte + payloaddata + LRC (which is two characters) + footer (CRLF)
+    * ASCII Mode: header (:) + slaveaddress byte + functioncode byte +
+      payloaddata + LRC (which is two characters) + footer (CRLF)
 
-    For development purposes, this function can also be used to extract the payload from the request sent TO the slave.
+    For development purposes, this function can also be used to extract the payload
+    from the request sent TO the slave.
 
     """
     BYTEPOSITION_FOR_ASCII_HEADER = 0  # Relative to plain response
@@ -1235,7 +1295,7 @@ def _extractPayload(response, slaveaddress, mode, functioncode):
                     _ASCII_HEADER, response
                 )
             )
-        elif response[-len(_ASCII_FOOTER) :] != _ASCII_FOOTER:
+        elif response[-len(_ASCII_FOOTER):] != _ASCII_FOOTER:
             raise ValueError(
                 "Did not find footer ({!r}) as end of ASCII response. The plain response is: {!r}".format(
                     _ASCII_FOOTER, response
@@ -1264,11 +1324,14 @@ def _extractPayload(response, slaveaddress, mode, functioncode):
         numberOfChecksumBytes = NUMBER_OF_CRC_BYTES
 
     receivedChecksum = response[-numberOfChecksumBytes:]
-    responseWithoutChecksum = response[0 : len(response) - numberOfChecksumBytes]
+    responseWithoutChecksum = response[0:(len(response)-numberOfChecksumBytes)]
     calculatedChecksum = calculateChecksum(responseWithoutChecksum)
 
     if receivedChecksum != calculatedChecksum:
-        template = "Checksum error in {} mode: {!r} instead of {!r} . The response is: {!r} (plain response: {!r})"
+        template = (
+            "Checksum error in {} mode: {!r} instead of {!r} . The response "
+            + "is: {!r} (plain response: {!r})"
+        )
         text = template.format(
             mode, receivedChecksum, calculatedChecksum, response, plainresponse
         )
@@ -1313,10 +1376,9 @@ def _extractPayload(response, slaveaddress, mode, functioncode):
     return payload
 
 
-############################################
-## Serial communication utility functions ##
-############################################
-
+# ###################################### #
+# Serial communication utility functions #
+# ###################################### #
 
 def _predictResponseSize(mode, functioncode, payloadToSlave):
     """Calculate the number of bytes that should be received from the slave.
@@ -1324,7 +1386,8 @@ def _predictResponseSize(mode, functioncode, payloadToSlave):
     Args:
      * mode (str): The modbus protcol mode (MODE_RTU or MODE_ASCII)
      * functioncode (int): Modbus function code.
-     * payloadToSlave (str): The raw request that is to be sent to the slave (not hex encoded string)
+     * payloadToSlave (str): The raw request that is to be sent to the slave
+       (not hex encoded string)
 
     Returns:
         The preducted number of bytes (int) in the response.
@@ -1396,7 +1459,8 @@ def _predictResponseSize(mode, functioncode, payloadToSlave):
 
 
 def _calculate_minimum_silent_period(baudrate):
-    """Calculate the silent period length to comply with the 3.5 character silence between messages.
+    """Calculate the silent period length to comply with the 3.5 character
+    silence between messages.
 
     Args:
         baudrate (numerical): The baudrate for the serial port
@@ -1423,10 +1487,9 @@ def _calculate_minimum_silent_period(baudrate):
     )
 
 
-##############################
+# ########################## #
 # String and num conversions #
-##############################
-
+# ########################## #
 
 def _numToOneByteString(inputvalue):
     """Convert a numerical value to a one-byte string.
@@ -1452,7 +1515,8 @@ def _numToTwoByteString(value, numberOfDecimals=0, LsbFirst=False, signed=False)
     Args:
         * value (float or int): The numerical value to be converted.
         * numberOfDecimals (int): Number of decimals, 0 or more, for scaling.
-        * LsbFirst (bol): Whether the least significant byte should be first in the resulting string.
+        * LsbFirst (bol): Whether the least significant byte should be first in
+          the resulting string.
         * signed (bol): Whether negative values should be accepted.
 
     Returns:
@@ -1462,8 +1526,9 @@ def _numToTwoByteString(value, numberOfDecimals=0, LsbFirst=False, signed=False)
         TypeError, ValueError. Gives DeprecationWarning instead of ValueError
         for some values in Python 2.6.
 
-    Use ``numberOfDecimals=1`` to multiply ``value`` by 10 before sending it to the slave register.
-    Similarly ``numberOfDecimals=2`` will multiply ``value`` by 100 before sending it to the slave register.
+    Use ``numberOfDecimals=1`` to multiply ``value`` by 10 before sending it to
+    the slave register. Similarly ``numberOfDecimals=2`` will multiply ``value``
+    by 100 before sending it to the slave register.
 
     Use the parameter ``signed=True`` if making a bytestring that can hold
     negative values. Then negative input will be automatically converted into
@@ -1479,9 +1544,10 @@ def _numToTwoByteString(value, numberOfDecimals=0, LsbFirst=False, signed=False)
     ====================== ============= ====================================
 
     For example:
-        To store for example value=77.0, use ``numberOfDecimals = 1`` if the register will hold it as 770 internally.
-        The value 770 (dec) is 0302 (hex), where the most significant byte is 03 (hex) and the
-        least significant byte is 02 (hex). With ``LsbFirst = False``, the most significant byte is given first
+        To store for example value=77.0, use ``numberOfDecimals = 1`` if the
+        register will hold it as 770 internally. The value 770 (dec) is 0302 (hex),
+        where the most significant byte is 03 (hex) and the least significant byte
+        is 02 (hex). With ``LsbFirst = False``, the most significant byte is given first
         why the resulting string is ``\x03\x02``, which has the length 2.
 
     """
@@ -1513,7 +1579,8 @@ def _twoByteStringToNum(bytestring, numberOfDecimals=0, signed=False):
     Args:
         * bytestring (str): A string of length 2.
         * numberOfDecimals (int): The number of decimals. Defaults to 0.
-        * signed (bol): Whether large positive values should be interpreted as negative values.
+        * signed (bol): Whether large positive values should be interpreted as
+          negative values.
 
     Returns:
         The numerical value (int or float) calculated from the ``bytestring``.
@@ -1525,14 +1592,15 @@ def _twoByteStringToNum(bytestring, numberOfDecimals=0, signed=False):
     negative values. Then upper range data will be automatically converted into
     negative return values (two's complement).
 
-    Use ``numberOfDecimals=1`` to divide the received data by 10 before returning the value.
-    Similarly ``numberOfDecimals=2`` will divide the received data by 100 before returning the value.
+    Use ``numberOfDecimals=1`` to divide the received data by 10 before returning
+    the value. Similarly ``numberOfDecimals=2`` will divide the received data by
+    100 before returning the value.
 
     The byte order is big-endian, meaning that the most significant byte is sent first.
 
     For example:
-        A string ``\x03\x02`` (which has the length 2) corresponds to 0302 (hex) = 770 (dec). If
-        ``numberOfDecimals = 1``, then this is converted to 77.0 (float).
+        A string ``\x03\x02`` (which has the length 2) corresponds to 0302 (hex) =
+        770 (dec). If ``numberOfDecimals = 1``, then this is converted to 77.0 (float).
 
     """
     _checkString(bytestring, minlength=2, maxlength=2, description="bytestring")
@@ -1556,11 +1624,13 @@ def _twoByteStringToNum(bytestring, numberOfDecimals=0, signed=False):
 def _longToBytestring(value, signed=False, numberOfRegisters=2):
     """Convert a long integer to a bytestring.
 
-    Long integers (32 bits = 4 bytes) are stored in two consecutive 16-bit registers in the slave.
+    Long integers (32 bits = 4 bytes) are stored in two consecutive 16-bit registers
+    in the slave.
 
     Args:
         * value (int): The numerical value to be converted.
-        * signed (bool): Whether large positive values should be interpreted as negative values.
+        * signed (bool): Whether large positive values should be interpreted as
+          negative values.
         * numberOfRegisters (int): Should be 2. For error checking only.
 
     Returns:
@@ -1590,11 +1660,13 @@ def _longToBytestring(value, signed=False, numberOfRegisters=2):
 def _bytestringToLong(bytestring, signed=False, numberOfRegisters=2):
     """Convert a bytestring to a long integer.
 
-    Long integers (32 bits = 4 bytes) are stored in two consecutive 16-bit registers in the slave.
+    Long integers (32 bits = 4 bytes) are stored in two consecutive 16-bit registers
+    in the slave.
 
     Args:
         * bytestring (str): A string of length 4.
-        * signed (bol): Whether large positive values should be interpreted as negative values.
+        * signed (bol): Whether large positive values should be interpreted as
+          negative values.
         * numberOfRegisters (int): Should be 2. For error checking only.
 
     Returns:
@@ -1706,7 +1778,8 @@ def _bytestringToFloat(bytestring, numberOfRegisters=2):
 
     if len(bytestring) != numberOfBytes:
         raise ValueError(
-            "Wrong length of the byte string! Given value is {0!r}, and numberOfRegisters is {1!r}.".format(
+            "Wrong length of the byte string! Given value is "
+            + "{0!r}, and numberOfRegisters is {1!r}.".format(
                 bytestring, numberOfRegisters
             )
         )
@@ -1721,10 +1794,12 @@ def _textstringToBytestring(inputstring, numberOfRegisters=16):
     For example 16 consecutive registers can hold 32 characters (32 bytes).
 
     Not much of conversion is done, mostly error checking and string padding.
-    If the inputstring is shorter that the allocated space, it is padded with spaces in the end.
+    If the inputstring is shorter that the allocated space, it is padded with
+    spaces in the end.
 
     Args:
-        * inputstring (str): The string to be stored in the slave. Max 2*numberOfRegisters characters.
+        * inputstring (str): The string to be stored in the slave.
+          Max 2*numberOfRegisters characters.
         * numberOfRegisters (int): The number of registers allocated for the string.
 
     Returns:
@@ -1778,7 +1853,8 @@ def _valuelistToBytestring(valuelist, numberOfRegisters):
     Each element is 'unsigned INT16'.
 
     Args:
-        * valuelist (list of int): The input list. The elements should be in the range 0 to 65535.
+        * valuelist (list of int): The input list. The elements should be in the
+          range 0 to 65535.
         * numberOfRegisters (int): The number of registers. For error checking.
 
     Returns:
@@ -1848,7 +1924,7 @@ def _bytestringToValuelist(bytestring, numberOfRegisters):
     values = []
     for i in range(numberOfRegisters):
         offset = _NUMBER_OF_BYTES_PER_REGISTER * i
-        substring = bytestring[offset : offset + _NUMBER_OF_BYTES_PER_REGISTER]
+        substring = bytestring[offset:(offset+_NUMBER_OF_BYTES_PER_REGISTER)]
         values.append(_twoByteStringToNum(substring))
 
     return values
@@ -1857,7 +1933,7 @@ def _bytestringToValuelist(bytestring, numberOfRegisters):
 def _now():
     """Return a timestamp for time duration measurements.
 
-    Returns a float, that increases with 1.0 per second. 
+    Returns a float, that increases with 1.0 per second.
     The starting point is undefined.
     """
     if hasattr(time, "monotonic"):
@@ -1871,7 +1947,8 @@ def _pack(formatstring, value):
     Uses the built-in :mod:`struct` Python module.
 
     Args:
-        * formatstring (str): String for the packing. See the :mod:`struct` module for details.
+        * formatstring (str): String for the packing. See the :mod:`struct` module
+          for details.
         * value (depends on formatstring): The value to be packed
 
     Returns:
@@ -1888,9 +1965,9 @@ def _pack(formatstring, value):
 
     try:
         result = struct.pack(formatstring, value)
-    except:
-        errortext = "The value to send is probably out of range, as the num-to-bytestring conversion failed."
-        errortext += " Value: {0!r} Struct format code is: {1}"
+    except Exception:
+        errortext = "The value to send is probably out of range, as the num-to-bytestring "
+        errortext += "conversion failed. Value: {0!r} Struct format code is: {1}"
         raise ValueError(errortext.format(value, formatstring))
 
     if sys.version_info[0] > 2:
@@ -1906,7 +1983,8 @@ def _unpack(formatstring, packed):
     Uses the built-in :mod:`struct` Python module.
 
     Args:
-        * formatstring (str): String for the packing. See the :mod:`struct` module for details.
+        * formatstring (str): String for the packing. See the :mod:`struct` module
+          for details.
         * packed (str): The bytestring to be unpacked.
 
     Returns:
@@ -1929,9 +2007,9 @@ def _unpack(formatstring, packed):
 
     try:
         value = struct.unpack(formatstring, packed)[0]
-    except:
-        errortext = "The received bytestring is probably wrong, as the bytestring-to-num conversion failed."
-        errortext += " Bytestring: {0!r} Struct format code is: {1}"
+    except Exception:
+        errortext = "The received bytestring is probably wrong, as the bytestring-to-num "
+        errortext += "conversion failed. Bytestring: {0!r} Struct format code is: {1}"
         raise ValueError(errortext.format(packed, formatstring))
 
     return value
@@ -1943,12 +2021,13 @@ def _hexencode(bytestring, insert_spaces=False):
     For example 'J' will return '4A', and ``'\x04'`` will return '04'.
 
     Args:
-        bytestring (str): Can be for example ``'A\x01B\x45'``.
-        insert_spaces (bool): Insert space characters between pair of characters to increase readability.
+        * bytestring (str): Can be for example ``'A\x01B\x45'``.
+        * insert_spaces (bool): Insert space characters between pair of characters
+          to increase readability.
 
     Returns:
-        A string of twice the length, with characters in the range '0' to '9' and 'A' to 'F'.
-        The string will be longer if spaces are inserted.
+        A string of twice the length, with characters in the range '0' to '9' and
+        'A' to 'F'. The string will be longer if spaces are inserted.
 
     Raises:
         TypeError, ValueError
@@ -1970,14 +2049,16 @@ def _hexencode(bytestring, insert_spaces=False):
 def _hexdecode(hexstring):
     r"""Convert a hex encoded string to a byte string.
 
-    For example '4A' will return 'J', and '04' will return ``'\x04'`` (which has length 1).
+    For example '4A' will return 'J', and '04' will return ``'\x04'`` (which has
+    length 1).
 
     Args:
-        hexstring (str): Can be for example 'A3' or 'A3B4'. Must be of even length.
-        Allowed characters are '0' to '9', 'a' to 'f' and 'A' to 'F' (not space).
+        * hexstring (str): Can be for example 'A3' or 'A3B4'. Must be of even length.
+        * Allowed characters are '0' to '9', 'a' to 'f' and 'A' to 'F' (not space).
 
     Returns:
-        A string of half the length, with characters corresponding to all 0-255 values for each byte.
+        A string of half the length, with characters corresponding to all 0-255
+        values for each byte.
 
     Raises:
         TypeError, ValueError
@@ -2018,9 +2099,9 @@ def _hexdecode(hexstring):
 
 def _hexlify(bytestring):
     """Convert a byte string to a hex encoded string, with spaces for easier reading.
-    
+
     This is just a facade for _hexencode() with insert_spaces = True.
-    
+
     See _hexencode() for details.
 
     """
@@ -2031,7 +2112,7 @@ def _bitResponseToValue(bytestring):
     r"""Convert a response string to a numerical value.
 
     Args:
-        bytestring (str): A string of length 1. Can be for example ``\x01``.
+        * bytestring (str): A string of length 1. Can be for example ``\x01``.
 
     Returns:
         The converted value (int).
@@ -2087,10 +2168,9 @@ def _createBitpattern(functioncode, value):
             return "\x01"  # Is this correct??
 
 
-#######################
+# ################### #
 # Number manipulation #
-#######################
-
+# ################### #
 
 def _twosComplement(x, bits=16):
     """Calculate the two's complement of an integer.
@@ -2125,7 +2205,8 @@ def _twosComplement(x, bits=16):
     lowerlimit = -2 ** (bits - 1)
     if x > upperlimit or x < lowerlimit:
         raise ValueError(
-            "The input value is out of range. Given value is {0}, but allowed range is {1} to {2} when using {3} bits.".format(
+            "The input value is out of range. Given value is "
+            + "{0}, but allowed range is {1} to {2} when using {3} bits.".format(
                 x, lowerlimit, upperlimit, bits
             )
         )
@@ -2167,7 +2248,8 @@ def _fromTwosComplement(x, bits=16):
     lowerlimit = 0
     if x > upperlimit or x < lowerlimit:
         raise ValueError(
-            "The input value is out of range. Given value is {0}, but allowed range is {1} to {2} when using {3} bits.".format(
+            "The input value is out of range. Given value is "
+            + "{0}, but allowed range is {1} to {2} when using {3} bits.".format(
                 x, lowerlimit, upperlimit, bits
             )
         )
@@ -2179,10 +2261,9 @@ def _fromTwosComplement(x, bits=16):
     return x - 2 ** bits
 
 
-####################
+# ################ #
 # Bit manipulation #
-####################
-
+# ################ #
 
 def _setBitOn(x, bitNum):
     """Set bit 'bitNum' to True.
@@ -2204,9 +2285,9 @@ def _setBitOn(x, bitNum):
     return x | (1 << bitNum)
 
 
-############################
+# ######################## #
 # Error checking functions #
-############################
+# ######################## #
 
 _CRC16TABLE = (
     0,
@@ -2522,7 +2603,8 @@ def _calculateLrcString(inputstring):
     Returns:
         A one-byte LRC bytestring (not encoded to hex-string)
 
-    Algorithm from the document 'MODBUS over serial line specification and implementation guide V1.02'.
+    Algorithm from the document 'MODBUS over serial line specification and
+    implementation guide V1.02'.
 
     The LRC is calculated as 8 bits (one byte).
 
@@ -2574,7 +2656,8 @@ def _checkFunctioncode(functioncode, listOfAllowedValues=[]):
 
     Args:
         * functioncode (int): The function code
-        * listOfAllowedValues (list of int): Allowed values. Use *None* to bypass this part of the checking.
+        * listOfAllowedValues (list of int): Allowed values. Use *None* to bypass
+          this part of the checking.
 
     Raises:
         TypeError, ValueError
@@ -2655,7 +2738,8 @@ def _checkRegisteraddress(registeraddress):
 def _checkResponseByteCount(payload):
     """Check that the number of bytes as given in the response is correct.
 
-    The first byte in the payload indicates the length of the payload (first byte not counted).
+    The first byte in the payload indicates the length of the payload (first
+    byte not counted).
 
     Args:
         payload (string): The payload
@@ -2674,7 +2758,8 @@ def _checkResponseByteCount(payload):
 
     if givenNumberOfDatabytes != countedNumberOfDatabytes:
         errortemplate = (
-            "Wrong given number of bytes in the response: {0}, but counted is {1} as data payload length is {2}."
+            "Wrong given number of bytes in the response: "
+            + "{0}, but counted is {1} as data payload length is {2}."
             + " The data payload is: {3!r}"
         )
         errortext = errortemplate.format(
@@ -2706,7 +2791,8 @@ def _checkResponseRegisterAddress(payload, registeraddress):
 
     if receivedStartAddress != registeraddress:
         raise ValueError(
-            "Wrong given write start adress: {0}, but commanded is {1}. The data payload is: {2!r}".format(
+            "Wrong given write start adress: "
+            + "{0}, but commanded is {1}. The data payload is: {2!r}".format(
                 receivedStartAddress, registeraddress, payload
             )
         )
@@ -2737,7 +2823,8 @@ def _checkResponseNumberOfRegisters(payload, numberOfRegisters):
 
     if receivedNumberOfWrittenReisters != numberOfRegisters:
         raise ValueError(
-            "Wrong number of registers to write in the response: {0}, but commanded is {1}. The data payload is: {2!r}".format(
+            "Wrong number of registers to write in the response: "
+            + "{0}, but commanded is {1}. The data payload is: {2!r}".format(
                 receivedNumberOfWrittenReisters, numberOfRegisters, payload
             )
         )
@@ -2765,7 +2852,8 @@ def _checkResponseWriteData(payload, writedata):
 
     if receivedWritedata != writedata:
         raise ValueError(
-            "Wrong write data in the response: {0!r}, but commanded is {1!r}. The data payload is: {2!r}".format(
+            "Wrong write data in the response: "
+            + "{0!r}, but commanded is {1!r}. The data payload is: {2!r}".format(
                 receivedWritedata, writedata, payload
             )
         )
@@ -2784,7 +2872,7 @@ def _checkString(
         * force_ascii (bool): Enforce that the string is ASCII
 
     The force_ascii argument is valid only for Python3, as all strings are ASCII in Python2.
-    
+
     Raises:
         TypeError, ValueError
 
@@ -2817,7 +2905,7 @@ def _checkString(
             )
         )
 
-    if not maxlength is None:
+    if maxlength is not None:
         if maxlength < 0:
             raise ValueError(
                 "The maxlength must be positive. Given: {0}".format(maxlength)
@@ -2858,7 +2946,8 @@ def _checkInt(inputvalue, minvalue=None, maxvalue=None, description="inputvalue"
     Raises:
         TypeError, ValueError
 
-    Note: Can not use the function :func:`_checkString`, as that function uses this function internally.
+    Note: Can not use the function :func:`_checkString`, as that function uses this
+    function internally.
 
     """
     if not isinstance(description, str):
@@ -2896,7 +2985,8 @@ def _checkNumerical(inputvalue, minvalue=None, maxvalue=None, description="input
     Raises:
         TypeError, ValueError
 
-    Note: Can not use the function :func:`_checkString`, as it uses this function internally.
+    Note: Can not use the function :func:`_checkString`, as it uses this function
+    internally.
 
     """
     # Type checking
@@ -2921,16 +3011,17 @@ def _checkNumerical(inputvalue, minvalue=None, maxvalue=None, description="input
         )
 
     # Consistency checking
-    if (not minvalue is None) and (not maxvalue is None):
+    if (minvalue is not None) and (maxvalue is not None):
         if maxvalue < minvalue:
             raise ValueError(
-                "The maxvalue must not be smaller than minvalue. Given: {0} and {1}, respectively.".format(
+                "The maxvalue must not be smaller than minvalue. "
+                + "Given: {0} and {1}, respectively.".format(
                     maxvalue, minvalue
                 )
             )
 
     # Value checking
-    if not minvalue is None:
+    if minvalue is not None:
         if inputvalue < minvalue:
             raise ValueError(
                 "The {0} is too small: {1}, but minimum value is {2}.".format(
@@ -2938,7 +3029,7 @@ def _checkNumerical(inputvalue, minvalue=None, maxvalue=None, description="input
                 )
             )
 
-    if not maxvalue is None:
+    if maxvalue is not None:
         if inputvalue > maxvalue:
             raise ValueError(
                 "The {0} is too large: {1}, but maximum value is {2}.".format(
@@ -2987,7 +3078,7 @@ def _print_out(inputstring):
 
 def _interpretRawMessage(inputstr):
     r"""Generate a human readable description of a Modbus bytestring.
-    
+
     Args:
         inputstr (str): The bytestring that should be interpreted.
 
@@ -2995,25 +3086,25 @@ def _interpretRawMessage(inputstr):
         A descriptive string.
 
     For example, the string ``'\n\x03\x10\x01\x00\x01\xd0q'`` should give something like::
-        
+
         TODO: update
-    
+
         Modbus bytestring decoder
         Input string (length 8 characters): '\n\x03\x10\x01\x00\x01\xd0q'
         Probably modbus RTU mode.
         Slave address: 10 (dec). Function code: 3 (dec).
         Valid message. Extracted payload: '\x10\x01\x00\x01'
 
-        Pos   Character Hex  Dec  Probable interpretation 
+        Pos   Character Hex  Dec  Probable interpretation
         -------------------------------------------------
-          0:  '\n'      0A    10  Slave address 
-          1:  '\x03'    03     3  Function code 
-          2:  '\x10'    10    16  Payload    
-          3:  '\x01'    01     1  Payload    
-          4:  '\x00'    00     0  Payload    
-          5:  '\x01'    01     1  Payload    
-          6:  '\xd0'    D0   208  Checksum, CRC LSB 
-          7:  'q'       71   113  Checksum, CRC MSB 
+          0:  '\n'      0A    10  Slave address
+          1:  '\x03'    03     3  Function code
+          2:  '\x10'    10    16  Payload
+          3:  '\x01'    01     1  Payload
+          4:  '\x00'    00     0  Payload
+          5:  '\x01'    01     1  Payload
+          6:  '\xd0'    D0   208  Checksum, CRC LSB
+          7:  'q'       71   113  Checksum, CRC MSB
 
     """
     raise NotImplementedError()
@@ -3041,7 +3132,7 @@ def _interpretRawMessage(inputstr):
         output += "Slave address: {} (dec). Function code: {} (dec).\n".format(
             slaveaddress, functioncode
         )
-    except:
+    except Exception:
         output += "\nCould not extract slave address and function code. \n\n"
 
     # Check message validity
@@ -3049,9 +3140,8 @@ def _interpretRawMessage(inputstr):
         extractedpayload = _extractPayload(inputstr, slaveaddress, mode, functioncode)
         output += "Valid message. Extracted payload: {!r}\n".format(extractedpayload)
     except (ValueError, TypeError) as err:
-        output += "\nThe message does not seem to be valid Modbus {}. Error message: \n{}. \n\n".format(
-            mode.upper(), err.message
-        )
+        output += "\nThe message does not seem to be valid Modbus {}. ".format(mode.upper())
+        output += "Error message: \n{}. \n\n".format(err.messages)
     except NameError as err:
         output += (
             "\nNo message validity checking. \n\n"
@@ -3105,13 +3195,13 @@ def _interpretRawMessage(inputstr):
                     description = "Payload"
 
                 try:
-                    hexvalue = _hexdecode(inputstr[i : i + 2])
+                    hexvalue = _hexdecode(inputstr[i:(i + 2)])
                     output += "{0:3.0f}:  {1!r:<8}     {2!r}     {3:02X}  {3: 4.0f}  {4} \n".format(
-                        i, inputstr[i : i + 2], hexvalue, ord(hexvalue), description
+                        i, inputstr[i:(i + 2)], hexvalue, ord(hexvalue), description
                     )
-                except:
+                except Exception:
                     output += "{0:3.0f}:  {1!r:<8}     ?           ?     ?  {2} \n".format(
-                        i, inputstr[i : i + 2], description
+                        i, inputstr[i:(i + 2)], description
                     )
                 i += 2
 
@@ -3119,7 +3209,7 @@ def _interpretRawMessage(inputstr):
     output += "\n\n"
     try:
         output += _interpretPayload(functioncode, extractedpayload)
-    except:
+    except Exception:
         output += (
             "\nCould not interpret the payload. \n\n"
         )  # Payload or function code not available
@@ -3129,18 +3219,19 @@ def _interpretRawMessage(inputstr):
 
 def _interpretPayload(functioncode, payload):
     r"""Generate a human readable description of a Modbus payload.
-    
+
     Args:
       * functioncode (int): Function code
-      * payload (str): The payload that should be interpreted. It should be a byte string.
+      * payload (str): The payload that should be interpreted. It should be a
+        byte string.
 
     Returns:
         A descriptive string.
 
-    For example, the payload ``'\x10\x01\x00\x01'`` for functioncode 3 should give something like::
-    
-        TODO: Update
-    
+    For example, the payload ``'\x10\x01\x00\x01'`` for functioncode 3 should give
+        something like::
+
+            TODO: Update
 
     """
     raise NotImplementedError()
@@ -3159,7 +3250,7 @@ def _interpretPayload(functioncode, payload):
 
 
 def _getDiagnosticString():
-    """Generate a diagnostic string, showing the module version, the platform, current directory etc.
+    """Generate a diagnostic string, showing the module version, the platform etc.
 
     Returns:
         A descriptive string.
@@ -3184,11 +3275,11 @@ def _getDiagnosticString():
     text += "Python executable: " + repr(sys.executable) + "\n"
     try:
         text += "Long info: " + repr(sys.long_info) + "\n"
-    except:
+    except Exception:
         text += "Long info: (none)\n"  # For Python3 compatibility
     try:
         text += "Float repr style: " + repr(sys.float_repr_style) + "\n\n"
-    except:
+    except Exception:
         text += "Float repr style: (none) \n\n"  # For Python 2.6 compatibility
     text += "Variable __name__: " + __name__ + "\n"
     text += "Current directory: " + os.getcwd() + "\n\n"

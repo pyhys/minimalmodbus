@@ -1,36 +1,36 @@
 Developer documentation
 =======================
 
-The details printed in debug mode (requests and responses) are very useful 
-for using the included dummy_serial port for unit testing purposes. 
+The details printed in debug mode (requests and responses) are very useful
+for using the included dummy_serial port for unit testing purposes.
 For examples, see the file test/test_minimalmodbus.py.
 
 
 Design considerations
 -----------------------------------------------------------------------------
-My take on the design is that is should be as simple as possible, hence the name MinimalModbus, 
-but it should implement the smallest number of functions needed for it to be useful. 
-The target audience for this driver simply wants to talk to Modbus clients 
+My take on the design is that is should be as simple as possible, hence the name MinimalModbus,
+but it should implement the smallest number of functions needed for it to be useful.
+The target audience for this driver simply wants to talk to Modbus clients
 using a serial interface using some simple driver.
 
-Only a few functions are implemented. It is very easy to implement lots of 
-(seldom used) functions, resulting in buggy code with large fractions of it almost never used. 
-It is instead much better to implement the features when needed/requested. 
+Only a few functions are implemented. It is very easy to implement lots of
+(seldom used) functions, resulting in buggy code with large fractions of it almost never used.
+It is instead much better to implement the features when needed/requested.
 There are many Modbus function codes, but I guess that most are not used.
 
-It is a goal that the same driver should be compatible for both Python2 and 
+It is a goal that the same driver should be compatible for both Python2 and
 Python3 programs. Some suggestions for making this possible are found here:
 https://wiki.python.org/moin/PortingPythonToPy3k
 
 There should be unittests for all functions, and mock communication data.
 
-Errors should be caught as early as possible, and the error messages should be informative. 
-For this reason there is type checking for for the parameters in most functions. 
+Errors should be caught as early as possible, and the error messages should be informative.
+For this reason there is type checking for for the parameters in most functions.
 This is rather un-pythonic, but is intended to give more clear error messages (for easier remote support).
 
 Note that the term 'address' is ambigous, why it is better to use the terms 'register address' or 'slave address'.
 
-Use only external links in the README.txt, otherwise they will not work on Python Package Index (PyPI). 
+Use only external links in the README.txt, otherwise they will not work on Python Package Index (PyPI).
 No Sphinx-specific constructs are allowed in that file.
 
 Design priorities:
@@ -54,15 +54,15 @@ Function                    Description
 :meth:`._communicate`       Handles raw strings for communication via pySerial.
 =========================== ================================================================================
 
-Most of the logic is located in separate (easy to test) functions on module level. 
-For a description of them, see :ref:`internalminimalmodbus`. 
+Most of the logic is located in separate (easy to test) functions on module level.
+For a description of them, see :ref:`internalminimalmodbus`.
 
 
 Number conversion to and from bytestrings
 -----------------------------------------------
 The Python module :mod:`struct` is used for conversion. See https://docs.python.org/2/library/struct.html
 
-Several wrapper functions are defined for easy use of the conversion. 
+Several wrapper functions are defined for easy use of the conversion.
 These functions also do argument validity checking.
 
 =========================== =================================== ================================
@@ -77,11 +77,11 @@ Floating point number       :meth:`._floatToBytestring`         :meth:`._bytestr
 String                      :meth:`._textstringToBytestring`    :meth:`._bytestringToTextstring`
 =========================== =================================== ================================
 
-Note that the :mod:`struct` module produces byte buffers for Python3, but bytestrings for Python2. 
-This is compensated for automatically by using the wrapper functions 
+Note that the :mod:`struct` module produces byte buffers for Python3, but bytestrings for Python2.
+This is compensated for automatically by using the wrapper functions
 :meth:`._pack` and :meth:`._unpack`.
 
-For a description of them, see :ref:`internalminimalmodbus`. 
+For a description of them, see :ref:`internalminimalmodbus`.
 
 
 
@@ -90,21 +90,21 @@ Unittesting
 Unit tests are provided in the tests subfolder. To run them::
 
     python test_minimalmodbus.py
-    
-Also a dummy/mock/stub for the serial port, dummy_serial, is provided for 
+
+Also a dummy/mock/stub for the serial port, dummy_serial, is provided for
 test purposes. See :ref:`apidummyserial`.
 
 The test coverage analysis is found at https://codecov.io/github/pyhys/minimalmodbus?branch=master.
-        
+
 Hardware tests are performed using a Delta DTB4824 process controller. See :ref:`testdtb4824` for more information.
-        
+
 A brief introduction to unittesting is found here: https://docs.python.org/release/2.5.2/lib/minimal-example.html
 
 The :mod:`unittest` module is documented here: https://docs.python.org/2/library/unittest.html
 
-The unittests uses previosly recorded communication data for the testing. 
+The unittests uses previosly recorded communication data for the testing.
 Inside the unpacked folder go to :file:`test` and run the unit tests with::
-     
+
     python test_all_simulated.py
     python3 test_all_simulated.py
 
@@ -114,7 +114,7 @@ Inside the unpacked folder go to :file:`test` and run the unit tests with::
     python2.7 test_all_simulated.py
 
 To automatically run the tests for the different Python versions::
-    
+
     tox
 
 It is also possible to run the individual test files::
@@ -123,23 +123,23 @@ It is also possible to run the individual test files::
     python test_eurotherm3500.py
     python test_omegacn7500.py
 
-MinimalModbus is also tested with hardware. A Delta temperature controller 
-DTB4824 is used together with a USB-to-RS485 converter. 
+MinimalModbus is also tested with hardware. A Delta temperature controller
+DTB4824 is used together with a USB-to-RS485 converter.
 
 Run it with::
 
    python test_deltaDTB4824.py
-   
+
 The baudrate and portname can optionally be set from command line::
 
     python test_deltaDTB4824.py 19200 /dev/ttyUSB0
-    
+
 For more details on testing with this hardware, see :ref:`testdtb4824`.
 
 
 Making sure that error messages are informative for the user
 ------------------------------------------------------------------------------
-To have a look on the error messages raised during unit testing of :mod:`minimalmodbus`, 
+To have a look on the error messages raised during unit testing of :mod:`minimalmodbus`,
 monkey-patch :data:`test_minimalmodbus.SHOW_ERROR_MESSAGES_FOR_ASSERTRAISES` as seen here::
 
     >>> import unittest
@@ -150,7 +150,7 @@ monkey-patch :data:`test_minimalmodbus.SHOW_ERROR_MESSAGES_FOR_ASSERTRAISES` as 
 
 This is part of the output::
 
-    testFunctioncodeNotInteger (test_minimalmodbus.TestEmbedPayload) ... 
+    testFunctioncodeNotInteger (test_minimalmodbus.TestEmbedPayload) ...
         TypeError('The functioncode must be an integer. Given: 1.0',)
 
         TypeError("The functioncode must be an integer. Given: '1'",)
@@ -160,7 +160,7 @@ This is part of the output::
         TypeError('The functioncode must be an integer. Given: None',)
     ok
     testKnownValues (test_minimalmodbus.TestEmbedPayload) ... ok
-    testPayloadNotString (test_minimalmodbus.TestEmbedPayload) ... 
+    testPayloadNotString (test_minimalmodbus.TestEmbedPayload) ...
         TypeError('The payload should be a string. Given: 1',)
 
         TypeError('The payload should be a string. Given: 1.0',)
@@ -169,17 +169,17 @@ This is part of the output::
 
         TypeError('The payload should be a string. Given: None',)
     ok
-    testSlaveaddressNotInteger (test_minimalmodbus.TestEmbedPayload) ... 
+    testSlaveaddressNotInteger (test_minimalmodbus.TestEmbedPayload) ...
         TypeError('The slaveaddress must be an integer. Given: 1.0',)
 
         TypeError("The slaveaddress must be an integer. Given: 'DEF'",)
     ok
-    testWrongFunctioncodeValue (test_minimalmodbus.TestEmbedPayload) ... 
+    testWrongFunctioncodeValue (test_minimalmodbus.TestEmbedPayload) ...
         ValueError('The functioncode is too large: 222, but maximum value is 127.',)
 
         ValueError('The functioncode is too small: -1, but minimum value is 1.',)
     ok
-    testWrongSlaveaddressValue (test_minimalmodbus.TestEmbedPayload) ... 
+    testWrongSlaveaddressValue (test_minimalmodbus.TestEmbedPayload) ...
         ValueError('The slaveaddress is too large: 248, but maximum value is 247.',)
 
         ValueError('The slaveaddress is too small: -1, but minimum value is 0.',)
@@ -190,20 +190,20 @@ See :mod:`test_minimalmodbus` for details on how this is implemented.
 It is possible to run just a few tests. To load a single class of test cases::
 
      suite = unittest.TestLoader().loadTestsFromTestCase(test_minimalmodbus.TestSetBitOn)
-     
+
 If necessary::
 
     reload(test_minimalmodbus.minimalmodbus)
 
 Recording communication data for unittesting
 -------------------------------------------------------------------------
-With the known data output from an instrument, we can finetune the inner details 
-of the driver (code refactoring) without worrying that we change the output from the code. 
-This data will be the 'golden standard' to which we test the code. 
-Use as many as possible of the commands, and paste all the output in a text document. 
-From this it is pretty easy to reshuffle it into unittest code. 
+With the known data output from an instrument, we can finetune the inner details
+of the driver (code refactoring) without worrying that we change the output from the code.
+This data will be the 'golden standard' to which we test the code.
+Use as many as possible of the commands, and paste all the output in a text document.
+From this it is pretty easy to reshuffle it into unittest code.
 
-Here is an example how to record communication data, which then is pasted 
+Here is an example how to record communication data, which then is pasted
 into the test code (for use with a mock/dummy serial port). See for example
 :ref:`testminimalmodbus` (click '[source]' on right side, see RESPONSES at end of the page). Do like this::
 
@@ -230,7 +230,7 @@ into the test code (for use with a mock/dummy serial port). See for example
    MinimalModbus debug mode. Writing to instrument: '\n\x05\x08\x14\xff\x00\xcf%'
    MinimalModbus debug mode. Response from instrument: '\n\x05\x08\x14\xff\x00\xcf%'
 
-This is also very useful for debugging drivers built on top of MinimalModbus. 
+This is also very useful for debugging drivers built on top of MinimalModbus.
 
 
 Using the dummy serial port
@@ -246,7 +246,7 @@ A dummy serial port is included for testing purposes, see :mod:`dummy_serial`. U
     >>> instrument.read_register(4097, 1)
     823.6
 
-In the example above there is recorded data available for ``read_register(4097, 1)``. If no 
+In the example above there is recorded data available for ``read_register(4097, 1)``. If no
 recorded data is available, an error message is displayed::
 
     >>> instrument.read_register(4098, 1)
@@ -289,7 +289,7 @@ To see the generated request data (without bothering about the response)::
 
 Data encoding in Python2 and Python3
 ------------------------------------------------------------------------------
-The **string** type has changed in Python3 compared to Python2. In Python3 the type 
+The **string** type has changed in Python3 compared to Python2. In Python3 the type
 **bytes** is used when communicating via pySerial.
 
 Dependent on the Python version number, the data sent from MinimalModbus to pySerial has different types.
@@ -299,24 +299,24 @@ String constants
 This is a **string** constant both in Python2 and Python3::
 
     st = 'abc\x69\xe6\x03'
-    
+
 This is a **bytes** constant in Python3, but a **string** constant in Python2 (allowed for 2.6 and higher)::
 
-    by = b'abc\x69\xe6\x03' 
-    
+    by = b'abc\x69\xe6\x03'
+
 Type conversion in Python3
 ```````````````````````````
 To convert a **string** to **bytes**, use one of these::
 
     bytes(st, 'latin1') # Note that 'ascii' encoding gives error for some values.
     st.encode('latin1')
- 
-To convert **bytes** to **string**, use one of these::    
+
+To convert **bytes** to **string**, use one of these::
 
     str(by, encoding='latin1')
     by.decode('latin1')
-    
-======== =============    
+
+======== =============
 Encoding Allowed range
 ======== =============
 ascii    0-127
@@ -325,18 +325,18 @@ latin-1  0-255
 
 Corresponding in Python2
 ````````````````````````
-Ideally, we would like to use the same source code for Python2 and Python3. In Python 2.6 and higher 
-there is the :func:`bytes` function for forward compatibility, but it is merely a 
+Ideally, we would like to use the same source code for Python2 and Python3. In Python 2.6 and higher
+there is the :func:`bytes` function for forward compatibility, but it is merely a
 synonym for :func:`str`.
 
 To convert from '**bytes**'(**string**) to **string**::
 
-    str(by) # not possible to give encoding    
+    str(by) # not possible to give encoding
     by.decode('latin1') # Gives unicode
 
 To convert from **string** to '**bytes**'(**string**)::
 
-    bytes(st) # not possible to give encoding   
+    bytes(st) # not possible to give encoding
     st.encode('latin1') # Can not be used for values larger than 127
 
 It is thus not possible to use exactly the same code for both Python2 and Python3.
@@ -350,7 +350,7 @@ Extending MinimalModbus
 ------------------------------------------------------------------------------
 It is straight-forward to extend MinimalModbus to handle more Modbus function codes. Use the method :meth:`_performCommand` to send data to the slave, and to receive the response. Note that the API might change, as this is outside the official API.
 
-This is easily tested in interactive mode. For example the method :meth:`.read_register` 
+This is easily tested in interactive mode. For example the method :meth:`.read_register`
 generates payload, which internally is sent to the instrument using :meth:`_performCommand`::
 
     >>> instr.debug = True
@@ -373,7 +373,7 @@ Use this if you are to implement other Modbus function codes, as it takes care o
 
 Other useful internal functions
 ------------------------------------------------------------------------------
-There are several useful (module level) helper functions available in the :mod:`minimalmodbus` module. 
+There are several useful (module level) helper functions available in the :mod:`minimalmodbus` module.
 The module level helper functions can be used without any hardware connected.
 See :ref:`internalminimalmodbus`. These can be handy when developing your own Modbus instrument hardware.
 
@@ -406,7 +406,7 @@ Use the top-level Make to generate HTML and PDF documentation::
 
     make docs
     make pdf
-    
+
 Do linkchecking and measureme test coverage::
 
     make linkcheck
@@ -415,7 +415,7 @@ Do linkchecking and measureme test coverage::
 
 Webpage
 ------------------------------------------------------------------------------
-The HTML theme used is the Sphinx 'sphinx_rtd_theme' theme. 
+The HTML theme used is the Sphinx 'sphinx_rtd_theme' theme.
 
 Note that Sphinx version 1.3 or later is required to build the documentation.
 
@@ -433,7 +433,7 @@ In the top directory::
 or during development (so you do not need to constantly re-install)::
 
     make installdev
-    
+
 It will add the current path to the file:
 :file:`/usr/local/lib/python2.7/dist-packages/easy-install.pth`.
 
@@ -456,8 +456,8 @@ Change version number etc
 * Manually change the ``__version__`` field in the :file:`minimalmodbus.py` source file.
 * Manually change the release date in :file:`CHANGES.txt`
 
-(Note that the version number in the Sphinx configuration file :file:`doc/conf.py` 
-and in the file :file:`setup.py` are changed automatically. 
+(Note that the version number in the Sphinx configuration file :file:`doc/conf.py`
+and in the file :file:`setup.py` are changed automatically.
 Also the copyright year in :file:`doc/conf.py` is changed automatically).
 
 How to number releases are described in :pep:`440`.
@@ -468,7 +468,7 @@ Check the code::
 
     make lint
 
-    pychecker minimalmodbus.py 
+    pychecker minimalmodbus.py
 
 (???The 2to3 tool is not necessary, as we run the unittests under both Python2 and Python3).
 
@@ -479,10 +479,10 @@ Run unit tests for all supported Python versions::
     make test-all
 
 Alternatively, run unit tests (in the :file:`trunk/test` directory)::
-    
+
     python test_all_simulated.py
     python3 test_all_simulated.py
-    
+
     python2.7 test_all_simulated.py
     python3.2 test_all_simulated.py
 
@@ -493,7 +493,7 @@ Test the source distribution generation (look in the :file:`PKG-INFO` file)::
     python setup.py sdist
 
 Also make sure that these are functional (see sections below):
-  * Documentation generation 
+  * Documentation generation
   * Test coverage report generation
 
 Git
@@ -509,8 +509,8 @@ Build the source distribution and wheel, and upload to PYPI::
 
 Test documentation
 `````````````````````
-Test links on the PyPI page. If adjustments are required 
-on the PyPI page, log in and manually adjust the text. This might be for 
+Test links on the PyPI page. If adjustments are required
+on the PyPI page, log in and manually adjust the text. This might be for
 example parsing problems with the ReST text (allows no Sphinx-specific constructs).
 
 
@@ -530,7 +530,7 @@ Burn a CD/DVD with these items:
 * Generated HTML files
 * PDF documentation
 
-  
+
 
 
 
@@ -548,13 +548,13 @@ Sphinx
 Coverage.py
    Unittest coverage tool. See https://coverage.readthedocs.io/
 
-PyChecker 
-   This is a tool for finding bugs in python source code. See http://pychecker.sourceforge.net/   
+PyChecker
+   This is a tool for finding bugs in python source code. See http://pychecker.sourceforge.net/
 
 pycodestyle
    Code style checker. See https://github.com/PyCQA/pycodestyle#readme
-  
-   
+
+
 
 Git usage
 ---------------------------
@@ -588,8 +588,8 @@ Sphinx usage
 This documentation is generated with the Sphinx tool: http://www.sphinx-doc.org/
 
 It is used to automatically generate HTML documentation from docstrings in the source code.
-See for example :ref:`internalminimalmodbus`. To see the source code of the Python 
-file, click [source] on the right part of that page. To see the source of the 
+See for example :ref:`internalminimalmodbus`. To see the source code of the Python
+file, click [source] on the right part of that page. To see the source of the
 Sphinx page definition file, click 'View page Source' (or possibly 'Edit on Github') in the upper right corner.
 
 To install, use::
@@ -598,7 +598,7 @@ To install, use::
 
 Check installed version by typing::
 
-    sphinx-build --version  
+    sphinx-build --version
 
 Spinx formatting conventions
 ````````````````````````````
@@ -615,17 +615,17 @@ String w escape ch. (string within inline code)                     ``'ABC\x00'`
 Environment var     ``:envvar:`PYTHONPATH```                        :envvar:`PYTHONPATH`
 OS-level command    ``:command:`make```                             :command:`make`
 File                ``:file:`minimalmodbus.py```                    :file:`minimalmodbus.py`
-Path                ``:file:`path/to/myfile.txt```                  :file:`path/to/myfile.txt` 
+Path                ``:file:`path/to/myfile.txt```                  :file:`path/to/myfile.txt`
 Type                ``**bytes**``                                   **bytes**
-Module              ``:mod:`minimalmodbus```                        :mod:`minimalmodbus`     
+Module              ``:mod:`minimalmodbus```                        :mod:`minimalmodbus`
 Data                ``:data:`.BAUDRATE```                           :data:`.BAUDRATE`
 Data (full)         ``:data:`minimalmodbus.BAUDRATE```              :data:`minimalmodbus.BAUDRATE`
 Constant            ``:const:`False```                              :const:`False`
-Function            ``:func:`._checkInt```                          :func:`._checkInt` 
-Function (full)     ``:func:`minimalmodbus._checkInt```             :func:`minimalmodbus._checkInt` 
+Function            ``:func:`._checkInt```                          :func:`._checkInt`
+Function (full)     ``:func:`minimalmodbus._checkInt```             :func:`minimalmodbus._checkInt`
 Argument            ``*payload*``                                   *payload*
-Class               ``:class:`.Instrument```                        :class:`.Instrument`   
-Class (full)        ``:class:`minimalmodbus.Instrument```           :class:`minimalmodbus.Instrument`  
+Class               ``:class:`.Instrument```                        :class:`.Instrument`
+Class (full)        ``:class:`minimalmodbus.Instrument```           :class:`minimalmodbus.Instrument`
 Method              ``:meth:`.read_bit```                           :meth:`.read_bit`
 Method (full)       ``:meth:`minimalmodbus.Instrument.read_bit```   :meth:`minimalmodbus.Instrument.read_bit`
 =================== =============================================== =====================================
@@ -640,16 +640,16 @@ Headings
 Internal links
   * Add an internal marker ``.. _my-reference-label:`` before a heading.
   * Then make an internal link to it using ``:ref:`my-reference-label```.
-  
+
 Strings with backslash
-  * In Python docstrings, use raw strings (a r before the tripplequote), 
+  * In Python docstrings, use raw strings (a r before the tripplequote),
     to have the backslashes reach Sphinx.
 
 Informative boxes
-  * ``.. seealso:: Example of a **seealso** box.`` 
-  * ``.. note:: Example of a **note** box.`` 
-  * ``.. warning:: Example of a **warning** box.`` 
-  
+  * ``.. seealso:: Example of a **seealso** box.``
+  * ``.. note:: Example of a **note** box.``
+  * ``.. warning:: Example of a **warning** box.``
+
 .. seealso:: Example of a **seealso** box.
 
 .. note:: Example of a **note** box.
@@ -667,7 +667,7 @@ Sphinx reStructuredText Primer
 Example usage for API documentation
     https://pythonhosted.org/an_example_pypi_project/sphinx.html
 
-reStructuredText Markup Specification 
+reStructuredText Markup Specification
     http://docutils.sourceforge.net/docs/ref/rst/restructuredtext.html
 
 Sphinx build commands
@@ -676,7 +676,7 @@ To build the documentation, in the top project directory run::
 
    make docs
 
-That should generate HTML files to the directory :file:`docs/_build/html`. 
+That should generate HTML files to the directory :file:`docs/_build/html`.
 
 To generate PDF::
 
@@ -699,12 +699,12 @@ Collect test data::
 
 or::
 
-    coverage run test_all.py    
-    
+    coverage run test_all.py
+
 Generate html report (ends up in :file:`trunk/test/htmlcov`)::
 
     coverage html
-    
+
 Or to exclude some third party modules (adapt to your file structure)::
 
     coverage html --omit=/usr/*
@@ -725,26 +725,6 @@ Run it::
 Configurations are made in a [flake8] section of the :file:`tox.ini` file.
 
 
-Using the pep8 style checker tool
-------------------------------------------------------------------------------
-TODO remove?
-
-This tool checks the coding style. See https://pypi.org/project/pep8/
-
-Install the pep8 checker tool::
-
-    sudo pip install pep8
-
-Run it::
-
-    pep8 minimalmodbus.py
-
-or:: 
-
-    pep8 --statistics minimalmodbus.py
-    
-    pep8 -r --select=E261 --show-source minimalmodbus.py
-
 
 TODO
 ----
@@ -753,7 +733,7 @@ See also Github issues: https://github.com/pyhys/minimalmodbus/issues
 
 * Improved documentation (especially the sections with TODO).
 * Increase test coverage for minimalmodbus.py
-* Improve the dummy_serial behavior, to better mimic Windows behavior. 
+* Improve the dummy_serial behavior, to better mimic Windows behavior.
 * Unittests for measuring the sleep time in _communicate.
 * Logging instead of _print_out()
 * Change to Python3 only, and:
@@ -764,4 +744,3 @@ See also Github issues: https://github.com/pyhys/minimalmodbus/issues
     * Run mypy checks
     * Possibly use pytest istead
 
- 

@@ -1,8 +1,8 @@
 .PHONY: clean-pyc clean-build docs clean clean-docs
 
 help:
-	
-	
+
+
 	@echo "devdeps - install dependencies required for development"
 	@echo "lint - check style with flake8"
 	@echo "black - modify code style using the black tool"
@@ -54,18 +54,20 @@ clean-docs:
 	$(MAKE) -C docs clean
 
 devdeps:
-	pip3 install --upgrade \
+	pip3 install --user --upgrade \
 		coverage \
 		pip \
+		pycodestyle \
 		pydocstyle \
 		setuptools \
 		sphinx_rtd_theme \
 		sphinx \
-		twine         \
+		twine \
 		wheel
 
 lint:
-	pydocstyle minimalmodbus.py 
+	pycodestyle minimalmodbus.py --max-line-length=110
+	pydocstyle minimalmodbus.py
 	flake8 minimalmodbus tests
 
 black:
@@ -75,7 +77,7 @@ test:
 	python setup.py test
 
 test-all:
-	rm -fr .tox/	
+	rm -fr .tox/
 	tox
 
 coverage:
@@ -124,5 +126,5 @@ dist: clean
 	python3 setup.py sdist bdist_wheel
 	ls -l dist
 
-upload: 
+upload:
 	twine upload dist/*
