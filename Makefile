@@ -60,7 +60,7 @@ lint:
 	flake8 minimalmodbus tests
 
 black:
-	black minimalmodbus.py dummyserial.py setup.py
+	black minimalmodbus.py dummy_serial.py setup.py
 
 test:
 	python setup.py test

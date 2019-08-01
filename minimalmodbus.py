@@ -104,7 +104,7 @@ class Instrument:
                 bytesize=8,
                 stopbits=1,
                 timeout=0.05,
-                write_timeout=2.0
+                write_timeout=2.0,
             )
         else:
             self.serial = _serialports[port]
@@ -1064,8 +1064,8 @@ class Instrument:
 
         # Write request
         latest_write_time = _now()
-        
-        self.serial.write(request)  # TODO might raise SerialTimeoutException 
+
+        self.serial.write(request)  # TODO might raise SerialTimeoutException
 
         # Read and discard local echo
         if self.handle_local_echo:
@@ -1098,7 +1098,7 @@ class Instrument:
 
         if sys.version_info[0] > 2:
             # Convert types to make it Python3 compatible
-            answer = str(answer, encoding="latin1")  
+            answer = str(answer, encoding="latin1")
 
         if self.debug:
             template = (
