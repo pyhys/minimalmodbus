@@ -43,11 +43,14 @@ clean-test:
 clean-docs:
 	$(MAKE) -C docs clean
 
+devdeps
+	pip3 install --upgrade setuptools pip wheel twine sphinx sphinx_rtd_theme coverage
+
 lint:
 	flake8 minimalmodbus tests
 
 black:
-	black minimalmodbus.py dummyserial.py
+	black minimalmodbus.py dummyserial.py setup.py
 
 test:
 	python setup.py test
@@ -86,14 +89,25 @@ pdf:
 linkcheck:
 	$(MAKE) -C docs linkcheck
 
+install: clean
+	pip3 install
+
+installdev: clean
+	pip3 install -e .
+
+list:
+	pip3 list
+
+show:
+	pip3 show
+
 release: clean
 	python setup.py sdist upload
 	python setup.py bdist_wheel upload
 
 dist: clean
-	python setup.py sdist
-	python setup.py bdist_wheel
+	python3 setup.py sdist bdist_wheel
 	ls -l dist
 
-install: clean
-	python setup.py install
+upload: 
+	twine upload dist/*

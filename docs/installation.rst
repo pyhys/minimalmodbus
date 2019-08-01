@@ -20,6 +20,7 @@ Tested with Python 2.7, 3.5, 3.6 and 3.7. This module is pure Python.
 This module relies on `pySerial <https://github.com/pyserial/pyserial>`_ (also pure Python) 
 to do the heavy lifting, and it is the only dependency. It is BSD-3-Clause licensed.
 You can find it at the Python package index: https://pypi.org/project/pyserial
+The version of pyserial should be 3.0 or later.
 
 
 Alternate installation on Linux

@@ -28,11 +28,19 @@ setup(
     license=metadata["license"],
     author=metadata["author"],
     url=metadata["url"],
+    project_urls={
+        'Documentation': 'https://minimalmodbus.readthedocs.io',
+        'Source Code': metadata["url"],
+        "Bug Tracker": 'https://github.com/pyhys/minimalmodbus/issues',
+    },
     description="Easy-to-use Modbus RTU and Modbus ASCII implementation for Python",
+    keywords="minimalmodbus modbus modbus-serial modbus-RTU modbus-ASCII",
     long_description=readme + "\n\n" + history,
-    install_requires=["pyserial"],
-    py_modules=["minimalmodbus", "eurotherm3500", "omegacn7500", "dummy_serial"],
-    keywords="minimalmodbus modbus serial RTU ASCII",
+    long_description_content_type = "text/x-rst",
+    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*',
+    install_requires=["pyserial>=3.0"],
+    py_modules=["minimalmodbus", "dummy_serial"],
+    test_suite="tests",
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
@@ -58,5 +66,4 @@ setup(
         "Topic :: System :: Hardware :: Hardware Drivers",
         "Topic :: Terminals :: Serial",
     ],
-    test_suite="tests",
 )

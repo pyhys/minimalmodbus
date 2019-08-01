@@ -5,6 +5,7 @@ History
 
 Release 1.0 (2019-08-??)
 -------------------------
+* Requires pyserial 3.0 or later
 * Removed example drivers for Eurotherm 3500 and Omegacn 7500, as I no longer have 
   access for these instruments for testing. It would great if someone would pick
   up support for these instruments in a separate project.

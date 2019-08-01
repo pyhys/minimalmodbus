@@ -407,20 +407,10 @@ Use the top-level Make to generate HTML and PDF documentation::
     make docs
     make pdf
     
-Do linkchecking and test coverage measurements:
+Do linkchecking and measureme test coverage::
 
     make linkcheck
     make coverage
-
-Alternatively, build the HTML and PDF documentation  (in directory :file:`doc` after making sure that :envvar:`PYTHONPATH` is correct)::
-
-    make html
-    make latexpdf
-
-Verify all external links::
-
-    make linkcheck
-
 
 
 Webpage
@@ -438,53 +428,24 @@ Installing the module from local files
 ``````````````````````````````````````
 In the top directory::
 
-    sudo python3 setup.py install
+    make install
 
 or during development (so you do not need to constantly re-install)::
 
-    sudo python3 setup.py develop
+    make installdev
     
-
-How to generate a source distribution from the present development code
-`````````````````````````````````````````````````````````````````````````
-This will create a subfolder :file:`dist` with zipped or gztared source folders::
-
-    python setup.py sdist
-    python setup.py sdist --formats=gztar,zip
-
-
-Notes on generating binary distributions
-````````````````````````````````````````
-This will create the subfolders :file:`build` and :file:`dist`::
-
-    python setup.py bdist
-
-This will create a subfolder :file:`dist` with a Windows installer::
-
-    python setup.py bdist --formats=wininst
-
-
-Build a distribution before installing it
-`````````````````````````````````````````
-This will create a subfolder :file:`build`::
-
-    python setup.py build
-
-
-Development installation
-`````````````````````````````````````````
-This will create a link to the project, instead of properly installing it::
-
-    sudo python setup.py develop 
-
 It will add the current path to the file:
 :file:`/usr/local/lib/python2.7/dist-packages/easy-install.pth`.
 
 To uninstall it::
 
-    sudo python setup.py develop --uninstall
+    make uninstall
 
+How to generate a source distribution from the present development code
+`````````````````````````````````````````````````````````````````````````
+This will create a subfolder :file:`dist` with ??::
 
+    make dist
 
 
 Preparation for release
@@ -505,9 +466,7 @@ Code style checking etc
 ```````````````````````
 Check the code::
 
-    pychecker eurotherm3500.py 
     pychecker minimalmodbus.py 
-    pychecker omegacn7500.py
 
 (The 2to3 tool is not necessary, as we run the unittests under both Python2 and Python3).
 
@@ -535,42 +494,22 @@ Also make sure that these are functional (see sections below):
   * Documentation generation 
   * Test coverage report generation
 
-(Prepare subversion)
+Git
 ``````````````````````
-Make sure the Subversion is updated::
-
-    svn update
-    svn status -v --no-ignore
-
-Make a tag in Subversion (adapt to version number)::
-     
-    svn copy https://svn.code.sf.net/p/minimalmodbus/code/trunk/ https://svn.code.sf.net/p/minimalmodbus/code/tags/0.5 -m "Release 0.5"
 
 Upload to PyPI
 ``````````````
-Build the source distribution (as :file:`.gzip.tar` and :file:`.zip`) , and upload it to PYPI (will use the :file:`README.txt` etc)::
+Build the source distribution and wheel, and upload to PYPI::
 
-    python setup.py register
-    python setup.py sdist --formats=gztar,zip upload
-
+    make dist
+    make upload
 
 
 Test documentation
 `````````````````````
-Test links on the Sourceforge and PyPI pages. If adjustments are required 
+Test links on the PyPI page. If adjustments are required 
 on the PyPI page, log in and manually adjust the text. This might be for 
 example parsing problems with the ReST text (allows no Sphinx-specific constructs).
-
-
-(Generate Windows installer)
-`````````````````````````````````````
-On a Windows machine, build the windows installer:: 
-
-    python setup.py bdist_wininst
-
-Upload the Windows installer to PYPI by logging in, and uploading it manually.
-
-Upload the Windows installer to Sourceforge by manually using the web form.
 
 
 Test installer
