@@ -11,10 +11,10 @@ MinimalModbus
         :alt: Documentation Status
 
 .. image:: https://img.shields.io/pypi/v/minimalmodbus.svg
-        :target: https://pypi.python.org/pypi/minimalmodbus
+        :target: https://pypi.org/project/MinimalModbus/
         :alt: PyPI page link
 
-.. image:: https://codecov.io/github/pyhys/minimalmodbus/coverage.svg?branch=master
+.. image:: https://codecov.io/gh/pyhys/minimalmodbus/branch/master/graphs/badge.svg?branch=master
         :target: https://codecov.io/github/pyhys/minimalmodbus?branch=master
         :alt: Test coverage report
 
@@ -37,8 +37,8 @@ Other web pages:
 Obsolete web pages:
 
 * Old Sourceforge documentation page: http://minimalmodbus.sourceforge.net/
-* Old Sourceforge project page: http://sourceforge.net/projects/minimalmodbus
-* Old Sourceforge repository: http://sourceforge.net/p/minimalmodbus/code/
+* Old Sourceforge project page: https://sourceforge.net/projects/minimalmodbus
+* Old Sourceforge repository: https://sourceforge.net/p/minimalmodbus/code/HEAD/tree/
 
 
 Features

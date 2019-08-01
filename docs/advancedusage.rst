@@ -190,7 +190,7 @@ Using this module as part of a measurement system
 ----------------------------------------------------------------------------
 It is very useful to make a graphical user interface (GUI) for your control/measurement program. 
 
-One library for making GUIs is wxPython, found on http://www.wxpython.org/. One good tutorial 
+One library for making GUIs is wxPython, found on https://www.wxpython.org/. One good tutorial 
 (it starts from the basics) is: http://zetcode.com/wxpython/
 
 I strongly suggest that your measurement program should be possible to run without any GUI, 

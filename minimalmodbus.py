@@ -998,7 +998,7 @@ class Instrument:
 
         The resolution for Python's time.time() is lower on Windows than on Linux.
         It is about 16 ms on Windows according to
-        http://stackoverflow.com/questions/157359/accurate-timestamping-in-python
+        https://stackoverflow.com/questions/157359/accurate-timestamping-in-python-logging
 
         For Python3, the information sent to and from pySerial should be of the type bytes.
         This is taken care of automatically by MinimalModbus.

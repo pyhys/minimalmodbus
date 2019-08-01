@@ -95,7 +95,7 @@ class ExtendedTestCase(unittest.TestCase):
     Use :data:`test_minimalmodbus.SHOW_ERROR_MESSAGES_FOR_ASSERTRAISES` = :const:`True`
     in order to use this option. It can also be useful to set :data:`test_minimalmodbus.VERBOSITY` = 2.
 
-    Based on http://stackoverflow.com/questions/8672754/how-to-show-the-error-messages-caught-by-assertraises-in-unittest-in-python2-7
+    Based on https://stackoverflow.com/questions/8672754/how-to-show-the-error-messages-caught-by-assertraises-in-unittest-in-python2-7
 
     """
 

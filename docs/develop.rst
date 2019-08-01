@@ -466,9 +466,11 @@ Code style checking etc
 ```````````````````````
 Check the code::
 
+    make lint
+
     pychecker minimalmodbus.py 
 
-(The 2to3 tool is not necessary, as we run the unittests under both Python2 and Python3).
+(???The 2to3 tool is not necessary, as we run the unittests under both Python2 and Python3).
 
 Unittesting
 ```````````
@@ -541,16 +543,16 @@ Git
    Version control software. See https://git-scm.com/
 
 Sphinx
-   For generating HTML documentation. See http://sphinx-doc.org/ 
+   For generating HTML documentation. See http://www.sphinx-doc.org/
 
 Coverage.py
-   Unittest coverage tool. See http://nedbatchelder.com/code/coverage/ 
+   Unittest coverage tool. See https://coverage.readthedocs.io/
 
 PyChecker 
    This is a tool for finding bugs in python source code. See http://pychecker.sourceforge.net/   
 
-pep8.py
-   Code style checker. See https://github.com/PyCQA/pep8#readme
+pycodestyle
+   Code style checker. See https://github.com/PyCQA/pycodestyle#readme
   
    
 
@@ -583,7 +585,7 @@ Commit remotely (will ask for Github username and password)::
 
 Sphinx usage
 -------------------------------------------------------------------------------
-This documentation is generated with the Sphinx tool: http://sphinx-doc.org/
+This documentation is generated with the Sphinx tool: http://www.sphinx-doc.org/
 
 It is used to automatically generate HTML documentation from docstrings in the source code.
 See for example :ref:`internalminimalmodbus`. To see the source code of the Python 
@@ -725,7 +727,9 @@ Configurations are made in a [flake8] section of the :file:`tox.ini` file.
 
 Using the pep8 style checker tool
 ------------------------------------------------------------------------------
-This tool checks the coding style. See https://pypi.python.org/pypi/pep8/
+TODO remove?
+
+This tool checks the coding style. See https://pypi.org/project/pep8/
 
 Install the pep8 checker tool::
 
