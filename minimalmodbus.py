@@ -13,14 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-
-"""
-
-.. moduleauthor:: Jonas Berg 
-
-MinimalModbus: A Python driver for the Modbus RTU and Modbus ASCII protocols via 
-serial port (via RS485 or RS232).
-"""
+"""MinimalModbus: A Python driver for the Modbus RTU/ASCII via serial port (via RS485 or RS232)."""
 
 __author__ = "Jonas Berg"
 __license__ = "Apache License, Version 2.0"
@@ -77,6 +70,7 @@ class Instrument:
     """
 
     def __init__(self, port, slaveaddress, mode=MODE_RTU):
+        """Initialize instrument and open corresponding serial port."""
         self.serial = None
         """The serial port object as defined by the pySerial module. Created by the constructor.
 
@@ -148,7 +142,7 @@ class Instrument:
             self.serial.close()
 
     def __repr__(self):
-        """String representation of the :class:`.Instrument` object."""
+        """Give string representation of the :class:`.Instrument` object."""
         return "{}.{}<id=0x{:x}, address={}, mode={}, close_port_after_each_call={}, precalculate_read_size={}, debug={}, serial={}>".format(
             self.__module__,
             self.__class__.__name__,
@@ -379,14 +373,14 @@ class Instrument:
         )
 
     def read_float(self, registeraddress, functioncode=3, numberOfRegisters=2):
-        """Read a floating point number from the slave.
+        r"""Read a floating point number from the slave.
 
         Floats are stored in two or more consecutive 16-bit registers in the slave. The
         encoding is according to the standard IEEE 754.
 
         There are differences in the byte order used by different manufacturers. A floating
         point value of 1.0 is encoded (in single precision) as 3f800000 (hex). In this
-        implementation the data will be sent as ``'\\x3f\\x80'`` and ``'\\x00\\x00'``
+        implementation the data will be sent as ``'\x3f\x80'`` and ``'\x00\x00'``
         to two consecutetive registers . Make sure to test that it makes sense for your instrument.
         It is pretty straight-forward to change this code if some other byte order is
         required by anyone (see support section).
@@ -617,7 +611,7 @@ class Instrument:
         signed=False,
         payloadformat=None,
     ):
-        """Generic command for reading and writing registers and bits.
+        """Perform generic command for reading and writing registers and bits.
 
         Args:
             * functioncode (int): Modbus function code.
@@ -915,7 +909,7 @@ class Instrument:
     ##########################################
 
     def _performCommand(self, functioncode, payloadToSlave):
-        """Performs the command having the *functioncode*.
+        """Perform the command having the *functioncode*.
 
         Args:
             * functioncode (int): The function code for the command to be performed. Can for example be 'Write register' = 16.
@@ -1453,7 +1447,7 @@ def _numToOneByteString(inputvalue):
 
 
 def _numToTwoByteString(value, numberOfDecimals=0, LsbFirst=False, signed=False):
-    """Convert a numerical value to a two-byte string, possibly scaling it.
+    r"""Convert a numerical value to a two-byte string, possibly scaling it.
 
     Args:
         * value (float or int): The numerical value to be converted.
@@ -1488,7 +1482,7 @@ def _numToTwoByteString(value, numberOfDecimals=0, LsbFirst=False, signed=False)
         To store for example value=77.0, use ``numberOfDecimals = 1`` if the register will hold it as 770 internally.
         The value 770 (dec) is 0302 (hex), where the most significant byte is 03 (hex) and the
         least significant byte is 02 (hex). With ``LsbFirst = False``, the most significant byte is given first
-        why the resulting string is ``\\x03\\x02``, which has the length 2.
+        why the resulting string is ``\x03\x02``, which has the length 2.
 
     """
     _checkNumerical(value, description="inputvalue")
@@ -1514,7 +1508,7 @@ def _numToTwoByteString(value, numberOfDecimals=0, LsbFirst=False, signed=False)
 
 
 def _twoByteStringToNum(bytestring, numberOfDecimals=0, signed=False):
-    """Convert a two-byte string to a numerical value, possibly scaling it.
+    r"""Convert a two-byte string to a numerical value, possibly scaling it.
 
     Args:
         * bytestring (str): A string of length 2.
@@ -1537,7 +1531,7 @@ def _twoByteStringToNum(bytestring, numberOfDecimals=0, signed=False):
     The byte order is big-endian, meaning that the most significant byte is sent first.
 
     For example:
-        A string ``\\x03\\x02`` (which has the length 2) corresponds to 0302 (hex) = 770 (dec). If
+        A string ``\x03\x02`` (which has the length 2) corresponds to 0302 (hex) = 770 (dec). If
         ``numberOfDecimals = 1``, then this is converted to 77.0 (float).
 
     """
@@ -1626,7 +1620,7 @@ def _bytestringToLong(bytestring, signed=False, numberOfRegisters=2):
 
 
 def _floatToBytestring(value, numberOfRegisters=2):
-    """Convert a numerical value to a bytestring.
+    r"""Convert a numerical value to a bytestring.
 
     Floats are stored in two or more consecutive 16-bit registers in the slave. The
     encoding is according to the standard IEEE 754.
@@ -1639,7 +1633,7 @@ def _floatToBytestring(value, numberOfRegisters=2):
     ====================================== ================= =========== =================
 
     A floating  point value of 1.0 is encoded (in single precision) as 3f800000 (hex).
-    This will give a byte string ``'\\x3f\\x80\\x00\\x00'`` (big endian).
+    This will give a byte string ``'\x3f\x80\x00\x00'`` (big endian).
 
     Args:
         * value (float or int): The numerical value to be converted.
@@ -1861,7 +1855,7 @@ def _bytestringToValuelist(bytestring, numberOfRegisters):
 
 
 def _now():
-    """Return a timestamp for time duration measurements
+    """Return a timestamp for time duration measurements.
 
     Returns a float, that increases with 1.0 per second. 
     The starting point is undefined.
@@ -1944,12 +1938,12 @@ def _unpack(formatstring, packed):
 
 
 def _hexencode(bytestring, insert_spaces=False):
-    """Convert a byte string to a hex encoded string.
+    r"""Convert a byte string to a hex encoded string.
 
-    For example 'J' will return '4A', and ``'\\x04'`` will return '04'.
+    For example 'J' will return '4A', and ``'\x04'`` will return '04'.
 
     Args:
-        bytestring (str): Can be for example ``'A\\x01B\\x45'``.
+        bytestring (str): Can be for example ``'A\x01B\x45'``.
         insert_spaces (bool): Insert space characters between pair of characters to increase readability.
 
     Returns:
@@ -1974,9 +1968,9 @@ def _hexencode(bytestring, insert_spaces=False):
 
 
 def _hexdecode(hexstring):
-    """Convert a hex encoded string to a byte string.
+    r"""Convert a hex encoded string to a byte string.
 
-    For example '4A' will return 'J', and '04' will return ``'\\x04'`` (which has length 1).
+    For example '4A' will return 'J', and '04' will return ``'\x04'`` (which has length 1).
 
     Args:
         hexstring (str): Can be for example 'A3' or 'A3B4'. Must be of even length.
@@ -2034,10 +2028,10 @@ def _hexlify(bytestring):
 
 
 def _bitResponseToValue(bytestring):
-    """Convert a response string to a numerical value.
+    r"""Convert a response string to a numerical value.
 
     Args:
-        bytestring (str): A string of length 1. Can be for example ``\\x01``.
+        bytestring (str): A string of length 1. Can be for example ``\x01``.
 
     Returns:
         The converted value (int).
@@ -2538,6 +2532,7 @@ def _calculateLrcString(inputstring):
     In Modbus ASCII mode, this should be transmitted using two characters. This
     example should be transmitted '61', which is a string of length two. This function
     does not handle that conversion for transmission.
+
     """
     _checkString(inputstring, description="input LRC string")
 
@@ -2561,7 +2556,6 @@ def _checkMode(mode):
         TypeError, ValueError
 
     """
-
     if not isinstance(mode, str):
         raise TypeError("The {0} should be a string. Given: {1!r}".format("mode", mode))
 

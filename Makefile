@@ -54,10 +54,11 @@ clean-docs:
 	$(MAKE) -C docs clean
 
 devdeps:
-	pip3 install --upgrade setuptools pip wheel twine sphinx sphinx_rtd_theme coverage
+	pip3 install --upgrade setuptools pip wheel twine sphinx sphinx_rtd_theme coverage pydocstyle
 
 lint:
 	flake8 minimalmodbus tests
+	pydocstyle minimalmodbus.py 
 
 black:
 	black minimalmodbus.py dummy_serial.py setup.py
