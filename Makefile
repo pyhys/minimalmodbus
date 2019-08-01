@@ -1,23 +1,33 @@
 .PHONY: clean-pyc clean-build docs clean clean-docs
 
 help:
+	
+	
+	@echo "devdeps - install dependencies required for development"
+	@echo "lint - check style with flake8"
+	@echo "black - modify code style using the black tool"
+	@echo " "
+	@echo "test - run tests quickly with the default Python"
+	@echo "test-all - run tests on every Python version with tox"
+	@echo "coverage - check code coverage quickly with the default Python"
+	@echo " "
+	@echo "docs - generate Sphinx HTML documentation"
+	@echo "pdf - generate Sphinx PDF documentation"
+	@echo "linkcheck - check documentation html links"
+	@echo " "
+	@echo "install - install the package to the active Python's site-packages"
+	@echo "installdev - install the package for as symlink, for development"
+	@echo "uninstall - uninstall the package"
+	@echo "list - list installed packages package"
+	@echo "show - show details on this package"
+	@echo "dist - package source and wheel"
+	@echo "upload - upload to PyPI"
+	@echo " "
 	@echo "clean - remove all build, test, coverage, docs and Python artifacts"
 	@echo "clean-build - remove build artifacts"
 	@echo "clean-pyc - remove Python file artifacts"
 	@echo "clean-test - remove test and coverage artifacts"
 	@echo "clean-docs - remove docs artifacts"
-	@echo "lint - check style with flake8"
-	@echo "black - modify code style using the black tool
-	@echo "test - run tests quickly with the default Python"
-	@echo "test-all - run tests on every Python version with tox"
-	@echo "coverage - check code coverage quickly with the default Python"
-	@echo "docs - generate Sphinx HTML documentation"
-	@echo "pdf - generate Sphinx PDF documentation"
-	@echo "linkcheck - check documentation html links"
-	@echo "release - package and upload a release"
-	@echo "dist - package"
-	@echo "install - install the package to the active Python's site-packages"
-	
 
 clean: clean-build clean-pyc clean-test clean-docs
 
@@ -43,7 +53,7 @@ clean-test:
 clean-docs:
 	$(MAKE) -C docs clean
 
-devdeps
+devdeps:
 	pip3 install --upgrade setuptools pip wheel twine sphinx sphinx_rtd_theme coverage
 
 lint:
@@ -100,10 +110,6 @@ list:
 
 show:
 	pip3 show
-
-release: clean
-	python setup.py sdist upload
-	python setup.py bdist_wheel upload
 
 dist: clean
 	python3 setup.py sdist bdist_wheel
