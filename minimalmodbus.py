@@ -198,7 +198,8 @@ class Instrument:
             The bit value 0 or 1 (int).
 
         Raises:
-            ValueError, TypeError, IOError
+            TypeError, ValueError, ModbusException,
+            serial.SerialException (inherited from IOError)
 
         """
         _checkFunctioncode(functioncode, [1, 2])
@@ -216,7 +217,8 @@ class Instrument:
             None
 
         Raises:
-            ValueError, TypeError, IOError
+            TypeError, ValueError, ModbusException,
+            serial.SerialException (inherited from IOError)
 
         """
         _checkFunctioncode(functioncode, [5, 15])
@@ -264,7 +266,8 @@ class Instrument:
             The register data in numerical value (int or float).
 
         Raises:
-            ValueError, TypeError, IOError
+            TypeError, ValueError, ModbusException,
+            serial.SerialException (inherited from IOError)
 
         """
         _checkFunctioncode(functioncode, [3, 4])
@@ -321,7 +324,8 @@ class Instrument:
             None
 
         Raises:
-            ValueError, TypeError, IOError
+            TypeError, ValueError, ModbusException,
+            serial.SerialException (inherited from IOError)
 
         """
         _checkFunctioncode(functioncode, [6, 16])
@@ -361,7 +365,8 @@ class Instrument:
             The numerical value (int).
 
         Raises:
-            ValueError, TypeError, IOError
+            TypeError, ValueError, ModbusException,
+            serial.SerialException (inherited from IOError)
 
         """
         _checkFunctioncode(functioncode, [3, 4])
@@ -395,7 +400,8 @@ class Instrument:
             None
 
         Raises:
-            ValueError, TypeError, IOError
+            TypeError, ValueError, ModbusException,
+            serial.SerialException (inherited from IOError)
 
         """
         MAX_VALUE_LONG = 4294967295  # Unsigned INT32
@@ -447,7 +453,8 @@ class Instrument:
             The numerical value (float).
 
         Raises:
-            ValueError, TypeError, IOError
+            TypeError, ValueError, ModbusException,
+            serial.SerialException (inherited from IOError)
 
         """
         _checkFunctioncode(functioncode, [3, 4])
@@ -482,7 +489,8 @@ class Instrument:
             None
 
         Raises:
-            ValueError, TypeError, IOError
+            TypeError, ValueError, ModbusException,
+            serial.SerialException (inherited from IOError)
 
         """
         _checkNumerical(value, description="input value")
@@ -516,7 +524,8 @@ class Instrument:
             The string (str).
 
         Raises:
-            ValueError, TypeError, IOError
+            TypeError, ValueError, ModbusException,
+            serial.SerialException (inherited from IOError)
 
         """
         _checkFunctioncode(functioncode, [3, 4])
@@ -557,7 +566,8 @@ class Instrument:
             None
 
         Raises:
-            ValueError, TypeError, IOError
+            TypeError, ValueError, ModbusException,
+            serial.SerialException (inherited from IOError)
 
         """
         _checkInt(
@@ -600,7 +610,8 @@ class Instrument:
             The register data (a list of int).
 
         Raises:
-            ValueError, TypeError, IOError
+            TypeError, ValueError, ModbusException,
+            serial.SerialException (inherited from IOError)
 
         """
         _checkFunctioncode(functioncode, [3, 4])
@@ -641,7 +652,8 @@ class Instrument:
             None
 
         Raises:
-            ValueError, TypeError, IOError
+            TypeError, ValueError, ModbusException,
+            serial.SerialException (inherited from IOError)
 
         """
         if not isinstance(values, list):
@@ -705,7 +717,8 @@ class Instrument:
             1 (int), or ``None``.
 
         Raises:
-            ValueError, TypeError, IOError
+            TypeError, ValueError, ModbusException,
+            serial.SerialException (inherited from IOError)
 
         """
         NUMBER_OF_REQUESTED_BITS = 1
@@ -982,7 +995,8 @@ class Instrument:
             stripped of CRC etc.
 
         Raises:
-            ValueError, TypeError.
+            TypeError, ValueError, ModbusException,
+            serial.SerialException (inherited from IOError)
 
         Makes use of the :meth:`_communicate` method. The request is generated
         with the :func:`_embedPayload` function, and the parsing of the
@@ -1273,12 +1287,14 @@ def _extractPayload(response, slaveaddress, mode, functioncode):
 
     Args:
         * response (str): The raw response byte string from the slave.
+          This is different for RTU and ASCII.
         * slaveaddress (int): The adress of the slave. Used here for error checking only.
         * mode (str): The modbus protcol mode (MODE_RTU or MODE_ASCII)
         * functioncode (int): Used here for error checking only.
 
     Returns:
-        The payload part of the *response* string. TODO Is is different for RTU and ASCII???
+        The payload part of the *response* string. Conversion from Modbus ASCII
+        has been done if applicable.
 
     Raises:
         ValueError, TypeError, ModbusException (or subclasses).
@@ -1331,8 +1347,9 @@ def _extractPayload(response, slaveaddress, mode, functioncode):
             )
         )
 
-    # Validate the ASCII header and footer.
     if mode == MODE_ASCII:
+
+        # Validate the ASCII header and footer.
         if response[BYTEPOSITION_FOR_ASCII_HEADER] != _ASCII_HEADER:
             raise InvalidResponseError(
                 "Did not find header ({!r}) as start of ASCII response. The plain response is: {!r}".format(
@@ -1391,19 +1408,12 @@ def _extractPayload(response, slaveaddress, mode, functioncode):
             )
         )
 
+    # Check if slave indicates error
+    _checkResponseSlaveErrorCode(response)
+
     # Check function code
     receivedFunctioncode = ord(response[BYTEPOSITION_FOR_FUNCTIONCODE])
-
-    if receivedFunctioncode == _setBitOn(
-        functioncode, BITNUMBER_FUNCTIONCODE_ERRORINDICATION
-    ):
-        # TODO parse error code from slave
-
-        raise ValueError(
-            "The slave is indicating an error. The response is: {!r}".format(response)
-        )
-
-    elif receivedFunctioncode != functioncode:
+    if receivedFunctioncode != functioncode:
         raise InvalidResponseError(
             "Wrong functioncode: {} instead of {}. The response is: {!r}".format(
                 receivedFunctioncode, functioncode, response
@@ -2807,6 +2817,22 @@ def _checkRegisteraddress(registeraddress):
         REGISTERADDRESS_MAX,
         description="registeraddress",
     )
+
+
+def _checkResponseSlaveErrorCode(response):
+    # Kolla upp och beskriv hur resonse ser ut
+
+    #    if receivedFunctioncode == _setBitOn(
+   #     functioncode, BITNUMBER_FUNCTIONCODE_ERRORINDICATION
+    #):
+        # TODO parse error code from slave
+
+
+       # raise ValueError(
+      #      "The slave is indicating an error. The response is: {!r}".format(response)
+      #  )
+
+    pass
 
 
 def _checkResponseByteCount(payload):
