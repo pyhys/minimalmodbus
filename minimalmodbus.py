@@ -928,7 +928,7 @@ class Instrument:
         if functioncode in [1, 2]:
             registerdata = payloadFromSlave[NUMBER_OF_BYTES_BEFORE_REGISTERDATA:]
             if len(registerdata) != NUMBER_OF_BYTES_FOR_ONE_BIT:
-                raise ValueError(   # TODO change exception
+                raise InvalidResponseError(
                     "The registerdata length does not match NUMBER_OF_BYTES_FOR_ONE_BIT. "
                     + "Given {0}.".format(len(registerdata))
                 )
@@ -938,7 +938,7 @@ class Instrument:
         if functioncode in [3, 4]:
             registerdata = payloadFromSlave[NUMBER_OF_BYTES_BEFORE_REGISTERDATA:]
             if len(registerdata) != numberOfRegisterBytes:
-                raise ValueError(   # TODO change exception
+                raise InvalidResponseError(
                     "The registerdata length does not match number of register bytes. "
                     + "Given {0!r} and {1!r}.".format(
                         len(registerdata), numberOfRegisterBytes
@@ -1321,13 +1321,13 @@ def _extractPayload(response, slaveaddress, mode, functioncode):
     # Validate response length
     if mode == MODE_ASCII:
         if len(response) < MINIMAL_RESPONSE_LENGTH_ASCII:
-            raise ValueError(   # TODO  Change exception
+            raise InvalidResponseError(
                 "Too short Modbus ASCII response (minimum length {} bytes). Response: {!r}".format(
                     MINIMAL_RESPONSE_LENGTH_ASCII, response
                 )
             )
     elif len(response) < MINIMAL_RESPONSE_LENGTH_RTU:
-        raise ValueError(   # TODO  Change exception
+        raise InvalidResponseError(
             "Too short Modbus RTU response (minimum length {} bytes). Response: {!r}".format(
                 MINIMAL_RESPONSE_LENGTH_RTU, response
             )
@@ -1336,13 +1336,13 @@ def _extractPayload(response, slaveaddress, mode, functioncode):
     # Validate the ASCII header and footer.
     if mode == MODE_ASCII:
         if response[BYTEPOSITION_FOR_ASCII_HEADER] != _ASCII_HEADER:
-            raise ValueError(
+            raise InvalidResponseError(
                 "Did not find header ({!r}) as start of ASCII response. The plain response is: {!r}".format(
                     _ASCII_HEADER, response
                 )
             )
         elif response[-len(_ASCII_FOOTER):] != _ASCII_FOOTER:
-            raise ValueError(
+            raise InvalidResponseError(
                 "Did not find footer ({!r}) as end of ASCII response. The plain response is: {!r}".format(
                     _ASCII_FOOTER, response
                 )
@@ -1356,7 +1356,7 @@ def _extractPayload(response, slaveaddress, mode, functioncode):
                 "Stripped ASCII frames should have an even number of bytes, but is {} bytes. "
                 + "The stripped response is: {!r} (plain response: {!r})"
             )
-            raise ValueError(template.format(len(response), response, plainresponse))
+            raise InvalidResponseError(template.format(len(response), response, plainresponse))
 
         # Convert the ASCII (stripped) response string to RTU-like response string
         response = _hexdecode(response)
@@ -1381,13 +1381,13 @@ def _extractPayload(response, slaveaddress, mode, functioncode):
         text = template.format(
             mode, receivedChecksum, calculatedChecksum, response, plainresponse
         )
-        raise ValueError(text)
+        raise InvalidResponseError(text)
 
     # Check slave address
     responseaddress = ord(response[BYTEPOSITION_FOR_SLAVEADDRESS])
 
     if responseaddress != slaveaddress:
-        raise ValueError(
+        raise InvalidResponseError(
             "Wrong return slave address: {} instead of {}. The response is: {!r}".format(
                 responseaddress, slaveaddress, response
             )
@@ -1406,7 +1406,7 @@ def _extractPayload(response, slaveaddress, mode, functioncode):
         )
 
     elif receivedFunctioncode != functioncode:
-        raise ValueError(
+        raise InvalidResponseError(
             "Wrong functioncode: {} instead of {}. The response is: {!r}".format(
                 receivedFunctioncode, functioncode, response
             )

@@ -62,6 +62,12 @@ import unittest
 
 import dummy_serial
 import minimalmodbus
+from minimalmodbus import IllegalRequestError
+from minimalmodbus import InvalidResponseError
+from minimalmodbus import LocalEchoError
+from minimalmodbus import NegativeAcknowledgeError
+from minimalmodbus import NoResponseError
+from minimalmodbus import SlaveDeviceBusyError
 
 ALSO_TIME_CONSUMING_TESTS = True
 """Set this to :const:`False` to skip the most time consuming tests"""
@@ -207,23 +213,28 @@ class TestExtractPayload(ExtendedTestCase):
             self.assertEqual(result, knownresult)
 
     def testWrongInputValue(self):
-        self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc3',     2,     'rtu',   2) # Wrong CRC from slave
-        self.assertRaises(ValueError, minimalmodbus._extractPayload, ':0202313233F1\r\n',    2,     'ascii', 2) # Wrong LRC from slave
+        self.assertRaises(InvalidResponseError, minimalmodbus._extractPayload, '\x02\x02123X\xc3',     2,     'rtu',   2) # Wrong CRC from slave
+        self.assertRaises(InvalidResponseError, minimalmodbus._extractPayload, ':0202313233F1\r\n',    2,     'ascii', 2) # Wrong LRC from slave
         self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x82123q\x02',     2,     'rtu',   2) # Error indication from slave
         self.assertRaises(ValueError, minimalmodbus._extractPayload, ':0282313233E6\r\n',    2,     'ascii', 2)
-        self.assertRaises(ValueError, minimalmodbus._extractPayload, 'ABC',                  2,     'rtu',   2) # Too short message from slave
-        self.assertRaises(ValueError, minimalmodbus._extractPayload, 'ABCDEFGH',             2,     'ascii', 2)
-        self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x72123B\x02',     2,     'rtu',   2) # Wrong functioncode from slave
-        self.assertRaises(ValueError, minimalmodbus._extractPayload, ':020431323364\r\n',    2,     'ascii', 2)
-        self.assertRaises(ValueError, minimalmodbus._extractPayload, '020231323366\r\n',     2,     'ascii', 2) # Missing ASCII header
-        self.assertRaises(ValueError, minimalmodbus._extractPayload, ':020231323366',        2,     'ascii', 2) # Wrong ASCII footer
-        self.assertRaises(ValueError, minimalmodbus._extractPayload, ':020231323366\r',      2,     'ascii', 2)
-        self.assertRaises(ValueError, minimalmodbus._extractPayload, ':020231323366\n',      2,     'ascii', 2)
-        self.assertRaises(ValueError, minimalmodbus._extractPayload, ':02023132366\r\n',     2,     'ascii', 2) # Odd number of ASCII payload characters
+        self.assertRaises(InvalidResponseError, minimalmodbus._extractPayload, 'ABC',                  2,     'rtu',   2) # Too short message from slave
+        self.assertRaises(InvalidResponseError, minimalmodbus._extractPayload, 'ABCDEFGH',             2,     'ascii', 2)
+        self.assertRaises(InvalidResponseError, minimalmodbus._extractPayload, '\x02\x72123B\x02',     2,     'rtu',   2) # Wrong functioncode from slave
+        self.assertRaises(InvalidResponseError, minimalmodbus._extractPayload, ':020431323364\r\n',    2,     'ascii', 2)
+        self.assertRaises(InvalidResponseError, minimalmodbus._extractPayload, '020231323366\r\n',     2,     'ascii', 2) # Missing ASCII header
+        self.assertRaises(InvalidResponseError, minimalmodbus._extractPayload, ':020231323366',        2,     'ascii', 2) # Wrong ASCII footer
+        self.assertRaises(InvalidResponseError, minimalmodbus._extractPayload, ':020231323366\r',      2,     'ascii', 2)
+        self.assertRaises(InvalidResponseError, minimalmodbus._extractPayload, ':020231323366\n',      2,     'ascii', 2)
+        self.assertRaises(InvalidResponseError, minimalmodbus._extractPayload, ':02023132366\r\n',     2,     'ascii', 2) # Odd number of ASCII payload characters
 
-        for value in [3, 95, 128, 248, -1]:
-            self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', value, 'rtu',   2) # Wrong slave address
-            self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 2,     'rtu',   value) # Wrong functioncode
+        for value in [256, -1]:
+            self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', value, 'rtu', 2) # Invalid slave address
+        for value in [3, 95, 128]:
+            self.assertRaises(InvalidResponseError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', value, 'rtu', 2) # Wrong slave address
+        for value in [128, 256, -1]:
+            self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 2, 'rtu',   value) # Invalid functioncode
+        for value in [3, 95, 127]:
+            self.assertRaises(InvalidResponseError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 2, 'rtu',  value) # Wrong functioncode
 
         for value in ['RTU', 'ASCII', 'asc', '', ' ']:
             self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x02123X\xc2', 2,      value,  2) # Wrong mode
@@ -1674,19 +1685,19 @@ class TestDummyCommunication(ExtendedTestCase):
             self.assertRaises(TypeError, self.instrument.write_register, 35,    20,    functioncode = value)
 
     def testWriteRegisterWithWrongCrcResponse(self):
-        self.assertRaises(ValueError, self.instrument.write_register, 51, 99) # Slave gives wrong CRC
+        self.assertRaises(InvalidResponseError, self.instrument.write_register, 51, 99) # Slave gives wrong CRC
 
     def testWriteRegisterSuppressErrorMessageAtWrongCRC(self):
         try:
             self.instrument.write_register(51, 99) # Slave gives wrong CRC
-        except ValueError:
+        except InvalidResponseError:
             minimalmodbus._print_out('Minimalmodbus: An error was suppressed.')
 
     def testWriteRegisterWithWrongSlaveaddressResponse(self):
-        self.assertRaises(ValueError, self.instrument.write_register, 54, 99) # Slave gives wrong slaveaddress
+        self.assertRaises(InvalidResponseError, self.instrument.write_register, 54, 99) # Slave gives wrong slaveaddress
 
     def testWriteRegisterWithWrongFunctioncodeResponse(self):
-        self.assertRaises(ValueError, self.instrument.write_register, 55, 99) # Slave gives wrong functioncode
+        self.assertRaises(InvalidResponseError, self.instrument.write_register, 55, 99) # Slave gives wrong functioncode
         self.assertRaises(ValueError, self.instrument.write_register, 56, 99) # Slave indicates an error
 
     def testWriteRegisterWithWrongRegisteraddressResponse(self):
@@ -1761,8 +1772,9 @@ class TestDummyCommunication(ExtendedTestCase):
         self.assertRaises(ValueError, self.instrument.read_float, 103,   1)  # Wrong function code
         self.assertRaises(ValueError, self.instrument.read_float, 103,   -1)
         self.assertRaises(ValueError, self.instrument.read_float, 103,   256)
-        for value in [-1, 0, 1, 3, 5, 6, 7, 8, 16]:
+        for value in [-1, 0, 1, 5, 6, 7, 8, 16]:
             self.assertRaises(ValueError, self.instrument.read_float, 103, 3,  value) # Wrong number of registers
+        self.assertRaises(InvalidResponseError, self.instrument.read_float, 103, 3,  3) # Wrong number of registers
 
     def testReadFloatWrongType(self):
         for value in _NOT_INTERGERS:
@@ -1998,11 +2010,11 @@ class TestDummyCommunication(ExtendedTestCase):
         self.assertEqual( self.instrument._performCommand(2, '\x00\x3d\x00\x01'), '\x01\x01' ) # Read bit register 61 on slave 1 using function code 2.
 
     def testPerformcommandWrongSlaveResponse(self):
-        self.assertRaises(ValueError, self.instrument._performCommand, 1,  'TESTCOMMAND') # Wrong slave address in response
-        self.assertRaises(ValueError, self.instrument._performCommand, 2,  'TESTCOMMAND') # Wrong function code in response
-        self.assertRaises(ValueError, self.instrument._performCommand, 3,  'TESTCOMMAND') # Wrong crc in response
-        self.assertRaises(ValueError, self.instrument._performCommand, 4,  'TESTCOMMAND') # Too short response message from slave
-        self.assertRaises(ValueError, self.instrument._performCommand, 5,  'TESTCOMMAND') # Error indication from slave
+        self.assertRaises(InvalidResponseError, self.instrument._performCommand, 1,  'TESTCOMMAND') # Wrong slave address in response
+        self.assertRaises(InvalidResponseError, self.instrument._performCommand, 2,  'TESTCOMMAND') # Wrong function code in response
+        self.assertRaises(InvalidResponseError, self.instrument._performCommand, 3,  'TESTCOMMAND') # Wrong crc in response
+        self.assertRaises(InvalidResponseError, self.instrument._performCommand, 4,  'TESTCOMMAND') # Too short response message from slave
+        self.assertRaises(InvalidResponseError, self.instrument._performCommand, 5,  'TESTCOMMAND') # Error indication from slave
 
     def testPerformcommandWrongInputValue(self):
         self.assertRaises(ValueError, self.instrument._performCommand, -1,  'TESTCOMMAND') # Wrong function code
