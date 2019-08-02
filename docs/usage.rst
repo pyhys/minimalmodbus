@@ -181,6 +181,8 @@ Different types of errors should be handled separately.
 
 TODO serial.serialutil.SerialException
      ModbusException(IOError)
+    TypeError
+	ValueError
 
 Subclassing
 -----------

@@ -69,8 +69,6 @@ _ALL_PAYLOADFORMATS = [
     _PAYLOADFORMAT_REGISTERS,
 ]
 
-
-
 # ######################## #
 # Modbus instrument object #
 # ######################## #
@@ -718,7 +716,6 @@ class Instrument:
         # Payload format constants, so datatypes can be told apart.
         # Note that bit datatype not is included, because it uses other functioncodes.
 
-
         # # Check input values # #
         _checkFunctioncode(functioncode, ALL_ALLOWED_FUNCTIONCODES)
         _checkRegisteraddress(registeraddress)
@@ -1281,11 +1278,12 @@ def _extractPayload(response, slaveaddress, mode, functioncode):
         * functioncode (int): Used here for error checking only.
 
     Returns:
-        The payload part of the *response* string.
+        The payload part of the *response* string. TODO Is is different for RTU and ASCII???
 
     Raises:
-        ValueError, TypeError, ModbusException. Raises an exception if there is any problem with
-        the received address, the functioncode or the CRC.
+        ValueError, TypeError, ModbusException (or subclasses).
+
+    Raises an exception if there is any problem with the received address, the functioncode or the CRC.
 
     The received response should have the format:
     * RTU Mode: slaveaddress byte + functioncode byte + payloaddata + CRC (which is two bytes)
@@ -1923,6 +1921,7 @@ def _valuelistToBytestring(valuelist, numberOfRegisters):
         * valuelist (list of int): The input list. The elements should be in the
           range 0 to 65535.
         * numberOfRegisters (int): The number of registers. For error checking.
+          Should equal the number of elements in valuelist.
 
     Returns:
         A bytestring (str). Length = 2*numberOfRegisters
@@ -2176,13 +2175,13 @@ def _hexlify(bytestring):
 
 
 def _bitResponseToValue(bytestring):
-    r"""Convert a response string to a numerical value.
+    r"""Convert a response string (for a single bit) to a numerical value.
 
     Args:
         * bytestring (str): A string of length 1. Can be for example ``\x01``.
 
     Returns:
-        The converted value (int).
+        The converted value (int), could be 0 or 1.
 
     Raises:
         TypeError, ValueError
@@ -2198,8 +2197,10 @@ def _bitResponseToValue(bytestring):
     elif bytestring == RESPONSE_OFF:
         return 0
     else:
-        raise ValueError(  # TODO change exception
-            "Could not convert bit response to a value. Input: {0!r}".format(bytestring)
+        raise InvalidResponseError(
+            "Could not convert bit response to a value (for single bit reading)."
+            + " Your instrument does not follow the Modbus standard."
+            + " Input: {0!r}".format(bytestring)
         )
 
 
@@ -2824,7 +2825,12 @@ def _checkResponseByteCount(payload):
     POSITION_FOR_GIVEN_NUMBER = 0
     NUMBER_OF_BYTES_TO_SKIP = 1
 
-    _checkString(payload, minlength=1, description="payload")  # TODO change exception type
+    _checkString(
+        payload,
+        minlength=1,
+        description="payload",
+        exception_type=InvalidResponseError
+    )
 
     givenNumberOfDatabytes = ord(payload[POSITION_FOR_GIVEN_NUMBER])
     countedNumberOfDatabytes = len(payload) - NUMBER_OF_BYTES_TO_SKIP
@@ -2848,13 +2854,19 @@ def _checkResponseRegisterAddress(payload, registeraddress):
 
     Args:
         * payload (string): The payload
-        * registeraddress (int): The register address (use decimal numbers, not hex).
+        * registeraddress (int): What the register address actually shoud be
+          (use decimal numbers, not hex).
 
     Raises:
         TypeError, ValueError, InvalidResponseError
 
     """
-    _checkString(payload, minlength=2, description="payload")  # TODO change exception type
+    _checkString(
+        payload,
+        minlength=2,
+        description="payload",
+        exception_type=InvalidResponseError
+    )
     _checkRegisteraddress(registeraddress)
 
     BYTERANGE_FOR_STARTADDRESS = slice(0, 2)
@@ -2884,7 +2896,12 @@ def _checkResponseNumberOfRegisters(payload, numberOfRegisters):
         TypeError, ValueError, InvalidResponseError
 
     """
-    _checkString(payload, minlength=4, description="payload")  # TODO change exception type
+    _checkString(
+        payload,
+        minlength=4,
+        description="payload",
+        exception_type=InvalidResponseError
+    )
     _checkInt(
         numberOfRegisters,
         minvalue=1,
@@ -2916,13 +2933,19 @@ def _checkResponseWriteData(payload, writedata):
 
     Args:
         * payload (string): The payload
-        * writedata (string): The data to write, length should be 2 bytes.
+        * writedata (string): The data that should have been  written.
+          Length should be 2 bytes.
 
     Raises:
         TypeError, ValueError, InvalidResponseError
 
     """
-    _checkString(payload, minlength=4, description="payload") # TODO change exception type
+    _checkString(
+        payload,
+        minlength=4,
+        description="payload",
+        exception_type=InvalidResponseError
+    )
     _checkString(writedata, minlength=2, maxlength=2, description="writedata")
 
     BYTERANGE_FOR_WRITEDATA = slice(2, 4)
@@ -2939,7 +2962,12 @@ def _checkResponseWriteData(payload, writedata):
 
 
 def _checkString(
-    inputstring, description, minlength=0, maxlength=None, force_ascii=False
+    inputstring,
+    description,
+    minlength=0,
+    maxlength=None,
+    force_ascii=False,
+    exception_type=ValueError
 ):
     """Check that the given string is valid.
 
@@ -2949,11 +2977,12 @@ def _checkString(
         * minlength (int): Minimum length of the string
         * maxlength (int or None): Maximum length of the string
         * force_ascii (bool): Enforce that the string is ASCII
+        * exception_type (Exception): The type of exception to raise for length errors
 
     The force_ascii argument is valid only for Python3, as all strings are ASCII in Python2.
 
     Raises:
-        TypeError, ValueError
+        TypeError, ValueError or the one given by exception_type
 
     Uses the function :func:`_checkInt` internally.
 
@@ -2974,11 +3003,16 @@ def _checkString(
             "The maxlength must be an integer or None. Given: {0!r}".format(maxlength)
         )
 
+    if not issubclass(exception_type, Exception):
+        raise TypeError(
+            "The exception_type must be an exception. Given: {0!r}".format(type(exception_type))
+        )
+
     # Check values
     _checkInt(minlength, minvalue=0, maxvalue=None, description="minlength")
 
     if len(inputstring) < minlength:
-        raise ValueError(
+        raise exception_type(
             "The {0} is too short: {1}, but minimum value is {2}. Given: {3!r}".format(
                 description, len(inputstring), minlength, inputstring
             )
@@ -2998,7 +3032,7 @@ def _checkString(
             )
 
         if len(inputstring) > maxlength:
-            raise ValueError(
+            raise exception_type(
                 "The {0} is too long: {1}, but maximum value is {2}. Given: {3!r}".format(
                     description, len(inputstring), maxlength, inputstring
                 )

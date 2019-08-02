@@ -987,8 +987,8 @@ class TestBitResponseToValue(ExtendedTestCase):
 
     def testWrongValues(self):
         self.assertRaises(ValueError, minimalmodbus._bitResponseToValue, 'ABC')   # Too long string
-        self.assertRaises(ValueError, minimalmodbus._bitResponseToValue, 'A')     # Wrong string
-        self.assertRaises(ValueError, minimalmodbus._bitResponseToValue, '\x03')  # Wrong string
+        self.assertRaises(InvalidResponseError, minimalmodbus._bitResponseToValue, 'A')     # Wrong string
+        self.assertRaises(InvalidResponseError, minimalmodbus._bitResponseToValue, '\x03')  # Wrong string
 
     def testWrongType(self):
         for value in _NOT_STRINGS:
@@ -1286,10 +1286,12 @@ class TestCheckResponseNumberOfBytes(ExtendedTestCase):
 
     def testCorrectNumberOfBytes(self):
         minimalmodbus._checkResponseByteCount('\x02\x03\x02')
+        minimalmodbus._checkResponseByteCount('\x0C\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C')
 
     def testWrongNumberOfBytes(self):
         self.assertRaises(InvalidResponseError, minimalmodbus._checkResponseByteCount, '\x03\x03\x02')
         self.assertRaises(InvalidResponseError, minimalmodbus._checkResponseByteCount, 'ABC')
+        self.assertRaises(InvalidResponseError, minimalmodbus._checkResponseByteCount, '')
 
     def testNotStringInput(self):
         for value in _NOT_STRINGS:
@@ -1304,17 +1306,17 @@ class TestCheckResponseRegisterAddress(ExtendedTestCase):
         minimalmodbus._checkResponseRegisterAddress( '\x00\x47\xff\x00', 71)
         minimalmodbus._checkResponseRegisterAddress( '\x00\x48\x00\x01', 72)
 
-    def testWrongResponseRegisterAddress(self):
-        self.assertRaises(InvalidResponseError, minimalmodbus._checkResponseRegisterAddress, '\x00\x2d\x00\x58', 46)
-
     def testTooShortString(self):
-        self.assertRaises(ValueError, minimalmodbus._checkResponseRegisterAddress, '\x00', 46)
+        self.assertRaises(InvalidResponseError, minimalmodbus._checkResponseRegisterAddress, '\x00', 46)
 
     def testNotString(self):
         for value in _NOT_STRINGS:
             self.assertRaises(TypeError, minimalmodbus._checkResponseRegisterAddress, value, 45)
 
-    def testWrongAddress(self):
+    def testWrongResponseRegisterAddress(self):
+        self.assertRaises(InvalidResponseError, minimalmodbus._checkResponseRegisterAddress, '\x00\x2d\x00\x58', 46)
+
+    def testInvalidAddress(self):
         self.assertRaises(ValueError, minimalmodbus._checkResponseRegisterAddress, '\x00\x2d\x00\x58', -2)
         self.assertRaises(ValueError, minimalmodbus._checkResponseRegisterAddress, '\x00\x2d\x00\x58', 65536)
 
@@ -1330,17 +1332,17 @@ class TestCheckResponseNumberOfRegisters(ExtendedTestCase):
         minimalmodbus._checkResponseNumberOfRegisters( '\x00#\x00\x01',    1 )
         minimalmodbus._checkResponseNumberOfRegisters( '\x00\x34\x00\x02', 2 )
 
-    def testWrongResponseNumberOfRegisters(self):
-        self.assertRaises(InvalidResponseError, minimalmodbus._checkResponseNumberOfRegisters, '\x00#\x00\x01', 4 )
-
     def testTooShortString(self):
-        self.assertRaises(ValueError, minimalmodbus._checkResponseNumberOfRegisters, '\x00', 1 )
+        self.assertRaises(InvalidResponseError, minimalmodbus._checkResponseNumberOfRegisters, '\x00', 1 )
 
     def testNotString(self):
         for value in _NOT_STRINGS:
             self.assertRaises(TypeError, minimalmodbus._checkResponseNumberOfRegisters, value, 1 )
 
-    def testWrongResponseNumberOfRegistersRange(self):
+    def testWrongResponseNumberOfRegisters(self):
+        self.assertRaises(InvalidResponseError, minimalmodbus._checkResponseNumberOfRegisters, '\x00#\x00\x01', 4 )
+
+    def testInvalidResponseNumberOfRegistersRange(self):
         self.assertRaises(ValueError, minimalmodbus._checkResponseNumberOfRegisters, '\x00\x18\x00\x00', 0 )
         self.assertRaises(ValueError, minimalmodbus._checkResponseNumberOfRegisters, '\x00\x18\x00\x01', -1 )
         self.assertRaises(ValueError, minimalmodbus._checkResponseNumberOfRegisters, '\x00\x18\x00\x01', 65536 )
@@ -1369,14 +1371,14 @@ class TestCheckResponseWriteData(ExtendedTestCase):
             self.assertRaises(TypeError, minimalmodbus._checkResponseWriteData, value, '\x00\x58')
             self.assertRaises(TypeError, minimalmodbus._checkResponseWriteData, '\x00\x2d\x00\x58', value)
 
-    def testTooShortString(self):
-        self.assertRaises(ValueError, minimalmodbus._checkResponseWriteData, '\x00\x58', '\x00\x58')
-        self.assertRaises(ValueError, minimalmodbus._checkResponseWriteData, '', '\x00\x58')
+    def testTooShortPayload(self):
+        self.assertRaises(InvalidResponseError, minimalmodbus._checkResponseWriteData, '\x00\x58', '\x00\x58')
+        self.assertRaises(InvalidResponseError, minimalmodbus._checkResponseWriteData, '', '\x00\x58')
+
+    def testInvalidReferenceData(self):
+        self.assertRaises(ValueError, minimalmodbus._checkResponseWriteData, '\x00\x2d\x00\x58', '\x00\x58\x00')
         self.assertRaises(ValueError, minimalmodbus._checkResponseWriteData, '\x00\x2d\x00\x58', '\x58')
         self.assertRaises(ValueError, minimalmodbus._checkResponseWriteData, '\x00\x2d\x00\x58', '')
-
-    def testTooLongString(self):
-        self.assertRaises(ValueError, minimalmodbus._checkResponseWriteData, '\x00\x2d\x00\x58', '\x00\x58\x00')
 
 
 class TestCheckString(ExtendedTestCase):
@@ -1414,6 +1416,10 @@ class TestCheckString(ExtendedTestCase):
     def testDescriptionNotString(self):
         for value in _NOT_STRINGS:
             self.assertRaises(TypeError, minimalmodbus._checkString, 'DEF', minlength=3, maxlength=3, description=value)
+
+    def testCustomError(self):
+        for ex in [NotImplementedError, MemoryError, InvalidResponseError]:
+            self.assertRaises(ex, minimalmodbus._checkString, 'DE',  minlength=3,  description='ABC', exception_type=ex)
 
 
 class TestCheckInt(ExtendedTestCase):
