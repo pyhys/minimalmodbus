@@ -37,6 +37,8 @@ if sys.version > "3":
     long = int
 
 _NUMBER_OF_BYTES_PER_REGISTER = 2
+_MAX_NUMBER_OF_REGISTERS_TO_WRITE = 123
+_MAX_NUMBER_OF_REGISTERS_TO_READ = 125
 _SECONDS_TO_MILLISECONDS = 1000
 _ASCII_HEADER = ":"
 _ASCII_FOOTER = "\r\n"
@@ -252,7 +254,10 @@ class Instrument:
         """
         _checkFunctioncode(functioncode, [3, 4])
         _checkInt(
-            numberOfDecimals, minvalue=0, maxvalue=10, description="number of decimals"
+            numberOfDecimals,
+            minvalue=0,
+            maxvalue=10,  # Some instrument might store 0.00000154 Ampere as 154 etc
+            description="number of decimals"
         )
         _checkBool(signed, description="signed")
         return self._genericCommand(
@@ -306,7 +311,10 @@ class Instrument:
         """
         _checkFunctioncode(functioncode, [6, 16])
         _checkInt(
-            numberOfDecimals, minvalue=0, maxvalue=10, description="number of decimals"
+            numberOfDecimals,
+            minvalue=0,
+            maxvalue=10,  # Some instrument might store 0.00000154 Ampere as 154 etc
+            description="number of decimals"
         )
         _checkBool(signed, description="signed")
         _checkNumerical(value, description="input value")
@@ -500,6 +508,7 @@ class Instrument:
         _checkInt(
             numberOfRegisters,
             minvalue=1,
+            maxvalue=_MAX_NUMBER_OF_REGISTERS_TO_READ,
             description="number of registers for read string",
         )
         return self._genericCommand(
@@ -539,6 +548,7 @@ class Instrument:
         _checkInt(
             numberOfRegisters,
             minvalue=1,
+            maxvalue=_MAX_NUMBER_OF_REGISTERS_TO_WRITE,
             description="number of registers for write string",
         )
         _checkString(
@@ -580,8 +590,11 @@ class Instrument:
         """
         _checkFunctioncode(functioncode, [3, 4])
         _checkInt(
-            numberOfRegisters, minvalue=1, description="number of registers"
-        )  # TODO max 125
+            numberOfRegisters,
+            minvalue=1,
+            maxvalue=_MAX_NUMBER_OF_REGISTERS_TO_READ,
+            description="number of registers"
+        )
         return self._genericCommand(
             functioncode,
             registeraddress,
@@ -621,8 +634,11 @@ class Instrument:
                 'The "values parameter" must be a list. Given: {0!r}'.format(values)
             )
         _checkInt(
-            len(values), minvalue=1, description="length of input list"
-        )  # TODO max 123 registers
+            len(values),
+            minvalue=1,
+            maxvalue=_MAX_NUMBER_OF_REGISTERS_TO_WRITE,
+            description="length of input list"
+        )
         # Note: The content of the list is checked at content conversion.
 
         self._genericCommand(

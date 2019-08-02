@@ -1621,7 +1621,7 @@ class TestDummyCommunication(ExtendedTestCase):
         self.assertRaises(ValueError, self.instrument.read_register, -1,   0,  3)
         self.assertRaises(ValueError, self.instrument.read_register, 65536)
         self.assertRaises(ValueError, self.instrument.read_register, 289,  -1)    # Wrong number of decimals
-        self.assertRaises(ValueError, self.instrument.read_register, 289,  100)
+        self.assertRaises(ValueError, self.instrument.read_register, 289,  11)
         self.assertRaises(ValueError, self.instrument.read_register, 289,  0,  5) # Wrong function code
         self.assertRaises(ValueError, self.instrument.read_register, 289,  0,  -4)
 
@@ -1797,7 +1797,7 @@ class TestDummyCommunication(ExtendedTestCase):
         self.assertRaises(ValueError, self.instrument.read_string, -1) # Wrong register address
         self.assertRaises(ValueError, self.instrument.read_string, 65536)
         self.assertRaises(ValueError, self.instrument.read_string, 104,  -1) # Wrong number of registers
-        self.assertRaises(ValueError, self.instrument.read_string, 104,  256)
+        self.assertRaises(ValueError, self.instrument.read_string, 104,  126)
         self.assertRaises(ValueError, self.instrument.read_string, 104,  4,  1)  # Wrong function code
         self.assertRaises(ValueError, self.instrument.read_string, 104,  4,  -1)
         self.assertRaises(ValueError, self.instrument.read_string, 104,  4,  256)
@@ -1823,7 +1823,7 @@ class TestDummyCommunication(ExtendedTestCase):
         self.assertRaises(ValueError, self.instrument.write_string, 104,   'AAA',       1) # Too long string
         self.assertRaises(ValueError, self.instrument.write_string, 104,   'ABCDEFGHI', 4)
         self.assertRaises(ValueError, self.instrument.write_string, 104,   'A',         -1) # Wrong number of registers
-        self.assertRaises(ValueError, self.instrument.write_string, 104,   'A',         256)
+        self.assertRaises(ValueError, self.instrument.write_string, 104,   'A',         124)
         # TODO When Python3 only, add test with non-ASCII characters and force_ascii=True
 
     def testWriteStringWrongType(self):
@@ -1844,7 +1844,7 @@ class TestDummyCommunication(ExtendedTestCase):
         self.assertRaises(ValueError, self.instrument.read_registers, -1,    1) # Wrong register address
         self.assertRaises(ValueError, self.instrument.read_registers, 65536, 1)
         self.assertRaises(ValueError, self.instrument.read_registers, 105,   -1) # Wrong number of registers
-        self.assertRaises(ValueError, self.instrument.read_registers, 105,   256)
+        self.assertRaises(ValueError, self.instrument.read_registers, 105,   126)
         self.assertRaises(ValueError, self.instrument.read_registers, 105,   1,  1) # Wrong function code
         self.assertRaises(ValueError, self.instrument.read_registers, 105,   1,  256)
         self.assertRaises(ValueError, self.instrument.read_registers, 105,   1,  -1)
@@ -1861,12 +1861,14 @@ class TestDummyCommunication(ExtendedTestCase):
     def testWriteRegisters(self):
         self.instrument.write_registers(105, [2])
         self.instrument.write_registers(105, [2, 4, 8])
+        #  self.instrument.write_registers(105, [2]*123)  # Todo create suitable response
 
     def testWriteRegistersWrongValue(self):
-        self.assertRaises(ValueError, self.instrument.write_registers, -1,    [2]) # Wrong register address
+        self.assertRaises(ValueError, self.instrument.write_registers, -1,    [2])  # Wrong register address
         self.assertRaises(ValueError, self.instrument.write_registers, 65536, [2])
-        self.assertRaises(ValueError, self.instrument.write_registers, 105,   []) # Wrong list value
+        self.assertRaises(ValueError, self.instrument.write_registers, 105,   [])  # Wrong list value
         self.assertRaises(ValueError, self.instrument.write_registers, 105,   [-1])
+        self.assertRaises(ValueError, self.instrument.write_registers, 105,   [2]*124)  # Wrong number of registers
 
     def testWriteRegistersWrongType(self):
         for value in _NOT_INTERGERS:
