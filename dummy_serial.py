@@ -141,11 +141,11 @@ class Serial:
         """Write to a port on dummy_serial.
 
         Args:
-            inputdata (string/bytes): data for sending to the port on dummy_serial. Will affect the response 
+            inputdata (string/bytes): data for sending to the port on dummy_serial. Will affect the response
             for subsequent read operations.
 
         Note that for Python2, the inputdata should be a **string**. For Python3 it should be of type **bytes**.
-        
+
         """
         if VERBOSE:
             _print_out(
@@ -181,7 +181,7 @@ class Serial:
         and what is defined in the :data:`RESPONSES` dictionary.
 
         Args:
-            numberOfBytes (int): For compability with the real function. 
+            numberOfBytes (int): For compability with the real function.
 
         Returns a **string** for Python2 and **bytes** for Python3.
 

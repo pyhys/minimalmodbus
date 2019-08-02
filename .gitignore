@@ -1,5 +1,9 @@
 *.py[cod]
 
+
+# Editor settings
+.vscode/
+
 # C extensions
 *.so
 

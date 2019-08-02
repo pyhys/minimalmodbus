@@ -151,13 +151,10 @@ class Instrument:
 
     def __repr__(self):
         """Give string representation of the :class:`.Instrument` object."""
-        return "{}.{}<id=0x{:x}, \
-                    address={}, \
-                    mode={}, \
-                    close_port_after_each_call={}, \
-                    precalculate_read_size={}, \
-                    debug={}, \
-                    serial={}>".format(
+        template = (
+            "{}.{}<id=0x{:x}, address={}, mode={}, close_port_after_each_call={}, "
+            + "precalculate_read_size={}, debug={}, serial={}>")
+        return template.format(
             self.__module__,
             self.__class__.__name__,
             id(self),
