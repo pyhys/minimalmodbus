@@ -70,6 +70,7 @@ _ALL_PAYLOADFORMATS = [
 ]
 
 
+
 # ######################## #
 # Modbus instrument object #
 # ######################## #
@@ -1183,6 +1184,38 @@ class Instrument:
 
         return answer
 
+# ########## #
+# Exceptions #
+# ########## #
+
+class ModbusException(IOError):
+    """Base class for Modbus communication exceptions. Inherits from IOError,
+    which is an alias for OSError in Python3."""
+
+class SlaveReportedException(ModbusException):
+    """Base class for exceptions that the slave (instrument) reports."""
+
+class MasterReportedException(ModbusException):
+    """Base class for exceptions that the master (computer) detects."""
+
+class SlaveDeviceBusyError(SlaveReportedException):
+    """The slave is busy processing some command."""
+
+class NegativeAcknowledgeError(SlaveReportedException):
+    """The slave can not fulfil the programming request
+    (typically with function code 13 or 14 decimal). """
+
+class IllegalRequestError(SlaveReportedException):
+    """The slave has received an illegal request."""
+
+class NoResponseError(MasterReportedException):
+    """No response from the slave."""
+
+class LocalEchoError(MasterReportedException):
+    """There is some problem with the local echo."""
+
+class InvalidResponseError(MasterReportedException):
+    """The response does not fulfill the Modbus standad, for example wrong checksum."""
 
 # ################ #
 # Payload handling #
