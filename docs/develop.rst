@@ -731,7 +731,6 @@ TODO
 
 See also Github issues: https://github.com/pyhys/minimalmodbus/issues
 
-* Improved documentation (especially the sections with TODO).
 * Increase test coverage for minimalmodbus.py
 * Improve the dummy_serial behavior, to better mimic Windows behavior.
 * Unittests for measuring the sleep time in _communicate.

@@ -1288,8 +1288,8 @@ class TestCheckResponseNumberOfBytes(ExtendedTestCase):
         minimalmodbus._checkResponseByteCount('\x02\x03\x02')
 
     def testWrongNumberOfBytes(self):
-        self.assertRaises(ValueError, minimalmodbus._checkResponseByteCount, '\x03\x03\x02')
-        self.assertRaises(ValueError, minimalmodbus._checkResponseByteCount, 'ABC')
+        self.assertRaises(InvalidResponseError, minimalmodbus._checkResponseByteCount, '\x03\x03\x02')
+        self.assertRaises(InvalidResponseError, minimalmodbus._checkResponseByteCount, 'ABC')
 
     def testNotStringInput(self):
         for value in _NOT_STRINGS:
@@ -1305,7 +1305,7 @@ class TestCheckResponseRegisterAddress(ExtendedTestCase):
         minimalmodbus._checkResponseRegisterAddress( '\x00\x48\x00\x01', 72)
 
     def testWrongResponseRegisterAddress(self):
-        self.assertRaises(ValueError, minimalmodbus._checkResponseRegisterAddress, '\x00\x2d\x00\x58', 46)
+        self.assertRaises(InvalidResponseError, minimalmodbus._checkResponseRegisterAddress, '\x00\x2d\x00\x58', 46)
 
     def testTooShortString(self):
         self.assertRaises(ValueError, minimalmodbus._checkResponseRegisterAddress, '\x00', 46)
@@ -1331,7 +1331,7 @@ class TestCheckResponseNumberOfRegisters(ExtendedTestCase):
         minimalmodbus._checkResponseNumberOfRegisters( '\x00\x34\x00\x02', 2 )
 
     def testWrongResponseNumberOfRegisters(self):
-        self.assertRaises(ValueError, minimalmodbus._checkResponseNumberOfRegisters, '\x00#\x00\x01', 4 )
+        self.assertRaises(InvalidResponseError, minimalmodbus._checkResponseNumberOfRegisters, '\x00#\x00\x01', 4 )
 
     def testTooShortString(self):
         self.assertRaises(ValueError, minimalmodbus._checkResponseNumberOfRegisters, '\x00', 1 )
@@ -1360,9 +1360,9 @@ class TestCheckResponseWriteData(ExtendedTestCase):
         minimalmodbus._checkResponseWriteData('\x00\x2d\x00\x58ABCDEFGHIJKLMNOP', '\x00\x58')
 
     def testWrongResponseWritedata(self):
-        self.assertRaises(ValueError, minimalmodbus._checkResponseWriteData, '\x00\x2d\x00\x58', '\x00\x59')
-        self.assertRaises(ValueError, minimalmodbus._checkResponseWriteData, '\x00\x2d\x00\x58', minimalmodbus._numToTwoByteString(89))
-        self.assertRaises(ValueError, minimalmodbus._checkResponseWriteData, '\x00\x47\xff\x00', '\xff\x01')
+        self.assertRaises(InvalidResponseError, minimalmodbus._checkResponseWriteData, '\x00\x2d\x00\x58', '\x00\x59')
+        self.assertRaises(InvalidResponseError, minimalmodbus._checkResponseWriteData, '\x00\x2d\x00\x58', minimalmodbus._numToTwoByteString(89))
+        self.assertRaises(InvalidResponseError, minimalmodbus._checkResponseWriteData, '\x00\x47\xff\x00', '\xff\x01')
 
     def testNotString(self):
         for value in _NOT_STRINGS:
@@ -1576,10 +1576,10 @@ class TestDummyCommunication(ExtendedTestCase):
             self.assertRaises(TypeError, self.instrument.read_bit, 62,   value)
 
     def testReadBitWithWrongByteCountResponse(self):
-        self.assertRaises(ValueError, self.instrument.read_bit, 63) # Functioncode 2. Slave gives wrong byte count.
+        self.assertRaises(InvalidResponseError, self.instrument.read_bit, 63) # Functioncode 2. Slave gives wrong byte count.
 
     def testReadBitWithNoResponse(self):
-        self.assertRaises(IOError, self.instrument.read_bit, 64) # Functioncode 2. Slave gives no response.
+        self.assertRaises(NoResponseError, self.instrument.read_bit, 64) # Functioncode 2. Slave gives no response.
 
 
     ## Write bit ##
@@ -1613,10 +1613,10 @@ class TestDummyCommunication(ExtendedTestCase):
             self.assertRaises(TypeError, self.instrument.write_bit, 71,    1,     value)
 
     def testWriteBitWithWrongRegisternumbersResponse(self):
-        self.assertRaises(ValueError, self.instrument.write_bit, 73, 1, functioncode=15) # Slave gives wrong number of registers
+        self.assertRaises(InvalidResponseError, self.instrument.write_bit, 73, 1, functioncode=15) # Slave gives wrong number of registers
 
     def testWriteBitWithWrongWritedataResponse(self):
-        self.assertRaises(ValueError, self.instrument.write_bit, 74, 1) # Slave gives wrong write data
+        self.assertRaises(InvalidResponseError, self.instrument.write_bit, 74, 1) # Slave gives wrong write data
 
 
     ## Read register ##
@@ -1701,13 +1701,13 @@ class TestDummyCommunication(ExtendedTestCase):
         self.assertRaises(ValueError, self.instrument.write_register, 56, 99) # Slave indicates an error
 
     def testWriteRegisterWithWrongRegisteraddressResponse(self):
-        self.assertRaises(ValueError, self.instrument.write_register, 53, 99) # Slave gives wrong registeraddress
+        self.assertRaises(InvalidResponseError, self.instrument.write_register, 53, 99) # Slave gives wrong registeraddress
 
     def testWriteRegisterWithWrongRegisternumbersResponse(self):
-        self.assertRaises(ValueError, self.instrument.write_register, 52, 99) # Slave gives wrong number of registers
+        self.assertRaises(InvalidResponseError, self.instrument.write_register, 52, 99) # Slave gives wrong number of registers
 
     def testWriteRegisterWithWrongWritedataResponse(self):
-        self.assertRaises(ValueError, self.instrument.write_register, 55, 99, functioncode = 6) # Functioncode 6. Slave gives wrong write data.
+        self.assertRaises(InvalidResponseError, self.instrument.write_register, 55, 99, functioncode = 6) # Functioncode 6. Slave gives wrong write data.
 
 
     ## Read Long ##
@@ -2040,11 +2040,11 @@ class TestDummyCommunication(ExtendedTestCase):
         self.assertRaises(ValueError, self.instrument._communicate, '', _LARGE_NUMBER_OF_BYTES)
 
     def testCommunicateNoResponse(self):
-        self.assertRaises(IOError, self.instrument._communicate, 'MessageForEmptyResponse', _LARGE_NUMBER_OF_BYTES)
+        self.assertRaises(NoResponseError, self.instrument._communicate, 'MessageForEmptyResponse', _LARGE_NUMBER_OF_BYTES)
 
     def testCommunicateLocalEcho(self):
         self.instrument.handle_local_echo = True
-        self.assertEqual( self.instrument._communicate('TESTMESSAGE2', _LARGE_NUMBER_OF_BYTES), 'TESTRESPONSE2' )
+        self.assertEqual(self.instrument._communicate('TESTMESSAGE2', _LARGE_NUMBER_OF_BYTES), 'TESTRESPONSE2' )
 
     def testCommunicateWrongLocalEcho(self):
         self.instrument.handle_local_echo = True

@@ -1038,7 +1038,8 @@ class Instrument:
             The raw data (string) returned from the slave.
 
         Raises:
-            TypeError, ValueError, IOError
+            TypeError, ValueError, ModbusException,
+            serial.SerialException (inherited from IOError)
 
         Note that the answer might have strange ASCII control signs, which
         makes it difficult to print it in the promt (messes up a bit).
@@ -1127,8 +1128,7 @@ class Instrument:
 
         # Write request
         latest_write_time = _now()
-
-        self.serial.write(request)  # TODO might raise SerialTimeoutException
+        self.serial.write(request)
 
         # Read and discard local echo
         if self.handle_local_echo:
@@ -1151,7 +1151,7 @@ class Instrument:
                     local_echo_to_discard,
                     len(local_echo_to_discard),
                 )
-                raise IOError(text)   # TODO change exception
+                raise LocalEchoError(text)
 
         # Read response
         answer = self.serial.read(number_of_bytes_to_read)
@@ -1180,7 +1180,7 @@ class Instrument:
             _print_out(text)
 
         if len(answer) == 0:
-            raise IOError("No communication with the instrument (no answer)")
+            raise NoResponseError("No communication with the instrument (no answer)")
 
         return answer
 
@@ -1284,7 +1284,7 @@ def _extractPayload(response, slaveaddress, mode, functioncode):
         The payload part of the *response* string.
 
     Raises:
-        ValueError, TypeError. Raises an exception if there is any problem with
+        ValueError, TypeError, ModbusException. Raises an exception if there is any problem with
         the received address, the functioncode or the CRC.
 
     The received response should have the format:
@@ -1310,8 +1310,8 @@ def _extractPayload(response, slaveaddress, mode, functioncode):
     MINIMAL_RESPONSE_LENGTH_RTU = NUMBER_OF_RESPONSE_STARTBYTES + NUMBER_OF_CRC_BYTES
     MINIMAL_RESPONSE_LENGTH_ASCII = 9
 
-    # Argument validity testing
-    _checkString(response, description="response")  # ValueError at lib programming error
+    # Argument validity testing (ValueError/TypeError at lib programming error)
+    _checkString(response, description="response")
     _checkSlaveaddress(slaveaddress)
     _checkMode(mode)
     _checkFunctioncode(functioncode, None)
@@ -2818,7 +2818,7 @@ def _checkResponseByteCount(payload):
         payload (string): The payload
 
     Raises:
-        TypeError, ValueError
+        TypeError, ValueError, InvalidResponseError
 
     """
     POSITION_FOR_GIVEN_NUMBER = 0
@@ -2838,7 +2838,7 @@ def _checkResponseByteCount(payload):
         errortext = errortemplate.format(
             givenNumberOfDatabytes, countedNumberOfDatabytes, len(payload), payload
         )
-        raise ValueError(errortext)  # TODO change exception type
+        raise InvalidResponseError(errortext)
 
 
 def _checkResponseRegisterAddress(payload, registeraddress):
@@ -2851,7 +2851,7 @@ def _checkResponseRegisterAddress(payload, registeraddress):
         * registeraddress (int): The register address (use decimal numbers, not hex).
 
     Raises:
-        TypeError, ValueError
+        TypeError, ValueError, InvalidResponseError
 
     """
     _checkString(payload, minlength=2, description="payload")  # TODO change exception type
@@ -2863,7 +2863,7 @@ def _checkResponseRegisterAddress(payload, registeraddress):
     receivedStartAddress = _twoByteStringToNum(bytesForStartAddress)
 
     if receivedStartAddress != registeraddress:
-        raise ValueError(  # TODO change exception type
+        raise InvalidResponseError(
             "Wrong given write start adress: "
             + "{0}, but commanded is {1}. The data payload is: {2!r}".format(
                 receivedStartAddress, registeraddress, payload
@@ -2881,16 +2881,18 @@ def _checkResponseNumberOfRegisters(payload, numberOfRegisters):
         * numberOfRegisters (int): Number of registers that have been written
 
     Raises:
-        TypeError, ValueError
+        TypeError, ValueError, InvalidResponseError
 
     """
     _checkString(payload, minlength=4, description="payload")  # TODO change exception type
     _checkInt(
         numberOfRegisters,
         minvalue=1,
-        maxvalue=0xFFFF,  # TODO change
-        description="numberOfRegisters"
-        # TODO change exception type
+        maxvalue=max(
+            _MAX_NUMBER_OF_REGISTERS_TO_READ,
+            _MAX_NUMBER_OF_REGISTERS_TO_WRITE
+        ),
+        description="number of registers",
     )
 
     BYTERANGE_FOR_NUMBER_OF_REGISTERS = slice(2, 4)
@@ -2899,7 +2901,7 @@ def _checkResponseNumberOfRegisters(payload, numberOfRegisters):
     receivedNumberOfWrittenReisters = _twoByteStringToNum(bytesForNumberOfRegisters)
 
     if receivedNumberOfWrittenReisters != numberOfRegisters:
-        raise ValueError( # TODO change exception type
+        raise InvalidResponseError(
             "Wrong number of registers to write in the response: "
             + "{0}, but commanded is {1}. The data payload is: {2!r}".format(
                 receivedNumberOfWrittenReisters, numberOfRegisters, payload
@@ -2917,18 +2919,18 @@ def _checkResponseWriteData(payload, writedata):
         * writedata (string): The data to write, length should be 2 bytes.
 
     Raises:
-        TypeError, ValueError
+        TypeError, ValueError, InvalidResponseError
 
     """
     _checkString(payload, minlength=4, description="payload") # TODO change exception type
-    _checkString(writedata, minlength=2, maxlength=2, description="writedata") # TODO change exception type
+    _checkString(writedata, minlength=2, maxlength=2, description="writedata")
 
     BYTERANGE_FOR_WRITEDATA = slice(2, 4)
 
     receivedWritedata = payload[BYTERANGE_FOR_WRITEDATA]
 
     if receivedWritedata != writedata:
-        raise ValueError( # TODO change exception type
+        raise InvalidResponseError(
             "Wrong write data in the response: "
             + "{0!r}, but commanded is {1!r}. The data payload is: {2!r}".format(
                 receivedWritedata, writedata, payload
