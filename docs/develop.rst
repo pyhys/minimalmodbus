@@ -740,6 +740,7 @@ See also Github issues: https://github.com/pyhys/minimalmodbus/issues
     * Change internal representation to byterray
     * Better printout of the bytearray in error messages
     * Tool for interpretation of Modbus messages
+    * Use Enum for payloadformat
     * Add type hinting
     * Run mypy checks
     * Possibly use pytest istead

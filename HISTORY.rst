@@ -6,7 +6,7 @@ History
 Release 1.0 (2019-08-??)
 -------------------------
 * Requires pyserial 3.0 or later
-* Removed example drivers for Eurotherm 3500 and Omegacn 7500, as I no longer have 
+* Removed example drivers for Eurotherm 3500 and Omegacn 7500, as I no longer have
   access for these instruments for testing. It would great if someone would pick
   up support for these instruments in a separate project.
 * Removed module level constants for default values, as they were confusingly named.
@@ -16,6 +16,7 @@ Release 1.0 (2019-08-??)
 * Use time.monotonic if available. Suggested by Matthias Bolte.
 * Implemented write timeout, to avoid hanging when writing. Instead it will raise an exception.
   Reported by Austin Stover.
+* Better checking of number of registers when reading and writing.
 * Improved documentation
 
 
@@ -45,7 +46,7 @@ Release 0.6 (2014-06-22)
 Release 0.5 (2014-03-23)
 --------------------------
 * Precalculating number of bytes to read, in order to increase the speed.
-* Better handling of several instruments on the same serial port, especially 
+* Better handling of several instruments on the same serial port, especially
   for Windows.
 * Improved timing for better compliance with Modbus timing requirements.
 
@@ -94,7 +95,7 @@ This is a major rewrite, but the API is backward compatible.
 
 Release 0.2 (2011-08-19)
 ------------------------
-* Changes in how to reference the serial port. 
+* Changes in how to reference the serial port.
 * Updated documentation.
 
 

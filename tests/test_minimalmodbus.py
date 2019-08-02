@@ -431,6 +431,7 @@ class TestNumToTwoByteString(ExtendedTestCase):
         for LsbFirst in [False, True]:
             # Range 0-65535
             self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, 77,    -1, LsbFirst)
+            self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, 77,    11, LsbFirst)
             if _runTestsForNewVersion:  # For compatibility with Python2.6
                 self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, 77000, 0,  LsbFirst) # Gives DeprecationWarning instead of ValueError for Python 2.6
                 self.assertRaises(ValueError, minimalmodbus._numToTwoByteString, 65536, 0,  LsbFirst)
@@ -473,6 +474,7 @@ class TestTwoByteStringToNum(ExtendedTestCase):
         self.assertRaises(ValueError, minimalmodbus._twoByteStringToNum, 'ABC', 1)
         self.assertRaises(ValueError, minimalmodbus._twoByteStringToNum, 'A',   1)
         self.assertRaises(ValueError, minimalmodbus._twoByteStringToNum, 'AB',  -1)
+        self.assertRaises(ValueError, minimalmodbus._twoByteStringToNum, 'AB',  11)
 
     def testWrongInputType(self):
         for value in _NOT_STRINGS:
@@ -731,12 +733,13 @@ class TestSanityValuelist(ExtendedTestCase):
 class TestTextstringToBytestring(ExtendedTestCase):
 
     knownValues = [
-        ('A',    1, 'A '),
-        ('AB',   1, 'AB'),
-        ('ABC',  2, 'ABC '),
-        ('ABCD', 2, 'ABCD'),
-        ('A',    16, 'A'+' '*31),
-        ('A',    32, 'A'+' '*63),
+        ('A',      1, 'A '),
+        ('AB',     1, 'AB'),
+        ('ABC',    2, 'ABC '),
+        ('ABCD',   2, 'ABCD'),
+        ('A',      16, 'A'+' '*31),
+        ('A',      32, 'A'+' '*63),
+        ('A'*246, 123, 'A'*246),
         ]
 
     def testKnownValues(self):
@@ -748,6 +751,7 @@ class TestTextstringToBytestring(ExtendedTestCase):
         self.assertRaises(ValueError, minimalmodbus._textstringToBytestring, 'ABC', 1)
         self.assertRaises(ValueError, minimalmodbus._textstringToBytestring, '',    1)
         self.assertRaises(ValueError, minimalmodbus._textstringToBytestring, 'A',   -1)
+        self.assertRaises(ValueError, minimalmodbus._textstringToBytestring, 'A',   124)
 
     def testWrongInputType(self):
         for value in _NOT_STRINGS:
@@ -772,6 +776,7 @@ class TestBytestringToTextstring(ExtendedTestCase):
         self.assertRaises(ValueError, minimalmodbus._bytestringToTextstring, 'ABC', 1)
         self.assertRaises(ValueError, minimalmodbus._bytestringToTextstring, 'AB',  0)
         self.assertRaises(ValueError, minimalmodbus._bytestringToTextstring, 'AB',  -1)
+        self.assertRaises(ValueError, minimalmodbus._bytestringToTextstring, 'AB',  126)
 
     def testWrongInputType(self):
         for value in _NOT_STRINGS:
