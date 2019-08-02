@@ -16,7 +16,7 @@
 #
 
 """
-.. moduleauthor:: Jonas Berg 
+.. moduleauthor:: Jonas Berg
 
 """
 
