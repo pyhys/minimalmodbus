@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #   Copyright 2019 Jonas Berg
 #
@@ -49,12 +49,9 @@ Wrong write data in response           write_bit             5
 Wrong write data in response           write_register        6
 =====================================  ===================== =================================
 
-
 """
-
 __author__  = "Jonas Berg"
 __license__ = "Apache License, Version 2.0"
-
 
 import sys
 import time
@@ -2120,12 +2117,18 @@ class TestDummyCommunication(ExtendedTestCase):
         self.instrument.handle_local_echo = True
         self.assertRaises(IOError, self.instrument._communicate, 'TESTMESSAGE3', _LARGE_NUMBER_OF_BYTES) # TODO is this correct?
 
+    def testPortWillBeOpened(self):
+        self.instrument.serial.close()
+        self.instrument.write_bit(71, 1)
+
     ## __repr__ ##
 
     def testRepresentation(self):
         representation = repr(self.instrument)
         self.assertTrue( 'minimalmodbus.Instrument<id=' in representation )
-        self.assertTrue( ', address=1, mode=rtu, close_port_after_each_call=False, precalculate_read_size=True, debug=False, serial=dummy_serial.Serial<id=' in representation )
+        self.assertTrue( ', address=1, mode=rtu, close_port_after_each_call=False, ' in representation )
+        self.assertTrue( ', precalculate_read_size=True, clear_buffers_before_each_transaction=True, ' in representation )
+        self.assertTrue( ', handle_local_echo=False, debug=False, ' in representation )
         self.assertTrue( ", open=True>(port=" in representation )
 
 
@@ -2133,18 +2136,14 @@ class TestDummyCommunication(ExtendedTestCase):
 
     def testReadPortClosed(self):
         self.instrument.serial.close()
-        self.assertRaises(IOError, self.instrument.serial.read, 1000)  # TODO  Kolla dessa
-
-    def testWritePortClosed(self):
-        self.instrument.serial.close()
-        self.assertRaises(IOError, self.instrument.write_bit, 71, 1)
+        self.assertRaises(IOError, self.instrument.serial.read, 1000)  # Error raised by dummy_serial
 
     def testPortAlreadyOpen(self):
-        self.assertRaises(IOError, self.instrument.serial.open)
+        self.assertRaises(IOError, self.instrument.serial.open)  # Error raised by dummy_serial
 
     def testPortAlreadyClosed(self):
         self.instrument.serial.close()
-        self.assertRaises(IOError, self.instrument.serial.close)
+        self.assertRaises(IOError, self.instrument.serial.close)  # Error raised by dummy_serial
 
 
     ## Tear down test fixture ##
@@ -2324,21 +2323,17 @@ class TestDummyCommunicationWithPortClosure(ExtendedTestCase):
         dummy_serial.DEFAULT_RESPONSE = 'NotFoundInResponseDictionary'
         dummy_serial.DEFAULT_TIMEOUT = 0.01
         minimalmodbus.serial.Serial = dummy_serial.Serial
-        minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = True # Mimic a WindowsXP serial port
         self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1) # port name, slave address (in decimal)
+        self.instrument.close_port_after_each_call = True # Mimic a WindowsXP serial port
 
     def testReadRegisterSeveralTimes(self):
-        self.assertEqual( self.instrument.read_register(289), 770 )
-        self.assertEqual( self.instrument.read_register(289), 770 )
-        self.assertEqual( self.instrument.read_register(289), 770 )
-
-    def testPortAlreadyOpen(self):
-        self.assertEqual( self.instrument.read_register(289), 770 )
-        self.instrument.serial.open()
-        self.assertRaises(IOError, self.instrument.read_register, 289)
+        self.assertEqual(self.instrument.read_register(289), 770)
+        self.assertEqual(self.instrument.read_register(289), 770)
+        self.assertEqual(self.instrument.read_register(289), 770)
 
     def testPortAlreadyClosed(self):
-        self.assertEqual( self.instrument.read_register(289), 770 )
+        self.assertEqual(self.instrument.read_register(289), 770)
+        self.assertEqual(self.instrument.serial.is_open, False)
         self.assertRaises(IOError, self.instrument.serial.close)
 
     def tearDown(self):
@@ -2358,8 +2353,8 @@ class TestVerboseDummyCommunicationWithPortClosure(ExtendedTestCase):
         dummy_serial.DEFAULT_RESPONSE = 'NotFoundInResponseDictionary'
         dummy_serial.DEFAULT_TIMEOUT = 0.01
         minimalmodbus.serial.Serial = dummy_serial.Serial
-        minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = True # Mimic a WindowsXP serial port
         self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1) # port name, slave address (in decimal)
+        self.instrument.close_port_after_each_call = True # Mimic a WindowsXP serial port
 
     def testReadRegister(self):
         self.assertEqual( self.instrument.read_register(289), 770 )
@@ -2381,7 +2376,6 @@ class TestDummyCommunicationDebugmode(ExtendedTestCase):
         dummy_serial.DEFAULT_RESPONSE = 'NotFoundInResponseDictionary'
         dummy_serial.DEFAULT_TIMEOUT = 0.01
         minimalmodbus.serial.Serial = dummy_serial.Serial
-        minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = False
         self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1) # port name, slave address (in decimal)
         self.instrument.debug = True
 
@@ -2400,7 +2394,6 @@ class TestDummyCommunicationHandleLocalEcho(ExtendedTestCase):
         dummy_serial.DEFAULT_RESPONSE = 'NotFoundInResponseDictionary'
         dummy_serial.DEFAULT_TIMEOUT = 0.01
         minimalmodbus.serial.Serial = dummy_serial.Serial
-        minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = False
         self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 20) # port name, slave address (in decimal)
         self.instrument.debug = True
         self.instrument.handle_local_echo = True
@@ -2414,7 +2407,6 @@ class TestDummyCommunicationHandleLocalEcho(ExtendedTestCase):
     def tearDown(self):
         self.instrument = None
         del(self.instrument)
-
 
 
 RTU_RESPONSES = {}

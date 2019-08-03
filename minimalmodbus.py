@@ -78,9 +78,6 @@ _ALL_PAYLOADFORMATS = [
 # Modbus instrument object #
 # ######################## #
 
-CLOSE_PORT_AFTER_EACH_CALL = False  # TODO remove
-
-
 class Instrument:
     """Instrument class for talking to instruments (slaves) via the Modbus RTU or ASCII
     protocols (via RS485 or RS232).
@@ -91,11 +88,63 @@ class Instrument:
         * slaveaddress (int): Slave address in the range 1 to 247 (use decimal numbers,
           not hex). Address 0 is for broadcast, and 248-255 are reserved.
         * mode (str): Mode selection. Can be MODE_RTU or MODE_ASCII.
+        * close_port_after_each_call (bool): If the serial port should be closed after
+          each call to the instrument.
 
     """
 
-    def __init__(self, port, slaveaddress, mode=MODE_RTU):
+    def __init__(self, port, slaveaddress, mode=MODE_RTU, close_port_after_each_call=False):
         """Initialize instrument and open corresponding serial port."""
+        self.address = slaveaddress
+        """Slave address (int). Most often set by the constructor
+        (see the class documentation). """
+
+        self.mode = mode
+        """Slave mode (str), can be MODE_RTU or MODE_ASCII.
+        Most often set by the constructor (see the class documentation).
+
+        New in version 0.6.
+        """
+
+        self.precalculate_read_size = True
+        """If this is :const:`False`, the serial port reads until timeout
+        instead of just reading a specific number of bytes. Defaults to :const:`True`.
+
+        New in version 0.5.
+        """
+
+        self.debug = False
+        """Set this to :const:`True` to print the communication details.
+        Defaults to :const:`False`."""
+
+        self.clear_buffers_before_each_transaction = True
+        """If this is :const:`True`, the serial port read and write buffers are
+        cleared before each request to the instrument, to avoid cumulative byte
+        sync errors across multiple messages. Defaults to :const:`True`.
+        Changing this will not affect how other instruments use the same serial port.
+
+        New in version 1.0.
+        """
+
+        self.close_port_after_each_call = close_port_after_each_call
+        """If this is :const:`True`, the serial port will be closed after each
+        call. Defaults to :const:`False`. Changing this will not affect how other
+        instruments use the same serial port.
+
+        Most often set by the constructor (see the class documentation).
+        """
+
+        self.handle_local_echo = False
+        """Set to to :const:`True` if your RS-485 adaptor has local echo enabled.
+        Then the transmitted message will immeadiately appear at the receive
+        line of the RS-485 adaptor. MinimalModbus will then read and discard
+        this data, before reading the data from the slave.
+        Defaults to :const:`False`. Changing this will not affect how other
+        instruments use the same serial port.
+
+        New in version 0.7.
+        """
+
         self.serial = None
         """The serial port object as defined by the pySerial module. Created by the constructor.
 
@@ -115,7 +164,8 @@ class Instrument:
             - write_timeout (float): Write timeout value in seconds.
                 - Defaults to 2.0 s.
         """
-        if port not in _serialports or not _serialports[port]:
+
+        if port not in _serialports or not _serialports[port]: # TODO ??
             self.serial = _serialports[port] = serial.Serial(
                 port=port,
                 baudrate=19200,
@@ -127,46 +177,10 @@ class Instrument:
             )
         else:
             self.serial = _serialports[port]
-            if self.serial.port is None:
+            if self.serial.port is None:  # TODO ??
                 self.serial.open()
-
-        self.address = slaveaddress
-        """Slave address (int). Most often set by the constructor
-        (see the class documentation). """
-
-        self.mode = mode
-        """Slave mode (str), can be MODE_RTU or MODE_ASCII.
-        Most often set by the constructor (see the class documentation).
-
-        New in version 0.6.
-        """
-
-        self.debug = False
-        """Set this to :const:`True` to print the communication details.
-        Defaults to :const:`False`."""
-
-        self.close_port_after_each_call = CLOSE_PORT_AFTER_EACH_CALL  # TODO modify
-        # self.close_port_after_each_call = False
-        """If this is :const:`True`, the serial port will be closed after each
-        call. Defaults to :const:`False`. To change it, set the value
-        ``minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL=True`` ."""  # TODO
-
-        self.precalculate_read_size = True
-        """If this is :const:`False`, the serial port reads until timeout
-        instead of just reading a specific number of bytes. Defaults to :const:`True`.
-
-        New in version 0.5.
-        """
-
-        self.handle_local_echo = False
-        """Set to to :const:`True` if your RS-485 adaptor has local echo enabled.
-        Then the transmitted message will immeadiately appear at the receive
-        line of the RS-485 adaptor. MinimalModbus will then read and discard
-        this data, before reading the data from the slave.
-        Defaults to :const:`False`.
-
-        New in version 0.7.
-        """
+            if not self.serial.is_open:
+                self.serial.open()
 
         if self.close_port_after_each_call:
             self.serial.close()
@@ -175,7 +189,8 @@ class Instrument:
         """Give string representation of the :class:`.Instrument` object."""
         template = (
             "{}.{}<id=0x{:x}, address={}, mode={}, close_port_after_each_call={}, "
-            + "precalculate_read_size={}, debug={}, serial={}>")
+            + "precalculate_read_size={}, clear_buffers_before_each_transaction={}, "
+            + "handle_local_echo={}, debug={}, serial={}>")
         return template.format(
             self.__module__,
             self.__class__.__name__,
@@ -184,6 +199,8 @@ class Instrument:
             self.mode,
             self.close_port_after_each_call,
             self.precalculate_read_size,
+            self.clear_buffers_before_each_transaction,
+            self.handle_local_echo,
             self.debug,
             self.serial,
         )
@@ -1100,10 +1117,14 @@ class Instrument:
                 )
             )
 
-        if self.close_port_after_each_call:
+        if not self.serial.is_open:
             self.serial.open()
 
-        # self.serial.flushInput() TODO
+        if self.clear_buffers_before_each_transaction:
+            if self.debug:
+                _print_out("Clearing serial buffers ...")
+            self.serial.reset_input_buffer()
+            self.serial.reset_output_buffer()
 
         if sys.version_info[0] > 2:
             request = bytes(
@@ -1183,7 +1204,7 @@ class Instrument:
         if self.debug:
             template = (
                 "MinimalModbus debug mode. Response from instrument: {!r} ({}) ({} bytes), "
-                + "roundtrip time: {:.1f} ms. Timeout setting: {:.1f} ms.\n"
+                + "roundtrip time: {:.1f} ms. Timeout for reading: {:.1f} ms.\n"
             )
             text = template.format(
                 answer,

@@ -12,18 +12,19 @@ Contributors
 
 Significant contributions by:
 
-Aaron LaLonde
-Angelo Compagnucci
-Asier Abalos
-Austin Stover
-Dino
-Dominik Socha
-Edwin van den Oetelaar
-Github user: draput
-Github user: gnbl
-Luca Di Gregorio
-Matthias Bolte
-Michael Penza
-Peter
-Russ Garrett
-Simon Funke
+* Aaron LaLonde
+* Angelo Compagnucci
+* Asier Abalos
+* Austin Stover
+* Dino
+* Dominik Socha
+* Edwin van den Oetelaar
+* Github user: draput
+* Github user: gnbl
+* Github user: mrrs6
+* Luca Di Gregorio
+* Matthias Bolte
+* Michael Penza
+* Peter
+* Russ Garrett
+* Simon Funke

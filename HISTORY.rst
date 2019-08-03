@@ -11,6 +11,9 @@ Release 1.0 (2019-08-??)
   up support for these instruments in a separate project.
 * Removed module level constants for default values, as they were confusingly named.
 * Allow slave addresses also in the reserved range (up to 255). Reported by Github user gnbl.
+* Serial port read and write buffers are cleared before each request to the instrument.
+  Pull request from Github user mrrs6.
+* Chech whether the serial port is open before trying to open it. Reported by Matthias Bolte.
 * Custom exceptions for Modbus errors, by Russ Garrett.
 * Silent period between messages is at least 1.75 ms to fulfill Modbus standard. Reported
   by Github user draput.

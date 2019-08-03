@@ -1,6 +1,5 @@
-#!/usr/bin/env python
 #
-#   Copyright 2012 Jonas Berg
+#   Copyright 2019 Jonas Berg
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -14,7 +13,6 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-
 """
 
 .. moduleauthor:: Jonas Berg
@@ -22,10 +20,8 @@
 dummy_serial: A dummy/mock implementation of a serial port for testing purposes.
 
 """
-
 __author__ = "Jonas Berg"
 __license__ = "Apache License, Version 2.0"
-
 
 import sys
 import time
@@ -73,7 +69,7 @@ NO_DATA_PRESENT = ""
 class Serial:
     """Dummy (mock) serial port for testing purposes.
 
-    Mimics the behavior of a serial port as defined by the `pySerial <http://pyserial.sourceforge.net/>`_ module.
+    Mimics the behavior of a serial port as defined by the `pySerial <https://github.com/pyserial/pyserial>`_ module.
 
     Args:
         * port:
@@ -114,6 +110,16 @@ class Serial:
             self.timeout,
             self._waiting_data,
         )
+
+    @property
+    def is_open(self):
+        return self._isOpen
+
+    def reset_input_buffer(self):
+        pass
+
+    def reset_output_buffer(self):
+        pass
 
     def open(self):
         """Open a (previously initialized) port on dummy_serial."""
