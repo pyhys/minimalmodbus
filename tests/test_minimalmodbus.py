@@ -65,9 +65,12 @@ import minimalmodbus
 from minimalmodbus import IllegalRequestError
 from minimalmodbus import InvalidResponseError
 from minimalmodbus import LocalEchoError
+from minimalmodbus import MasterReportedException
+from minimalmodbus import ModbusException
 from minimalmodbus import NegativeAcknowledgeError
 from minimalmodbus import NoResponseError
 from minimalmodbus import SlaveDeviceBusyError
+from minimalmodbus import SlaveReportedException
 
 ALSO_TIME_CONSUMING_TESTS = True
 """Set this to :const:`False` to skip the most time consuming tests"""
@@ -215,8 +218,8 @@ class TestExtractPayload(ExtendedTestCase):
     def testWrongInputValue(self):
         self.assertRaises(InvalidResponseError, minimalmodbus._extractPayload, '\x02\x02123X\xc3',     2,     'rtu',   2) # Wrong CRC from slave
         self.assertRaises(InvalidResponseError, minimalmodbus._extractPayload, ':0202313233F1\r\n',    2,     'ascii', 2) # Wrong LRC from slave
-        self.assertRaises(ValueError, minimalmodbus._extractPayload, '\x02\x82123q\x02',     2,     'rtu',   2) # Error indication from slave
-        self.assertRaises(ValueError, minimalmodbus._extractPayload, ':0282313233E6\r\n',    2,     'ascii', 2)
+        self.assertRaises(SlaveReportedException, minimalmodbus._extractPayload, '\x02\x82123q\x02',   2,     'rtu',   2) # Error indication from slave
+        self.assertRaises(SlaveReportedException, minimalmodbus._extractPayload, ':0282313233E6\r\n',  2,     'ascii', 2)
         self.assertRaises(InvalidResponseError, minimalmodbus._extractPayload, 'ABC',                  2,     'rtu',   2) # Too short message from slave
         self.assertRaises(InvalidResponseError, minimalmodbus._extractPayload, 'ABCDEFGH',             2,     'ascii', 2)
         self.assertRaises(InvalidResponseError, minimalmodbus._extractPayload, '\x02\x72123B\x02',     2,     'rtu',   2) # Wrong functioncode from slave
@@ -1122,9 +1125,9 @@ class TestSanityTwosComplement(ExtendedTestCase):
 class TestSetBitOn(ExtendedTestCase):
 
     knownValues=[
-    (4,0,5),
-    (4,1,6),
-    (1,1,3),
+        (4, 0, 5),
+        (4, 1, 6),
+        (1, 1, 3),
     ]
 
     def testKnownValues(self):
@@ -1141,6 +1144,41 @@ class TestSetBitOn(ExtendedTestCase):
         for value in _NOT_INTERGERS:
             self.assertRaises(TypeError, minimalmodbus._setBitOn, value, 1)
             self.assertRaises(TypeError, minimalmodbus._setBitOn, 1,     value)
+
+
+class TestCheckBit(ExtendedTestCase):
+
+    knownValues=[
+        (0, 0, False),
+        (0, 1, False),
+        (0, 2, False),
+        (0, 3, False),
+        (0, 4, False),
+        (0, 5, False),
+        (0, 6, False),
+        (4, 0, False),
+        (4, 1, False),
+        (4, 2, True),
+        (4, 3, False),
+        (4, 4, False),
+        (4, 5, False),
+        (4, 5, False),
+    ]
+
+    def testKnownValues(self):
+        for x, bitnum, knownresult in self.knownValues:
+
+            result = minimalmodbus._checkBit(x, bitnum)
+            self.assertEqual(result, knownresult)
+
+    def testWrongInputValue(self):
+        self.assertRaises(ValueError, minimalmodbus._checkBit, 1,  -1)
+        self.assertRaises(ValueError, minimalmodbus._checkBit, -2, 1)
+
+    def testWrongInputType(self):
+        for value in _NOT_INTERGERS:
+            self.assertRaises(TypeError, minimalmodbus._checkBit, value, 1)
+            self.assertRaises(TypeError, minimalmodbus._checkBit, 1,     value)
 
 ############################
 # Error checking functions #
@@ -1280,6 +1318,32 @@ class TestCheckRegisteraddress(ExtendedTestCase):
     def testWrongType(self):
         for value in _NOT_INTERGERS:
             self.assertRaises(TypeError, minimalmodbus._checkRegisteraddress, value)
+
+class TestCheckResponseSlaveErrorCode(ExtendedTestCase):
+
+    def testResponsesWithoutErrors(self):
+        minimalmodbus._checkResponseSlaveErrorCode('\x01\x01\x01\x00Q\x88')
+        minimalmodbus._checkResponseSlaveErrorCode('\x01\x01\x05')
+        minimalmodbus._checkResponseSlaveErrorCode('\x01\x81\x05')
+
+    def testResponsesWithErrors(self):
+        self.assertRaises(IllegalRequestError,      minimalmodbus._checkResponseSlaveErrorCode, '\x01\x81\x01')
+        self.assertRaises(IllegalRequestError,      minimalmodbus._checkResponseSlaveErrorCode, '\x01\x81\x02')
+        self.assertRaises(IllegalRequestError,      minimalmodbus._checkResponseSlaveErrorCode, '\x01\x81\x03')
+        self.assertRaises(SlaveReportedException,   minimalmodbus._checkResponseSlaveErrorCode, '\x01\x81\x04')
+        self.assertRaises(SlaveDeviceBusyError,     minimalmodbus._checkResponseSlaveErrorCode, '\x01\x81\x06')
+        self.assertRaises(NegativeAcknowledgeError, minimalmodbus._checkResponseSlaveErrorCode, '\x01\x81\x07')
+        self.assertRaises(SlaveReportedException,   minimalmodbus._checkResponseSlaveErrorCode, '\x01\x81\x08')
+        self.assertRaises(SlaveReportedException,   minimalmodbus._checkResponseSlaveErrorCode, '\x01\x81\x09')
+        self.assertRaises(SlaveReportedException,   minimalmodbus._checkResponseSlaveErrorCode, '\x01\x81\x0A')
+        self.assertRaises(SlaveReportedException,   minimalmodbus._checkResponseSlaveErrorCode, '\x01\x81\x0B')
+        self.assertRaises(SlaveReportedException,   minimalmodbus._checkResponseSlaveErrorCode, '\x01\x81\x0C')
+        self.assertRaises(SlaveReportedException,   minimalmodbus._checkResponseSlaveErrorCode, '\x01\x81\xFF')
+
+    def testTooShortResponses(self):
+        minimalmodbus._checkResponseSlaveErrorCode("")
+        minimalmodbus._checkResponseSlaveErrorCode("A")
+        minimalmodbus._checkResponseSlaveErrorCode("AB")
 
 
 class TestCheckResponseNumberOfBytes(ExtendedTestCase):
@@ -1704,7 +1768,7 @@ class TestDummyCommunication(ExtendedTestCase):
 
     def testWriteRegisterWithWrongFunctioncodeResponse(self):
         self.assertRaises(InvalidResponseError, self.instrument.write_register, 55, 99) # Slave gives wrong functioncode
-        self.assertRaises(ValueError, self.instrument.write_register, 56, 99) # Slave indicates an error
+        self.assertRaises(SlaveReportedException, self.instrument.write_register, 56, 99) # Slave indicates an error
 
     def testWriteRegisterWithWrongRegisteraddressResponse(self):
         self.assertRaises(InvalidResponseError, self.instrument.write_register, 53, 99) # Slave gives wrong registeraddress
@@ -2043,7 +2107,7 @@ class TestDummyCommunication(ExtendedTestCase):
             self.assertRaises(TypeError, self.instrument._communicate, value, _LARGE_NUMBER_OF_BYTES)
 
     def testCommunicateNoMessage(self):
-        self.assertRaises(ValueError, self.instrument._communicate, '', _LARGE_NUMBER_OF_BYTES)
+        self.assertRaises(ValueError, self.instrument._communicate, '', _LARGE_NUMBER_OF_BYTES)  # TODO is this correct?
 
     def testCommunicateNoResponse(self):
         self.assertRaises(NoResponseError, self.instrument._communicate, 'MessageForEmptyResponse', _LARGE_NUMBER_OF_BYTES)
@@ -2054,7 +2118,7 @@ class TestDummyCommunication(ExtendedTestCase):
 
     def testCommunicateWrongLocalEcho(self):
         self.instrument.handle_local_echo = True
-        self.assertRaises(IOError, self.instrument._communicate, 'TESTMESSAGE3', _LARGE_NUMBER_OF_BYTES)
+        self.assertRaises(IOError, self.instrument._communicate, 'TESTMESSAGE3', _LARGE_NUMBER_OF_BYTES) # TODO is this correct?
 
     ## __repr__ ##
 
@@ -2069,7 +2133,7 @@ class TestDummyCommunication(ExtendedTestCase):
 
     def testReadPortClosed(self):
         self.instrument.serial.close()
-        self.assertRaises(IOError, self.instrument.serial.read, 1000)
+        self.assertRaises(IOError, self.instrument.serial.read, 1000)  # TODO  Kolla dessa
 
     def testWritePortClosed(self):
         self.instrument.serial.close()
@@ -2995,7 +3059,8 @@ if __name__ == '__main__':
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestDummyCommunicationHandleLocalEcho)
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestCalculateCrcString)
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestHexdecode)
-
+    #suite = unittest.TestLoader().loadTestsFromTestCase(TestCheckResponseSlaveErrorCode)
+    #suite = unittest.TestLoader().loadTestsFromTestCase(TestExtractBit)
     #unittest.TextTestRunner(verbosity=2).run(suite)
 
 

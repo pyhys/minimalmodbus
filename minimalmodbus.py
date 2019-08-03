@@ -43,6 +43,11 @@ _MAX_NUMBER_OF_DECIMALS = 10  # Some instrument might store 0.00000154 Ampere as
 _SECONDS_TO_MILLISECONDS = 1000
 _ASCII_HEADER = ":"
 _ASCII_FOOTER = "\r\n"
+_BYTEPOSITION_FOR_ASCII_HEADER = 0  # Relative to plain response
+_BYTEPOSITION_FOR_SLAVEADDRESS = 0  # Relative to (stripped) response
+_BYTEPOSITION_FOR_FUNCTIONCODE = 1  # Relative to (stripped) response
+_BYTEPOSITION_FOR_SLAVE_ERROR_CODE = 2 # Relative to (stripped) response
+_BITNUMBER_FUNCTIONCODE_ERRORINDICATION = 7
 
 # Several instrument instances can share the same serialport
 _serialports = {}  # Key: port name (str), value: port instance
@@ -1206,9 +1211,6 @@ class ModbusException(IOError):
 class SlaveReportedException(ModbusException):
     """Base class for exceptions that the slave (instrument) reports."""
 
-class MasterReportedException(ModbusException):
-    """Base class for exceptions that the master (computer) detects."""
-
 class SlaveDeviceBusyError(SlaveReportedException):
     """The slave is busy processing some command."""
 
@@ -1218,6 +1220,9 @@ class NegativeAcknowledgeError(SlaveReportedException):
 
 class IllegalRequestError(SlaveReportedException):
     """The slave has received an illegal request."""
+
+class MasterReportedException(ModbusException):
+    """Base class for exceptions that the master (computer) detects."""
 
 class NoResponseError(MasterReportedException):
     """No response from the slave."""
@@ -1310,17 +1315,11 @@ def _extractPayload(response, slaveaddress, mode, functioncode):
     from the request sent TO the slave.
 
     """
-    BYTEPOSITION_FOR_ASCII_HEADER = 0  # Relative to plain response
-
-    BYTEPOSITION_FOR_SLAVEADDRESS = 0  # Relative to (stripped) response
-    BYTEPOSITION_FOR_FUNCTIONCODE = 1
-
     # Number of bytes before the response payload (in stripped response)
     NUMBER_OF_RESPONSE_STARTBYTES = 2
+
     NUMBER_OF_CRC_BYTES = 2
     NUMBER_OF_LRC_BYTES = 1
-    BITNUMBER_FUNCTIONCODE_ERRORINDICATION = 7
-
     MINIMAL_RESPONSE_LENGTH_RTU = NUMBER_OF_RESPONSE_STARTBYTES + NUMBER_OF_CRC_BYTES
     MINIMAL_RESPONSE_LENGTH_ASCII = 9
 
@@ -1350,7 +1349,7 @@ def _extractPayload(response, slaveaddress, mode, functioncode):
     if mode == MODE_ASCII:
 
         # Validate the ASCII header and footer.
-        if response[BYTEPOSITION_FOR_ASCII_HEADER] != _ASCII_HEADER:
+        if response[_BYTEPOSITION_FOR_ASCII_HEADER] != _ASCII_HEADER:
             raise InvalidResponseError(
                 "Did not find header ({!r}) as start of ASCII response. The plain response is: {!r}".format(
                     _ASCII_HEADER, response
@@ -1399,7 +1398,7 @@ def _extractPayload(response, slaveaddress, mode, functioncode):
         raise InvalidResponseError(text)
 
     # Check slave address
-    responseaddress = ord(response[BYTEPOSITION_FOR_SLAVEADDRESS])
+    responseaddress = ord(response[_BYTEPOSITION_FOR_SLAVEADDRESS])
 
     if responseaddress != slaveaddress:
         raise InvalidResponseError(
@@ -1412,7 +1411,7 @@ def _extractPayload(response, slaveaddress, mode, functioncode):
     _checkResponseSlaveErrorCode(response)
 
     # Check function code
-    receivedFunctioncode = ord(response[BYTEPOSITION_FOR_FUNCTIONCODE])
+    receivedFunctioncode = ord(response[_BYTEPOSITION_FOR_FUNCTIONCODE])
     if receivedFunctioncode != functioncode:
         raise InvalidResponseError(
             "Wrong functioncode: {} instead of {}. The response is: {!r}".format(
@@ -2362,6 +2361,25 @@ def _setBitOn(x, bitNum):
 
     return x | (1 << bitNum)
 
+def _checkBit(x, bitNum):
+    """Check if bit 'bitNum' is set the input integer.
+
+    Args:
+        * x (int): The input value.
+        * bitNum (int): The bit number to be checked
+
+    Returns:
+        True or False
+
+    For example:
+        For x = 4 (dec) = 0100 (bin), checking bit number 2 results in True, and
+        checking bit number 3 results in False.
+
+    """
+    _checkInt(x, minvalue=0, description="input value")
+    _checkInt(bitNum, minvalue=0, description="bitnumber")
+
+    return (x & (1 << bitNum)) > 0
 
 # ######################## #
 # Error checking functions #
@@ -2820,19 +2838,50 @@ def _checkRegisteraddress(registeraddress):
 
 
 def _checkResponseSlaveErrorCode(response):
-    # Kolla upp och beskriv hur resonse ser ut
+    """Check if the slave indicates an error.
 
-    #    if receivedFunctioncode == _setBitOn(
-   #     functioncode, BITNUMBER_FUNCTIONCODE_ERRORINDICATION
-    #):
-        # TODO parse error code from slave
+    Args:
+        * response (string): Response from the slave
 
+    The response is in RTU format, but the checksum might be one or two bytes
+    depending on whether it was sent in RTU or ASCII mode.
 
-       # raise ValueError(
-      #      "The slave is indicating an error. The response is: {!r}".format(response)
-      #  )
+    Checking of type and length of the response should be done before calling
+    this functions.
 
-    pass
+    Raises:
+        SlaveReportedException or subclass
+
+    """
+    NON_ERRORS = [5]
+    SLAVE_ERRORS = {
+        1: IllegalRequestError("Slave reported illegal function"),
+        2: IllegalRequestError("Slave reported illegal data address"),
+        3: IllegalRequestError("Slave reported illegal data value"),
+        4: SlaveReportedException("Slave reported device failure"),
+        6: SlaveDeviceBusyError("Slave reported device busy"),
+        7: NegativeAcknowledgeError("Slave reported negative acknowledge"),
+        8: SlaveReportedException("Slave reported memory parity error"),
+        10: SlaveReportedException("Slave reported gateway path unavailable"),
+        11: SlaveReportedException("Slave reported gateway target device failed to respond"),
+    }
+
+    if len(response) < _BYTEPOSITION_FOR_SLAVE_ERROR_CODE + 1:
+        return  # This check is also done before calling, do not raise exception here.
+
+    received_functioncode = ord(response[_BYTEPOSITION_FOR_FUNCTIONCODE])
+
+    if _checkBit(received_functioncode, _BITNUMBER_FUNCTIONCODE_ERRORINDICATION):
+        slave_error_code = ord(response[_BYTEPOSITION_FOR_SLAVE_ERROR_CODE])
+
+        if slave_error_code in NON_ERRORS:
+            return
+
+        error = SLAVE_ERRORS.get(
+            slave_error_code,
+            SlaveReportedException("Slave reported error code " + str(slave_error_code))
+        )
+        raise error
 
 
 def _checkResponseByteCount(payload):
