@@ -2085,7 +2085,7 @@ def _unpack(formatstring, packed):
     except Exception:
         errortext = "The received bytestring is probably wrong, as the bytestring-to-num "
         errortext += "conversion failed. Bytestring: {0!r} Struct format code is: {1}"
-        raise ValueError(errortext.format(packed, formatstring))  # TODO change exception
+        raise InvalidResponseError(errortext.format(packed, formatstring))
 
     return value
 

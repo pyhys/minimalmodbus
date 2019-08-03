@@ -5,12 +5,13 @@ History
 
 Release 1.0 (2019-08-??)
 -------------------------
-* Requires pyserial 3.0 or later
+* Requires pyserial 3.0 or later.
 * Removed example drivers for Eurotherm 3500 and Omegacn 7500, as I no longer have
   access for these instruments for testing. It would great if someone would pick
   up support for these instruments in a separate project.
 * Removed module level constants for default values, as they were confusingly named.
 * Allow slave addresses also in the reserved range (up to 255). Reported by Github user gnbl.
+* Custom exceptions for Modbus errors, by Russ Garrett.
 * Silent period between messages is at least 1.75 ms to fulfill Modbus standard. Reported
   by Github user draput.
 * Use time.monotonic if available. Suggested by Matthias Bolte.

@@ -179,10 +179,11 @@ Use::
 
 Different types of errors should be handled separately.
 
-TODO serial.serialutil.SerialException
-     ModbusException(IOError)
-    TypeError
-	ValueError
+Errors related to wrong argument to functions raises TypeError or ValueError.
+When there is communication problems etc the exceptions raised are ModbusException
+(with subclasses) and serial.serialutil.SerialException, which both are inheriting
+from IOError. Note that in Python3 the IOError is an alias for OSError.
+
 
 Subclassing
 -----------

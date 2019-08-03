@@ -880,7 +880,7 @@ class TestUnpack(ExtendedTestCase):
             self.assertAlmostEqualRatio(resultvalue, knownvalue)
 
     def testWrongInputValue(self):
-        self.assertRaises(ValueError, minimalmodbus._unpack, 'ABC', '\xff\xb3')
+        self.assertRaises(InvalidResponseError, minimalmodbus._unpack, 'ABC', '\xff\xb3')
         self.assertRaises(ValueError, minimalmodbus._unpack, '',    '\xff\xb3')
         self.assertRaises(ValueError, minimalmodbus._unpack, '>h',  '')
 
