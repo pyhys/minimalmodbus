@@ -169,6 +169,9 @@ class TestCreatePayload(ExtendedTestCase):
         # read_bit(61, functioncode=2)
         self.assertEqual(minimalmodbus._createPayload(2, 61, None, 0, 0, False, False, None), '\x00\x3D\x00\x01')
 
+        # read_bit(62, functioncode=1)
+        self.assertEqual(minimalmodbus._createPayload(1, 62, None, 0, 0, False, False, None), '\x00\x3E\x00\x01')
+
         # write_bit(71, 1, functioncode=5)
         self.assertEqual(minimalmodbus._createPayload(5, 71, 1, 0, 1, False, False, None), '\x00\x47\xFF\x00')
 
@@ -269,10 +272,99 @@ class TestCreatePayload(ExtendedTestCase):
         self.assertEqual(minimalmodbus._createPayload(16, 105, [2, 4, 8], 0, 3, False, False, _PAYLOADFORMAT_REGISTERS),
                         '\x00\x69\x00\x03\x06\x00\x02\x00\x04\x00\x08')
 
-class TestCreatePayload(ExtendedTestCase):
+class TestParsePayload(ExtendedTestCase):
 
     def testKnownValues(self):
-        pass
+
+        # read_bit(61, functioncode=2)
+        self.assertEqual(minimalmodbus._parse_payload('\x01\x01', 2, 61, None, 0, 0, False, False, None), 1)
+
+        # read_bit(62, functioncode=1)
+        self.assertEqual(minimalmodbus._parse_payload('\x01\x00', 1, 62, None, 0, 0, False, False, None), 0)
+
+        # write_bit(71, 1, functioncode=5)
+        self.assertEqual(minimalmodbus._parse_payload('\x00\x47\xff\x00', 5, 71, 1, 0, 0, False, False, None), None)
+
+        # write_bit(72, 1, functioncode=15)
+        self.assertEqual(minimalmodbus._parse_payload('\x00\x48\x00\x01', 15, 72, 1, 0, 0, False, False, None), None)
+
+        # read_register(289, 0, functioncode=3)
+        self.assertEqual(minimalmodbus._parse_payload('\x02\x03\x02', 3, 289, None, 0, 1, False, False, _PAYLOADFORMAT_REGISTER), 770)
+
+        # read_register(14, 0, functioncode=4)
+        self.assertEqual(minimalmodbus._parse_payload('\x02\x03\x70', 4, 14, None, 0, 1, False, False, _PAYLOADFORMAT_REGISTER), 880)
+
+        # write_register(35, 20, functioncode = 16)
+        self.assertEqual(minimalmodbus._parse_payload('\x00#\x00\x01', 16, 35, 20, 0, 1, False, False, _PAYLOADFORMAT_REGISTER), None)
+
+        # write_register(45, 88, functioncode = 6)
+        self.assertEqual(minimalmodbus._parse_payload('\x00\x2d\x00\x58', 6, 45, 88, 0, 1, False, False, _PAYLOADFORMAT_REGISTER), None)
+
+        # write_register(101, -5, signed=True)
+        self.assertEqual(minimalmodbus._parse_payload('\x00e\x00\x01', 16, 101, -5, 0, 1, True, False, _PAYLOADFORMAT_REGISTER), None)
+
+        # read_long(102)
+        self.assertEqual(minimalmodbus._parse_payload('\x04\xff\xff\xff\xff', 3, 102, None, 0, 2, False, False, _PAYLOADFORMAT_LONG), 4294967295)
+
+        # read_long(102, signed=True)
+        self.assertEqual(minimalmodbus._parse_payload('\x04\xff\xff\xff\xff', 3, 102, None, 0, 2, True, False, _PAYLOADFORMAT_LONG), -1)
+
+        # write_long(102, 5)
+        self.assertEqual(minimalmodbus._parse_payload('\x00f\x00\x02', 16, 102, 5, 0, 2, False, False, _PAYLOADFORMAT_LONG), None)
+
+        # write_long(102, -5, signed=True)
+        self.assertEqual(minimalmodbus._parse_payload('\x00f\x00\x02', 16, 102, -5, 0, 2, True, False, _PAYLOADFORMAT_LONG), None)
+
+        # read_float(103, functioncode=3, numberOfRegisters=2)
+        self.assertAlmostEqual(minimalmodbus._parse_payload('\x04\x3f\x80\x00\x00',
+                                                            3, 103, None, 0, 2, False, False, _PAYLOADFORMAT_FLOAT),
+                               1.0)
+
+        # read_float(103, functioncode=3, numberOfRegisters=4)
+        self.assertAlmostEqual(minimalmodbus._parse_payload('\x08\xc0\x00\x00\x00\x00\x00\x00\x00',
+                                                            3, 103, None, 0, 4, False, False, _PAYLOADFORMAT_FLOAT),
+                               -2.0)
+
+        # read_float(103, functioncode=4, numberOfRegisters=2)
+        self.assertAlmostEqualRatio(minimalmodbus._parse_payload('\x04\x72\x38\x47\x25',
+                                                                 4, 103, None, 0, 2, False, False, _PAYLOADFORMAT_FLOAT),
+                                    3.65e30)
+
+        # write_float(103, 1.1, numberOfRegisters=2)
+        self.assertEqual(minimalmodbus._parse_payload('\x00g\x00\x02', 16, 103, 1.1, 0, 2, False, False, _PAYLOADFORMAT_FLOAT), None)
+
+        # write_float(103, 1.1, numberOfRegisters=4)
+        self.assertEqual(minimalmodbus._parse_payload('\x00g\x00\x04', 16, 103, 1.1, 0, 4, False, False, _PAYLOADFORMAT_FLOAT), None)
+
+        # read_string(104, 1)
+        self.assertEqual(minimalmodbus._parse_payload('\x02AB', 3, 104, None, 0, 1, False, False, _PAYLOADFORMAT_STRING), 'AB')
+
+        # read_string(104, 4)
+        self.assertEqual(minimalmodbus._parse_payload('\x08ABCDEFGH', 3, 104, None, 0, 4, False, False, _PAYLOADFORMAT_STRING), 'ABCDEFGH')
+
+        # write_string(104, 'A', 1)
+        self.assertEqual(minimalmodbus._parse_payload('\x00h\x00\x01', 16, 104, 'A', 0, 1, False, False, _PAYLOADFORMAT_STRING), None)
+
+        # write_string(104, 'A', 4)
+        self.assertEqual(minimalmodbus._parse_payload('\x00h\x00\x04', 16, 104, 'A', 0, 4, False, False, _PAYLOADFORMAT_STRING), None)
+
+        # write_string(104, 'ABCDEFGH', 4)
+        self.assertEqual(minimalmodbus._parse_payload('\x00h\x00\x04', 16, 104, 'ABCDEFGH', 0, 4, False, False, _PAYLOADFORMAT_STRING), None)
+
+        # read_registers(105, 1)
+        self.assertEqual(minimalmodbus._parse_payload('\x02\x00\x10', 3, 105, None, 0, 1, False, False, _PAYLOADFORMAT_REGISTERS), [16])
+
+        # read_registers(105, 3)
+        self.assertEqual(minimalmodbus._parse_payload('\x06\x00\x10\x00\x20\x00\x40',
+                                                      3, 105, None, 0, 3, False, False, _PAYLOADFORMAT_REGISTERS),
+                        [16, 32, 64])
+
+        # write_registers(105, [2])
+        self.assertEqual(minimalmodbus._parse_payload('\x00i\x00\x01', 16, 105, [2], 0, 1, False, False, _PAYLOADFORMAT_REGISTERS), None)
+
+        # write_registers(105, [2, 4, 8])
+        self.assertEqual(minimalmodbus._parse_payload('\x00i\x00\x03', 16, 105, [2, 4, 8], 0, 3, False, False, _PAYLOADFORMAT_REGISTERS), None)
+
 
 class TestEmbedPayload(ExtendedTestCase):
 
@@ -3170,7 +3262,7 @@ if __name__ == '__main__':
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestCalculateCrcString)
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestHexdecode)
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestCheckResponseSlaveErrorCode)
-    #suite = unittest.TestLoader().loadTestsFromTestCase(TestCreatePayload)
+    #suite = unittest.TestLoader().loadTestsFromTestCase(TestParsePayload)
     #unittest.TextTestRunner(verbosity=2).run(suite)
 
 

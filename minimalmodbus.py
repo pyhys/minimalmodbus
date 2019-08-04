@@ -887,6 +887,7 @@ class Instrument:
         # Communicate with instrument
         payloadFromSlave = self._performCommand(functioncode, payloadToSlave)
 
+        # Parse response payload
         return _parse_payload(
             payloadFromSlave,
             functioncode,
