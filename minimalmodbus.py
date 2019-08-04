@@ -23,10 +23,11 @@ __version__ = "1.0a1"
 
 
 import os
-import serial
 import struct
 import sys
 import time
+
+import serial
 
 if sys.version > "3":
     import binascii
@@ -49,7 +50,7 @@ _ASCII_FOOTER = "\r\n"
 _BYTEPOSITION_FOR_ASCII_HEADER = 0  # Relative to plain response
 _BYTEPOSITION_FOR_SLAVEADDRESS = 0  # Relative to (stripped) response
 _BYTEPOSITION_FOR_FUNCTIONCODE = 1  # Relative to (stripped) response
-_BYTEPOSITION_FOR_SLAVE_ERROR_CODE = 2 # Relative to (stripped) response
+_BYTEPOSITION_FOR_SLAVE_ERROR_CODE = 2  # Relative to (stripped) response
 _BITNUMBER_FUNCTIONCODE_ERRORINDICATION = 7
 
 # Several instrument instances can share the same serialport
@@ -64,7 +65,7 @@ MODE_RTU = "rtu"
 MODE_ASCII = "ascii"
 
 # Replace with enum when Python3 only
- # Note that bit datatype not is included, because it uses other functioncodes.
+# Note that bit datatype not is included, because it uses other functioncodes.
 _PAYLOADFORMAT_LONG = "long"
 _PAYLOADFORMAT_FLOAT = "float"
 _PAYLOADFORMAT_STRING = "string"
@@ -82,9 +83,11 @@ _ALL_PAYLOADFORMATS = [
 # Modbus instrument object #
 # ######################## #
 
+
 class Instrument:
-    """Instrument class for talking to instruments (slaves) via the Modbus RTU or ASCII
-    protocols (via RS485 or RS232).
+    """Instrument class for talking to instruments (slaves).
+
+    Uses the Modbus RTU or ASCII protocols (via RS485 or RS232).
 
     Args:
         * port (str): The serial port name, for example ``/dev/ttyUSB0`` (Linux),
@@ -169,7 +172,7 @@ class Instrument:
                 - Defaults to 2.0 s.
         """
 
-        if port not in _serialports or not _serialports[port]: # TODO ??
+        if port not in _serialports or not _serialports[port]:  # TODO ??
             self.serial = _serialports[port] = serial.Serial(
                 port=port,
                 baudrate=19200,
@@ -749,7 +752,6 @@ class Instrument:
             serial.SerialException (inherited from IOError)
 
         """
-
         ALL_ALLOWED_FUNCTIONCODES = [1, 2, 3, 4, 5, 6, 15, 16]
 
         # Check input values
@@ -1117,7 +1119,7 @@ class Instrument:
             )
             _print_out(text)
 
-        if len(answer) == 0:
+        if not answer:
             raise NoResponseError("No communication with the instrument (no answer)")
 
         return answer
@@ -1126,34 +1128,48 @@ class Instrument:
 # Exceptions #
 # ########## #
 
+
 class ModbusException(IOError):
-    """Base class for Modbus communication exceptions. Inherits from IOError,
-    which is an alias for OSError in Python3."""
+    """Base class for Modbus communication exceptions.
+
+    Inherits from IOError, which is an alias for OSError in Python3.
+    """
+
 
 class SlaveReportedException(ModbusException):
     """Base class for exceptions that the slave (instrument) reports."""
 
+
 class SlaveDeviceBusyError(SlaveReportedException):
     """The slave is busy processing some command."""
 
+
 class NegativeAcknowledgeError(SlaveReportedException):
-    """The slave can not fulfil the programming request
-    (typically with function code 13 or 14 decimal). """
+    """The slave can not fulfil the programming request.
+
+    This typically happens when using function code 13 or 14 decimal.
+    """
+
 
 class IllegalRequestError(SlaveReportedException):
     """The slave has received an illegal request."""
 
+
 class MasterReportedException(ModbusException):
     """Base class for exceptions that the master (computer) detects."""
+
 
 class NoResponseError(MasterReportedException):
     """No response from the slave."""
 
+
 class LocalEchoError(MasterReportedException):
     """There is some problem with the local echo."""
 
+
 class InvalidResponseError(MasterReportedException):
     """The response does not fulfill the Modbus standad, for example wrong checksum."""
+
 
 # ################ #
 # Payload handling #
@@ -1347,7 +1363,8 @@ def _extractPayload(response, slaveaddress, mode, functioncode):
     Raises:
         ValueError, TypeError, ModbusException (or subclasses).
 
-    Raises an exception if there is any problem with the received address, the functioncode or the CRC.
+    Raises an exception if there is any problem with the received address,
+    the functioncode or the CRC.
 
     The received response should have the format:
     * RTU Mode: slaveaddress byte + functioncode byte + payloaddata + CRC (which is two bytes)
@@ -1394,13 +1411,15 @@ def _extractPayload(response, slaveaddress, mode, functioncode):
         # Validate the ASCII header and footer.
         if response[_BYTEPOSITION_FOR_ASCII_HEADER] != _ASCII_HEADER:
             raise InvalidResponseError(
-                "Did not find header ({!r}) as start of ASCII response. The plain response is: {!r}".format(
+                "Did not find header "
+                + "({!r}) as start of ASCII response. The plain response is: {!r}".format(
                     _ASCII_HEADER, response
                 )
             )
         elif response[-len(_ASCII_FOOTER):] != _ASCII_FOOTER:
             raise InvalidResponseError(
-                "Did not find footer ({!r}) as end of ASCII response. The plain response is: {!r}".format(
+                "Did not find footer "
+                + "({!r}) as end of ASCII response. The plain response is: {!r}".format(
                     _ASCII_FOOTER, response
                 )
             )
@@ -1518,7 +1537,7 @@ def _predictResponseSize(mode, functioncode, payloadToSlave):
 
     elif functioncode in [1, 2, 3, 4]:
         given_size = _twoByteStringToNum(payloadToSlave[BYTERANGE_FOR_GIVEN_SIZE])
-        if functioncode == 1 or functioncode == 2:
+        if functioncode in [1, 2]:
             # Algorithm from MODBUS APPLICATION PROTOCOL SPECIFICATION V1.1b
             number_of_inputs = given_size
             response_payload_size = (
@@ -1527,7 +1546,7 @@ def _predictResponseSize(mode, functioncode, payloadToSlave):
                 + (1 if number_of_inputs % 8 else 0)
             )
 
-        elif functioncode == 3 or functioncode == 4:
+        elif functioncode in [3, 4]:
             number_of_registers = given_size
             response_payload_size = (
                 NUMBER_OF_PAYLOAD_BYTES_FOR_BYTECOUNTFIELD
@@ -1557,8 +1576,9 @@ def _predictResponseSize(mode, functioncode, payloadToSlave):
 
 
 def _calculate_minimum_silent_period(baudrate):
-    """Calculate the silent period length to comply with the 3.5 character
-    silence between messages.
+    """Calculate the silent period length between messages.
+
+    It should correspond to the time to send 3.5 characters.
 
     Args:
         baudrate (numerical): The baudrate for the serial port
@@ -2159,8 +2179,8 @@ def _hexencode(bytestring, insert_spaces=False):
     # in order to have it Python 2.x and 3.x compatible
 
     byte_representions = []
-    for c in bytestring:
-        byte_representions.append("{0:02X}".format(ord(c)))
+    for char in bytestring:
+        byte_representions.append("{0:02X}".format(ord(char)))
     return separator.join(byte_representions).strip()
 
 
@@ -2195,9 +2215,9 @@ def _hexdecode(hexstring):
         )
 
     if sys.version_info[0] > 2:
-        by = bytes(hexstring, "latin1")
+        converted_bytes = bytes(hexstring, "latin1")
         try:
-            return str(binascii.unhexlify(by), encoding="latin1")
+            return str(binascii.unhexlify(converted_bytes), encoding="latin1")
         except binascii.Error as err:
             new_error_message = "Hexdecode reported an error: {!s}. Input hexstring: {}".format(
                 err.args[0], hexstring
@@ -2207,11 +2227,10 @@ def _hexdecode(hexstring):
     else:
         try:
             return hexstring.decode("hex")
-        except TypeError as err:
+        except TypeError:
+            # TODO When Python3 only, show info from first exception
             raise TypeError(
-                "Hexdecode reported an error: {}. Input hexstring: {}".format(
-                    err.message, hexstring
-                )
+                "Hexdecode reported an error. Input hexstring: {}".format(hexstring)
             )
 
 
@@ -2404,6 +2423,7 @@ def _setBitOn(x, bitNum):
 
     return x | (1 << bitNum)
 
+
 def _checkBit(x, bitNum):
     """Check if bit 'bitNum' is set the input integer.
 
@@ -2427,6 +2447,7 @@ def _checkBit(x, bitNum):
 # ######################## #
 # Error checking functions #
 # ######################## #
+
 
 _CRC16TABLE = (
     0,
@@ -2788,7 +2809,7 @@ def _checkMode(mode):
         )
 
 
-def _checkFunctioncode(functioncode, listOfAllowedValues=[]):
+def _checkFunctioncode(functioncode, listOfAllowedValues=None):
     """Check that the given functioncode is in the listOfAllowedValues.
 
     Also verifies that 1 <= function code <= 127.
@@ -2879,6 +2900,7 @@ def _checkRegisteraddress(registeraddress):
         description="registeraddress",
     )
 
+
 def _check_response_payload(
     payload,
     functioncode,
@@ -2930,6 +2952,7 @@ def _check_response_payload(
                     len(registerdata), numberOfRegisterBytes
                 )
             )
+
 
 def _checkResponseSlaveErrorCode(response):
     """Check if the slave indicates an error.
@@ -3358,177 +3381,178 @@ def _print_out(inputstring):
     sys.stdout.write(inputstring + "\n")
 
 
-def _interpretRawMessage(inputstr):
-    r"""Generate a human readable description of a Modbus bytestring.
+# def _interpretRawMessage(inputstr):
+#     r"""Generate a human readable description of a Modbus bytestring.
 
-    Args:
-        inputstr (str): The bytestring that should be interpreted.
+#     Args:
+#         inputstr (str): The bytestring that should be interpreted.
 
-    Returns:
-        A descriptive string.
+#     Returns:
+#         A descriptive string.
 
-    For example, the string ``'\n\x03\x10\x01\x00\x01\xd0q'`` should give something like::
+#     For example, the string ``'\n\x03\x10\x01\x00\x01\xd0q'`` should give something like::
 
-        TODO: update
+#         TODO: update
 
-        Modbus bytestring decoder
-        Input string (length 8 characters): '\n\x03\x10\x01\x00\x01\xd0q'
-        Probably modbus RTU mode.
-        Slave address: 10 (dec). Function code: 3 (dec).
-        Valid message. Extracted payload: '\x10\x01\x00\x01'
+#         Modbus bytestring decoder
+#         Input string (length 8 characters): '\n\x03\x10\x01\x00\x01\xd0q'
+#         Probably modbus RTU mode.
+#         Slave address: 10 (dec). Function code: 3 (dec).
+#         Valid message. Extracted payload: '\x10\x01\x00\x01'
 
-        Pos   Character Hex  Dec  Probable interpretation
-        -------------------------------------------------
-          0:  '\n'      0A    10  Slave address
-          1:  '\x03'    03     3  Function code
-          2:  '\x10'    10    16  Payload
-          3:  '\x01'    01     1  Payload
-          4:  '\x00'    00     0  Payload
-          5:  '\x01'    01     1  Payload
-          6:  '\xd0'    D0   208  Checksum, CRC LSB
-          7:  'q'       71   113  Checksum, CRC MSB
+#         Pos   Character Hex  Dec  Probable interpretation
+#         -------------------------------------------------
+#           0:  '\n'      0A    10  Slave address
+#           1:  '\x03'    03     3  Function code
+#           2:  '\x10'    10    16  Payload
+#           3:  '\x01'    01     1  Payload
+#           4:  '\x00'    00     0  Payload
+#           5:  '\x01'    01     1  Payload
+#           6:  '\xd0'    D0   208  Checksum, CRC LSB
+#           7:  'q'       71   113  Checksum, CRC MSB
 
-    """
-    raise NotImplementedError()
-    output = ""
-    output += "Modbus bytestring decoder\n"
-    output += "Input string (length {} characters): {!r} \n".format(
-        len(inputstr), inputstr
-    )
+#     """
+#     raise NotImplementedError()
+#     output = ""
+#     output += "Modbus bytestring decoder\n"
+#     output += "Input string (length {} characters): {!r} \n".format(
+#         len(inputstr), inputstr
+#     )
 
-    # Detect modbus type
-    if inputstr.startswith(_ASCII_HEADER) and inputstr.endswith(_ASCII_FOOTER):
-        mode = MODE_ASCII
-    else:
-        mode = MODE_RTU
-    output += "Probably Modbus {} mode.\n".format(mode.upper())
+#     # Detect modbus type
+#     if inputstr.startswith(_ASCII_HEADER) and inputstr.endswith(_ASCII_FOOTER):
+#         mode = MODE_ASCII
+#     else:
+#         mode = MODE_RTU
+#     output += "Probably Modbus {} mode.\n".format(mode.upper())
 
-    # Extract slave address and function code
-    try:
-        if mode == MODE_ASCII:
-            slaveaddress = int(inputstr[1:3])
-            functioncode = int(inputstr[3:5])
-        else:
-            slaveaddress = ord(inputstr[0])
-            functioncode = ord(inputstr[1])
-        output += "Slave address: {} (dec). Function code: {} (dec).\n".format(
-            slaveaddress, functioncode
-        )
-    except Exception:
-        output += "\nCould not extract slave address and function code. \n\n"
+#     # Extract slave address and function code
+#     try:
+#         if mode == MODE_ASCII:
+#             slaveaddress = int(inputstr[1:3])
+#             functioncode = int(inputstr[3:5])
+#         else:
+#             slaveaddress = ord(inputstr[0])
+#             functioncode = ord(inputstr[1])
+#         output += "Slave address: {} (dec). Function code: {} (dec).\n".format(
+#             slaveaddress, functioncode
+#         )
+#     except Exception:
+#         output += "\nCould not extract slave address and function code. \n\n"
 
-    # Check message validity
-    try:
-        extractedpayload = _extractPayload(inputstr, slaveaddress, mode, functioncode)
-        output += "Valid message. Extracted payload: {!r}\n".format(extractedpayload)
-    except (ValueError, TypeError) as err:
-        output += "\nThe message does not seem to be valid Modbus {}. ".format(mode.upper())
-        output += "Error message: \n{}. \n\n".format(err.messages)
-    except NameError as err:
-        output += (
-            "\nNo message validity checking. \n\n"
-        )  # Slave address or function code not available
+#     # Check message validity
+#     try:
+#         extractedpayload = _extractPayload(inputstr, slaveaddress, mode, functioncode)
+#         output += "Valid message. Extracted payload: {!r}\n".format(extractedpayload)
+#     except (ValueError, TypeError) as err:
+#         output += "\nThe message does not seem to be valid Modbus {}. ".format(mode.upper())
+#         output += "Error message: \n{}. \n\n".format(err.messages)
+#     except NameError as err:
+#         output += (
+#             "\nNo message validity checking. \n\n"
+#         )  # Slave address or function code not available
 
-    # Generate table describing the message
-    if mode == MODE_RTU:
-        output += "\nPos   Character Hex  Dec  Probable interpretation \n"
-        output += "------------------------------------------------- \n"
-        for i, character in enumerate(inputstr):
-            if i == 0:
-                description = "Slave address"
-            elif i == 1:
-                description = "Function code"
-            elif i == len(inputstr) - 2:
-                description = "Checksum, CRC LSB"
-            elif i == len(inputstr) - 1:
-                description = "Checksum, CRC MSB"
-            else:
-                description = "Payload"
-            output += "{0:3.0f}:  {1!r:<8}  {2:02X}  {2: 4.0f}  {3:<10} \n".format(
-                i, character, ord(character), description
-            )
+#     # Generate table describing the message
+#     if mode == MODE_RTU:
+#         output += "\nPos   Character Hex  Dec  Probable interpretation \n"
+#         output += "------------------------------------------------- \n"
+#         for i, character in enumerate(inputstr):
+#             if i == 0:
+#                 description = "Slave address"
+#             elif i == 1:
+#                 description = "Function code"
+#             elif i == len(inputstr) - 2:
+#                 description = "Checksum, CRC LSB"
+#             elif i == len(inputstr) - 1:
+#                 description = "Checksum, CRC MSB"
+#             else:
+#                 description = "Payload"
+#             output += "{0:3.0f}:  {1!r:<8}  {2:02X}  {2: 4.0f}  {3:<10} \n".format(
+#                 i, character, ord(character), description
+#             )
 
-    elif mode == MODE_ASCII:
-        output += "\nPos   Character(s) Converted  Hex  Dec  Probable interpretation \n"
-        output += "--------------------------------------------------------------- \n"
+#     elif mode == MODE_ASCII:
+#         output += "\nPos   Character(s) Converted  Hex  Dec  Probable interpretation \n"
+#         output += "--------------------------------------------------------------- \n"
 
-        i = 0
-        while i < len(inputstr):
+#         i = 0
+#         while i < len(inputstr):
 
-            if inputstr[i] in [":", "\r", "\n"]:
-                if inputstr[i] == ":":
-                    description = "Start character"
-                else:
-                    description = "Stop character"
+#             if inputstr[i] in [":", "\r", "\n"]:
+#                 if inputstr[i] == ":":
+#                     description = "Start character"
+#                 else:
+#                     description = "Stop character"
 
-                output += "{0:3.0f}:  {1!r:<8}                          {2} \n".format(
-                    i, inputstr[i], description
-                )
-                i += 1
+#                 output += "{0:3.0f}:  {1!r:<8}                          {2} \n".format(
+#                     i, inputstr[i], description
+#                 )
+#                 i += 1
 
-            else:
-                if i == 1:
-                    description = "Slave address"
-                elif i == 3:
-                    description = "Function code"
-                elif i == len(inputstr) - 4:
-                    description = "Checksum (LRC)"
-                else:
-                    description = "Payload"
+#             else:
+#                 if i == 1:
+#                     description = "Slave address"
+#                 elif i == 3:
+#                     description = "Function code"
+#                 elif i == len(inputstr) - 4:
+#                     description = "Checksum (LRC)"
+#                 else:
+#                     description = "Payload"
 
-                try:
-                    hexvalue = _hexdecode(inputstr[i:(i + 2)])
-                    output += "{0:3.0f}:  {1!r:<8}     {2!r}     {3:02X}  {3: 4.0f}  {4} \n".format(
-                        i, inputstr[i:(i + 2)], hexvalue, ord(hexvalue), description
-                    )
-                except Exception:
-                    output += "{0:3.0f}:  {1!r:<8}     ?           ?     ?  {2} \n".format(
-                        i, inputstr[i:(i + 2)], description
-                    )
-                i += 2
+#                 try:
+#                     hexvalue = _hexdecode(inputstr[i:(i + 2)])
+#                     output += "{0:3.0f}:  {1!r:<8}     {2!r}     {3:02X}  {3: 4.0f}  {4} \n".
+#                               format(
+#                         i, inputstr[i:(i + 2)], hexvalue, ord(hexvalue), description
+#                     )
+#                 except Exception:
+#                     output += "{0:3.0f}:  {1!r:<8}     ?           ?     ?  {2} \n".format(
+#                         i, inputstr[i:(i + 2)], description
+#                     )
+#                 i += 2
 
-    # Generate description for the payload
-    output += "\n\n"
-    try:
-        output += _interpretPayload(functioncode, extractedpayload)
-    except Exception:
-        output += (
-            "\nCould not interpret the payload. \n\n"
-        )  # Payload or function code not available
+#     # Generate description for the payload
+#     output += "\n\n"
+#     try:
+#         output += _interpretPayload(functioncode, extractedpayload)
+#     except Exception:
+#         output += (
+#             "\nCould not interpret the payload. \n\n"
+#         )  # Payload or function code not available
 
-    return output
+#     return output
 
 
-def _interpretPayload(functioncode, payload):
-    r"""Generate a human readable description of a Modbus payload.
+# def _interpretPayload(functioncode, payload):
+#     r"""Generate a human readable description of a Modbus payload.
 
-    Args:
-      * functioncode (int): Function code
-      * payload (str): The payload that should be interpreted. It should be a
-        byte string.
+#     Args:
+#       * functioncode (int): Function code
+#       * payload (str): The payload that should be interpreted. It should be a
+#         byte string.
 
-    Returns:
-        A descriptive string.
+#     Returns:
+#         A descriptive string.
 
-    For example, the payload ``'\x10\x01\x00\x01'`` for functioncode 3 should give
-        something like::
+#     For example, the payload ``'\x10\x01\x00\x01'`` for functioncode 3 should give
+#         something like::
 
-            TODO: Update
+#             TODO: Update
 
-    """
-    raise NotImplementedError()
-    output = ""
-    output += "Modbus payload decoder\n"
-    output += "Input payload (length {} characters): {!r} \n".format(
-        len(payload), payload
-    )
-    output += "Function code: {} (dec).\n".format(functioncode)
+#     """
+#     raise NotImplementedError()
+#     output = ""
+#     output += "Modbus payload decoder\n"
+#     output += "Input payload (length {} characters): {!r} \n".format(
+#         len(payload), payload
+#     )
+#     output += "Function code: {} (dec).\n".format(functioncode)
 
-    if len(payload) == 4:
-        FourbyteMessageFirstHalfValue = _twoByteStringToNum(payload[0:2])
-        FourbyteMessageSecondHalfValue = _twoByteStringToNum(payload[2:4])
+#     if len(payload) == 4:
+#         FourbyteMessageFirstHalfValue = _twoByteStringToNum(payload[0:2])
+#         FourbyteMessageSecondHalfValue = _twoByteStringToNum(payload[2:4])
 
-    return output
+#     return output
 
 
 def _getDiagnosticString():

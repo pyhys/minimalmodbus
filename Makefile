@@ -56,9 +56,11 @@ clean-docs:
 devdeps:
 	pip3 install --user --upgrade \
 		coverage \
+		flake8 \
 		pip \
 		pycodestyle \
 		pydocstyle \
+		pylint \
 		setuptools \
 		sphinx_rtd_theme \
 		sphinx \
@@ -66,9 +68,13 @@ devdeps:
 		wheel
 
 lint:
-	pycodestyle minimalmodbus.py --max-line-length=110
-	pydocstyle minimalmodbus.py
-	flake8 minimalmodbus tests
+	flake8 minimalmodbus.py --max-line-length=100 || true  # Includes pycodestyle
+	@echo " "
+	@echo " "
+	pydocstyle minimalmodbus.py || true
+	@echo " "
+	@echo " "
+	pylint minimalmodbus.py -d C0103 -d C0330 -d R0913 || true
 
 black:
 	black minimalmodbus.py dummy_serial.py setup.py
