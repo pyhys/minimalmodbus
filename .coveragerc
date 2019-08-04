@@ -1,6 +1,6 @@
 [run]
 branch = True
-include = 
+include =
     *
     tests/*
 
@@ -13,11 +13,12 @@ exclude_lines =
     if __name__ == .__main__.:
     except ImportError:
 ignore_errors = True
-presicion = 1
-include = 
+precision = 1
+include =
     *
     tests/*
 omit =
     /usr/*
     *opt*
+    *site-packages*
     *eggs*

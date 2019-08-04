@@ -82,9 +82,9 @@ test-all:
 
 coverage:
 	rm -fr htmlcov/
-	coverage run setup.py test
-	coverage report -m
-	coverage html
+	coverage3 run setup.py test
+	coverage3 report -m
+	coverage3 html
 	@echo "    "
 	@echo "    "
 	@echo "    "
