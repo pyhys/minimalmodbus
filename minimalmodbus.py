@@ -41,8 +41,10 @@ _NUMBER_OF_BYTES_BEFORE_REGISTERDATA = 1  # Within the payload
 _NUMBER_OF_BYTES_PER_REGISTER = 2
 _NUMBER_OF_REQUESTED_BITS = 1
 _NUMBER_OF_BYTES_FOR_ONE_BIT = 1
-_MAX_NUMBER_OF_REGISTERS_TO_WRITE = 123
-_MAX_NUMBER_OF_REGISTERS_TO_READ = 125
+_MAX_NUMBER_OF_REGISTERS_TO_WRITE = 1968  # 0x7B0
+_MAX_NUMBER_OF_REGISTERS_TO_READ = 2000  # 0x7D0
+_MAX_NUMBER_OF_BITS_TO_WRITE =  55
+_MAX_NUMBER_OF_BITS_TO_READ = 4
 _MAX_NUMBER_OF_DECIMALS = 10  # Some instrument might store 0.00000154 Ampere as 154 etc
 _SECONDS_TO_MILLISECONDS = 1000
 _ASCII_HEADER = ":"
@@ -217,7 +219,9 @@ class Instrument:
     # ################################# #
 
     def read_bit(self, registeraddress, functioncode=2):
-        """Read one bit from the slave.
+        """Read one bit from the slave (instrument).
+
+        This is for a bit that has its individual address in the instrument.
 
         Args:
             * registeraddress (int): The slave register address (use decimal numbers, not hex).
@@ -235,7 +239,9 @@ class Instrument:
         return self._genericCommand(functioncode, registeraddress)
 
     def write_bit(self, registeraddress, value, functioncode=5):
-        """Write one bit to the slave.
+        """Write one bit to the slave (instrument).
+
+        This is for a bit that has its individual address in the instrument.
 
         Args:
             * registeraddress (int): The slave register address (use decimal numbers, not hex).
@@ -253,6 +259,64 @@ class Instrument:
         _checkFunctioncode(functioncode, [5, 15])
         _checkInt(value, minvalue=0, maxvalue=1, description="input value")
         self._genericCommand(functioncode, registeraddress, value)
+
+    def read_bits(self, registeraddress, numberOfBits, functioncode=2):
+        """Read multiple bits from the slave (instrument).
+
+        This is for bits that have individual addresses in the instrument.
+
+        Args:
+            * registeraddress (int): The slave register start address  (use decimal
+              numbers, not hex).
+            * numberOfBits (int): Number of bits to read
+            * functioncode (int): Modbus function code. Can be 1 or 2.
+
+        Returns:
+            A list of bit values 0 or 1 (int).
+
+        Raises:
+            TypeError, ValueError, ModbusException,
+            serial.SerialException (inherited from IOError)
+
+        """
+        _checkFunctioncode(functioncode, [1, 2])
+        _checkInt(
+            numberOfBits,
+            minvalue=1,
+            maxvalue=_MAX_NUMBER_OF_BITS_TO_READ,
+            description="number of bits"
+        )
+        return self._genericCommand(functioncode, registeraddress)
+
+    def write_bits(self, registeraddress, values):
+        """Write multiple bits to the slave (instrument).
+
+        This is for bits that have individual addresses in the instrument.
+
+        Uses Modbus functioncode 15.
+
+        Args:
+            * registeraddress (int): The slave register start address (use decimal
+              numbers, not hex).
+            * values (list of int or bool): 0 or 1, or True or False
+
+        Returns:
+            None
+
+        Raises:
+            TypeError, ValueError, ModbusException,
+            serial.SerialException (inherited from IOError)
+
+        """
+        _checkInt(
+            len(values),
+            minvalue=1,
+            maxvalue=_MAX_NUMBER_OF_BITS_TO_WRITE,
+            description="length of input list"
+        )
+        # Note: The content of the list is checked at content conversion.
+
+        self._genericCommand(15, registeraddress, values)
 
     def read_register(
         self, registeraddress, numberOfDecimals=0, functioncode=3, signed=False
