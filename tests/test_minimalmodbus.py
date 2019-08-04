@@ -365,6 +365,38 @@ class TestParsePayload(ExtendedTestCase):
         # write_registers(105, [2, 4, 8])
         self.assertEqual(minimalmodbus._parse_payload('\x00i\x00\x03', 16, 105, [2, 4, 8], 0, 3, False, False, _PAYLOADFORMAT_REGISTERS), None)
 
+    def testInvalidPayloads(self):
+
+        # read_bit(63, functioncode=2)  # Slave gives wrong byte count
+        self.assertRaises(InvalidResponseError, minimalmodbus._parse_payload, '\x02\x01', 2, 63, None, 0, 0, False, False, None)
+
+        # write_bit(73, 1, functioncode=15)  # Slave gives wrong number of registers
+        self.assertRaises(InvalidResponseError, minimalmodbus._parse_payload, '\x00\x49\x00\x02', 15, 73, 1, 0, 0, False, False, None)
+
+        # write_bit(74, 1, functioncode=5)  # Slave gives wrong write data
+        self.assertRaises(InvalidResponseError, minimalmodbus._parse_payload, '\x00\x47\x00\x00', 5, 74, 1, 0, 0, False, False, None)
+
+        # write_bit(73, 1, functioncode=15)  # Slave gives wrong number of registers
+        self.assertRaises(InvalidResponseError, minimalmodbus._parse_payload, '\x00\x49\x00\x02', 15, 73, 1, 0, 0, False, False, None)
+
+        # write_bit(74, 1, functioncode=5)  # Slave gives wrong write data (address)
+        self.assertRaises(InvalidResponseError, minimalmodbus._parse_payload, '\x00\x47\x00\x00', 5, 74, 1, 0, 0, False, False, None)
+
+        # read_register(202, 0, functioncode=3)  # Slave gives too long response
+        self.assertRaises(InvalidResponseError, minimalmodbus._parse_payload, '\x02\x00\x00\x09', 3, 202, None, 0, 1, False, False, None)
+
+        # read_register(203, 0, functioncode=3)  # Slave gives too short response
+        self.assertRaises(InvalidResponseError, minimalmodbus._parse_payload, '\x02\x09', 3, 203, None, 0, 1, False, False, None)
+
+        # write_register(52, 99, functioncode = 16)  # Slave gives wrong number of registers
+        self.assertRaises(InvalidResponseError, minimalmodbus._parse_payload, '\x00\x34\x00\x02', 16, 52, 99, 0, 1, False, False, None)
+
+        # write_register(53, 99, functioncode = 16)  # Slave gives wrong register address
+        self.assertRaises(InvalidResponseError, minimalmodbus._parse_payload, '\x00\x36\x00\x01', 16, 53, 99, 0, 1, False, False, None)
+
+        # write_register(55, 99, functioncode = 6)  # Slave gives wrong write data
+        self.assertRaises(InvalidResponseError, minimalmodbus._parse_payload, '\x00\x36\x00\x01', 6, 55, 99, 0, 1, False, False, None)
+
 
 class TestEmbedPayload(ExtendedTestCase):
 
