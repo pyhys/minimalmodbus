@@ -67,18 +67,21 @@ MODE_RTU = "rtu"
 MODE_ASCII = "ascii"
 
 # Replace with enum when Python3 only
-# Note that bit datatype not is included, because it uses other functioncodes.
-_PAYLOADFORMAT_LONG = "long"
+_PAYLOADFORMAT_BIT = "bit"
+_PAYLOADFORMAT_BITS = "bits"
 _PAYLOADFORMAT_FLOAT = "float"
-_PAYLOADFORMAT_STRING = "string"
+_PAYLOADFORMAT_LONG = "long"
 _PAYLOADFORMAT_REGISTER = "register"
 _PAYLOADFORMAT_REGISTERS = "registers"
+_PAYLOADFORMAT_STRING = "string"
 _ALL_PAYLOADFORMATS = [
-    _PAYLOADFORMAT_LONG,
+    _PAYLOADFORMAT_BIT,
+    _PAYLOADFORMAT_BITS,
     _PAYLOADFORMAT_FLOAT,
-    _PAYLOADFORMAT_STRING,
+    _PAYLOADFORMAT_LONG,
     _PAYLOADFORMAT_REGISTER,
     _PAYLOADFORMAT_REGISTERS,
+    _PAYLOADFORMAT_STRING,
 ]
 
 # ######################## #
@@ -236,7 +239,11 @@ class Instrument:
 
         """
         _checkFunctioncode(functioncode, [1, 2])
-        return self._genericCommand(functioncode, registeraddress)
+        return self._genericCommand(
+            functioncode,
+            registeraddress,
+            payloadformat=_PAYLOADFORMAT_BIT
+        )
 
     def write_bit(self, registeraddress, value, functioncode=5):
         """Write one bit to the slave (instrument).
@@ -258,7 +265,12 @@ class Instrument:
         """
         _checkFunctioncode(functioncode, [5, 15])
         _checkInt(value, minvalue=0, maxvalue=1, description="input value")
-        self._genericCommand(functioncode, registeraddress, value)
+        self._genericCommand(
+            functioncode,
+            registeraddress,
+            value,
+            payloadformat=_PAYLOADFORMAT_BIT
+        )
 
     def read_bits(self, registeraddress, numberOfBits, functioncode=2):
         """Read multiple bits from the slave (instrument).
@@ -286,7 +298,11 @@ class Instrument:
             maxvalue=_MAX_NUMBER_OF_BITS_TO_READ,
             description="number of bits"
         )
-        return self._genericCommand(functioncode, registeraddress)
+        return self._genericCommand(
+            functioncode,
+            registeraddress,
+            payloadformat=_PAYLOADFORMAT_BITS
+        )
 
     def write_bits(self, registeraddress, values):
         """Write multiple bits to the slave (instrument).
@@ -316,7 +332,12 @@ class Instrument:
         )
         # Note: The content of the list is checked at content conversion.
 
-        self._genericCommand(15, registeraddress, values)
+        self._genericCommand(
+            15,
+            registeraddress,
+            values,
+            payloadformat=_PAYLOADFORMAT_BITS
+        )
 
     def read_register(
         self, registeraddress, numberOfDecimals=0, functioncode=3, signed=False
@@ -376,6 +397,7 @@ class Instrument:
             registeraddress,
             numberOfDecimals=numberOfDecimals,
             signed=signed,
+            payloadformat=_PAYLOADFORMAT_REGISTER,
         )
 
     def write_register(
@@ -432,7 +454,12 @@ class Instrument:
         _checkNumerical(value, description="input value")
 
         self._genericCommand(
-            functioncode, registeraddress, value, numberOfDecimals, signed=signed
+            functioncode,
+            registeraddress,
+            value,
+            numberOfDecimals,
+            signed=signed,
+            payloadformat=_PAYLOADFORMAT_REGISTER,
         )
 
     def read_long(self, registeraddress, functioncode=3, signed=False):
@@ -834,34 +861,23 @@ class Instrument:
         _checkBool(signed, description="signed")
         _checkBool(little_endian, description="little_endian")
 
-        if payloadformat is not None:
-            if payloadformat not in _ALL_PAYLOADFORMATS:
-                raise ValueError(
-                    "Wrong payload format variable. Given: {0!r}".format(payloadformat)
-                )
+        if payloadformat not in _ALL_PAYLOADFORMATS:
+            raise ValueError(
+                "Wrong payload format variable. Given: {0!r}".format(payloadformat)
+            )
 
         numberOfRegisterBytes = numberOfRegisters * _NUMBER_OF_BYTES_PER_REGISTER
 
-        # Check combinations: Payload format
-        if functioncode in [3, 4, 6, 16] and payloadformat is None:
-            payloadformat = _PAYLOADFORMAT_REGISTER
-
-        if functioncode in [3, 4, 6, 16]:
-            if payloadformat not in _ALL_PAYLOADFORMATS:
-                raise ValueError(
-                    "The payload format is unknown. Given format: {0!r}, \
-                        functioncode: {1!r}.".format(
-                        payloadformat, functioncode
-                    )
-                )
-        else:
-            if payloadformat is not None:
-                raise ValueError(
-                    "The payload format given is not allowed for this function code. "
-                    + "Given format: {0!r}, functioncode: {1!r}.".format(
-                        payloadformat, functioncode
-                    )
-                )
+        # Check combinations: Payload format and functioncode
+        # TODO
+        # BIT and 1, 2, 5, 15.
+        # BITS and 1, 2, 15.
+        # REGISTER and 3, 4, 6, 16
+        # LONG + FLOAT + STRING + REGISTERS and 3, 4, 16
+        #
+        if (payloadformat == _PAYLOADFORMAT_BIT and functioncode not in [1, 2, 5, 15]) or
+                (payloadformat == _PAYLOADFORMAT_BITS and functioncode not in [1, 2, 15]):
+            print"HELLO"
 
         # Check combinations: Signed and numberOfDecimals
         if signed:
@@ -897,6 +913,9 @@ class Instrument:
             )
             # Note: For function code 16 there is checking also in the content
             # conversion functions.
+
+        # Check combinations: Number of bits
+        # TODO
 
         # Check combinations: Value
         if functioncode in [5, 6, 15, 16] and value is None:
