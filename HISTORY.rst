@@ -5,12 +5,22 @@ History
 
 Release 1.0 (2019-08-??)
 -------------------------
+New features:
+
 * Implements reading and writing multiple bits simultaneously.
+
+Breaking changes:
+
+* Renamed method arguments 'numberOfDecimals', 'number_of_registers' to
+  'number_of_decimals', 'number_of_registers'
 * Removed example drivers for Eurotherm 3500 and Omegacn 7500, as I no longer have
-  access for these instruments for testing. It would great if someone would pick
+  access to these instruments for testing. It would great if someone would pick
   up support for these instruments in a separate project.
 * Requires pyserial 3.0 or later.
 * Removed module level constants for default values, as they were confusingly named.
+
+Other fixes:
+
 * Allow slave addresses also in the reserved range (up to 255). Reported by Github user gnbl.
 * Serial port read and write buffers are cleared before each request to the instrument.
   Pull request from Github user mrrs6.
