@@ -330,13 +330,17 @@ class Instrument:
             serial.SerialException (inherited from IOError)
 
         """
+        if not isinstance(values, list):
+            raise TypeError(
+                'The "values parameter" must be a list. Given: {0!r}'.format(values)
+        )
+        # Note: The content of the list is checked at content conversion.
         _checkInt(
             len(values),
             minvalue=1,
             maxvalue=_MAX_NUMBER_OF_BITS_TO_WRITE,
             description="length of input list",
         )
-        # Note: The content of the list is checked at content conversion.
 
         self._genericCommand(
             15,
@@ -854,19 +858,24 @@ class Instrument:
 
         """
         ALL_ALLOWED_FUNCTIONCODES = [1, 2, 3, 4, 5, 6, 15, 16]
-        ALLOWED_FUNCITONCODES = {}
-        ALLOWED_FUNCITONCODES[_PAYLOADFORMAT_BIT] = [1, 2, 5, 15]
-        ALLOWED_FUNCITONCODES[_PAYLOADFORMAT_BITS] = [1, 2, 15]
-        ALLOWED_FUNCITONCODES[_PAYLOADFORMAT_REGISTER] = [3, 4, 6, 16]
-        ALLOWED_FUNCITONCODES[_PAYLOADFORMAT_FLOAT] = [3, 4, 16]
-        ALLOWED_FUNCITONCODES[_PAYLOADFORMAT_STRING] = [3, 4, 16]
-        ALLOWED_FUNCITONCODES[_PAYLOADFORMAT_LONG] = [3, 4, 16]
-        ALLOWED_FUNCITONCODES[_PAYLOADFORMAT_REGISTERS] = [3, 4, 16]
+        ALLOWED_FUNCTIONCODES = {}
+        ALLOWED_FUNCTIONCODES[_PAYLOADFORMAT_BIT] = [1, 2, 5, 15]
+        ALLOWED_FUNCTIONCODES[_PAYLOADFORMAT_BITS] = [1, 2, 15]
+        ALLOWED_FUNCTIONCODES[_PAYLOADFORMAT_REGISTER] = [3, 4, 6, 16]
+        ALLOWED_FUNCTIONCODES[_PAYLOADFORMAT_FLOAT] = [3, 4, 16]
+        ALLOWED_FUNCTIONCODES[_PAYLOADFORMAT_STRING] = [3, 4, 16]
+        ALLOWED_FUNCTIONCODES[_PAYLOADFORMAT_LONG] = [3, 4, 16]
+        ALLOWED_FUNCTIONCODES[_PAYLOADFORMAT_REGISTERS] = [3, 4, 16]
 
         # Check input values
         _checkFunctioncode(functioncode, ALL_ALLOWED_FUNCTIONCODES)
         _checkRegisteraddress(registeraddress)
-        _checkInt(number_of_decimals, minvalue=0, description="number of decimals")
+        _checkInt(
+            number_of_decimals,
+            minvalue=0,
+            maxvalue=_MAX_NUMBER_OF_DECIMALS,
+            description="number of decimals"
+        )
         _checkInt(
             number_of_registers,
             minvalue=0,
@@ -887,17 +896,21 @@ class Instrument:
         _checkBool(little_endian, description="little_endian")
 
         if payloadformat not in _ALL_PAYLOADFORMATS:
+            if not isinstance(payloadformat, str):
+                raise TypeError(
+                    "The payload format should be a string. Given: {!r}".format(payloadformat)
+                )
             raise ValueError(
-                "Wrong payload format variable. Given: {0!r}".format(payloadformat)
+                "Wrong payload format variable. Given: {!r}".format(payloadformat)
             )
 
         numberOfRegisterBytes = number_of_registers * _NUMBER_OF_BYTES_PER_REGISTER
 
         # Check combinations: Payload format and functioncode
-        if functioncode not in ALLOWED_FUNCITONCODES[payloadformat]:
+        if functioncode not in ALLOWED_FUNCTIONCODES[payloadformat]:
             raise ValueError(
-                    "Wront functioncode for payloadformat "
-                    + "{0!r}. Given: {0!r}.".format(payloadformat, functioncode)
+                    "Wrong functioncode for payloadformat "
+                    + "{!r}. Given: {!r}.".format(payloadformat, functioncode)
                 )
 
         # Check combinations: Signed
@@ -905,15 +918,16 @@ class Instrument:
             if payloadformat not in [_PAYLOADFORMAT_REGISTER, _PAYLOADFORMAT_LONG]:
                 raise ValueError(
                     'The "signed" parameter can not be used for this payload format. '
-                    + "Given format: {0!r}.".format(payloadformat)
+                    + "Given format: {!r}.".format(payloadformat)
                 )
 
         # Check combinations: number_of_decimals
-        if payloadformat != _PAYLOADFORMAT_REGISTER and number_of_decimals > 0:
-            raise ValueError(
-                'The "number_of_decimals" parameter can not be used for this payload format. '
-                + "Given format: {0!r}.".format(payloadformat)
-            )
+        if number_of_decimals > 0:
+            if payloadformat != _PAYLOADFORMAT_REGISTER:
+                raise ValueError(
+                    'The "number_of_decimals" parameter can not be used for this payload format. '
+                    + "Given format: {0!r}.".format(payloadformat)
+                )
 
         # Check combinations: little_endian
         if little_endian:
@@ -924,35 +938,45 @@ class Instrument:
                 )
 
         # Check combinations: number of bits
-         # gör om
-        if (
-            payloadformat == _PAYLOADFORMAT_BIT and number_of_bits !=1
-        ) or (
-            payloadformat == _PAYLOADFORMAT_BITS and number_of_bits < 1
-        ) or (
-            number_of_bits > 0  #TODO fel
-        ):
+        if payloadformat == _PAYLOADFORMAT_BIT:
+            if number_of_bits != 1:
+                raise ValueError(
+                    "For BIT payload format the number of bits should be 1. "
+                    + "Given: {0!r}.".format(number_of_bits)
+                )
+        elif payloadformat == _PAYLOADFORMAT_BITS:
+            if number_of_bits < 1:
+                raise ValueError(
+                    "For BITS payload format the number of bits should be at least 1. "
+                    + "Given: {0!r}.".format(number_of_bits)
+                )
+        elif number_of_bits:
             raise ValueError(
                 'The number_of_bits parameter is wrong for payload format '
                 + "{0!r}. Given: {0!r}.".format(payloadformat, number_of_bits)
             )
 
         # Check combinations: Number of registers
-        # TODO så man fattar
-        # 1, 2, 5, 15 = 0
-        # 3, 4, 6, 16 = >=1
-
-        if functioncode not in [3, 4, 16] and number_of_registers != 1:
+        if functioncode in [1, 2, 5, 15] and number_of_registers:
             raise ValueError(
                 "The number_of_registers is not valid for this function code. "
                 + "number_of_registers: {0!r}, functioncode {1}.".format(
                     number_of_registers, functioncode
                 )
             )
-
+        elif functioncode in [3, 4, 16] and not number_of_registers:
+            raise ValueError(
+                "The number_of_registers must be > 0 for functioncode "
+                + "{}.".format(functioncode)
+            )
+        elif functioncode == 6  and number_of_registers != 1:
+            raise ValueError(
+                "The number_of_registers must be 1 for functioncode 6. "
+                + "Given: {}.".format(number_of_registers)
+            )
         if (
-            payloadformat == _PAYLOADFORMAT_REGISTER
-            and functioncode == 16
+            functioncode == 16
+            and payloadformat == _PAYLOADFORMAT_REGISTER
             and number_of_registers != 1
         ):
             raise ValueError(
@@ -965,17 +989,22 @@ class Instrument:
         # Check combinations: Value
         if functioncode in [5, 6, 15, 16] and value is None:
             raise ValueError(
-                "The input value is not valid for this function code. "
+                "The input value must be given for this function code. "
+                + "Given {0!r} and {1}.".format(value, functioncode)
+            )
+        elif functioncode in [1, 2, 3, 4] and value is not None:
+            raise ValueError(
+                "The input value should not be given for this function code. "
                 + "Given {0!r} and {1}.".format(value, functioncode)
             )
 
+        # Check combinations: Value for numerical
         if functioncode == 16 and payloadformat in [
             _PAYLOADFORMAT_REGISTER,
             _PAYLOADFORMAT_FLOAT,
             _PAYLOADFORMAT_LONG,
         ]:
             _checkNumerical(value, description="input value")
-
         if functioncode == 6 and payloadformat == _PAYLOADFORMAT_REGISTER:
             _checkNumerical(value, description="input value")
 
@@ -991,7 +1020,8 @@ class Instrument:
         if functioncode == 16 and payloadformat == _PAYLOADFORMAT_REGISTERS:
             if not isinstance(value, list):
                 raise TypeError(
-                    "The value parameter must be a list. Given {0!r}.".format(value)
+                    "The value parameter for payloadformat REGISTERS must be a list. "
+                    + "Given {0!r}.".format(value)
                 )
 
             if len(value) != number_of_registers:
@@ -1002,8 +1032,30 @@ class Instrument:
                     )
                 )
 
+        # Check combinations: Value for bit
+        if functioncode in [5, 15] and payloadformat == _PAYLOADFORMAT_BIT:
+            _checkInt(
+                value,
+                minvalue=0,
+                maxvalue=1,
+                description="input value for payload format BIT",
+            )
+
         # Check combinations: Value for bits
-        # TODO
+        if functioncode == 15 and payloadformat == _PAYLOADFORMAT_BITS:
+            if not isinstance(value, list):
+                raise TypeError(
+                    "The value parameter for payloadformat BITS must be a list. "
+                    + "Given {0!r}.".format(value)
+                )
+
+            if len(value) != number_of_bits:
+                raise ValueError(
+                    "The list length does not match number of bits. "
+                    + "List: {0!r},  Number of registers: {1!r}.".format(
+                        value, number_of_registers
+                    )
+                )
 
         # Create payload
         payloadToSlave = _createPayload(
@@ -1316,6 +1368,7 @@ def _createPayload(
     value,
     number_of_decimals,
     number_of_registers,
+    number_of_bits,
     signed,
     little_endian,
     payloadformat,
@@ -1380,6 +1433,7 @@ def _parse_payload(
     value,
     number_of_decimals,
     number_of_registers,
+    number_of_bits,
     signed,
     little_endian,
     payloadformat,

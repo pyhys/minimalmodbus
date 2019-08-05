@@ -69,6 +69,8 @@ from minimalmodbus import NoResponseError
 from minimalmodbus import SlaveDeviceBusyError
 from minimalmodbus import SlaveReportedException
 
+from minimalmodbus import _PAYLOADFORMAT_BIT
+from minimalmodbus import _PAYLOADFORMAT_BITS
 from minimalmodbus import _PAYLOADFORMAT_LONG
 from minimalmodbus import _PAYLOADFORMAT_FLOAT
 from minimalmodbus import _PAYLOADFORMAT_STRING
@@ -167,109 +169,127 @@ class TestCreatePayload(ExtendedTestCase):
 
     def testKnownValues(self):
         # read_bit(61, functioncode=2)
-        self.assertEqual(minimalmodbus._createPayload(2, 61, None, 0, 0, False, False, None), '\x00\x3D\x00\x01')
+        self.assertEqual(minimalmodbus._createPayload(2, 61, None, 0, 0, 1, False, False, None),
+                         '\x00\x3D\x00\x01')
 
         # read_bit(62, functioncode=1)
-        self.assertEqual(minimalmodbus._createPayload(1, 62, None, 0, 0, False, False, None), '\x00\x3E\x00\x01')
+        self.assertEqual(minimalmodbus._createPayload(1, 62, None, 0, 0, 1, False, False, None),
+                         '\x00\x3E\x00\x01')
 
         # write_bit(71, 1, functioncode=5)
-        self.assertEqual(minimalmodbus._createPayload(5, 71, 1, 0, 1, False, False, None), '\x00\x47\xFF\x00')
+        self.assertEqual(minimalmodbus._createPayload(5, 71, 1, 0, 0, 1, False, False, _PAYLOADFORMAT_BIT),
+                         '\x00\x47\xFF\x00')
 
         # read_register(289, 0, functioncode=3)
-        self.assertEqual(minimalmodbus._createPayload(3, 289, None, 0, 1, False, False, None), '\x01\x21\x00\x01')
+        self.assertEqual(minimalmodbus._createPayload(3, 289, None, 0, 1, 0, False, False, _PAYLOADFORMAT_REGISTER),
+                         '\x01\x21\x00\x01')
 
         # read_register(14, 0, functioncode=4)
-        self.assertEqual(minimalmodbus._createPayload(4, 14, None, 0, 1, False, False, None), '\x00\x0E\x00\x01')
+        self.assertEqual(minimalmodbus._createPayload(4, 14, None, 0, 1, 0, False, False, _PAYLOADFORMAT_REGISTER),
+                         '\x00\x0E\x00\x01')
 
         # write_register(35, 20, functioncode = 16)
-        self.assertEqual(minimalmodbus._createPayload(16, 35, 20, 0, 1, False, False, _PAYLOADFORMAT_REGISTER),
+        self.assertEqual(minimalmodbus._createPayload(16, 35, 20, 0, 1, 0, False, False, _PAYLOADFORMAT_REGISTER),
                          '\x00\x23\x00\x01\x02\x00\x14')
 
         # write_register(45, 88, functioncode = 6)
-        self.assertEqual(minimalmodbus._createPayload(6, 45, 88, 0, 1, False, False, _PAYLOADFORMAT_REGISTER), '\x00\x2D\x00\x58')
+        self.assertEqual(minimalmodbus._createPayload(6, 45, 88, 0, 1, 0, False, False, _PAYLOADFORMAT_REGISTER),
+                         '\x00\x2D\x00\x58')
 
         # write_register(101, -5, signed=True)
-        self.assertEqual(minimalmodbus._createPayload(16, 101, -5, 0, 1, True, False, _PAYLOADFORMAT_REGISTER),
+        self.assertEqual(minimalmodbus._createPayload(16, 101, -5, 0, 1, 0, True, False, _PAYLOADFORMAT_REGISTER),
                          '\x00\x65\x00\x01\x02\xFF\xFB')
 
         # write_register(101, -5, 1, signed=True)
-        self.assertEqual(minimalmodbus._createPayload(16, 101, -5, 1, 1, True, False, _PAYLOADFORMAT_REGISTER),
+        self.assertEqual(minimalmodbus._createPayload(16, 101, -5, 1, 1, 0, True, False, _PAYLOADFORMAT_REGISTER),
                          '\x00\x65\x00\x01\x02\xFF\xCE')
 
         # read_long(102)
-        self.assertEqual(minimalmodbus._createPayload(3, 102, None, 0, 2, False, False, _PAYLOADFORMAT_LONG), '\x00\x66\x00\x02')
+        self.assertEqual(minimalmodbus._createPayload(3, 102, None, 0, 2, 0, False, False, _PAYLOADFORMAT_LONG),
+                         '\x00\x66\x00\x02')
 
         # read_long(102, functioncode=4)
-        self.assertEqual(minimalmodbus._createPayload(4, 102, None, 0, 2, False, False, _PAYLOADFORMAT_LONG), '\x00\x66\x00\x02')
+        self.assertEqual(minimalmodbus._createPayload(4, 102, None, 0, 2, 0, False, False, _PAYLOADFORMAT_LONG),
+                         '\x00\x66\x00\x02')
 
         # read_long(256)
-        self.assertEqual(minimalmodbus._createPayload(3, 256, None, 0, 2, False, False, _PAYLOADFORMAT_LONG), '\x01\x00\x00\x02')
+        self.assertEqual(minimalmodbus._createPayload(3, 256, None, 0, 2, 0, False, False, _PAYLOADFORMAT_LONG),
+                         '\x01\x00\x00\x02')
 
         # write_long(102, 5)
-        self.assertEqual(minimalmodbus._createPayload(16, 102, 5, 0, 2, False, False, _PAYLOADFORMAT_LONG),
+        self.assertEqual(minimalmodbus._createPayload(16, 102, 5, 0, 2, 0, False, False, _PAYLOADFORMAT_LONG),
                         '\x00\x66\x00\x02\x04\x00\x00\x00\x05')
 
         # write_long(102, 5,  signed=True)
-        self.assertEqual(minimalmodbus._createPayload(16, 102, 5, 0, 2, True, False, _PAYLOADFORMAT_LONG),
+        self.assertEqual(minimalmodbus._createPayload(16, 102, 5, 0, 2, 0, True, False, _PAYLOADFORMAT_LONG),
                         '\x00\x66\x00\x02\x04\x00\x00\x00\x05')
 
         # write_long(102, -5, signed=True)
-        self.assertEqual(minimalmodbus._createPayload(16, 102, -5, 0, 2, True, False, _PAYLOADFORMAT_LONG),
+        self.assertEqual(minimalmodbus._createPayload(16, 102, -5, 0, 2, 0, True, False, _PAYLOADFORMAT_LONG),
                         '\x00\x66\x00\x02\x04\xFF\xFF\xFF\xFB')
 
-        # read_float(103, functioncode=3, numberOfRegisters=2)
-        self.assertEqual(minimalmodbus._createPayload(3, 103, None, 0, 2, False, False, _PAYLOADFORMAT_FLOAT), '\x00\x67\x00\x02')
+        # read_float(103, functioncode=3, number_of_registers=2)
+        self.assertEqual(minimalmodbus._createPayload(3, 103, None, 0, 2, 0, False, False, _PAYLOADFORMAT_FLOAT),
+                         '\x00\x67\x00\x02')
 
-        # read_float(103, functioncode=3, numberOfRegisters=4)
-        self.assertEqual(minimalmodbus._createPayload(3, 103, None, 0, 4, False, False, _PAYLOADFORMAT_FLOAT), '\x00\x67\x00\x04')
+        # read_float(103, functioncode=3, number_of_registers=4)
+        self.assertEqual(minimalmodbus._createPayload(3, 103, None, 0, 4, 0, False, False, _PAYLOADFORMAT_FLOAT),
+                         '\x00\x67\x00\x04')
 
-        # read_float(103, functioncode=4, numberOfRegisters=2)
-        self.assertEqual(minimalmodbus._createPayload(4, 103, None, 0, 2, False, False, _PAYLOADFORMAT_FLOAT), '\x00\x67\x00\x02')
+        # read_float(103, functioncode=4, number_of_registers=2)
+        self.assertEqual(minimalmodbus._createPayload(4, 103, None, 0, 2, 0, False, False, _PAYLOADFORMAT_FLOAT),
+                         '\x00\x67\x00\x02')
 
-        # write_float(103, 1.1, numberOfRegisters=2)   OK compare to recorded data
-        self.assertEqual(minimalmodbus._createPayload(16, 103, 1.1, 0, 2, False, False, _PAYLOADFORMAT_FLOAT),
+        # write_float(103, 1.1, number_of_registers=2)   OK compare to recorded data
+        self.assertEqual(minimalmodbus._createPayload(16, 103, 1.1, 0, 2, 0, False, False, _PAYLOADFORMAT_FLOAT),
                         '\x00\x67\x00\x02\x04\x3F\x8C\xCC\xCD')
 
-        # write_float(103, 1.1, numberOfRegisters=4)   OK compare to recorded data
-        self.assertEqual(minimalmodbus._createPayload(16, 103, 1.1, 0, 4, False, False, _PAYLOADFORMAT_FLOAT),
+        # write_float(103, 1.1, number_of_registers=4)   OK compare to recorded data
+        self.assertEqual(minimalmodbus._createPayload(16, 103, 1.1, 0, 4, 0, False, False, _PAYLOADFORMAT_FLOAT),
                         '\x00\x67\x00\x04\x08\x3F\xF1\x99\x99\x99\x99\x99\x9A')
 
         # read_string(104, 1)
-        self.assertEqual(minimalmodbus._createPayload(3, 104, None, 0, 1, False, False, _PAYLOADFORMAT_STRING), '\x00\x68\x00\x01')
+        self.assertEqual(minimalmodbus._createPayload(3, 104, None, 0, 1, 0, False, False, _PAYLOADFORMAT_STRING),
+                         '\x00\x68\x00\x01')
 
         # read_string(104, 4)
-        self.assertEqual(minimalmodbus._createPayload(3, 104, None, 0, 4, False, False, _PAYLOADFORMAT_STRING), '\x00\x68\x00\x04')
+        self.assertEqual(minimalmodbus._createPayload(3, 104, None, 0, 4, 0, False, False, _PAYLOADFORMAT_STRING),
+                         '\x00\x68\x00\x04')
 
         # read_string(104, 4, functioncode=4)
-        self.assertEqual(minimalmodbus._createPayload(4, 104, None, 0, 4, False, False, _PAYLOADFORMAT_STRING), '\x00\x68\x00\x04')
+        self.assertEqual(minimalmodbus._createPayload(4, 104, None, 0, 4, 0, False, False, _PAYLOADFORMAT_STRING),
+                         '\x00\x68\x00\x04')
 
         # write_string(104, 'A', 1)
-        self.assertEqual(minimalmodbus._createPayload(16, 104, 'A', 0, 1, False, False, _PAYLOADFORMAT_STRING),
-                        '\x00\x68\x00\x01\x02A ')
+        self.assertEqual(minimalmodbus._createPayload(16, 104, 'A', 0, 1, 0, False, False, _PAYLOADFORMAT_STRING),
+                         '\x00\x68\x00\x01\x02A ')
 
         # write_string(104, 'A', 4)
-        self.assertEqual(minimalmodbus._createPayload(16, 104, 'A', 0, 4, False, False, _PAYLOADFORMAT_STRING),
-                        '\x00\x68\x00\x04\x08A       ')
+        self.assertEqual(minimalmodbus._createPayload(16, 104, 'A', 0, 4, 0, False, False, _PAYLOADFORMAT_STRING),
+                         '\x00\x68\x00\x04\x08A       ')
 
         # write_string(104, 'ABCDEFGH', 4)
-        self.assertEqual(minimalmodbus._createPayload(16, 104, 'ABCDEFGH', 0, 4, False, False, _PAYLOADFORMAT_STRING),
-                        '\x00\x68\x00\x04\x08ABCDEFGH')
+        self.assertEqual(minimalmodbus._createPayload(16, 104, 'ABCDEFGH', 0, 4, 0, False, False, _PAYLOADFORMAT_STRING),
+                         '\x00\x68\x00\x04\x08ABCDEFGH')
 
         # read_registers(105, 1)
-        self.assertEqual(minimalmodbus._createPayload(3, 105, None, 0, 1, False, False, _PAYLOADFORMAT_REGISTERS), '\x00\x69\x00\x01')
+        self.assertEqual(minimalmodbus._createPayload(3, 105, None, 0, 1, 0, False, False, _PAYLOADFORMAT_REGISTERS),
+                         '\x00\x69\x00\x01')
 
         # read_registers(105, 3)
-        self.assertEqual(minimalmodbus._createPayload(3, 105, None, 0, 3, False, False, _PAYLOADFORMAT_REGISTERS), '\x00\x69\x00\x03')
+        self.assertEqual(minimalmodbus._createPayload(3, 105, None, 0, 3, 0, False, False, _PAYLOADFORMAT_REGISTERS),
+                         '\x00\x69\x00\x03')
 
         # read_registers(105, 7, functioncode=4)
-        self.assertEqual(minimalmodbus._createPayload(4, 105, None, 0, 7, False, False, _PAYLOADFORMAT_REGISTERS), '\x00\x69\x00\x07')
+        self.assertEqual(minimalmodbus._createPayload(4, 105, None, 0, 7, 0, False, False, _PAYLOADFORMAT_REGISTERS),
+                         '\x00\x69\x00\x07')
 
         # write_registers(105, [2])
-        self.assertEqual(minimalmodbus._createPayload(16, 105, [2], 0, 1, False, False, _PAYLOADFORMAT_REGISTERS),
+        self.assertEqual(minimalmodbus._createPayload(16, 105, [2], 0, 1, 0, False, False, _PAYLOADFORMAT_REGISTERS),
                         '\x00\x69\x00\x01\x02\x00\x02')
 
         # write_registers(105, [2, 4, 8])
-        self.assertEqual(minimalmodbus._createPayload(16, 105, [2, 4, 8], 0, 3, False, False, _PAYLOADFORMAT_REGISTERS),
+        self.assertEqual(minimalmodbus._createPayload(16, 105, [2, 4, 8], 0, 3, 0, False, False, _PAYLOADFORMAT_REGISTERS),
                         '\x00\x69\x00\x03\x06\x00\x02\x00\x04\x00\x08')
 
 class TestParsePayload(ExtendedTestCase):
@@ -277,125 +297,153 @@ class TestParsePayload(ExtendedTestCase):
     def testKnownValues(self):
 
         # read_bit(61, functioncode=2)
-        self.assertEqual(minimalmodbus._parse_payload('\x01\x01', 2, 61, None, 0, 0, False, False, None), 1)
+        self.assertEqual(minimalmodbus._parse_payload('\x01\x01', 2, 61, None, 0, 0, 1, False, False, _PAYLOADFORMAT_BIT), 1)
 
         # read_bit(62, functioncode=1)
-        self.assertEqual(minimalmodbus._parse_payload('\x01\x00', 1, 62, None, 0, 0, False, False, None), 0)
+        self.assertEqual(minimalmodbus._parse_payload('\x01\x00', 1, 62, None, 0, 0, 1, False, False, _PAYLOADFORMAT_BIT), 0)
 
         # write_bit(71, 1, functioncode=5)
-        self.assertEqual(minimalmodbus._parse_payload('\x00\x47\xff\x00', 5, 71, 1, 0, 0, False, False, None), None)
+        self.assertEqual(minimalmodbus._parse_payload('\x00\x47\xff\x00', 5, 71, 1, 0, 0, 1, False, False, _PAYLOADFORMAT_BIT), None)
 
         # write_bit(72, 1, functioncode=15)
-        self.assertEqual(minimalmodbus._parse_payload('\x00\x48\x00\x01', 15, 72, 1, 0, 0, False, False, None), None)
+        self.assertEqual(minimalmodbus._parse_payload('\x00\x48\x00\x01', 15, 72, 1, 0, 0, 1, False, False, _PAYLOADFORMAT_BIT), None)
 
         # read_register(289, 0, functioncode=3)
-        self.assertEqual(minimalmodbus._parse_payload('\x02\x03\x02', 3, 289, None, 0, 1, False, False, _PAYLOADFORMAT_REGISTER), 770)
+        self.assertEqual(minimalmodbus._parse_payload('\x02\x03\x02', 3, 289, None, 0, 1, 0, False, False, _PAYLOADFORMAT_REGISTER), 770)
 
         # read_register(14, 0, functioncode=4)
-        self.assertEqual(minimalmodbus._parse_payload('\x02\x03\x70', 4, 14, None, 0, 1, False, False, _PAYLOADFORMAT_REGISTER), 880)
+        self.assertEqual(minimalmodbus._parse_payload('\x02\x03\x70', 4, 14, None, 0, 1, 0, False, False, _PAYLOADFORMAT_REGISTER), 880)
 
         # write_register(35, 20, functioncode = 16)
-        self.assertEqual(minimalmodbus._parse_payload('\x00#\x00\x01', 16, 35, 20, 0, 1, False, False, _PAYLOADFORMAT_REGISTER), None)
+        self.assertEqual(minimalmodbus._parse_payload('\x00#\x00\x01', 16, 35, 20, 0, 1, 0, False, False, _PAYLOADFORMAT_REGISTER), None)
 
         # write_register(45, 88, functioncode = 6)
-        self.assertEqual(minimalmodbus._parse_payload('\x00\x2d\x00\x58', 6, 45, 88, 0, 1, False, False, _PAYLOADFORMAT_REGISTER), None)
+        self.assertEqual(minimalmodbus._parse_payload('\x00\x2d\x00\x58', 6, 45, 88, 0, 1, 0, False, False, _PAYLOADFORMAT_REGISTER), None)
 
         # write_register(101, -5, signed=True)
-        self.assertEqual(minimalmodbus._parse_payload('\x00e\x00\x01', 16, 101, -5, 0, 1, True, False, _PAYLOADFORMAT_REGISTER), None)
+        self.assertEqual(minimalmodbus._parse_payload('\x00e\x00\x01', 16, 101, -5, 0, 1, 0, True, False, _PAYLOADFORMAT_REGISTER), None)
 
         # read_long(102)
-        self.assertEqual(minimalmodbus._parse_payload('\x04\xff\xff\xff\xff', 3, 102, None, 0, 2, False, False, _PAYLOADFORMAT_LONG), 4294967295)
+        self.assertEqual(minimalmodbus._parse_payload('\x04\xff\xff\xff\xff', 3, 102, None, 0, 2, 0, False, False, _PAYLOADFORMAT_LONG), 4294967295)
 
         # read_long(102, signed=True)
-        self.assertEqual(minimalmodbus._parse_payload('\x04\xff\xff\xff\xff', 3, 102, None, 0, 2, True, False, _PAYLOADFORMAT_LONG), -1)
+        self.assertEqual(minimalmodbus._parse_payload('\x04\xff\xff\xff\xff', 3, 102, None, 0, 2, 0, True, False, _PAYLOADFORMAT_LONG), -1)
 
         # write_long(102, 5)
-        self.assertEqual(minimalmodbus._parse_payload('\x00f\x00\x02', 16, 102, 5, 0, 2, False, False, _PAYLOADFORMAT_LONG), None)
+        self.assertEqual(minimalmodbus._parse_payload('\x00f\x00\x02', 16, 102, 5, 0, 2, 0, False, False, _PAYLOADFORMAT_LONG), None)
 
         # write_long(102, -5, signed=True)
-        self.assertEqual(minimalmodbus._parse_payload('\x00f\x00\x02', 16, 102, -5, 0, 2, True, False, _PAYLOADFORMAT_LONG), None)
+        self.assertEqual(minimalmodbus._parse_payload('\x00f\x00\x02', 16, 102, -5, 0, 2, 0, True, False, _PAYLOADFORMAT_LONG), None)
 
-        # read_float(103, functioncode=3, numberOfRegisters=2)
+        # read_float(103, functioncode=3, number_of_registers=2)
         self.assertAlmostEqual(minimalmodbus._parse_payload('\x04\x3f\x80\x00\x00',
-                                                            3, 103, None, 0, 2, False, False, _PAYLOADFORMAT_FLOAT),
+                                                            3, 103, None, 0, 2, 0, False, False, _PAYLOADFORMAT_FLOAT),
                                1.0)
 
-        # read_float(103, functioncode=3, numberOfRegisters=4)
+        # read_float(103, functioncode=3, number_of_registers=4)
         self.assertAlmostEqual(minimalmodbus._parse_payload('\x08\xc0\x00\x00\x00\x00\x00\x00\x00',
-                                                            3, 103, None, 0, 4, False, False, _PAYLOADFORMAT_FLOAT),
+                                                            3, 103, None, 0, 4, 0, False, False, _PAYLOADFORMAT_FLOAT),
                                -2.0)
 
-        # read_float(103, functioncode=4, numberOfRegisters=2)
+        # read_float(103, functioncode=4, number_of_registers=2)
         self.assertAlmostEqualRatio(minimalmodbus._parse_payload('\x04\x72\x38\x47\x25',
-                                                                 4, 103, None, 0, 2, False, False, _PAYLOADFORMAT_FLOAT),
+                                                                 4, 103, None, 0, 2, 0, False, False, _PAYLOADFORMAT_FLOAT),
                                     3.65e30)
 
-        # write_float(103, 1.1, numberOfRegisters=2)
-        self.assertEqual(minimalmodbus._parse_payload('\x00g\x00\x02', 16, 103, 1.1, 0, 2, False, False, _PAYLOADFORMAT_FLOAT), None)
+        # write_float(103, 1.1, number_of_registers=2)
+        self.assertEqual(minimalmodbus._parse_payload('\x00g\x00\x02', 16, 103, 1.1, 0, 2, 0, False, False, _PAYLOADFORMAT_FLOAT), None)
 
-        # write_float(103, 1.1, numberOfRegisters=4)
-        self.assertEqual(minimalmodbus._parse_payload('\x00g\x00\x04', 16, 103, 1.1, 0, 4, False, False, _PAYLOADFORMAT_FLOAT), None)
+        # write_float(103, 1.1, number_of_registers=4)
+        self.assertEqual(minimalmodbus._parse_payload('\x00g\x00\x04', 16, 103, 1.1, 0, 4, 0, False, False, _PAYLOADFORMAT_FLOAT), None)
 
         # read_string(104, 1)
-        self.assertEqual(minimalmodbus._parse_payload('\x02AB', 3, 104, None, 0, 1, False, False, _PAYLOADFORMAT_STRING), 'AB')
+        self.assertEqual(minimalmodbus._parse_payload('\x02AB', 3, 104, None, 0, 1, 0, False, False, _PAYLOADFORMAT_STRING), 'AB')
 
         # read_string(104, 4)
-        self.assertEqual(minimalmodbus._parse_payload('\x08ABCDEFGH', 3, 104, None, 0, 4, False, False, _PAYLOADFORMAT_STRING), 'ABCDEFGH')
+        self.assertEqual(minimalmodbus._parse_payload('\x08ABCDEFGH', 3, 104, None, 0, 4, 0, False, False, _PAYLOADFORMAT_STRING), 'ABCDEFGH')
 
         # write_string(104, 'A', 1)
-        self.assertEqual(minimalmodbus._parse_payload('\x00h\x00\x01', 16, 104, 'A', 0, 1, False, False, _PAYLOADFORMAT_STRING), None)
+        self.assertEqual(minimalmodbus._parse_payload('\x00h\x00\x01', 16, 104, 'A', 0, 1, 0, False, False, _PAYLOADFORMAT_STRING), None)
 
         # write_string(104, 'A', 4)
-        self.assertEqual(minimalmodbus._parse_payload('\x00h\x00\x04', 16, 104, 'A', 0, 4, False, False, _PAYLOADFORMAT_STRING), None)
+        self.assertEqual(minimalmodbus._parse_payload('\x00h\x00\x04', 16, 104, 'A', 0, 4, 0, False, False, _PAYLOADFORMAT_STRING), None)
 
         # write_string(104, 'ABCDEFGH', 4)
-        self.assertEqual(minimalmodbus._parse_payload('\x00h\x00\x04', 16, 104, 'ABCDEFGH', 0, 4, False, False, _PAYLOADFORMAT_STRING), None)
+        self.assertEqual(minimalmodbus._parse_payload('\x00h\x00\x04',
+                                                      16, 104, 'ABCDEFGH', 0, 4, 0, False, False, _PAYLOADFORMAT_STRING),
+                         None)
 
         # read_registers(105, 1)
-        self.assertEqual(minimalmodbus._parse_payload('\x02\x00\x10', 3, 105, None, 0, 1, False, False, _PAYLOADFORMAT_REGISTERS), [16])
+        self.assertEqual(minimalmodbus._parse_payload('\x02\x00\x10',
+                                                      3, 105, None, 0, 1, 0, False, False, _PAYLOADFORMAT_REGISTERS),
+                        [16])
 
         # read_registers(105, 3)
         self.assertEqual(minimalmodbus._parse_payload('\x06\x00\x10\x00\x20\x00\x40',
-                                                      3, 105, None, 0, 3, False, False, _PAYLOADFORMAT_REGISTERS),
+                                                      3, 105, None, 0, 3, 0, False, False, _PAYLOADFORMAT_REGISTERS),
                         [16, 32, 64])
 
         # write_registers(105, [2])
-        self.assertEqual(minimalmodbus._parse_payload('\x00i\x00\x01', 16, 105, [2], 0, 1, False, False, _PAYLOADFORMAT_REGISTERS), None)
+        self.assertEqual(minimalmodbus._parse_payload('\x00i\x00\x01',
+                                                      16, 105, [2], 0, 1, 0, False, False, _PAYLOADFORMAT_REGISTERS),
+                         None)
 
         # write_registers(105, [2, 4, 8])
-        self.assertEqual(minimalmodbus._parse_payload('\x00i\x00\x03', 16, 105, [2, 4, 8], 0, 3, False, False, _PAYLOADFORMAT_REGISTERS), None)
+        self.assertEqual(minimalmodbus._parse_payload('\x00i\x00\x03', 16, 105, [2, 4, 8], 0, 3, 0,
+                                                      False, False, _PAYLOADFORMAT_REGISTERS),
+                         None)
 
     def testInvalidPayloads(self):
 
         # read_bit(63, functioncode=2)  # Slave gives wrong byte count
-        self.assertRaises(InvalidResponseError, minimalmodbus._parse_payload, '\x02\x01', 2, 63, None, 0, 0, False, False, None)
+        self.assertRaises(InvalidResponseError,
+                          minimalmodbus._parse_payload,'\x02\x01', 2, 63, None, 0, 0, 1,
+                                                        False, False, _PAYLOADFORMAT_BIT)
 
         # write_bit(73, 1, functioncode=15)  # Slave gives wrong number of registers
-        self.assertRaises(InvalidResponseError, minimalmodbus._parse_payload, '\x00\x49\x00\x02', 15, 73, 1, 0, 0, False, False, None)
+        self.assertRaises(InvalidResponseError,
+                          minimalmodbus._parse_payload, '\x00\x49\x00\x02', 15, 73, 1, 0, 0, 1,
+                                                        False, False, _PAYLOADFORMAT_BIT)
 
         # write_bit(74, 1, functioncode=5)  # Slave gives wrong write data
-        self.assertRaises(InvalidResponseError, minimalmodbus._parse_payload, '\x00\x47\x00\x00', 5, 74, 1, 0, 0, False, False, None)
+        self.assertRaises(InvalidResponseError,
+                          minimalmodbus._parse_payload, '\x00\x47\x00\x00', 5, 74, 1, 0, 0, 1,
+                                                        False, False, _PAYLOADFORMAT_BIT)
 
         # write_bit(73, 1, functioncode=15)  # Slave gives wrong number of registers
-        self.assertRaises(InvalidResponseError, minimalmodbus._parse_payload, '\x00\x49\x00\x02', 15, 73, 1, 0, 0, False, False, None)
+        self.assertRaises(InvalidResponseError,
+                          minimalmodbus._parse_payload, '\x00\x49\x00\x02', 15, 73, 1, 0, 0, 1,
+                                                        False, False, _PAYLOADFORMAT_BIT)
 
         # write_bit(74, 1, functioncode=5)  # Slave gives wrong write data (address)
-        self.assertRaises(InvalidResponseError, minimalmodbus._parse_payload, '\x00\x47\x00\x00', 5, 74, 1, 0, 0, False, False, None)
+        self.assertRaises(InvalidResponseError,
+                          minimalmodbus._parse_payload, '\x00\x47\x00\x00', 5, 74, 1, 0, 0, 1,
+                                                        False, False, _PAYLOADFORMAT_BIT)
 
         # read_register(202, 0, functioncode=3)  # Slave gives too long response
-        self.assertRaises(InvalidResponseError, minimalmodbus._parse_payload, '\x02\x00\x00\x09', 3, 202, None, 0, 1, False, False, None)
+        self.assertRaises(InvalidResponseError,
+                          minimalmodbus._parse_payload,'\x02\x00\x00\x09', 3, 202, None, 0, 1, 0,
+                                                        False, False, _PAYLOADFORMAT_REGISTER)
 
         # read_register(203, 0, functioncode=3)  # Slave gives too short response
-        self.assertRaises(InvalidResponseError, minimalmodbus._parse_payload, '\x02\x09', 3, 203, None, 0, 1, False, False, None)
+        self.assertRaises(InvalidResponseError,
+                          minimalmodbus._parse_payload,'\x02\x09', 3, 203, None, 0, 1, 0,
+                                                        False, False, _PAYLOADFORMAT_REGISTER)
 
         # write_register(52, 99, functioncode = 16)  # Slave gives wrong number of registers
-        self.assertRaises(InvalidResponseError, minimalmodbus._parse_payload, '\x00\x34\x00\x02', 16, 52, 99, 0, 1, False, False, None)
+        self.assertRaises(InvalidResponseError,
+                          minimalmodbus._parse_payload, '\x00\x34\x00\x02', 16, 52, 99, 0, 1, 0,
+                                                        False, False, _PAYLOADFORMAT_REGISTER)
 
         # write_register(53, 99, functioncode = 16)  # Slave gives wrong register address
-        self.assertRaises(InvalidResponseError, minimalmodbus._parse_payload, '\x00\x36\x00\x01', 16, 53, 99, 0, 1, False, False, None)
+        self.assertRaises(InvalidResponseError,
+                          minimalmodbus._parse_payload, '\x00\x36\x00\x01', 16, 53, 99, 0, 1, 0,
+                                                        False, False, _PAYLOADFORMAT_REGISTER)
 
         # write_register(55, 99, functioncode = 6)  # Slave gives wrong write data
-        self.assertRaises(InvalidResponseError, minimalmodbus._parse_payload, '\x00\x36\x00\x01', 6, 55, 99, 0, 1, False, False, None)
+        self.assertRaises(InvalidResponseError,
+                          minimalmodbus._parse_payload, '\x00\x36\x00\x01', 6, 55, 99, 0, 1, 0,
+                                                        False, False, _PAYLOADFORMAT_REGISTER)
 
 
 class TestEmbedPayload(ExtendedTestCase):
@@ -675,8 +723,8 @@ class TestNumToTwoByteString(ExtendedTestCase):
     ]
 
     def testKnownValues(self):
-        for inputvalue, numberOfDecimals, LsbFirst, signed, knownstring in self.knownValues:
-            resultstring = minimalmodbus._numToTwoByteString(inputvalue, numberOfDecimals, LsbFirst, signed)
+        for inputvalue, number_of_decimals, LsbFirst, signed, knownstring in self.knownValues:
+            resultstring = minimalmodbus._numToTwoByteString(inputvalue, number_of_decimals, LsbFirst, signed)
             self.assertEqual(resultstring, knownstring)
 
     def testWrongInputValue(self):
@@ -717,9 +765,9 @@ class TestTwoByteStringToNum(ExtendedTestCase):
     knownValues=TestNumToTwoByteString.knownValues
 
     def testKnownValues(self):
-        for knownvalue, numberOfDecimals, LsbFirst, signed, bytestring in self.knownValues:
+        for knownvalue, number_of_decimals, LsbFirst, signed, bytestring in self.knownValues:
             if not LsbFirst:
-                resultvalue = minimalmodbus._twoByteStringToNum(bytestring, numberOfDecimals, signed)
+                resultvalue = minimalmodbus._twoByteStringToNum(bytestring, number_of_decimals, signed)
                 self.assertEqual(resultvalue, knownvalue)
 
     def testWrongInputValue(self):
@@ -742,11 +790,11 @@ class TestSanityTwoByteString(ExtendedTestCase):
     knownValues=TestNumToTwoByteString.knownValues
 
     def testSanity(self):
-        for value, numberOfDecimals, LsbFirst, signed, bytestring in self.knownValues:
+        for value, number_of_decimals, LsbFirst, signed, bytestring in self.knownValues:
             if not LsbFirst:
                 resultvalue = minimalmodbus._twoByteStringToNum( \
-                    minimalmodbus._numToTwoByteString(value, numberOfDecimals, LsbFirst, signed), \
-                    numberOfDecimals, signed )
+                    minimalmodbus._numToTwoByteString(value, number_of_decimals, LsbFirst, signed), \
+                    number_of_decimals, signed )
                 self.assertEqual(resultvalue, value)
 
         if ALSO_TIME_CONSUMING_TESTS:
@@ -778,8 +826,8 @@ class TestLongToBytestring(ExtendedTestCase):
     ]
 
     def testKnownValues(self):
-        for value, signed, numberOfRegisters, knownstring in self.knownValues:
-            resultstring = minimalmodbus._longToBytestring(value, signed, numberOfRegisters)
+        for value, signed, number_of_registers, knownstring in self.knownValues:
+            resultstring = minimalmodbus._longToBytestring(value, signed, number_of_registers)
             self.assertEqual(resultstring, knownstring)
 
     def testWrongInputValue(self):
@@ -790,8 +838,8 @@ class TestLongToBytestring(ExtendedTestCase):
             self.assertRaises(ValueError, minimalmodbus._longToBytestring, 2147483648,      True,  2)
             self.assertRaises(ValueError, minimalmodbus._longToBytestring, 222222222222222, True,  2)
 
-        for numberOfRegisters in [0, 1, 3, 4, 5, 6, 7, 8, 16]:
-            self.assertRaises(ValueError, minimalmodbus._longToBytestring, 1,           True,  numberOfRegisters)
+        for number_of_registers in [0, 1, 3, 4, 5, 6, 7, 8, 16]:
+            self.assertRaises(ValueError, minimalmodbus._longToBytestring, 1,           True,  number_of_registers)
 
     def testWrongInputType(self):
         for value in _NOT_INTERGERS:
@@ -806,15 +854,15 @@ class TestBytestringToLong(ExtendedTestCase):
     knownValues=TestLongToBytestring.knownValues
 
     def testKnownValues(self):
-        for knownvalue, signed, numberOfRegisters, bytestring in self.knownValues:
-            resultvalue = minimalmodbus._bytestringToLong(bytestring, signed, numberOfRegisters)
+        for knownvalue, signed, number_of_registers, bytestring in self.knownValues:
+            resultvalue = minimalmodbus._bytestringToLong(bytestring, signed, number_of_registers)
             self.assertEqual(resultvalue, knownvalue)
 
     def testWrongInputValue(self):
         for inputstring in ['', 'A', 'AA', 'AAA', 'AAAAA']:
             self.assertRaises(ValueError, minimalmodbus._bytestringToLong, inputstring, True,  2)
-        for numberOfRegisters in [0, 1, 3, 4, 5, 6, 7, 8, 16]:
-            self.assertRaises(ValueError, minimalmodbus._bytestringToLong, 'AAAA',      True,  numberOfRegisters)
+        for number_of_registers in [0, 1, 3, 4, 5, 6, 7, 8, 16]:
+            self.assertRaises(ValueError, minimalmodbus._bytestringToLong, 'AAAA',      True,  number_of_registers)
 
     def testWrongInputType(self):
         for value in _NOT_STRINGS:
@@ -830,9 +878,9 @@ class TestSanityLong(ExtendedTestCase):
     knownValues=TestLongToBytestring.knownValues
 
     def testSanity(self):
-        for value, signed, numberOfRegisters, bytestring in self.knownValues:
+        for value, signed, number_of_registers, bytestring in self.knownValues:
             resultvalue = minimalmodbus._bytestringToLong( \
-                minimalmodbus._longToBytestring(value, signed, numberOfRegisters), signed, numberOfRegisters)
+                minimalmodbus._longToBytestring(value, signed, number_of_registers), signed, number_of_registers)
             self.assertEqual(resultvalue, value)
 
 
@@ -871,15 +919,15 @@ class TestFloatToBytestring(ExtendedTestCase):
     ]
 
     def testKnownValues(self):
-        for value, numberOfRegisters, knownstring in self.knownValues:
-            resultstring = minimalmodbus._floatToBytestring(value, numberOfRegisters)
+        for value, number_of_registers, knownstring in self.knownValues:
+            resultstring = minimalmodbus._floatToBytestring(value, number_of_registers)
             self.assertEqual(resultstring, knownstring)
         self.assertEqual(minimalmodbus._floatToBytestring(1.5e999, 2), '\x7f\x80\x00\x00') # +inf
 
     def testWrongInputValue(self):
         # Note: Out of range will not necessarily raise any error, instead it will indicate +inf etc.
-        for numberOfRegisters in [0, 1, 3, 5, 6, 7, 8, 16]:
-            self.assertRaises(ValueError, minimalmodbus._floatToBytestring, 1.1, numberOfRegisters)
+        for number_of_registers in [0, 1, 3, 5, 6, 7, 8, 16]:
+            self.assertRaises(ValueError, minimalmodbus._floatToBytestring, 1.1, number_of_registers)
 
     def testWrongInputType(self):
         for value in _NOT_NUMERICALS:
@@ -893,17 +941,17 @@ class TestBytestringToFloat(ExtendedTestCase):
     knownValues=TestFloatToBytestring.knownValues
 
     def testKnownValues(self):
-        for knownvalue, numberOfRegisters, bytestring in self.knownValues:
-            resultvalue = minimalmodbus._bytestringToFloat(bytestring, numberOfRegisters)
+        for knownvalue, number_of_registers, bytestring in self.knownValues:
+            resultvalue = minimalmodbus._bytestringToFloat(bytestring, number_of_registers)
             self.assertAlmostEqualRatio(resultvalue, knownvalue)
 
     def testWrongInputValue(self):
         for bytestring in ['', 'A', 'AB', 'ABC', 'ABCDE', 'ABCDEF', 'ABCDEFG']:
             self.assertRaises(ValueError, minimalmodbus._bytestringToFloat, bytestring, 2)
             self.assertRaises(ValueError, minimalmodbus._bytestringToFloat, bytestring, 4)
-        for numberOfRegisters in [0, 1, 3, 5, 6, 7, 8, 16]:
-            self.assertRaises(ValueError, minimalmodbus._bytestringToFloat, 'ABCD',     numberOfRegisters)
-            self.assertRaises(ValueError, minimalmodbus._bytestringToFloat, 'ABCDEFGH', numberOfRegisters)
+        for number_of_registers in [0, 1, 3, 5, 6, 7, 8, 16]:
+            self.assertRaises(ValueError, minimalmodbus._bytestringToFloat, 'ABCD',     number_of_registers)
+            self.assertRaises(ValueError, minimalmodbus._bytestringToFloat, 'ABCDEFGH', number_of_registers)
 
     def testWrongInputType(self):
         for value in _NOT_STRINGS:
@@ -917,9 +965,9 @@ class TestSanityFloat(ExtendedTestCase):
     knownValues=TestFloatToBytestring.knownValues
 
     def testSanity(self):
-        for value, numberOfRegisters, knownstring in self.knownValues:
+        for value, number_of_registers, knownstring in self.knownValues:
             resultvalue = minimalmodbus._bytestringToFloat( \
-                minimalmodbus._floatToBytestring(value, numberOfRegisters), numberOfRegisters)
+                minimalmodbus._floatToBytestring(value, number_of_registers), number_of_registers)
             self.assertAlmostEqualRatio(resultvalue, value)
 
 
@@ -935,8 +983,8 @@ class TestValuelistToBytestring(ExtendedTestCase):
     ]
 
     def testKnownValues(self):
-        for value, numberOfRegisters, knownstring in self.knownValues:
-            resultstring = minimalmodbus._valuelistToBytestring(value, numberOfRegisters)
+        for value, number_of_registers, knownstring in self.knownValues:
+            resultstring = minimalmodbus._valuelistToBytestring(value, number_of_registers)
             self.assertEqual(resultstring, knownstring)
 
     def testWrongInputValue(self):
@@ -955,8 +1003,8 @@ class TestBytestringToValuelist(ExtendedTestCase):
     knownValues=TestValuelistToBytestring.knownValues
 
     def testKnownValues(self):
-        for knownlist, numberOfRegisters, bytestring in self.knownValues:
-            resultlist = minimalmodbus._bytestringToValuelist(bytestring, numberOfRegisters)
+        for knownlist, number_of_registers, bytestring in self.knownValues:
+            resultlist = minimalmodbus._bytestringToValuelist(bytestring, number_of_registers)
             self.assertEqual(resultlist, knownlist)
 
     def testWrongInputValue(self):
@@ -977,9 +1025,9 @@ class TestSanityValuelist(ExtendedTestCase):
     knownValues=TestValuelistToBytestring.knownValues
 
     def testSanity(self):
-        for valuelist, numberOfRegisters, bytestring in self.knownValues:
+        for valuelist, number_of_registers, bytestring in self.knownValues:
             resultlist = minimalmodbus._bytestringToValuelist( \
-                minimalmodbus._valuelistToBytestring(valuelist, numberOfRegisters), numberOfRegisters)
+                minimalmodbus._valuelistToBytestring(valuelist, number_of_registers), number_of_registers)
             self.assertEqual(resultlist, valuelist)
 
 class TestTextstringToBytestring(ExtendedTestCase):
@@ -995,8 +1043,8 @@ class TestTextstringToBytestring(ExtendedTestCase):
         ]
 
     def testKnownValues(self):
-        for textstring, numberOfRegisters, knownstring in self.knownValues:
-            resultstring = minimalmodbus._textstringToBytestring(textstring, numberOfRegisters)
+        for textstring, number_of_registers, knownstring in self.knownValues:
+            resultstring = minimalmodbus._textstringToBytestring(textstring, number_of_registers)
             self.assertEqual(resultstring, knownstring)
 
     def testWrongInputValue(self):
@@ -1017,8 +1065,8 @@ class TestBytestringToTextstring(ExtendedTestCase):
     knownValues=TestTextstringToBytestring.knownValues
 
     def testKnownValues(self):
-        for knownstring, numberOfRegisters, bytestring in self.knownValues:
-            resultstring = minimalmodbus._bytestringToTextstring(bytestring, numberOfRegisters)
+        for knownstring, number_of_registers, bytestring in self.knownValues:
+            resultstring = minimalmodbus._bytestringToTextstring(bytestring, number_of_registers)
             self.assertEqual(resultstring.strip(), knownstring)
 
     def testWrongInputValue(self):
@@ -1042,9 +1090,9 @@ class TestSanityTextstring(ExtendedTestCase):
     knownValues=TestTextstringToBytestring.knownValues
 
     def testSanity(self):
-        for textstring, numberOfRegisters, bytestring in self.knownValues:
+        for textstring, number_of_registers, bytestring in self.knownValues:
             resultstring = minimalmodbus._bytestringToTextstring( \
-                minimalmodbus._textstringToBytestring(textstring, numberOfRegisters), numberOfRegisters)
+                minimalmodbus._textstringToBytestring(textstring, number_of_registers), number_of_registers)
             self.assertEqual( resultstring.strip(), textstring )
 
 
@@ -1627,31 +1675,31 @@ class TestCheckResponseRegisterAddress(ExtendedTestCase):
             self.assertRaises(TypeError, minimalmodbus._checkResponseRegisterAddress, '\x00\x2d\x00\x58', value)
 
 
-class TestCheckResponseNumberOfRegisters(ExtendedTestCase):
+class TestCheckResponsenumber_of_registers(ExtendedTestCase):
 
-    def testCorrectResponseNumberOfRegisters(self):
-        minimalmodbus._checkResponseNumberOfRegisters( '\x00\x18\x00\x01', 1 )
-        minimalmodbus._checkResponseNumberOfRegisters( '\x00#\x00\x01',    1 )
-        minimalmodbus._checkResponseNumberOfRegisters( '\x00\x34\x00\x02', 2 )
+    def testCorrectResponsenumber_of_registers(self):
+        minimalmodbus._checkResponsenumber_of_registers( '\x00\x18\x00\x01', 1 )
+        minimalmodbus._checkResponsenumber_of_registers( '\x00#\x00\x01',    1 )
+        minimalmodbus._checkResponsenumber_of_registers( '\x00\x34\x00\x02', 2 )
 
     def testTooShortString(self):
-        self.assertRaises(InvalidResponseError, minimalmodbus._checkResponseNumberOfRegisters, '\x00', 1 )
+        self.assertRaises(InvalidResponseError, minimalmodbus._checkResponsenumber_of_registers, '\x00', 1 )
 
     def testNotString(self):
         for value in _NOT_STRINGS:
-            self.assertRaises(TypeError, minimalmodbus._checkResponseNumberOfRegisters, value, 1 )
+            self.assertRaises(TypeError, minimalmodbus._checkResponsenumber_of_registers, value, 1 )
 
-    def testWrongResponseNumberOfRegisters(self):
-        self.assertRaises(InvalidResponseError, minimalmodbus._checkResponseNumberOfRegisters, '\x00#\x00\x01', 4 )
+    def testWrongResponsenumber_of_registers(self):
+        self.assertRaises(InvalidResponseError, minimalmodbus._checkResponsenumber_of_registers, '\x00#\x00\x01', 4 )
 
-    def testInvalidResponseNumberOfRegistersRange(self):
-        self.assertRaises(ValueError, minimalmodbus._checkResponseNumberOfRegisters, '\x00\x18\x00\x00', 0 )
-        self.assertRaises(ValueError, minimalmodbus._checkResponseNumberOfRegisters, '\x00\x18\x00\x01', -1 )
-        self.assertRaises(ValueError, minimalmodbus._checkResponseNumberOfRegisters, '\x00\x18\x00\x01', 65536 )
+    def testInvalidResponsenumber_of_registersRange(self):
+        self.assertRaises(ValueError, minimalmodbus._checkResponsenumber_of_registers, '\x00\x18\x00\x00', 0 )
+        self.assertRaises(ValueError, minimalmodbus._checkResponsenumber_of_registers, '\x00\x18\x00\x01', -1 )
+        self.assertRaises(ValueError, minimalmodbus._checkResponsenumber_of_registers, '\x00\x18\x00\x01', 65536 )
 
-    def testNumberOfRegistersNotInteger(self):
+    def testnumber_of_registersNotInteger(self):
         for value in _NOT_INTERGERS:
-            self.assertRaises(TypeError, minimalmodbus._checkResponseNumberOfRegisters, '\x00\x18\x00\x01', value )
+            self.assertRaises(TypeError, minimalmodbus._checkResponsenumber_of_registers, '\x00\x18\x00\x01', value )
 
 
 class TestCheckResponseWriteData(ExtendedTestCase):
@@ -1925,6 +1973,17 @@ class TestDummyCommunication(ExtendedTestCase):
     def testWriteBitWithWrongWritedataResponse(self):
         self.assertRaises(InvalidResponseError, self.instrument.write_bit, 74, 1) # Slave gives wrong write data
 
+    ## Read bits ##
+
+    def testReadBitsWrongValue(self):
+        self.assertRaises(ValueError, self.instrument.read_bits, -1, 4)
+
+
+    ## Write bits ##
+
+    def testWriteBitsWrongValue(self):
+        self.assertRaises(ValueError, self.instrument.write_bits, -1, [0,1])
+        self.assertRaises(TypeError, self.instrument.write_bits, 122, 1)
 
     ## Read register ##
 
@@ -2208,108 +2267,166 @@ class TestDummyCommunication(ExtendedTestCase):
     def testGenericCommand(self):
 
         # write_bit(71, 1)
-        self.instrument._genericCommand(5,  71, value=1)
+        self.instrument._genericCommand(5, 71, 1, number_of_bits=1, payloadformat=_PAYLOADFORMAT_BIT)
 
         # write_register(35, 20)
-        self.instrument._genericCommand(16, 35, value=20)
+        self.instrument._genericCommand(16, 35, 20, number_of_registers=1, payloadformat=_PAYLOADFORMAT_REGISTER)
 
         # write_register(45, 88)
-        self.instrument._genericCommand(6, 45, value=88)
+        self.instrument._genericCommand(6, 45, 88, number_of_registers=1, payloadformat=_PAYLOADFORMAT_REGISTER)
 
         # write_long(102, 5)
-        self.instrument._genericCommand(16, 102, value=5, numberOfRegisters=2, payloadformat='long')
+        self.instrument._genericCommand(16, 102, 5, number_of_registers=2, payloadformat=_PAYLOADFORMAT_LONG)
 
         # write_float(103, 1.1)
-        self.instrument._genericCommand(16, 103, value=1.1, numberOfRegisters=2, payloadformat='float')
+        self.instrument._genericCommand(16, 103, 1.1, number_of_registers=2, payloadformat=_PAYLOADFORMAT_FLOAT)
 
         # write_string(104, 'A', 1)
-        self.instrument._genericCommand(16, 104, value='A', numberOfRegisters=1, payloadformat='string')
+        self.instrument._genericCommand(16, 104, 'A', number_of_registers=1, payloadformat=_PAYLOADFORMAT_STRING)
 
         # write_registers(105, [2, 4, 8])
-        self.instrument._genericCommand(16, 105, value=[2, 4, 8], numberOfRegisters=3, payloadformat='registers')
+        self.instrument._genericCommand(16, 105, [2, 4, 8], number_of_registers=3, payloadformat=_PAYLOADFORMAT_REGISTERS)
 
         # read_register(289)
-        self.assertEqual( self.instrument._genericCommand(3, 289), 770)
+        self.assertEqual(self.instrument._genericCommand(3, 289, number_of_registers=1, payloadformat=_PAYLOADFORMAT_REGISTER),
+                         770)
 
          # read_bit(61)
-        self.assertEqual( self.instrument._genericCommand(2, 61), 1)
+        self.assertEqual(self.instrument._genericCommand(2, 61, number_of_bits=1, payloadformat=_PAYLOADFORMAT_BIT),
+                         1)
 
         # read_register(101, signed = True)
-        self.assertEqual( self.instrument._genericCommand(3, 101, signed=True), -5)
+        self.assertEqual(self.instrument._genericCommand(3, 101, number_of_registers=1, signed=True,
+                                                         payloadformat=_PAYLOADFORMAT_REGISTER),
+                         -5)
 
         # read_register(289, 1)
-        self.assertAlmostEqual( self.instrument._genericCommand(3, 289, numberOfDecimals=1), 77.0)
+        self.assertAlmostEqual(self.instrument._genericCommand(3, 289, number_of_decimals=1,
+                                                               number_of_registers=1, payloadformat=_PAYLOADFORMAT_REGISTER),
+                               77.0)
 
         # read_long(102)
-        self.assertEqual(   self.instrument._genericCommand(3, 102, numberOfRegisters=2, payloadformat='long'),
-                            4294967295)
+        self.assertEqual(self.instrument._genericCommand(3, 102, number_of_registers=2, payloadformat=_PAYLOADFORMAT_LONG),
+                         4294967295)
 
         # read_float(103)
-        self.assertAlmostEqual( self.instrument._genericCommand(3, 103, numberOfRegisters=2, payloadformat='float'),
-                                1.0)
+        self.assertAlmostEqual(self.instrument._genericCommand(3, 103, number_of_registers=2, payloadformat=_PAYLOADFORMAT_FLOAT),
+                               1.0)
 
         # read_string(104, 1)
-        self.assertEqual(   self.instrument._genericCommand(3, 104, numberOfRegisters=1, payloadformat='string'),
+        self.assertEqual(   self.instrument._genericCommand(3, 104, number_of_registers=1, payloadformat=_PAYLOADFORMAT_STRING),
                             'AB')
 
         # read_registers(105, 3)
-        self.assertEqual(   self.instrument._genericCommand(3, 105, numberOfRegisters=3, payloadformat='registers'),
+        self.assertEqual(   self.instrument._genericCommand(3, 105, number_of_registers=3, payloadformat=_PAYLOADFORMAT_REGISTERS),
                             [16, 32, 64])
 
-    def testGenericCommandWrongValue(self):
-        self.assertRaises(ValueError, self.instrument._genericCommand, 35,  289) # Wrong functioncode
-        self.assertRaises(ValueError, self.instrument._genericCommand, -1,  289)
-        self.assertRaises(ValueError, self.instrument._genericCommand, 128, 289)
-        self.assertRaises(ValueError, self.instrument._genericCommand, 3,   -1) # Wrong registeraddress
-        self.assertRaises(ValueError, self.instrument._genericCommand, 3,   65536)
-        self.assertRaises(ValueError, self.instrument._genericCommand, 3,   289, numberOfDecimals=-1)
-        self.assertRaises(ValueError, self.instrument._genericCommand, 3,   289, numberOfRegisters=-1)
-        self.assertRaises(ValueError, self.instrument._genericCommand, 3,   289, payloadformat='ABC')
+    def testGenericCommandWrongValue(self):  # Detected without looking at parameter combinations
+        for functioncode in [-1, 0, 23, 35, 128, 255, 1234567]:
+            self.assertRaises(ValueError,
+                              self.instrument._genericCommand, functioncode, 1, number_of_registers=1, payloadformat=_PAYLOADFORMAT_REGISTER)
+        for registeraddress in [-1, 65536]:
+            self.assertRaises(ValueError,
+                              self.instrument._genericCommand, 3, registeraddress)
+        for number_of_decimals in [-1, 11]:
+            self.assertRaises(ValueError,
+                              self.instrument._genericCommand, 3, 289, number_of_decimals=number_of_decimals)
+        for number_of_registers in [-1, 126]:
+            self.assertRaises(ValueError,
+                              self.instrument._genericCommand, 3, 289, number_of_registers=number_of_registers)
+        for number_of_bits in [-1, 2001]:
+            self.assertRaises(ValueError,
+                              self.instrument._genericCommand, 3, 289, number_of_bits=number_of_bits)
+        self.assertRaises(ValueError,
+                              self.instrument._genericCommand, 3, 289, payloadformat='ABC')
+
+    def testGenericCommandWrongType(self):  # Detected without looking at parameter combinations
+        # Note: The parameter 'value' type is dependent on the other parameters. See tests above.
+        for value in _NOT_INTERGERS:
+            self.assertRaises(TypeError, self.instrument._genericCommand, value, 289)  # Function code
+            self.assertRaises(TypeError, self.instrument._genericCommand, 3,     value) # Register address
+            self.assertRaises(TypeError, self.instrument._genericCommand, 3,     289, number_of_decimals=value)
+            self.assertRaises(TypeError, self.instrument._genericCommand, 3,     289, number_of_registers=value)
+            self.assertRaises(TypeError, self.instrument._genericCommand, 3,     289, number_of_bits=value)
+        for value in _NOT_BOOLEANS:
+            self.assertRaises(TypeError, self.instrument._genericCommand, 3, 289, signed=value)
+            self.assertRaises(TypeError, self.instrument._genericCommand, 3, 289, little_endian=value)
+        for value in _NOT_STRINGS_OR_NONE:
+            self.assertRaises(TypeError, self.instrument._genericCommand, 3, 289, payloadformat=value)
 
     def testGenericCommandWrongValueCombinations(self):
         # Bit
-        self.assertRaises(ValueError, self.instrument._genericCommand,  5,  71, value=1,         numberOfRegisters=2)
+        self.assertRaises(ValueError,
+                          self.instrument._genericCommand, 5, 71, 1, number_of_bits=2, payloadformat=_PAYLOADFORMAT_BIT)
+        self.assertRaises(ValueError,
+                          self.instrument._genericCommand, 5, 71, 1, number_of_bits=1, payloadformat=_PAYLOADFORMAT_REGISTER)
+        self.assertRaises(ValueError,
+                          self.instrument._genericCommand, 5, 71, 1, number_of_bits=1, number_of_decimals=1,
+                                                           payloadformat=_PAYLOADFORMAT_BIT)
+        self.assertRaises(ValueError,
+                          self.instrument._genericCommand, 5, 71, 1, number_of_bits=1, number_of_registers=1,
+                                                           payloadformat=_PAYLOADFORMAT_BIT)
+        self.assertRaises(ValueError,
+                          self.instrument._genericCommand, 5, 71, 1, number_of_bits=1, signed=True,
+                                                           payloadformat=_PAYLOADFORMAT_BIT)
+        self.assertRaises(ValueError,
+                          self.instrument._genericCommand, 5, 71, 1, number_of_bits=1, little_endian=True,
+                                                           payloadformat=_PAYLOADFORMAT_BIT)
+        self.assertRaises(ValueError,
+                          self.instrument._genericCommand, 5, 71, 2, number_of_bits=1, payloadformat=_PAYLOADFORMAT_BIT)
+
+        # Bits
+        self.assertRaises(ValueError,
+                          self.instrument._genericCommand, 2, 71, number_of_bits=-1,
+                                                           payloadformat=_PAYLOADFORMAT_BITS)
+        self.assertRaises(ValueError,
+                          self.instrument._genericCommand, 2, 71, number_of_bits=0,
+                                                           payloadformat=_PAYLOADFORMAT_BITS)
+        self.assertRaises(TypeError,
+                          self.instrument._genericCommand, 15, 71, 1, number_of_bits=1,
+                                                           payloadformat=_PAYLOADFORMAT_BITS)
+        self.assertRaises(ValueError,
+                          self.instrument._genericCommand, 15, 71, [1, 2], number_of_bits=1,
+                                                           payloadformat=_PAYLOADFORMAT_BITS)
 
         # Register
-        self.assertRaises(TypeError,  self.instrument._genericCommand,  6,  45, value='a')
-        self.assertRaises(ValueError, self.instrument._genericCommand,  6,  45, value=88,        numberOfRegisters=2)
-        self.assertRaises(ValueError, self.instrument._genericCommand, 16,  35, value=20,        numberOfRegisters=2)
+        self.assertRaises(ValueError,
+                          self.instrument._genericCommand, 3, 289, number_of_registers=1, number_of_bits=1,
+                                                           payloadformat=_PAYLOADFORMAT_REGISTER)
 
-        # Float
-        self.assertRaises(TypeError,  self.instrument._genericCommand, 16, 105, value=[2, 4, 8], numberOfRegisters=2, payloadformat='float')
-        self.assertRaises(TypeError,  self.instrument._genericCommand, 16, 105, value='ABC',     numberOfRegisters=2, payloadformat='float')
-        self.assertRaises(ValueError, self.instrument._genericCommand, 16, 105, value=None,      numberOfRegisters=2, payloadformat='float')
-        self.assertRaises(ValueError, self.instrument._genericCommand, 16, 105, value=3.3,       numberOfRegisters=2, payloadformat='float', numberOfDecimals=1)
-        self.assertRaises(ValueError, self.instrument._genericCommand, 16, 105, value=3.3,       numberOfRegisters=2, payloadformat='float', signed=True)
+        self.assertRaises(ValueError,
+                          self.instrument._genericCommand, 3, 289, number_of_registers=0,
+                                                           payloadformat=_PAYLOADFORMAT_REGISTER)
 
-        # String
-        self.assertRaises(ValueError, self.instrument._genericCommand, 1,  104, value='A',   numberOfRegisters=1, payloadformat='string')
-        self.assertRaises(ValueError, self.instrument._genericCommand, 16, 104, value='ABC', numberOfRegisters=1, payloadformat='string')
-        self.assertRaises(ValueError, self.instrument._genericCommand, 16, 104, value=None,  numberOfRegisters=1, payloadformat='string')
-        self.assertRaises(TypeError,  self.instrument._genericCommand, 16, 104, value=22,    numberOfRegisters=1, payloadformat='string')
-        self.assertRaises(ValueError, self.instrument._genericCommand, 16, 104, value='A',   numberOfRegisters=1, payloadformat='string', signed=True)
-        self.assertRaises(ValueError, self.instrument._genericCommand, 16, 104, value='A',   numberOfRegisters=1, payloadformat='string', numberOfDecimals=1)
+        self.assertRaises(ValueError,
+                          self.instrument._genericCommand, 16, 289, number_of_registers=5,
+                                                           payloadformat=_PAYLOADFORMAT_REGISTER)
+
+        self.assertRaises(ValueError,
+                          self.instrument._genericCommand, 16, 289, number_of_registers=1,
+                                                           payloadformat=_PAYLOADFORMAT_REGISTER)
+
+        self.assertRaises(ValueError,
+                          self.instrument._genericCommand, 6, 45, 88, number_of_registers=7,
+                                                           payloadformat=_PAYLOADFORMAT_REGISTER)
+
+        self.assertRaises(ValueError,
+                          self.instrument._genericCommand, 3, 289, 88, number_of_registers=1,
+                                                           payloadformat=_PAYLOADFORMAT_REGISTER)
+
 
         # Registers
-        self.assertRaises(TypeError,  self.instrument._genericCommand, 16, 105, value=1,         numberOfRegisters=1, payloadformat='registers')
-        self.assertRaises(TypeError,  self.instrument._genericCommand, 16, 105, value='A',       numberOfRegisters=1, payloadformat='registers')
-        self.assertRaises(ValueError, self.instrument._genericCommand, 16, 105, value=[2, 4, 8], numberOfRegisters=1, payloadformat='registers')
-        self.assertRaises(ValueError, self.instrument._genericCommand, 16, 105, value=None,     numberOfRegisters=3, payloadformat='registers')
-        self.assertRaises(ValueError, self.instrument._genericCommand, 16, 105, value=[2, 4, 8], numberOfRegisters=3, payloadformat='registers', signed=True)
-        self.assertRaises(ValueError, self.instrument._genericCommand, 16, 105, value=[2, 4, 8], numberOfRegisters=3, payloadformat='registers', numberOfDecimals=1)
+        self.assertRaises(ValueError,
+                          self.instrument._genericCommand, 1, 105, number_of_registers=3,
+                                                           payloadformat=_PAYLOADFORMAT_REGISTERS)
 
-    def testGenericCommandWrongType(self):
-        # Note: The parameter 'value' type is dependent on the other parameters. See tests above.
-        for value in _NOT_INTERGERS:
-            self.assertRaises(TypeError, self.instrument._genericCommand,  value, 289)  # Function code
-            self.assertRaises(TypeError, self.instrument._genericCommand,  3,     value) # Register address
-            self.assertRaises(TypeError, self.instrument._genericCommand,  3,     289,    numberOfDecimals=value)
-            self.assertRaises(TypeError, self.instrument._genericCommand,  3,     289,    numberOfRegisters=value)
-        for value in _NOT_BOOLEANS:
-            self.assertRaises(TypeError, self.instrument._genericCommand,  3,     289,    signed=value)
-        for value in _NOT_STRINGS_OR_NONE:
-            self.assertRaises(ValueError, self.instrument._genericCommand, 3,     289,    payloadformat=value)
+        self.assertRaises(TypeError,
+                          self.instrument._genericCommand, 16, 105, 2, number_of_registers=3,
+                                                           payloadformat=_PAYLOADFORMAT_REGISTERS)
 
+        self.assertRaises(ValueError,
+                          self.instrument._genericCommand, 16, 105, [2, 4], number_of_registers=3,
+                                                           payloadformat=_PAYLOADFORMAT_REGISTERS)
 
     ## Perform command ##
 
@@ -3285,7 +3402,7 @@ if __name__ == '__main__':
 
         ## Run all tests ##
 
-    unittest.main(verbosity=VERBOSITY)
+    #unittest.main(verbosity=VERBOSITY)
 
 
         ## Run a test class ##
@@ -3294,16 +3411,15 @@ if __name__ == '__main__':
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestCalculateCrcString)
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestHexdecode)
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestCheckResponseSlaveErrorCode)
-    #suite = unittest.TestLoader().loadTestsFromTestCase(TestParsePayload)
     #unittest.TextTestRunner(verbosity=2).run(suite)
 
 
         ## Run a single test ##
 
-    #suite = unittest.TestSuite()
+    suite = unittest.TestSuite()
     #suite.addTest(TestDummyCommunication("testReadLong"))
-    #suite.addTest(TestDummyCommunication("testWriteString"))
-    #unittest.TextTestRunner(verbosity=2).run(suite)
+    suite.addTest(TestDummyCommunication("testGenericCommandWrongValueCombinations"))
+    unittest.TextTestRunner(verbosity=2).run(suite)
 
 
         ## Run individual commands ##
