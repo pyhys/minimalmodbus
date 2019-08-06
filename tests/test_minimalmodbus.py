@@ -180,6 +180,22 @@ class TestCreatePayload(ExtendedTestCase):
         self.assertEqual(minimalmodbus._create_payload(5, 71, 1, 0, 0, 1, False, False, _PAYLOADFORMAT_BIT),
                          '\x00\x47\xFF\x00')
 
+        # read_bits(196, 22, functioncode=2)
+        # Example from MODBUS APPLICATION PROTOCOL SPECIFICATION V1.1b
+        self.assertEqual(minimalmodbus._create_payload(2, 196, None, 0, 0, 22, False, False, _PAYLOADFORMAT_BITS),
+                         '\x00\xC4\x00\x16')
+
+        # read_bits(19, 19, functioncode=1)
+        # Example from MODBUS APPLICATION PROTOCOL SPECIFICATION V1.1b
+        self.assertEqual(minimalmodbus._create_payload(1, 19, None, 0, 0, 19, False, False, _PAYLOADFORMAT_BITS),
+                         '\x00\x13\x00\x13')
+
+        # write_bits(19, [1, 0, 1, 1, 0, 0, 1, 1, 1, 0])
+        # Example from MODBUS APPLICATION PROTOCOL SPECIFICATION V1.1b
+        self.assertEqual(minimalmodbus._create_payload(15, 19, [1, 0, 1, 1, 0, 0, 1, 1, 1, 0],
+                                                       0, 0, 10, False, False, _PAYLOADFORMAT_BITS),
+                         '\x00\x13\x00\x0A\x02\xCD\x01')
+
         # read_register(289, 0, functioncode=3)
         self.assertEqual(minimalmodbus._create_payload(3, 289, None, 0, 1, 0, False, False, _PAYLOADFORMAT_REGISTER),
                          '\x01\x21\x00\x01')
@@ -297,28 +313,63 @@ class TestParsePayload(ExtendedTestCase):
     def testKnownValues(self):
 
         # read_bit(61, functioncode=2)
-        self.assertEqual(minimalmodbus._parse_payload('\x01\x01', 2, 61, None, 0, 0, 1, False, False, _PAYLOADFORMAT_BIT), 1)
+        self.assertEqual(minimalmodbus._parse_payload('\x01\x01',
+                                                      2, 61, None, 0, 0, 1, False, False, _PAYLOADFORMAT_BIT),
+                         1)
 
         # read_bit(62, functioncode=1)
-        self.assertEqual(minimalmodbus._parse_payload('\x01\x00', 1, 62, None, 0, 0, 1, False, False, _PAYLOADFORMAT_BIT), 0)
+        self.assertEqual(minimalmodbus._parse_payload('\x01\x00',
+                                                      1, 62, None, 0, 0, 1, False, False, _PAYLOADFORMAT_BIT),
+                         0)
 
         # write_bit(71, 1, functioncode=5)
-        self.assertEqual(minimalmodbus._parse_payload('\x00\x47\xff\x00', 5, 71, 1, 0, 0, 1, False, False, _PAYLOADFORMAT_BIT), None)
+        self.assertEqual(minimalmodbus._parse_payload('\x00\x47\xff\x00',
+                                                      5, 71, 1, 0, 0, 1, False, False, _PAYLOADFORMAT_BIT),
+                         None)
 
         # write_bit(72, 1, functioncode=15)
-        self.assertEqual(minimalmodbus._parse_payload('\x00\x48\x00\x01', 15, 72, 1, 0, 0, 1, False, False, _PAYLOADFORMAT_BIT), None)
+        self.assertEqual(minimalmodbus._parse_payload('\x00\x48\x00\x01',
+                                                      15, 72, 1, 0, 0, 1, False, False, _PAYLOADFORMAT_BIT),
+                         None)
+
+        # read_bits(196, 22, functioncode=2)
+        # Example from MODBUS APPLICATION PROTOCOL SPECIFICATION V1.1b
+        self.assertEqual(minimalmodbus._parse_payload('\x03\xAC\xDB\x35',
+                                                      2, 196, None, 0, 0, 22, False, False, _PAYLOADFORMAT_BITS),
+                         [0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1])
+
+        # read_bits(19, 19, functioncode=1)
+        # Example from MODBUS APPLICATION PROTOCOL SPECIFICATION V1.1b
+        self.assertEqual(minimalmodbus._parse_payload('\x03\xCD\x6B\x05',
+                                                      1, 19, None, 0, 0, 19, False, False, _PAYLOADFORMAT_BITS),
+                         [1, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1])
+
+        # write_bits(19, [1, 0, 1, 1, 0, 0, 1, 1, 1, 0])
+        # Example from MODBUS APPLICATION PROTOCOL SPECIFICATION V1.1b
+        self.assertEqual(minimalmodbus._parse_payload('\x00\x13\x00\x0A',
+                                                      15, 19, [1, 0, 1, 1, 0, 0, 1, 1, 1, 0],
+                                                      0, 0, 10, False, False, _PAYLOADFORMAT_BITS),
+                         None)
 
         # read_register(289, 0, functioncode=3)
-        self.assertEqual(minimalmodbus._parse_payload('\x02\x03\x02', 3, 289, None, 0, 1, 0, False, False, _PAYLOADFORMAT_REGISTER), 770)
+        self.assertEqual(minimalmodbus._parse_payload('\x02\x03\x02',
+                                                      3, 289, None, 0, 1, 0, False, False, _PAYLOADFORMAT_REGISTER),
+                         770)
 
         # read_register(14, 0, functioncode=4)
-        self.assertEqual(minimalmodbus._parse_payload('\x02\x03\x70', 4, 14, None, 0, 1, 0, False, False, _PAYLOADFORMAT_REGISTER), 880)
+        self.assertEqual(minimalmodbus._parse_payload('\x02\x03\x70',
+                                                      4, 14, None, 0, 1, 0, False, False, _PAYLOADFORMAT_REGISTER),
+                         880)
 
         # write_register(35, 20, functioncode = 16)
-        self.assertEqual(minimalmodbus._parse_payload('\x00#\x00\x01', 16, 35, 20, 0, 1, 0, False, False, _PAYLOADFORMAT_REGISTER), None)
+        self.assertEqual(minimalmodbus._parse_payload('\x00#\x00\x01',
+                                                      16, 35, 20, 0, 1, 0, False, False, _PAYLOADFORMAT_REGISTER),
+                         None)
 
         # write_register(45, 88, functioncode = 6)
-        self.assertEqual(minimalmodbus._parse_payload('\x00\x2d\x00\x58', 6, 45, 88, 0, 1, 0, False, False, _PAYLOADFORMAT_REGISTER), None)
+        self.assertEqual(minimalmodbus._parse_payload('\x00\x2d\x00\x58',
+                                                      6, 45, 88, 0, 1, 0, False, False, _PAYLOADFORMAT_REGISTER),
+                         None)
 
         # write_register(101, -5, signed=True)
         self.assertEqual(minimalmodbus._parse_payload('\x00e\x00\x01', 16, 101, -5, 0, 1, 0, True, False, _PAYLOADFORMAT_REGISTER), None)
@@ -2058,6 +2109,7 @@ class TestDummyCommunication(ExtendedTestCase):
     def testWriteBits(self):
         # Example from MODBUS APPLICATION PROTOCOL SPECIFICATION V1.1b
         self.instrument.write_bits(19, [1, 0, 1, 1, 0, 0, 1, 1, 1, 0])
+        self.instrument.write_bits(19, [True, False, True, True, False, False, True, True, True, False])
 
     def testWriteBitsWrongValue(self):
         self.assertRaises(ValueError, self.instrument.write_bits, -1, [0,1])
@@ -3529,16 +3581,16 @@ if __name__ == '__main__':
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestDummyCommunicationHandleLocalEcho)
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestCalculateCrcString)
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestHexdecode)
-    #suite = unittest.TestLoader().loadTestsFromTestCase(TestBitsToBytestring)
-    #unittest.TextTestRunner(verbosity=2).run(suite)
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestParsePayload)
+    unittest.TextTestRunner(verbosity=2).run(suite)
 
 
         ## Run a single test ##
 
-    suite = unittest.TestSuite()
+    #suite = unittest.TestSuite()
     #suite.addTest(TestDummyCommunication("testReadLong"))
-    suite.addTest(TestDummyCommunication("testGenericCommand"))
-    unittest.TextTestRunner(verbosity=2).run(suite)
+    #suite.addTest(TestDummyCommunication("testGenericCommand"))
+    #unittest.TextTestRunner(verbosity=2).run(suite)
 
 
         ## Run individual commands ##
