@@ -245,7 +245,7 @@ class Instrument:
             functioncode,
             registeraddress,
             number_of_bits=1,
-            payloadformat=_PAYLOADFORMAT_BIT
+            payloadformat=_PAYLOADFORMAT_BIT,
         )
 
     def write_bit(self, registeraddress, value, functioncode=5):
@@ -273,7 +273,7 @@ class Instrument:
             registeraddress,
             value,
             number_of_bits=1,
-            payloadformat=_PAYLOADFORMAT_BIT
+            payloadformat=_PAYLOADFORMAT_BIT,
         )
 
     def read_bits(self, registeraddress, number_of_bits, functioncode=2):
@@ -307,7 +307,7 @@ class Instrument:
             functioncode,
             registeraddress,
             number_of_bits=number_of_bits,
-            payloadformat=_PAYLOADFORMAT_BITS
+            payloadformat=_PAYLOADFORMAT_BITS,
         )
 
     def write_bits(self, registeraddress, values):
@@ -335,7 +335,7 @@ class Instrument:
         if not isinstance(values, list):
             raise TypeError(
                 'The "values parameter" must be a list. Given: {0!r}'.format(values)
-        )
+            )
         # Note: The content of the list is checked at content conversion.
         _check_int(
             len(values),
@@ -349,7 +349,7 @@ class Instrument:
             registeraddress,
             values,
             number_of_bits=len(values),
-            payloadformat=_PAYLOADFORMAT_BITS
+            payloadformat=_PAYLOADFORMAT_BITS,
         )
 
     def read_register(
@@ -415,7 +415,12 @@ class Instrument:
         )
 
     def write_register(
-        self, registeraddress, value, number_of_decimals=0, functioncode=16, signed=False
+        self,
+        registeraddress,
+        value,
+        number_of_decimals=0,
+        functioncode=16,
+        signed=False,
     ):
         """Write an integer to one 16-bit register in the slave, possibly scaling it.
 
@@ -594,7 +599,10 @@ class Instrument:
         """
         _check_functioncode(functioncode, [3, 4])
         _check_int(
-            number_of_registers, minvalue=2, maxvalue=4, description="number of registers"
+            number_of_registers,
+            minvalue=2,
+            maxvalue=4,
+            description="number of registers",
         )
         return self._generic_command(
             functioncode,
@@ -630,7 +638,10 @@ class Instrument:
         """
         _check_numerical(value, description="input value")
         _check_int(
-            number_of_registers, minvalue=2, maxvalue=4, description="number of registers"
+            number_of_registers,
+            minvalue=2,
+            maxvalue=4,
+            description="number of registers",
         )
         self._generic_command(
             16,
@@ -876,7 +887,7 @@ class Instrument:
             number_of_decimals,
             minvalue=0,
             maxvalue=_MAX_NUMBER_OF_DECIMALS,
-            description="number of decimals"
+            description="number of decimals",
         )
         _check_int(
             number_of_registers,
@@ -889,9 +900,7 @@ class Instrument:
         _check_int(
             number_of_bits,
             minvalue=0,
-            maxvalue=max(
-                _MAX_NUMBER_OF_BITS_TO_READ, _MAX_NUMBER_OF_BITS_TO_WRITE
-            ),
+            maxvalue=max(_MAX_NUMBER_OF_BITS_TO_READ, _MAX_NUMBER_OF_BITS_TO_WRITE),
             description="number of bits",
         )
         _check_bool(signed, description="signed")
@@ -900,7 +909,9 @@ class Instrument:
         if payloadformat not in _ALL_PAYLOADFORMATS:
             if not isinstance(payloadformat, str):
                 raise TypeError(
-                    "The payload format should be a string. Given: {!r}".format(payloadformat)
+                    "The payload format should be a string. Given: {!r}".format(
+                        payloadformat
+                    )
                 )
             raise ValueError(
                 "Wrong payload format variable. Given: {!r}".format(payloadformat)
@@ -911,9 +922,9 @@ class Instrument:
         # Check combinations: Payload format and functioncode
         if functioncode not in ALLOWED_FUNCTIONCODES[payloadformat]:
             raise ValueError(
-                    "Wrong functioncode for payloadformat "
-                    + "{!r}. Given: {!r}.".format(payloadformat, functioncode)
-                )
+                "Wrong functioncode for payloadformat "
+                + "{!r}. Given: {!r}.".format(payloadformat, functioncode)
+            )
 
         # Check combinations: Signed
         if signed:
@@ -954,7 +965,7 @@ class Instrument:
                 )
         elif number_of_bits:
             raise ValueError(
-                'The number_of_bits parameter is wrong for payload format '
+                "The number_of_bits parameter is wrong for payload format "
                 + "{0!r}. Given: {0!r}.".format(payloadformat, number_of_bits)
             )
 
@@ -971,7 +982,7 @@ class Instrument:
                 "The number_of_registers must be > 0 for functioncode "
                 + "{}.".format(functioncode)
             )
-        elif functioncode == 6  and number_of_registers != 1:
+        elif functioncode == 6 and number_of_registers != 1:
             raise ValueError(
                 "The number_of_registers must be 1 for functioncode 6. "
                 + "Given: {}.".format(number_of_registers)
@@ -1121,7 +1132,9 @@ class Instrument:
         _check_string(payload_to_slave, description="payload")
 
         # Build request
-        request = _embed_payload(self.address, self.mode, functioncode, payload_to_slave)
+        request = _embed_payload(
+            self.address, self.mode, functioncode, payload_to_slave
+        )
 
         # Calculate number of bytes to read
         number_of_bytes_to_read = DEFAULT_NUMBER_OF_BYTES_TO_READ
@@ -1314,6 +1327,7 @@ class Instrument:
     # For backward compatibility
     _performCommand = _perform_command
 
+
 # ########## #
 # Exceptions #
 # ########## #
@@ -1360,6 +1374,7 @@ class LocalEchoError(MasterReportedException):
 class InvalidResponseError(MasterReportedException):
     """The response does not fulfill the Modbus standad, for example wrong checksum."""
 
+
 # ################ #
 # Payload handling #
 # ################ #
@@ -1405,12 +1420,16 @@ def _create_payload(
         return (
             _num_to_twobyte_string(registeraddress)
             + _num_to_twobyte_string(number_of_bits)
-            + _num_to_onebyte_string(_calculate_number_of_bytes_for_bits(number_of_bits))
+            + _num_to_onebyte_string(
+                _calculate_number_of_bytes_for_bits(number_of_bits)
+            )
             + _bits_to_bytestring(bitlist)
         )
     if functioncode == 16:
         if payloadformat == _PAYLOADFORMAT_REGISTER:
-            registerdata = _num_to_twobyte_string(value, number_of_decimals, signed=signed)
+            registerdata = _num_to_twobyte_string(
+                value, number_of_decimals, signed=signed
+            )
         elif payloadformat == _PAYLOADFORMAT_STRING:
             registerdata = _textstring_to_bytestring(value, number_of_registers)
         elif payloadformat == _PAYLOADFORMAT_LONG:
@@ -1478,7 +1497,9 @@ def _parse_payload(
             return _bytestring_to_valuelist(registerdata, number_of_registers)
 
         elif payloadformat == _PAYLOADFORMAT_REGISTER:
-            return _twobyte_string_to_num(registerdata, number_of_decimals, signed=signed)
+            return _twobyte_string_to_num(
+                registerdata, number_of_decimals, signed=signed
+            )
 
         raise ValueError(
             "Wrong payloadformat for return value generation. "
@@ -2053,7 +2074,9 @@ def _float_to_bytestring(value, number_of_registers=2):
         lengthtarget = 8
     else:
         raise ValueError(
-            "Wrong number of registers! Given value is {0!r}".format(number_of_registers)
+            "Wrong number of registers! Given value is {0!r}".format(
+                number_of_registers
+            )
         )
 
     outstring = _pack(formatcode, value)
@@ -2094,7 +2117,9 @@ def _bytestring_to_float(bytestring, number_of_registers=2):
         formatcode += "d"  # Double (8 bytes)
     else:
         raise ValueError(
-            "Wrong number of registers! Given value is {0!r}".format(number_of_registers)
+            "Wrong number of registers! Given value is {0!r}".format(
+                number_of_registers
+            )
         )
 
     if len(bytestring) != number_of_bytes:
@@ -2497,23 +2522,23 @@ def _bits_to_bytestring(valuelist):
 
     """
     if not isinstance(valuelist, list):
-        raise TypeError("The input should be a list. "
-                         + "Given: {!r}".format(valuelist)
+        raise TypeError(
+            "The input should be a list. " + "Given: {!r}".format(valuelist)
         )
     for value in valuelist:
         if value not in [0, 1, False, True]:
-            raise ValueError("Wrong value in list of bits. "
-                         + "Given: {!r}".format(value)
-        )
+            raise ValueError(
+                "Wrong value in list of bits. " + "Given: {!r}".format(value)
+            )
 
     list_position = 0
     outputstring = ""
     while list_position < len(valuelist):
-        sublist = valuelist[list_position:list_position + _BITS_PER_BYTE]
+        sublist = valuelist[list_position : list_position + _BITS_PER_BYTE]
 
         bytevalue = 0
         for bitposition, value in enumerate(sublist):
-            bytevalue |= (value << bitposition)
+            bytevalue |= value << bitposition
         outputstring += chr(bytevalue)
 
         list_position += _BITS_PER_BYTE
@@ -2541,10 +2566,12 @@ def _bytestring_to_bits(bytestring, number_of_bits):
     """
     expected_length = _calculate_number_of_bytes_for_bits(number_of_bits)
     if len(bytestring) != expected_length:
-        raise ValueError("Wrong length of bytestring. Expected is "
-                         + "{} bytes (for {} bits), actual is {} bytes.".format(
-                             expected_length, number_of_bits, len(bytestring),
-                         ))
+        raise ValueError(
+            "Wrong length of bytestring. Expected is "
+            + "{} bytes (for {} bits), actual is {} bytes.".format(
+                expected_length, number_of_bits, len(bytestring)
+            )
+        )
     total_list = []
     for character in bytestring:
         bytevalue = ord(character)
@@ -2552,6 +2579,7 @@ def _bytestring_to_bits(bytestring, number_of_bits):
             bitvalue = (bytevalue & (1 << bitposition)) > 0
             total_list.append(int(bitvalue))
     return total_list[:number_of_bits]
+
 
 # ################### #
 # Number manipulation #
@@ -3181,7 +3209,9 @@ def _check_response_payload(
         if len(registerdata) != expected_number_of_bytes:
             raise InvalidResponseError(
                 "The data length is wrong for payloadformat BIT/BITS."
-                + " Expected: {} Actual: {}.".format(expected_number_of_bytes, len(registerdata))
+                + " Expected: {} Actual: {}.".format(
+                    expected_number_of_bytes, len(registerdata)
+                )
             )
 
     # Response for read registers
@@ -3278,7 +3308,10 @@ def _check_response_bytecount(payload):
             + " The data payload is: {3!r}"
         )
         errortext = errortemplate.format(
-            given_number_of_databytes, counted_number_of_databytes, len(payload), payload
+            given_number_of_databytes,
+            counted_number_of_databytes,
+            len(payload),
+            payload,
         )
         raise InvalidResponseError(errortext)
 
@@ -3344,7 +3377,9 @@ def _check_response_number_of_registers(payload, number_of_registers):
     BYTERANGE_FOR_NUMBER_OF_REGISTERS = slice(2, 4)
 
     bytes_for_mumber_of_registers = payload[BYTERANGE_FOR_NUMBER_OF_REGISTERS]
-    received_number_of_written_registers = _twobyte_string_to_num(bytes_for_mumber_of_registers)
+    received_number_of_written_registers = _twobyte_string_to_num(
+        bytes_for_mumber_of_registers
+    )
 
     if received_number_of_written_registers != number_of_registers:
         raise InvalidResponseError(
@@ -3514,7 +3549,9 @@ def _check_int(inputvalue, minvalue=None, maxvalue=None, description="inputvalue
     _check_numerical(inputvalue, minvalue, maxvalue, description)
 
 
-def _check_numerical(inputvalue, minvalue=None, maxvalue=None, description="inputvalue"):
+def _check_numerical(
+    inputvalue, minvalue=None, maxvalue=None, description="inputvalue"
+):
     """Check that the given numerical value is valid.
 
     Args:

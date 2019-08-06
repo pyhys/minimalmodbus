@@ -2090,6 +2090,7 @@ class TestDummyCommunication(ExtendedTestCase):
     def testWriteBitWithWrongWritedataResponse(self):
         self.assertRaises(InvalidResponseError, self.instrument.write_bit, 74, 1) # Slave gives wrong write data
 
+
     ## Read bits ##
 
     def testReadBits(self):
@@ -2104,6 +2105,7 @@ class TestDummyCommunication(ExtendedTestCase):
     def testReadBitsWrongValue(self):
         self.assertRaises(ValueError, self.instrument.read_bits, -1, 4)
 
+
     ## Write bits ##
 
     def testWriteBits(self):
@@ -2114,6 +2116,7 @@ class TestDummyCommunication(ExtendedTestCase):
     def testWriteBitsWrongValue(self):
         self.assertRaises(ValueError, self.instrument.write_bits, -1, [0,1])
         self.assertRaises(TypeError, self.instrument.write_bits, 122, 1)
+
 
     ## Read register ##
 
