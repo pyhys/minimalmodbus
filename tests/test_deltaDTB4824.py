@@ -1,7 +1,7 @@
 """
 Hardware testing of MinimalModbus using the Delta DTB temperature controller.
 
-For use with Delta DTB4824VR. 
+For use with Delta DTB4824VR.
 
 Usage
 -------------
@@ -13,7 +13,7 @@ Usage
 Arguments:
  * -b : baud rate
  * -D : port name
- 
+
 NOTE: There should be no space between the option switch and its argument.
 
 Defaults to RTU mode.
@@ -26,10 +26,11 @@ Make sure that RUN_VERIFY_EXAMPLES and similar flags are all 'True'.
  * Run the tests under Linux and Windows
  * Use 2400 bps and 38400 bps
  * Use Modbus ASCII and Modbus RTU
- * Use Python 2.7 and Python 3.x 
- 
- 
+ * Use Python 2.7 and Python 3.x
+
+
  Sequence (for each use Python 2.7 and 3.x):
+
   * 38400 bps RTU
   * 38400 bps ASCII
   * 2400 bps ASCII
@@ -39,11 +40,12 @@ Make sure that RUN_VERIFY_EXAMPLES and similar flags are all 'True'.
 Settings in the temperature controller
 ------------------------------------------
 To change the settings on the temperature controller panel,
-hold the SET button for more than 3 seconds. Use the 'loop arrow' button for 
-moving to next parameter. Change the value with the up and down arrows, and 
+hold the SET button for more than 3 seconds. Use the 'loop arrow' button for
+moving to next parameter. Change the value with the up and down arrows, and
 confirm using the SET button. Press SET again to exit setting mode.
 
 Use these setting values in the temperature controller:
+
  * SP   1    (Decimal point position)
  * CoSH on   (ON: communication write-in enabled)
  * C-SL rtu  (use RTU or ASCII)
@@ -52,7 +54,7 @@ Use these setting values in the temperature controller:
  * LEN  8
  * PRTY None
  * Stop 1
- 
+
 When running, the setpoint is seen on the rightmost part of the display.
 
 
@@ -82,6 +84,7 @@ replugging the USB-to-RS485 converter.
 Function codes for DTB4824
 -------------------------------
 From "DTB Series Temperature Controller Instruction Sheet":
+
  * 02H to read the bits data (Max. 16 bits).
  * 03H to read the contents of register (Max. 8 words).
  * 05H to write 1 (one) bit into register.
@@ -90,7 +93,7 @@ From "DTB Series Temperature Controller Instruction Sheet":
 
 Manual testing in interactive mode (at the Python prompt)
 ----------------------------------------------------------
-Use a setting of 19200 bps, RTU mode and slave addess 1 for the DTB4824. 
+Use a setting of 19200 bps, RTU mode and slave addess 1 for the DTB4824.
 Run these commands::
 
     import minimalmodbus

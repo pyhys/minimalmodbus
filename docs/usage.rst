@@ -123,12 +123,12 @@ or alternatively (to avoid import of ``serial``)::
     instrument.serial.parity = minimalmodbus.serial.PARITY_EVEN
 
 
-.. warning:: The module level constats minimalmodbus.BAUDRATE etc were removed in version 1.0
+.. warning:: The module level constants minimalmodbus.BAUDRATE etc were removed in version 1.0
 
 Confusing Modbus register addresses
 -----------------------------------
 Sometimes "entity numbers" are used in documentation for Modbus instruments. These
-numbers are typically 5 or six digits long, and contains info about both
+numbers are typically five or six digits long, and contains info about both
 the register type and the register address. The first digit describes the register type,
 for example 4 is a holding register. The rest of the digits describes the address plus one
 (yes, very confusing).
@@ -182,7 +182,9 @@ Different types of errors should be handled separately.
 Errors related to wrong argument to functions raises TypeError or ValueError.
 When there is communication problems etc the exceptions raised are ModbusException
 (with subclasses) and serial.serialutil.SerialException, which both are inheriting
-from IOError. Note that in Python3 the IOError is an alias for OSError.
+from IOError.
+
+Note that in Python3 the IOError is an alias for OSError.
 
 
 Subclassing
@@ -192,5 +194,9 @@ It is better to put the details on registers etc in a driver for the specific in
 See :ref:`specificdrivers`.
 
 
+Extending
+---------
 
+It is pretty easy to extend this module to support other functioncodes or special
+cases. See :ref:`extending`.
 

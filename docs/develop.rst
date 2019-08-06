@@ -26,14 +26,17 @@ There should be unittests for all functions, and mock communication data.
 
 Errors should be caught as early as possible, and the error messages should be informative.
 For this reason there is type checking for for the parameters in most functions.
-This is rather un-pythonic, but is intended to give more clear error messages (for easier remote support).
+This is rather un-pythonic, but is intended to give more clear error
+messages (for easier remote support).
 
-Note that the term 'address' is ambigous, why it is better to use the terms 'register address' or 'slave address'.
+Note that the term 'address' is ambigous, why it is better
+to use the terms 'register address' or 'slave address'.
 
-Use only external links in the README.txt, otherwise they will not work on Python Package Index (PyPI).
-No Sphinx-specific constructs are allowed in that file.
+Use only external links in the README.txt, otherwise they will not work on Python
+Package Index (PyPI). No Sphinx-specific constructs are allowed in that file.
 
 Design priorities:
+
  * Easy to use
  * Catch errors early
  * Informative error messages
@@ -48,9 +51,9 @@ The general structure of the program is shown here:
 =========================== ================================================================================
 Function                    Description
 =========================== ================================================================================
-:meth:`.read_register`      One of the facades for :meth:`._genericCommand`.
-:meth:`._genericCommand`    Generates payload, then calls :meth:`._performCommand`.
-:meth:`._performCommand`    Embeds payload into error-checking codes etc, then calls :meth:`._communicate`.
+:meth:`.read_register`      One of the facades for :meth:`._generic_command`.
+:meth:`._generic_command`   Generates payload, then calls :meth:`._perform_command`.
+:meth:`._perform_command`   Embeds payload into error-checking codes etc, then calls :meth:`._communicate`.
 :meth:`._communicate`       Handles raw strings for communication via pySerial.
 =========================== ================================================================================
 
@@ -68,13 +71,14 @@ These functions also do argument validity checking.
 =========================== =================================== ================================
 Data type                   To bytestring                       From bytestring
 =========================== =================================== ================================
-(internal usage)            :meth:`._numToOneByteString`
-Bit                         :meth:`._createBitpattern`          :meth:`._bitResponseToValue`
-Integer (char, short)       :meth:`._numToTwoByteString`        :meth:`._twoByteStringToNum`
-Several registers           :meth:`._valuelistToBytestring`     :meth:`._bytestringToValuelist`
-Long integer                :meth:`._longToBytestring`          :meth:`._bytestringToLong`
-Floating point number       :meth:`._floatToBytestring`         :meth:`._bytestringToFloat`
-String                      :meth:`._textstringToBytestring`    :meth:`._bytestringToTextstring`
+(internal usage)            :meth:`._num_to_onebyte_string`
+Bit                         :meth:`._bit_to_bytestring`         Same as for bits
+Several bits                :meth:`._bits_to_bytestring`        :meth:`._bytestring_to_bits`
+Integer (char, short)       :meth:`._num_to_twobyte_string`     :meth:`._twobyte_string_to_num`
+Several registers           :meth:`._valuelist_to_bytestring`   :meth:`._bytestring_to_valuelist`
+Long integer                :meth:`._long_to_bytestring`        :meth:`._bytestring_to_long`
+Floating point number       :meth:`._float_to_bytestring`       :meth:`._bytestring_to_float`
+String                      :meth:`._textstring_to_bytestring`  :meth:`._bytestring_to_textstring`
 =========================== =================================== ================================
 
 Note that the :mod:`struct` module produces byte buffers for Python3, but bytestrings for Python2.
@@ -82,7 +86,6 @@ This is compensated for automatically by using the wrapper functions
 :meth:`._pack` and :meth:`._unpack`.
 
 For a description of them, see :ref:`internalminimalmodbus`.
-
 
 
 Unittesting
@@ -94,11 +97,14 @@ Unit tests are provided in the tests subfolder. To run them::
 Also a dummy/mock/stub for the serial port, dummy_serial, is provided for
 test purposes. See :ref:`apidummyserial`.
 
-The test coverage analysis is found at https://codecov.io/github/pyhys/minimalmodbus?branch=master.
+The test coverage analysis is found
+at https://codecov.io/github/pyhys/minimalmodbus?branch=master.
 
-Hardware tests are performed using a Delta DTB4824 process controller. See :ref:`testdtb4824` for more information.
+Hardware tests are performed using a Delta DTB4824 process controller. See
+:ref:`testdtb4824` for more information.
 
-A brief introduction to unittesting is found here: https://docs.python.org/release/2.5.2/lib/minimal-example.html
+A brief introduction to unittesting is found
+here: https://docs.python.org/release/2.5.2/lib/minimal-example.html
 
 The :mod:`unittest` module is documented here: https://docs.python.org/2/library/unittest.html
 
@@ -205,10 +211,10 @@ From this it is pretty easy to reshuffle it into unittest code.
 
 Here is an example how to record communication data, which then is pasted
 into the test code (for use with a mock/dummy serial port). See for example
-:ref:`testminimalmodbus` (click '[source]' on right side, see RESPONSES at end of the page). Do like this::
+:ref:`testminimalmodbus` (click '[source]' on right side, see RESPONSES at
+end of the page). Do like this::
 
    >>> import minimalmodbus
-   >>> minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = True # Seems mandatory for Windows
    >>> instrument_1 = minimalmodbus.Instrument('/dev/ttyUSB0',10)
    >>> instrument_1.debug = True
    >>> instrument_1.read_register(4097,1)
@@ -292,7 +298,8 @@ Data encoding in Python2 and Python3
 The **string** type has changed in Python3 compared to Python2. In Python3 the type
 **bytes** is used when communicating via pySerial.
 
-Dependent on the Python version number, the data sent from MinimalModbus to pySerial has different types.
+Dependent on the Python version number, the data sent from MinimalModbus
+to pySerial has different types.
 
 String constants
 ````````````````````
@@ -300,7 +307,8 @@ This is a **string** constant both in Python2 and Python3::
 
     st = 'abc\x69\xe6\x03'
 
-This is a **bytes** constant in Python3, but a **string** constant in Python2 (allowed for 2.6 and higher)::
+This is a **bytes** constant in Python3, but a **string** constant in
+Python2 (allowed for 2.6 and higher)::
 
     by = b'abc\x69\xe6\x03'
 
@@ -346,12 +354,16 @@ Where it is unavoidable, use::
         whatever
 
 
+.. _extending:
+
 Extending MinimalModbus
 ------------------------------------------------------------------------------
-It is straight-forward to extend MinimalModbus to handle more Modbus function codes. Use the method :meth:`_performCommand` to send data to the slave, and to receive the response. Note that the API might change, as this is outside the official API.
+It is straight-forward to extend MinimalModbus to handle more Modbus function codes.
+Use the method :meth:`_perform_command` to send data to the slave, and to receive
+the response. Note that the API might change, as this is outside the official API.
 
 This is easily tested in interactive mode. For example the method :meth:`.read_register`
-generates payload, which internally is sent to the instrument using :meth:`_performCommand`::
+generates payload, which internally is sent to the instrument using :meth:`_perform_command`::
 
     >>> instr.debug = True
     >>> instr.read_register(5,1)
@@ -359,10 +371,10 @@ generates payload, which internally is sent to the instrument using :meth:`_perf
     MinimalModbus debug mode. Response from instrument: '\x01\x03\x02\x00º9÷'
     18.6
 
-It is possible to use :meth:`_performCommand` directly. You can use any Modbus function code (1-127),
+It is possible to use :meth:`_perform_command` directly. You can use any Modbus function code (1-127),
 but you need to generate the payload yourself. Note that the same data is sent::
 
-    >>> instr._performCommand(3, '\x00\x05\x00\x01')
+    >>> instr._perform_command(3, '\x00\x05\x00\x01')
     MinimalModbus debug mode. Writing to instrument: '\x01\x03\x00\x05\x00\x01\x94\x0b'
     MinimalModbus debug mode. Response from instrument: '\x01\x03\x02\x00º9÷'
     '\x02\x00º'
@@ -373,23 +385,25 @@ Use this if you are to implement other Modbus function codes, as it takes care o
 
 Other useful internal functions
 ------------------------------------------------------------------------------
-There are several useful (module level) helper functions available in the :mod:`minimalmodbus` module.
+There are several useful (module level) helper functions available in
+the :mod:`minimalmodbus` module.
 The module level helper functions can be used without any hardware connected.
-See :ref:`internalminimalmodbus`. These can be handy when developing your own Modbus instrument hardware.
+See :ref:`internalminimalmodbus`. These can be handy when developing your
+own Modbus instrument hardware.
 
 For example::
 
-    >>> minimalmodbus._calculateCrcString('\x01\x03\x00\x05\x00\x01')
+    >>> minimalmodbus._calculate_crc_string('\x01\x03\x00\x05\x00\x01')
     '\x94\x0b'
 
 And to embed the payload ``'\x10\x11\x12'`` to slave address 1, with functioncode 16::
 
-    >>> minimalmodbus._embedPayload(1, 16, '\x10\x11\x12')
+    >>> minimalmodbus._embed_payload(1, MODE_RTU, 16, '\x10\x11\x12')
     '\x01\x10\x10\x11\x12\x90\x98'
 
 Playing with two's complement::
 
-    >>> minimalmodbus._twosComplement(-1, bits=8)
+    >>> minimalmodbus._twos_complement(-1, bits=8)
     255
 
 Calculating the minimum silent interval (seconds) at a baudrate of 19200 bits/s::
@@ -443,7 +457,8 @@ To uninstall it::
 
 How to generate a source distribution from the present development code
 `````````````````````````````````````````````````````````````````````````
-This will create a subfolder :file:`dist` with ??::
+This will create a subfolder :file:`dist` with the source in wheel format and in
+.tar.gz format::
 
     make dist
 
@@ -464,13 +479,15 @@ How to number releases are described in :pep:`440`.
 
 Code style checking etc
 ```````````````````````
+
+Automatically modify the formatting of the code::
+
+    make black
+
 Check the code::
 
     make lint
 
-    pychecker minimalmodbus.py
-
-(???The 2to3 tool is not necessary, as we run the unittests under both Python2 and Python3).
 
 Unittesting
 ```````````
@@ -493,6 +510,7 @@ Test the source distribution generation (look in the :file:`PKG-INFO` file)::
     python setup.py sdist
 
 Also make sure that these are functional (see sections below):
+
   * Documentation generation
   * Test coverage report generation
 
@@ -695,21 +713,7 @@ Install the script :file:`coverage.py`::
 
 Collect test data::
 
-    coverage run test_minimalmodbus.py
-
-or::
-
-    coverage run test_all.py
-
-Generate html report (ends up in :file:`trunk/test/htmlcov`)::
-
-    coverage html
-
-Or to exclude some third party modules (adapt to your file structure)::
-
-    coverage html --omit=/usr/*
-
-Alternatively, adjust the settings in the :file:`.coverage` file.
+    make coverage
 
 
 Using the flake8 style checker tool
@@ -735,12 +739,14 @@ See also Github issues: https://github.com/pyhys/minimalmodbus/issues
 * Improve the dummy_serial behavior, to better mimic Windows behavior.
 * Unittests for measuring the sleep time in _communicate.
 * Logging instead of _print_out()
-* Change to Python3 only, and:
-    * Change internal representation to byterray
-    * Better printout of the bytearray in error messages
-    * Tool for interpretation of Modbus messages
-    * Use Enum for payloadformat
-    * Add type hinting
-    * Run mypy checks
-    * Possibly use pytest istead
+
+Change to Python3 only, and then:
+
+* Change internal representation to bytearray
+* Better printout of the bytearray in error messages
+* Tool for interpretation of Modbus messages
+* Use Enum for payloadformat
+* Add type hinting
+* Run mypy checks
+* Possibly use pytest instead
 

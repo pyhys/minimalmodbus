@@ -18,7 +18,7 @@ Types of Contributions
 Help other users
 ~~~~~~~~~~~~~~~~
 
-It is greatly appreciated if you can help other users get their Modbus equipment up and running.
+It is greatly appreciated if you can help other users to get their Modbus equipment up and running.
 Please subscribe ("watch") the tags "modbus" and "minimalmodbus" on Stack Overflow.
 
 Here are the newest minimalmodbus questions on Stack Overflow:
@@ -43,7 +43,7 @@ If you are reporting a bug, please include:
 * Your operating system name and version.
 * Any details about your local setup that might be helpful in troubleshooting.
 * Detailed steps to reproduce the bug.
-* The output from :meth:`._getDiagnosticString`.
+* The output from :meth:`._get_diagnostic_string`.
 
 Fix Bugs
 ~~~~~~~~
@@ -126,9 +126,3 @@ Before you submit a pull request, check that it meets these guidelines:
    https://travis-ci.org/pyhys/minimalmodbus/pull_requests
    and make sure that the tests pass for all supported Python versions.
 
-Tips
-----
-
-To run a subset of tests::
-
-    $ python -m unittest tests.test_minimalmodbus
