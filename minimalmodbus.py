@@ -3220,8 +3220,8 @@ def _check_response_payload(
         number_of_register_bytes = number_of_registers * _NUMBER_OF_BYTES_PER_REGISTER
         if len(registerdata) != number_of_register_bytes:
             raise InvalidResponseError(
-                "The registerdata length does not match number of register bytes. "
-                + "Given {0!r} and {1!r}.".format(
+                "The register data length is wrong. "
+                + "Registerdata: {!r} bytes. Expected: {!r}.".format(
                     len(registerdata), number_of_register_bytes
                 )
             )
@@ -3463,10 +3463,18 @@ def _check_string(
         raise TypeError(
             "The maxlength must be an integer or None. Given: {0!r}".format(maxlength)
         )
-
+    try:
+        issubclass(exception_type, Exception)
+    except TypeError:
+        raise TypeError(
+            "The exception_type must be an exception class. "
+            + "It not even a class. Given: {0!r}".format(
+                type(exception_type)
+            )
+        )
     if not issubclass(exception_type, Exception):
         raise TypeError(
-            "The exception_type must be an exception. Given: {0!r}".format(
+            "The exception_type must be an exception class. Given: {0!r}".format(
                 type(exception_type)
             )
         )

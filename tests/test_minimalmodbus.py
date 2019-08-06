@@ -471,6 +471,11 @@ class TestParsePayload(ExtendedTestCase):
                           minimalmodbus._parse_payload, '\x00\x47\x00\x00', 5, 74, 1, 0, 0, 1,
                                                         False, False, _PAYLOADFORMAT_BIT)
 
+        # read_bits(196, 22, functioncode=2)  # Wrong number of bits
+        self.assertRaises(InvalidResponseError,
+                          minimalmodbus._parse_payload,'\x03\xAC\xDB\x35', 2, 196, None, 0, 0, 7,
+                                                        False, False, _PAYLOADFORMAT_REGISTER)
+
         # read_register(202, 0, functioncode=3)  # Slave gives too long response
         self.assertRaises(InvalidResponseError,
                           minimalmodbus._parse_payload,'\x02\x00\x00\x09', 3, 202, None, 0, 1, 0,
@@ -496,6 +501,10 @@ class TestParsePayload(ExtendedTestCase):
                           minimalmodbus._parse_payload, '\x00\x36\x00\x01', 6, 55, 99, 0, 1, 0,
                                                         False, False, _PAYLOADFORMAT_REGISTER)
 
+        # read_registers(105, 3)  # wrong number of registers
+        self.assertRaises(InvalidResponseError,
+                          minimalmodbus._parse_payload, '\x06\x00\x10\x00\x20\x00\x40', 3, 105, None, 0, 4, 0,
+                                                        False, False, _PAYLOADFORMAT_REGISTERS)
 
 class TestEmbedPayload(ExtendedTestCase):
 
@@ -909,11 +918,13 @@ class TestBytestringToBits(ExtendedTestCase):
     ]
 
     def testKnownValues(self):
-
         for bytestring, number_of_bits, expected_result in self.knownValues:
             assert len(expected_result) == number_of_bits
             result = minimalmodbus._bytestring_to_bits(bytestring, number_of_bits)
             self.assertEqual(result, expected_result)
+
+    def testWrongValues(self):
+        self.assertRaises(ValueError, minimalmodbus._bytestring_to_bits, '\x01\x02', 3)
 
 class TestBitsToBytestring(ExtendedTestCase):
 
@@ -923,6 +934,10 @@ class TestBitsToBytestring(ExtendedTestCase):
         for knownresult, __, bitlist in self.knownValues:
             result = minimalmodbus._bits_to_bytestring(bitlist)
             self.assertEqual(result, knownresult)
+
+    def testWrongValues(self):
+        self.assertRaises(ValueError, minimalmodbus._bits_to_bytestring, [1, 0, 3])
+        self.assertRaises(TypeError, minimalmodbus._bits_to_bytestring, 1)
 
 class TestBitToBytestring(ExtendedTestCase):
 
@@ -1883,6 +1898,12 @@ class TestCheckString(ExtendedTestCase):
     def testDescriptionNotString(self):
         for value in _NOT_STRINGS:
             self.assertRaises(TypeError, minimalmodbus._check_string, 'DEF', minlength=3, maxlength=3, description=value)
+
+    def testWrongCustomError(self):
+        self.assertRaises(TypeError,
+                          minimalmodbus._check_string, 'DEF', minlength=3, maxlength=3, description='ABC', exception_type=list)
+        self.assertRaises(TypeError,
+                          minimalmodbus._check_string, 'DEF', minlength=3, maxlength=3, description='ABC', exception_type=7)
 
     def testCustomError(self):
         for ex in [NotImplementedError, MemoryError, InvalidResponseError]:
