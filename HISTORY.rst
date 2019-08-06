@@ -32,6 +32,7 @@ Other fixes:
 * Implemented write timeout, to avoid hanging when writing. Instead it will raise an exception.
   Reported by Austin Stover.
 * Better checking of number of registers when reading and writing.
+* Rename internal methods and variables to be PEP8 compliant.
 * Improved documentation
 
 
