@@ -2041,11 +2041,23 @@ class TestDummyCommunication(ExtendedTestCase):
 
     ## Read bits ##
 
+    def testReadBits(self):
+        # Example from MODBUS APPLICATION PROTOCOL SPECIFICATION V1.1b
+        self.assertEqual(self.instrument.read_bits(196, 22, functioncode=2),
+                         [0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1])
+
+        # Example from MODBUS APPLICATION PROTOCOL SPECIFICATION V1.1b
+        self.assertEqual(self.instrument.read_bits(19, 19, functioncode=1),
+                         [1, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1])
+
     def testReadBitsWrongValue(self):
         self.assertRaises(ValueError, self.instrument.read_bits, -1, 4)
 
-
     ## Write bits ##
+
+    def testWriteBits(self):
+        # Example from MODBUS APPLICATION PROTOCOL SPECIFICATION V1.1b
+        self.instrument.write_bits(19, [1, 0, 1, 1, 0, 0, 1, 1, 1, 0])
 
     def testWriteBitsWrongValue(self):
         self.assertRaises(ValueError, self.instrument.write_bits, -1, [0,1])
@@ -2332,34 +2344,27 @@ class TestDummyCommunication(ExtendedTestCase):
 
     def testGenericCommand(self):
 
+        # read_bit(61)
+        self.assertEqual(self.instrument._generic_command(2, 61, number_of_bits=1, payloadformat=_PAYLOADFORMAT_BIT),
+                         1)
+
         # write_bit(71, 1)
         self.instrument._generic_command(5, 71, 1, number_of_bits=1, payloadformat=_PAYLOADFORMAT_BIT)
 
-        # write_register(35, 20)
-        self.instrument._generic_command(16, 35, 20, number_of_registers=1, payloadformat=_PAYLOADFORMAT_REGISTER)
+        # read_bits(196, 22, functioncode=2)
+        self.assertEqual(self.instrument._generic_command(2, 196, number_of_bits=22, payloadformat=_PAYLOADFORMAT_BITS),
+                         [0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1])
 
-        # write_register(45, 88)
-        self.instrument._generic_command(6, 45, 88, number_of_registers=1, payloadformat=_PAYLOADFORMAT_REGISTER)
+        # read_bits(19, 19, functioncode=1)
+        self.assertEqual(self.instrument._generic_command(1, 19, number_of_bits=19, payloadformat=_PAYLOADFORMAT_BITS),
+                         [1, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1])
 
-        # write_long(102, 5)
-        self.instrument._generic_command(16, 102, 5, number_of_registers=2, payloadformat=_PAYLOADFORMAT_LONG)
-
-        # write_float(103, 1.1)
-        self.instrument._generic_command(16, 103, 1.1, number_of_registers=2, payloadformat=_PAYLOADFORMAT_FLOAT)
-
-        # write_string(104, 'A', 1)
-        self.instrument._generic_command(16, 104, 'A', number_of_registers=1, payloadformat=_PAYLOADFORMAT_STRING)
-
-        # write_registers(105, [2, 4, 8])
-        self.instrument._generic_command(16, 105, [2, 4, 8], number_of_registers=3, payloadformat=_PAYLOADFORMAT_REGISTERS)
+        # write_bits(19, [1, 0, 1, 1, 0, 0, 1, 1, 1, 0])
+        self.instrument._generic_command(15, 19, [1, 0, 1, 1, 0, 0, 1, 1, 1, 0], number_of_bits=10, payloadformat=_PAYLOADFORMAT_BITS)
 
         # read_register(289)
         self.assertEqual(self.instrument._generic_command(3, 289, number_of_registers=1, payloadformat=_PAYLOADFORMAT_REGISTER),
                          770)
-
-         # read_bit(61)
-        self.assertEqual(self.instrument._generic_command(2, 61, number_of_bits=1, payloadformat=_PAYLOADFORMAT_BIT),
-                         1)
 
         # read_register(101, signed = True)
         self.assertEqual(self.instrument._generic_command(3, 101, number_of_registers=1, signed=True,
@@ -2371,21 +2376,39 @@ class TestDummyCommunication(ExtendedTestCase):
                                                                number_of_registers=1, payloadformat=_PAYLOADFORMAT_REGISTER),
                                77.0)
 
+        # write_register(35, 20)
+        self.instrument._generic_command(16, 35, 20, number_of_registers=1, payloadformat=_PAYLOADFORMAT_REGISTER)
+
+        # write_register(45, 88)
+        self.instrument._generic_command(6, 45, 88, number_of_registers=1, payloadformat=_PAYLOADFORMAT_REGISTER)
+
         # read_long(102)
         self.assertEqual(self.instrument._generic_command(3, 102, number_of_registers=2, payloadformat=_PAYLOADFORMAT_LONG),
                          4294967295)
+
+        # write_long(102, 5)
+        self.instrument._generic_command(16, 102, 5, number_of_registers=2, payloadformat=_PAYLOADFORMAT_LONG)
 
         # read_float(103)
         self.assertAlmostEqual(self.instrument._generic_command(3, 103, number_of_registers=2, payloadformat=_PAYLOADFORMAT_FLOAT),
                                1.0)
 
+        # write_float(103, 1.1)
+        self.instrument._generic_command(16, 103, 1.1, number_of_registers=2, payloadformat=_PAYLOADFORMAT_FLOAT)
+
         # read_string(104, 1)
         self.assertEqual(   self.instrument._generic_command(3, 104, number_of_registers=1, payloadformat=_PAYLOADFORMAT_STRING),
                             'AB')
 
+        # write_string(104, 'A', 1)
+        self.instrument._generic_command(16, 104, 'A', number_of_registers=1, payloadformat=_PAYLOADFORMAT_STRING)
+
         # read_registers(105, 3)
         self.assertEqual(   self.instrument._generic_command(3, 105, number_of_registers=3, payloadformat=_PAYLOADFORMAT_REGISTERS),
                             [16, 32, 64])
+
+        # write_registers(105, [2, 4, 8])
+        self.instrument._generic_command(16, 105, [2, 4, 8], number_of_registers=3, payloadformat=_PAYLOADFORMAT_REGISTERS)
 
     def testGenericCommandWrongValue(self):  # Detected without looking at parameter combinations
         for functioncode in [-1, 0, 23, 35, 128, 255, 1234567]:
@@ -2908,6 +2931,36 @@ WRONG_RTU_RESPONSES['\x01\x0f' + '\x00\x49\x00\x01\x01\x01' + '2\x99'] = '\x01\x
 # Message:  Slave address 1, function code 5. Register address 74, value 1 (FF00). CRC.
 # Response: Slave address 1, function code 5. Register address 74, value 0 (0000, wrong). CRC.
 WRONG_RTU_RESPONSES['\x01\x05' + '\x00\x4a\xff\x00' + '\xad\xec'] = '\x01\x05' + '\x00\x47\x00\x00' + '}\xdf'
+
+
+#                ##  READ BITS  ##
+
+# Read 19 bits starting at address 19 on slave 1 using function code 1.
+# Also for testing _perform_command()
+# Example from MODBUS APPLICATION PROTOCOL SPECIFICATION V1.1b
+# ----------------------------------------------------------------------------------------- #
+# Message:  Slave address 1, function code 1. Register address 19, 19 coils. CRC.
+# Response: Slave address 1, function code 1. 3 bytes, values. CRC.
+GOOD_RTU_RESPONSES['\x01\x01' + '\x00\x13\x00\x13' + '\x8c\x02'] = '\x01\x01' + '\x03\xCD\x6B\x05' + 'B\x82'
+
+# Read 22 bits starting at address 196 on slave 1 using function code 2.
+# Also for testing _perform_command()
+# Example from MODBUS APPLICATION PROTOCOL SPECIFICATION V1.1b
+# ----------------------------------------------------------------------------------------- #
+# Message:  Slave address 1, function code 2. Register address 196, 22 coils. CRC.
+# Response: Slave address 1, function code 2. 3 bytes, values. CRC.
+GOOD_RTU_RESPONSES['\x01\x02' + '\x00\xC4\x00\x16' + '¸9'] = '\x01\x02' + '\x03\xAC\xDB\x35' + '"\x88'
+
+
+#                ##  WRITE BITS  ##
+
+# Write 10 bits starting at address 19 on slave 1 using function code 15.
+# Also for testing _perform_command()
+# Example from MODBUS APPLICATION PROTOCOL SPECIFICATION V1.1b
+# ----------------------------------------------------------------------------------------- #
+# Message:  Slave address 1, function code 15. Address 19, 10 coils, 2 bytes, values. CRC.
+# Response: Slave address 1, function code 15. Address 19, 10 coils. CRC.
+GOOD_RTU_RESPONSES['\x01\x0f' + '\x00\x13\x00\x0A\x02\xCD\x01' + 'rË'] = '\x01\x0f' + '\x00\x13\x00\x0A' + '$\t'
 
 
 #                ##  READ REGISTER  ##
@@ -3476,16 +3529,16 @@ if __name__ == '__main__':
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestDummyCommunicationHandleLocalEcho)
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestCalculateCrcString)
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestHexdecode)
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestBitsToBytestring)
-    unittest.TextTestRunner(verbosity=2).run(suite)
+    #suite = unittest.TestLoader().loadTestsFromTestCase(TestBitsToBytestring)
+    #unittest.TextTestRunner(verbosity=2).run(suite)
 
 
         ## Run a single test ##
 
-    #suite = unittest.TestSuite()
+    suite = unittest.TestSuite()
     #suite.addTest(TestDummyCommunication("testReadLong"))
-    #suite.addTest(TestDummyCommunication("testGenericCommandWrongValueCombinations"))
-    #unittest.TextTestRunner(verbosity=2).run(suite)
+    suite.addTest(TestDummyCommunication("testGenericCommand"))
+    unittest.TextTestRunner(verbosity=2).run(suite)
 
 
         ## Run individual commands ##
