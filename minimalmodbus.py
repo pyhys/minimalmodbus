@@ -1578,6 +1578,7 @@ def _extract_payload(response, slaveaddress, mode, functioncode):
     the functioncode or the CRC.
 
     The received response should have the format:
+
     * RTU Mode: slaveaddress byte + functioncode byte + payloaddata + CRC (which is two bytes)
     * ASCII Mode: header (:) + slaveaddress byte + functioncode byte +
       payloaddata + LRC (which is two characters) + footer (CRLF)
@@ -1627,7 +1628,7 @@ def _extract_payload(response, slaveaddress, mode, functioncode):
                     _ASCII_HEADER, response
                 )
             )
-        elif response[-len(_ASCII_FOOTER) :] != _ASCII_FOOTER:
+        elif response[-len(_ASCII_FOOTER):] != _ASCII_FOOTER:
             raise InvalidResponseError(
                 "Did not find footer "
                 + "({!r}) as end of ASCII response. The plain response is: {!r}".format(
@@ -1659,7 +1660,7 @@ def _extract_payload(response, slaveaddress, mode, functioncode):
         number_of_checksum_bytes = NUMBER_OF_CRC_BYTES
 
     received_checksum = response[-number_of_checksum_bytes:]
-    response_without_checksum = response[0 : (len(response) - number_of_checksum_bytes)]
+    response_without_checksum = response[0:(len(response) - number_of_checksum_bytes)]
     calculated_checksum = calculate_checksum(response_without_checksum)
 
     if received_checksum != calculated_checksum:
@@ -1868,12 +1869,12 @@ def _num_to_twobyte_string(value, number_of_decimals=0, lsb_first=False, signed=
 
     The byte order is controlled by the ``lsb_first`` parameter, as seen here:
 
-    ====================== ============= ====================================
+    ======================= ============= ====================================
     ``lsb_first`` parameter Endianness    Description
-    ====================== ============= ====================================
-    False (default)        Big-endian    Most significant byte is sent first
-    True                   Little-endian Least significant byte is sent first
-    ====================== ============= ====================================
+    ======================= ============= ====================================
+    False (default)         Big-endian    Most significant byte is sent first
+    True                    Little-endian Least significant byte is sent first
+    ======================= ============= ====================================
 
     For example:
         To store for example value=77.0, use ``number_of_decimals = 1`` if the
@@ -2281,7 +2282,7 @@ def _bytestring_to_valuelist(bytestring, number_of_registers):
     values = []
     for i in range(number_of_registers):
         offset = _NUMBER_OF_BYTES_PER_REGISTER * i
-        substring = bytestring[offset : (offset + _NUMBER_OF_BYTES_PER_REGISTER)]
+        substring = bytestring[offset:(offset + _NUMBER_OF_BYTES_PER_REGISTER)]
         values.append(_twobyte_string_to_num(substring))
 
     return values
@@ -2477,6 +2478,7 @@ def _calculate_number_of_bytes_for_bits(number_of_bits):
     Error checking should have been done before.
 
     Algorithm from MODBUS APPLICATION PROTOCOL SPECIFICATION V1.1b
+
     """
     result = number_of_bits // _BITS_PER_BYTE  # Integer division in Python2 and 3
     if number_of_bits % _BITS_PER_BYTE:
@@ -2534,7 +2536,7 @@ def _bits_to_bytestring(valuelist):
     list_position = 0
     outputstring = ""
     while list_position < len(valuelist):
-        sublist = valuelist[list_position : list_position + _BITS_PER_BYTE]
+        sublist = valuelist[list_position:(list_position + _BITS_PER_BYTE)]
 
         bytevalue = 0
         for bitposition, value in enumerate(sublist):
