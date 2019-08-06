@@ -39,14 +39,13 @@ if sys.version > "3":
 
 _NUMBER_OF_BYTES_BEFORE_REGISTERDATA = 1  # Within the payload
 _NUMBER_OF_BYTES_PER_REGISTER = 2
-_NUMBER_OF_REQUESTED_BITS = 1
-_NUMBER_OF_BYTES_FOR_ONE_BIT = 1
 _MAX_NUMBER_OF_REGISTERS_TO_WRITE = 123
 _MAX_NUMBER_OF_REGISTERS_TO_READ = 125
 _MAX_NUMBER_OF_BITS_TO_WRITE = 1968  # 0x7B0
 _MAX_NUMBER_OF_BITS_TO_READ = 2000  # 0x7D0
 _MAX_NUMBER_OF_DECIMALS = 10  # Some instrument might store 0.00000154 Ampere as 154 etc
 _SECONDS_TO_MILLISECONDS = 1000
+_BITS_PER_BYTE = 8
 _ASCII_HEADER = ":"
 _ASCII_FOOTER = "\r\n"
 _BYTEPOSITION_FOR_ASCII_HEADER = 0  # Relative to plain response
@@ -289,7 +288,8 @@ class Instrument:
             * functioncode (int): Modbus function code. Can be 1 or 2.
 
         Returns:
-            A list of bit values 0 or 1 (int).
+            A list of bit values 0 or 1 (int). The first value in the list is for
+            the bit at the given address.
 
         Raises:
             TypeError, ValueError, ModbusException,
@@ -321,6 +321,8 @@ class Instrument:
             * registeraddress (int): The slave register start address (use decimal
               numbers, not hex).
             * values (list of int or bool): 0 or 1, or True or False
+
+        The first value in the list is for the bit at the given address.
 
         Returns:
             None
@@ -1358,7 +1360,6 @@ class LocalEchoError(MasterReportedException):
 class InvalidResponseError(MasterReportedException):
     """The response does not fulfill the Modbus standad, for example wrong checksum."""
 
-
 # ################ #
 # Payload handling #
 # ################ #
@@ -1384,26 +1385,28 @@ def _create_payload(
     """
     if functioncode in [1, 2]:
         return _num_to_twobyte_string(registeraddress) + _num_to_twobyte_string(
-            _NUMBER_OF_REQUESTED_BITS
+            number_of_bits
         )
     if functioncode in [3, 4]:
         return _num_to_twobyte_string(registeraddress) + _num_to_twobyte_string(
             number_of_registers
         )
     if functioncode == 5:
-        return _num_to_twobyte_string(registeraddress) + _create_bitpattern(
-            functioncode, value
-        )
+        return _num_to_twobyte_string(registeraddress) + _bit_to_bytestring(value)
     if functioncode == 6:
         return _num_to_twobyte_string(registeraddress) + _num_to_twobyte_string(
             value, number_of_decimals, signed=signed
         )
     if functioncode == 15:
+        if payloadformat == _PAYLOADFORMAT_BIT:
+            bitlist = [value]
+        else:
+            bitlist = value
         return (
             _num_to_twobyte_string(registeraddress)
-            + _num_to_twobyte_string(_NUMBER_OF_REQUESTED_BITS)
-            + _num_to_onebyte_string(_NUMBER_OF_BYTES_FOR_ONE_BIT)
-            + _create_bitpattern(functioncode, value)
+            + _num_to_twobyte_string(number_of_bits)
+            + _num_to_onebyte_string(_calculate_number_of_bytes_for_bits(number_of_bits))
+            + _bits_to_bytestring(bitlist)
         )
     if functioncode == 16:
         if payloadformat == _PAYLOADFORMAT_REGISTER:
@@ -1447,6 +1450,7 @@ def _parse_payload(
         value,
         number_of_decimals,
         number_of_registers,
+        number_of_bits,
         signed,
         little_endian,
         payloadformat,
@@ -1454,7 +1458,10 @@ def _parse_payload(
 
     if functioncode in [1, 2]:
         registerdata = payload[_NUMBER_OF_BYTES_BEFORE_REGISTERDATA:]
-        return _bit_response_to_value(registerdata)
+        if payloadformat == _PAYLOADFORMAT_BIT:
+            return _bytestring_to_bits(registerdata, number_of_bits)[0]
+        elif payloadformat == _PAYLOADFORMAT_BITS:
+            return _bytestring_to_bits(registerdata, number_of_bits)
 
     if functioncode in [3, 4]:
         registerdata = payload[_NUMBER_OF_BYTES_BEFORE_REGISTERDATA:]
@@ -2436,43 +2443,31 @@ def _hexlify(bytestring):
     return _hexencode(bytestring, insert_spaces=True)
 
 
-def _bit_response_to_value(bytestring):
-    r"""Convert a response string (for a single bit) to a numerical value.
+def _calculate_number_of_bytes_for_bits(number_of_bits):
+    """Calculate number of full bytes required to house a number of bits.
 
     Args:
-        * bytestring (str): A string of length 1. Can be for example ``\x01``.
+        * number_of_bits (str): Number of bits
 
-    Returns:
-        The converted value (int), could be 0 or 1.
+    Error checking should have been done before.
 
-    Raises:
-        TypeError, ValueError
-
+    Algorithm from MODBUS APPLICATION PROTOCOL SPECIFICATION V1.1b
     """
-    _check_string(bytestring, description="bytestring", minlength=1, maxlength=1)
-
-    RESPONSE_ON = "\x01"
-    RESPONSE_OFF = "\x00"
-
-    if bytestring == RESPONSE_ON:
-        return 1
-    elif bytestring == RESPONSE_OFF:
-        return 0
-    else:
-        raise InvalidResponseError(
-            "Could not convert bit response to a value (for single bit reading)."
-            + " Your instrument does not follow the Modbus standard."
-            + " Input: {0!r}".format(bytestring)
-        )
+    result = number_of_bits // _BITS_PER_BYTE  # Integer division in Python2 and 3
+    if number_of_bits % _BITS_PER_BYTE:
+        result += 1
+    return result
 
 
-def _create_bitpattern(functioncode, value):
+def _bit_to_bytestring(value):
     """Create the bit pattern that is used for writing single bits.
+
+    Used for functioncode 5. The same value is sent back in the response
+    from the slave.
 
     This is basically a storage of numerical constants.
 
     Args:
-        * functioncode (int): can be 5 or 15
         * value (int): can be 0 or 1
 
     Returns:
@@ -2482,21 +2477,81 @@ def _create_bitpattern(functioncode, value):
         TypeError, ValueError
 
     """
-    _check_functioncode(functioncode, [5, 15])
     _check_int(value, minvalue=0, maxvalue=1, description="inputvalue")
 
-    if functioncode == 5:
-        if value == 0:
-            return "\x00\x00"
-        else:
-            return "\xff\x00"
+    if value == 0:
+        return "\x00\x00"
+    else:
+        return "\xff\x00"
 
-    elif functioncode == 15:
-        if value == 0:
-            return "\x00"
-        else:
-            return "\x01"
 
+def _bits_to_bytestring(valuelist):
+    """Build a bytestring from a list of bits.
+
+    This is used for functioncode 15.
+
+    Args:
+        * valuelist (list of int): 0 or 1
+
+    Returns a bytestring.
+
+    """
+    if not isinstance(valuelist, list):
+        raise TypeError("The input should be a list. "
+                         + "Given: {!r}".format(valuelist)
+        )
+    for value in valuelist:
+        if value not in [0, 1, False, True]:
+            raise ValueError("Wrong value in list of bits. "
+                         + "Given: {!r}".format(value)
+        )
+
+    list_position = 0
+    outputstring = ""
+    while list_position < len(valuelist):
+        sublist = valuelist[list_position:list_position + _BITS_PER_BYTE]
+
+        bytevalue = 0
+        for bitposition, value in enumerate(sublist):
+            bytevalue |= (value << bitposition)
+        outputstring += chr(bytevalue)
+
+        list_position += _BITS_PER_BYTE
+    return outputstring
+
+
+def _bytestring_to_bits(bytestring, number_of_bits):
+    """Parse bits from a bytestring.
+
+    This is used for parsing the bits in response messages for functioncode 1 and 2.
+
+    The first byte in the bytestring contains info on the addressed bit
+    (in LSB in that byte). Second bit from right contains info on the bit
+    on the next address.
+
+    Next byte in the bytestring contains data on next 8 bits. Might be padded with
+    zeros toward MSB.
+
+    Args:
+        * bytestring (str): input string
+        * number_of_bits (int): Number of bits to extract
+
+    Returns a list of values (0 or 1). The length of the list is equal to number_of_bits.
+
+    """
+    expected_length = _calculate_number_of_bytes_for_bits(number_of_bits)
+    if len(bytestring) != expected_length:
+        raise ValueError("Wrong length of bytestring. Expected is "
+                         + "{} bytes (for {} bits), actual is {} bytes.".format(
+                             expected_length, number_of_bits, len(bytestring),
+                         ))
+    total_list = []
+    for character in bytestring:
+        bytevalue = ord(character)
+        for bitposition in range(_BITS_PER_BYTE):
+            bitvalue = (bytevalue & (1 << bitposition)) > 0
+            total_list.append(int(bitvalue))
+    return total_list[:number_of_bits]
 
 # ################### #
 # Number manipulation #
@@ -3095,6 +3150,7 @@ def _check_response_payload(
     value,
     number_of_decimals,
     number_of_registers,
+    number_of_bits,
     signed,
     little_endian,
     payloadformat,
@@ -3106,14 +3162,14 @@ def _check_response_payload(
         _check_response_registeraddress(payload, registeraddress)
 
     if functioncode == 5:
-        _check_response_writedata(payload, _create_bitpattern(functioncode, value))
+        _check_response_writedata(payload, _bit_to_bytestring(value))
     elif functioncode == 6:
         _check_response_writedata(
             payload, _num_to_twobyte_string(value, number_of_decimals, signed=signed)
         )
     elif functioncode == 15:
         # response number of bits
-        _check_response_number_of_registers(payload, _NUMBER_OF_REQUESTED_BITS)
+        _check_response_number_of_registers(payload, number_of_bits)
 
     elif functioncode == 16:
         _check_response_number_of_registers(payload, number_of_registers)
@@ -3121,10 +3177,11 @@ def _check_response_payload(
     # Response for read bits
     if functioncode in [1, 2]:
         registerdata = payload[_NUMBER_OF_BYTES_BEFORE_REGISTERDATA:]
-        if len(registerdata) != _NUMBER_OF_BYTES_FOR_ONE_BIT:
+        expected_number_of_bytes = _calculate_number_of_bytes_for_bits(number_of_bits)
+        if len(registerdata) != expected_number_of_bytes:
             raise InvalidResponseError(
-                "The registerdata length does not match _NUMBER_OF_BYTES_FOR_ONE_BIT. "
-                + "Given {0}.".format(len(registerdata))
+                "The data length is wrong for payloadformat BIT/BITS."
+                + " Expected: {} Actual: {}.".format(expected_number_of_bytes, len(registerdata))
             )
 
     # Response for read registers

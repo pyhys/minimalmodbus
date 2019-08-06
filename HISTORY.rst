@@ -11,7 +11,7 @@ New features:
 
 Breaking changes:
 
-* Renamed method arguments 'numberOfDecimals', 'number_of_registers' to
+* Renamed method arguments 'numberOfDecimals', 'numberOfRegisters' to
   'number_of_decimals', 'number_of_registers'
 * Removed example drivers for Eurotherm 3500 and Omegacn 7500, as I no longer have
   access to these instruments for testing. It would great if someone would pick
@@ -33,8 +33,7 @@ Other fixes:
   Reported by Austin Stover.
 * Better checking of number of registers when reading and writing.
 * Rename internal methods and variables to be PEP8 compliant.
-* Improved documentation
-
+* Improved documentation.
 
 
 Release 0.7 (2015-07-30)

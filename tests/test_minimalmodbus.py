@@ -803,6 +803,126 @@ class TestSanityTwoByteString(ExtendedTestCase):
                 self.assertEqual(resultvalue, value)
 
 
+# class TestBytestringToBit(ExtendedTestCase):
+
+#     def testKnownValues(self):
+#         self.assertEqual(minimalmodbus._bytestring_to_bit('\x00'), 0)
+#         self.assertEqual(minimalmodbus._bytestring_to_bit('\x01'), 1)
+
+#     def testWrongValues(self):
+#         self.assertRaises(ValueError, minimalmodbus._bytestring_to_bit, 'ABC')   # Too long string
+#         self.assertRaises(InvalidResponseError, minimalmodbus._bytestring_to_bit, 'A')     # Wrong string
+#         self.assertRaises(InvalidResponseError, minimalmodbus._bytestring_to_bit, '\x03')  # Wrong string
+
+#     def testWrongType(self):
+#         for value in _NOT_STRINGS:
+#             self.assertRaises(TypeError, minimalmodbus._bytestring_to_bit, value)
+
+
+class TestBytestringToBits(ExtendedTestCase):
+
+    knownValues=[
+    ('\x00',          1, [0]),
+    ('\x01',          1, [1]),
+    ('\x02',          2, [0, 1]),
+    ('\x04',          3, [0, 0, 1]),
+    ('\x08',          4, [0, 0, 0, 1]),
+    ('\x10',          5, [0, 0, 0, 0, 1]),
+    ('\x20',          6, [0, 0, 0, 0, 0, 1]),
+    ('\x40',          7, [0, 0, 0, 0, 0, 0, 1]),
+    ('\x80',          8, [0, 0, 0, 0, 0, 0, 0, 1]),
+    ('\x00\x01',      9, [0, 0, 0, 0, 0, 0, 0, 0, 1]),
+    ('\x00\x02',     10, [0, 0, 0, 0, 0, 0, 0, 0, 0, 1]),
+    ('\x00\x00\x01', 17, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]),
+    ('\x00\x00\x02', 18, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]),
+    ('\x00\x00\x02', 19, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0]),
+    ('\x01',          1, [1]),
+    ('\x01',          2, [1, 0]),
+    ('\x01',          3, [1, 0, 0]),
+    ('\x01',          4, [1, 0, 0, 0]),
+    ('\x01',          5, [1, 0, 0, 0, 0]),
+    ('\x01',          6, [1, 0, 0, 0, 0, 0]),
+    ('\x01',          7, [1, 0, 0, 0, 0, 0, 0]),
+    ('\x01',          8, [1, 0, 0, 0, 0, 0, 0, 0]),
+    ('\x01\x00',      9, [1, 0, 0, 0, 0, 0, 0, 0, 0]),
+    ('\x01\x00',     10, [1, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+    ('\x01\x00',     16, [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+    ('\x01\x00\x00', 17, [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+    ('\x01\x00\x00', 18, [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+    # Example from MODBUS APPLICATION PROTOCOL SPECIFICATION V1.1b
+    ('\xCD\x6B\x05', 19, [1, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1]),
+    # Example from MODBUS APPLICATION PROTOCOL SPECIFICATION V1.1b
+    ('\xAC\xDB\x35', 22, [0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1]),
+    # Example from MODBUS APPLICATION PROTOCOL SPECIFICATION V1.1b
+    ('\xCD\x01',     10, [1, 0, 1, 1, 0, 0, 1, 1, 1, 0]),
+    ]
+
+    def testKnownValues(self):
+
+        for bytestring, number_of_bits, expected_result in self.knownValues:
+            assert len(expected_result) == number_of_bits
+            result = minimalmodbus._bytestring_to_bits(bytestring, number_of_bits)
+            self.assertEqual(result, expected_result)
+
+class TestBitsToBytestring(ExtendedTestCase):
+
+    knownValues=TestBytestringToBits.knownValues
+
+    def testKnownValues(self):
+        for knownresult, __, bitlist in self.knownValues:
+            result = minimalmodbus._bits_to_bytestring(bitlist)
+            self.assertEqual(result, knownresult)
+
+class TestBitToBytestring(ExtendedTestCase):
+
+    knownValues=[
+    (0, '\x00\x00'),
+    (1, '\xff\x00' ),
+    ]
+
+    def testKnownValues(self):
+        for value, knownresult in self.knownValues:
+            resultvalue = minimalmodbus._bit_to_bytestring(value)
+            self.assertEqual(resultvalue, knownresult)
+
+    def testWrongValue(self):
+        self.assertRaises(ValueError, minimalmodbus._bit_to_bytestring, 2)
+        self.assertRaises(ValueError, minimalmodbus._bit_to_bytestring, 222)
+        self.assertRaises(ValueError, minimalmodbus._bit_to_bytestring, -1)
+
+    def testValueNotInteger(self):
+        for value in _NOT_INTERGERS:
+            self.assertRaises(TypeError, minimalmodbus._bit_to_bytestring, value)
+
+class TestCalculateNumberOfBytesForBits(ExtendedTestCase):
+
+    knownValues=[
+    (0, 0),
+    (1, 1),
+    (2, 1),
+    (3, 1),
+    (4, 1),
+    (5, 1),
+    (6, 1),
+    (7, 1),
+    (8, 1),
+    (9, 2),
+    (10, 2),
+    (11, 2),
+    (12, 2),
+    (13, 2),
+    (14, 2),
+    (15, 2),
+    (16, 2),
+    (17, 3),
+    ]
+
+    def testKnownValues(self):
+        for bits, knownresult in self.knownValues:
+            resultvalue = minimalmodbus._calculate_number_of_bytes_for_bits(bits)
+            self.assertEqual(resultvalue, knownresult)
+
+
 class TestLongToBytestring(ExtendedTestCase):
 
     knownValues=[
@@ -1266,60 +1386,6 @@ class TestSanityHexencodeHexdecode(ExtendedTestCase):
                     bytestring = chr(i) + chr(j)
                     resultstring = minimalmodbus._hexdecode(minimalmodbus._hexencode(bytestring))
                     self.assertEqual(resultstring, bytestring)
-
-
-class TestBitResponseToValue(ExtendedTestCase):
-
-    def testKnownValues(self):
-        self.assertEqual(minimalmodbus._bit_response_to_value('\x00'), 0)
-        self.assertEqual(minimalmodbus._bit_response_to_value('\x01'), 1)
-
-    def testWrongValues(self):
-        self.assertRaises(ValueError, minimalmodbus._bit_response_to_value, 'ABC')   # Too long string
-        self.assertRaises(InvalidResponseError, minimalmodbus._bit_response_to_value, 'A')     # Wrong string
-        self.assertRaises(InvalidResponseError, minimalmodbus._bit_response_to_value, '\x03')  # Wrong string
-
-    def testWrongType(self):
-        for value in _NOT_STRINGS:
-            self.assertRaises(TypeError, minimalmodbus._bit_response_to_value, value)
-
-
-class TestCreateBitPattern(ExtendedTestCase):
-
-    knownValues=[
-    (5,  0, '\x00\x00'),
-    (5,  1, '\xff\x00' ),
-    (15, 0, '\x00'),
-    (15, 1, '\x01'),
-    ]
-
-    def testKnownValues(self):
-        for functioncode, value, knownresult in self.knownValues:
-            resultvalue = minimalmodbus._create_bitpattern(functioncode, value)
-            self.assertEqual(resultvalue, knownresult)
-
-    def testWrongFunctionCode(self):
-        self.assertRaises(ValueError, minimalmodbus._create_bitpattern, 16,  1)
-        self.assertRaises(ValueError, minimalmodbus._create_bitpattern, -1,  1)
-        self.assertRaises(ValueError, minimalmodbus._create_bitpattern, 128, 1)
-
-    def testFunctionCodeNotInteger(self):
-        for value in _NOT_INTERGERS:
-            self.assertRaises(TypeError, minimalmodbus._create_bitpattern, value, 1)
-
-    def testWrongValue(self):
-        self.assertRaises(ValueError, minimalmodbus._create_bitpattern, 5,  2)
-        self.assertRaises(ValueError, minimalmodbus._create_bitpattern, 5,  222)
-        self.assertRaises(ValueError, minimalmodbus._create_bitpattern, 5,  -1)
-        self.assertRaises(ValueError, minimalmodbus._create_bitpattern, 15, 2)
-        self.assertRaises(ValueError, minimalmodbus._create_bitpattern, 15, 222)
-        self.assertRaises(ValueError, minimalmodbus._create_bitpattern, 15, -1)
-
-    def testValueNotInteger(self):
-        for value in _NOT_INTERGERS:
-            self.assertRaises(TypeError, minimalmodbus._create_bitpattern, 5,  value)
-            self.assertRaises(TypeError, minimalmodbus._create_bitpattern, 15, value)
-
 
 ############################
 # Test number manipulation #
@@ -3410,16 +3476,16 @@ if __name__ == '__main__':
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestDummyCommunicationHandleLocalEcho)
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestCalculateCrcString)
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestHexdecode)
-    #suite = unittest.TestLoader().loadTestsFromTestCase(TestCheckResponseSlaveErrorCode)
-    #unittest.TextTestRunner(verbosity=2).run(suite)
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestBitsToBytestring)
+    unittest.TextTestRunner(verbosity=2).run(suite)
 
 
         ## Run a single test ##
 
-    suite = unittest.TestSuite()
+    #suite = unittest.TestSuite()
     #suite.addTest(TestDummyCommunication("testReadLong"))
-    suite.addTest(TestDummyCommunication("testGenericCommandWrongValueCombinations"))
-    unittest.TextTestRunner(verbosity=2).run(suite)
+    #suite.addTest(TestDummyCommunication("testGenericCommandWrongValueCombinations"))
+    #unittest.TextTestRunner(verbosity=2).run(suite)
 
 
         ## Run individual commands ##
