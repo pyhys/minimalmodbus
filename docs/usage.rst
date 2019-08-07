@@ -160,6 +160,15 @@ The instruments sharing the same serial port share the same ``serial`` Python ob
 You can use instruments on different serial ports in the same script, but
 running several scripts using the same port will give problems.
 
+Closing serial port after each call
+-----------------------------------
+
+In some cases (mostly on Windows) the serial port must be closed after each call.
+
+Enable that behavior with::
+
+    instrument.close_port_after_each_call = True
+
 
 Handling communication errors
 -----------------------------
@@ -185,6 +194,11 @@ When there is communication problems etc the exceptions raised are ModbusExcepti
 from IOError.
 
 Note that in Python3 the IOError is an alias for OSError.
+
+
+Byte order for floating point values and long integers
+------------------------------------------------------
+The byte order used by manufacturers differ. See See :ref:`byteorder`.
 
 
 Subclassing

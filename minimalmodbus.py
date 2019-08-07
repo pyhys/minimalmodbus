@@ -371,6 +371,9 @@ class Instrument:
             * functioncode (int): Modbus function code. Can be 3 or 4.
             * signed (bool): Whether the data should be interpreted as unsigned or signed.
 
+        .. note:: The parameter number_of_decimals was named numberOfDecimals
+                  before MinimalModbus 1.0
+
         If a value of 77.0 is stored internally in the slave register as 770,
         then use ``number_of_decimals=1`` which will divide the received data by 10
         before returning the value.
@@ -441,6 +444,9 @@ class Instrument:
             * functioncode (int): Modbus function code. Can be 6 or 16.
             * signed (bool): Whether the data should be interpreted as unsigned or signed.
 
+        .. note:: The parameter number_of_decimals was named numberOfDecimals
+                  before MinimalModbus 1.0
+
         To store for example ``value=77.0``, use ``number_of_decimals=1`` if the slave register
         will hold it as 770 internally. This will multiply ``value`` by 10 before sending it
         to the slave register.
@@ -499,6 +505,7 @@ class Instrument:
             * functioncode (int): Modbus function code. Can be 3 or 4.
             * signed (bool): Whether the data should be interpreted as unsigned or signed.
             * byteorder (int): How multi-register data should be interpreted.
+              Defaults to BYTEORDER_BIG.
 
         ============== ================== ================ ==========================
         ``signed``     Data type in slave Alternative name Range
@@ -543,6 +550,7 @@ class Instrument:
             * value (int or long): The value to store in the slave.
             * signed (bool): Whether the data should be interpreted as unsigned or signed.
             * byteorder (int): How multi-register data should be interpreted.
+              Defaults to BYTEORDER_BIG.
 
         Returns:
             None
@@ -591,6 +599,10 @@ class Instrument:
             * number_of_registers (int): The number of registers allocated for the float.
               Can be 2 or 4.
             * byteorder (int): How multi-register data should be interpreted.
+              Defaults to BYTEORDER_BIG.
+
+        .. note:: The parameter number_of_registers was named numberOfRegisters
+                  before MinimalModbus 1.0
 
         ====================================== ================= =========== =================
         Type of floating point number in slave Size              Registers   Range
@@ -639,6 +651,10 @@ class Instrument:
             * number_of_registers (int): The number of registers allocated for the float.
               Can be 2 or 4.
             * byteorder (int): How multi-register data should be interpreted.
+              Defaults to BYTEORDER_BIG.
+
+        .. note:: The parameter number_of_registers was named numberOfRegisters
+                  before MinimalModbus 1.0
 
         Returns:
             None
@@ -679,6 +695,9 @@ class Instrument:
             * number_of_registers (int): The number of registers allocated for the string.
             * functioncode (int): Modbus function code. Can be 3 or 4.
 
+        .. note:: The parameter number_of_registers was named numberOfRegisters
+                  before MinimalModbus 1.0
+
         Returns:
             The string (str).
 
@@ -717,6 +736,9 @@ class Instrument:
               numbers, not hex).
             * textstring (str): The string to store in the slave, must be ASCII.
             * number_of_registers (int): The number of registers allocated for the string.
+
+        .. note:: The parameter number_of_registers was named numberOfRegisters
+                  before MinimalModbus 1.0
 
         If the ``textstring`` is longer than the ``2*number_of_registers``, an error is raised.
         Shorter strings are padded with spaces.
@@ -762,6 +784,9 @@ class Instrument:
             * number_of_registers (int): The number of registers to read, max 125 registers.
             * functioncode (int): Modbus function code. Can be 3 or 4.
 
+        .. note:: The parameter number_of_registers was named numberOfRegisters
+                  before MinimalModbus 1.0
+
         Any scaling of the register data, or converting it to negative number
         (two's complement) must be done manually.
 
@@ -803,6 +828,9 @@ class Instrument:
               numbers, not hex).
             * values (list of int): The values to store in the slave registers,
               max 123 values.
+
+        .. note:: The parameter number_of_registers was named numberOfRegisters
+                  before MinimalModbus 1.0
 
         Any scaling of the register data, or converting it to negative number
         (two's complement) must be done manually.

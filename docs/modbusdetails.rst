@@ -13,8 +13,8 @@ The Modbus standard defines storage in:
   range 0 to 65535 (dec), which is 0 to ffff (hex). Also called 'unsigned INT16'
   or 'unsigned short'.
 
-Modbus defines "table" names dependent on whether the storage is single bit or 16-bit registers,
-and whether it is possible to write to the storage.
+Modbus defines "table" names dependent on whether the storage is in a single bit
+or in a 16-bit register, and whether it is possible to write to the storage.
 
 +-----------------+----------------+------------------------+-------------------------------------------------+
 | Storage in      | Access         | Modbus "table"         | Example use on instrument                       |
@@ -44,7 +44,8 @@ Function codes are used to describe the read or write operations (shown in decim
 | Read-only registers (input registers)        |        | 4, 23    | None    | None     |
 +----------------------------------------------+--------+----------+---------+----------+
 
-Note that function code 23 not is implemented by this software.
+Note that function code 23 not is implemented by this software (it is for
+reading and writing in same request).
 
 Function codes 128 and larger are used by slaves to indicate errors.
 
@@ -142,6 +143,34 @@ given in decimal in this table.
 
 See the API for MinimalModbus: :ref:`apiminimalmodbus`.
 
+
+.. _byteorder:
+
+Byte order for data stored in serveral registers
+------------------------------------------------
+Floats and long integers does not fit in a single 16-bit register, so typically consecutive
+registers are used. However different manufacturers store the bytes in different order.
+
+The functions handling floats and long integers have a parameter for changing
+which byte order that is used.
+
+===================== ============================ ====================== =======
+Name                  Description                  Use                    Example
+===================== ============================ ====================== =======
+Big endian (Motorola) High order byte first        BYTEORDER_BIG          ABCD
+?                     Big endian with byte swap    BYTEORDER_BIG_SWAP     BADC
+?                     Little endian with byte swap BYTEORDER_LITTLE_SWAP  CDAB
+Little endian (Intel) Low order byte first         BYTEORDER_LITTLE       DCBA
+===================== ============================ ====================== =======
+
+The example column show how the bytes are ordered on the wire (assuming byte A is
+the most significant byte).
+
+Read more on Modbus byte ordering in these articles:
+
+* https://store.chipkin.com/articles/how-real-floating-point-and-32-bit-data-is-encoded-in-modbus-rtu-messages
+* https://www.modbustools.com/poll_display_formats.html
+* https://www.simplymodbus.ca/FAQ.htm#Ext
 
 Modbus implementation details
 -----------------------------

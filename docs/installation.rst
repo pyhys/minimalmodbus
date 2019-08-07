@@ -22,6 +22,7 @@ to do the heavy lifting, and it is the only dependency. It is BSD-3-Clause licen
 You can find it at the Python package index: https://pypi.org/project/pyserial
 The version of pyserial should be 3.0 or later.
 
+.. note:: Since MinimalModbus 1.0 you need to use pySerial version at least 3.0
 
 Alternate installation on Linux
 -------------------------------------
