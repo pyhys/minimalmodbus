@@ -88,57 +88,34 @@ This is compensated for automatically by using the wrapper functions
 For a description of them, see :ref:`internalminimalmodbus`.
 
 
-Unittesting
+Unit testing
 ------------------------------------------------------------------------------
 Unit tests are provided in the tests subfolder. To run them::
 
-    python test_minimalmodbus.py
+    make test
 
-Also a dummy/mock/stub for the serial port, dummy_serial, is provided for
+The unittests uses previosly recorded communication data for the testing.
+
+A dummy/mock/stub for the serial port, dummy_serial, is provided for
 test purposes. See :ref:`apidummyserial`.
 
 The test coverage analysis is found
 at https://codecov.io/github/pyhys/minimalmodbus?branch=master.
 
-Hardware tests are performed using a Delta DTB4824 process controller. See
-:ref:`testdtb4824` for more information.
-
-A brief introduction to unittesting is found
-here: https://docs.python.org/release/2.5.2/lib/minimal-example.html
-
-The :mod:`unittest` module is documented here: https://docs.python.org/2/library/unittest.html
-
-The unittests uses previosly recorded communication data for the testing.
-Inside the unpacked folder go to :file:`test` and run the unit tests with::
-
-    python test_all_simulated.py
-    python3 test_all_simulated.py
-
-    python3.4 test_all_simulated.py
-    python3.3 test_all_simulated.py
-    python3.2 test_all_simulated.py
-    python2.7 test_all_simulated.py
-
 To automatically run the tests for the different Python versions::
 
-    tox
+    make test_all
 
-It is also possible to run the individual test files::
-
-    python test_minimalmodbus.py
-    python test_eurotherm3500.py
-    python test_omegacn7500.py
-
-MinimalModbus is also tested with hardware. A Delta temperature controller
-DTB4824 is used together with a USB-to-RS485 converter.
+Hardware tests are performed using a Delta DTB4824 process controller together
+with a USB-to-RS485 converter. See :ref:`testdtb4824` for more information.
 
 Run it with::
 
-   python test_deltaDTB4824.py
+   python3 tests/test_deltaDTB4824.py
 
 The baudrate and portname can optionally be set from command line::
 
-    python test_deltaDTB4824.py 19200 /dev/ttyUSB0
+    python3 tests/test_deltaDTB4824.py 19200 /dev/ttyUSB0
 
 For more details on testing with this hardware, see :ref:`testdtb4824`.
 
@@ -495,19 +472,11 @@ Run unit tests for all supported Python versions::
 
     make test-all
 
-Alternatively, run unit tests (in the :file:`trunk/test` directory)::
-
-    python test_all_simulated.py
-    python3 test_all_simulated.py
-
-    python2.7 test_all_simulated.py
-    python3.2 test_all_simulated.py
-
 Also make tests using Delta DTB4824 hardware. See :ref:`testdtb4824`.
 
 Test the source distribution generation (look in the :file:`PKG-INFO` file)::
 
-    python setup.py sdist
+    make dist
 
 Also make sure that these are functional (see sections below):
 

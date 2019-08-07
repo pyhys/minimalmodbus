@@ -8,7 +8,7 @@ Usage
 
 ::
 
-    python scriptname [-rtu] [-ascii] [-b38400] [-D/dev/ttyUSB0]
+    python3 scriptname [-rtu] [-ascii] [-b38400] [-D/dev/ttyUSB0]
 
 Arguments:
  * -b : baud rate
