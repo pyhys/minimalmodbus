@@ -78,6 +78,8 @@ from minimalmodbus import _PAYLOADFORMAT_REGISTER
 from minimalmodbus import _PAYLOADFORMAT_REGISTERS
 from minimalmodbus import BYTEORDER_BIG
 from minimalmodbus import BYTEORDER_LITTLE
+from minimalmodbus import BYTEORDER_BIG_SWAP
+from minimalmodbus import BYTEORDER_LITTLE_SWAP
 
 ALSO_TIME_CONSUMING_TESTS = True
 """Set this to :const:`False` to skip the most time consuming tests"""
@@ -994,28 +996,37 @@ class TestCalculateNumberOfBytesForBits(ExtendedTestCase):
 class TestLongToBytestring(ExtendedTestCase):
 
     knownValues=[
-    (0,           False, 2, '\x00\x00\x00\x00'),
-    (0,           True,  2, '\x00\x00\x00\x00'),
-    (1,           False, 2, '\x00\x00\x00\x01'),
-    (1,           True,  2, '\x00\x00\x00\x01'),
-    (2,           False, 2, '\x00\x00\x00\x02'),
-    (2,           True,  2, '\x00\x00\x00\x02'),
-    (75000,       False, 2, '\x00\x01\x24\xf8'),
-    (75000,       True,  2, '\x00\x01\x24\xf8'),
-    (1000000,     False, 2, '\x00\x0f\x42\x40'),
-    (1000000,     True,  2, '\x00\x0f\x42\x40'),
-    (2147483647,  False, 2, '\x7f\xff\xff\xff'),
-    (2147483647,  True,  2, '\x7f\xff\xff\xff'),
-    (2147483648,  False, 2, '\x80\x00\x00\x00'),
-    (4294967295,  False, 2, '\xff\xff\xff\xff'),
-    (-1,          True,  2, '\xff\xff\xff\xff'),
-    (-2147483648, True,  2, '\x80\x00\x00\x00'),
-    (-200000000,  True,  2, '\xf4\x14\x3e\x00'),
+        (0,           True,  BYTEORDER_BIG,         '\x00\x00\x00\x00'),
+        (1,           False, BYTEORDER_BIG,         '\x00\x00\x00\x01'),
+        (1,           True,  BYTEORDER_BIG,         '\x00\x00\x00\x01'),
+        (2,           False, BYTEORDER_BIG,         '\x00\x00\x00\x02'),
+        (2,           True,  BYTEORDER_BIG,         '\x00\x00\x00\x02'),
+        (75000,       False, BYTEORDER_BIG,         '\x00\x01\x24\xf8'),
+        (75000,       True,  BYTEORDER_BIG,         '\x00\x01\x24\xf8'),
+        (1000000,     False, BYTEORDER_BIG,         '\x00\x0f\x42\x40'),
+        (1000000,     True,  BYTEORDER_BIG,         '\x00\x0f\x42\x40'),
+        (2147483647,  False, BYTEORDER_BIG,         '\x7f\xff\xff\xff'),
+        (2147483647,  True,  BYTEORDER_BIG,         '\x7f\xff\xff\xff'),
+        (2147483648,  False, BYTEORDER_BIG,         '\x80\x00\x00\x00'),
+        (4294967295,  False, BYTEORDER_BIG,         '\xff\xff\xff\xff'),
+        (-1,          True,  BYTEORDER_BIG,         '\xff\xff\xff\xff'),
+        (-2147483648, True,  BYTEORDER_BIG,         '\x80\x00\x00\x00'),
+        (-200000000,  True,  BYTEORDER_BIG,        '\xf4\x14\x3e\x00'),
+        # Example from https://www.simplymodbus.ca/FAQ.htm
+        (2923517522,  False, BYTEORDER_BIG,         '\xAE\x41\x56\x52'),
+        # Example from https://www.simplymodbus.ca/FAQ.htm
+        (-1371449774, True,  BYTEORDER_BIG,         '\xAE\x41\x56\x52'),
+        # Example from https://www.simplymodbus.ca/FAQ.htm
+        (2923517522,  False, BYTEORDER_LITTLE,      '\x52\x56\x41\xAE'),
+        # Example from https://www.simplymodbus.ca/FAQ.htm (the byteorder is not named)
+        (2923517522,  False, BYTEORDER_LITTLE_SWAP, '\x56\x52\xAE\x41'),
+        # Example from https://www.simplymodbus.ca/FAQ.htm (the byteorder is not named)
+        (2923517522,  False, BYTEORDER_BIG_SWAP,    '\x41\xAE\x52\x56'),
     ]
 
     def testKnownValues(self):
-        for value, signed, number_of_registers, knownstring in self.knownValues:
-            resultstring = minimalmodbus._long_to_bytestring(value, signed, number_of_registers)
+        for value, signed, byteorder, knownstring in self.knownValues:
+            resultstring = minimalmodbus._long_to_bytestring(value, signed, 2, byteorder)
             self.assertEqual(resultstring, knownstring)
 
     def testWrongInputValue(self):
@@ -1042,8 +1053,8 @@ class TestBytestringToLong(ExtendedTestCase):
     knownValues=TestLongToBytestring.knownValues
 
     def testKnownValues(self):
-        for knownvalue, signed, number_of_registers, bytestring in self.knownValues:
-            resultvalue = minimalmodbus._bytestring_to_long(bytestring, signed, number_of_registers)
+        for knownvalue, signed, byteorder, bytestring in self.knownValues:
+            resultvalue = minimalmodbus._bytestring_to_long(bytestring, signed, 2, byteorder)
             self.assertEqual(resultvalue, knownvalue)
 
     def testWrongInputValue(self):
@@ -1066,49 +1077,66 @@ class TestSanityLong(ExtendedTestCase):
     knownValues=TestLongToBytestring.knownValues
 
     def testSanity(self):
-        for value, signed, number_of_registers, bytestring in self.knownValues:
+        for value, signed, byteorder, bytestring in self.knownValues:
             resultvalue = minimalmodbus._bytestring_to_long( \
-                minimalmodbus._long_to_bytestring(value, signed, number_of_registers), signed, number_of_registers)
+                minimalmodbus._long_to_bytestring(value, signed, 2, byteorder), signed, 2, byteorder)
             self.assertEqual(resultvalue, value)
 
 
 class TestFloatToBytestring(ExtendedTestCase):
 
     # Use this online calculator:
-    # http://babbage.cs.qc.cuny.edu/IEEE-754/index.xhtml
+    # https://www.h-schmidt.net/FloatConverter/IEEE754.html
 
     # See also examples in
     # http://en.wikipedia.org/wiki/Single-precision_floating-point_format
     # http://en.wikipedia.org/wiki/Double-precision_floating-point_format
 
     knownValues=[
-    (1,       2, '\x3f\x80\x00\x00'),
-    (1.0,     2, '\x3f\x80\x00\x00'), # wikipedia
-    (1.0,     2, '?\x80\x00\x00'),
-    (1.1,     2, '\x3f\x8c\xcc\xcd'),
-    (100,     2, '\x42\xc8\x00\x00'),
-    (100.0,   2, '\x42\xc8\x00\x00'),
-    (1.0e5,   2, '\x47\xc3\x50\x00'),
-    (1.1e9,   2, '\x4e\x83\x21\x56'),
-    (1.0e16,  2, '\x5a\x0e\x1b\xca'),
-    (1.5e16,  2, '\x5a\x55\x29\xaf'),
-    (3.65e30, 2, '\x72\x38\x47\x25'),
-    (-1.1,    2, '\xbf\x8c\xcc\xcd'),
-    (-2,      2, '\xc0\x00\x00\x00'),
-    (-3.6e30, 2, '\xf2\x35\xc0\xe9'),
-    (1.0,     4, '\x3f\xf0\x00\x00\x00\x00\x00\x00'),
-    (2,       4, '\x40\x00\x00\x00\x00\x00\x00\x00'),
-    (1.1e9,   4, '\x41\xd0\x64\x2a\xc0\x00\x00\x00'),
-    (3.65e30, 4, '\x46\x47\x08\xe4\x9e\x2f\x4d\x62'),
-    (2.42e300,4, '\x7e\x4c\xe8\xa5\x67\x1f\x46\xa0'),
-    (-1.1,    4, '\xbf\xf1\x99\x99\x99\x99\x99\x9a'),
-    (-2,      4, '\xc0\x00\x00\x00\x00\x00\x00\x00'),
-    (-3.6e30, 4, '\xc6\x46\xb8\x1d\x1a\x43\xb2\x06'),
+    (1,       2, BYTEORDER_BIG,          '\x3f\x80\x00\x00'),
+    (1.0,     2, BYTEORDER_BIG,          '\x3f\x80\x00\x00'), # wikipedia
+    (1.0,     2, BYTEORDER_BIG,          '?\x80\x00\x00'),
+    (1.1,     2, BYTEORDER_BIG,          '\x3f\x8c\xcc\xcd'),
+    (100,     2, BYTEORDER_BIG,          '\x42\xc8\x00\x00'),
+    (100.0,   2, BYTEORDER_BIG,          '\x42\xc8\x00\x00'),
+    (1.0e5,   2, BYTEORDER_BIG,          '\x47\xc3\x50\x00'),
+    (1.1e9,   2, BYTEORDER_BIG,          '\x4e\x83\x21\x56'),
+    (1.0e16,  2, BYTEORDER_BIG,          '\x5a\x0e\x1b\xca'),
+    (1.5e16,  2, BYTEORDER_BIG,          '\x5a\x55\x29\xaf'),
+    (3.65e30, 2, BYTEORDER_BIG,          '\x72\x38\x47\x25'),
+    (-1.1,    2, BYTEORDER_BIG,          '\xbf\x8c\xcc\xcd'),
+    (-2,      2, BYTEORDER_BIG,          '\xc0\x00\x00\x00'),
+    (-3.6e30, 2, BYTEORDER_BIG,          '\xf2\x35\xc0\xe9'),
+    (1.0,     4, BYTEORDER_BIG,          '\x3f\xf0\x00\x00\x00\x00\x00\x00'),
+    (2,       4, BYTEORDER_BIG,          '\x40\x00\x00\x00\x00\x00\x00\x00'),
+    (1.1e9,   4, BYTEORDER_BIG,          '\x41\xd0\x64\x2a\xc0\x00\x00\x00'),
+    (3.65e30, 4, BYTEORDER_BIG,          '\x46\x47\x08\xe4\x9e\x2f\x4d\x62'),
+    (2.42e300,4, BYTEORDER_BIG,          '\x7e\x4c\xe8\xa5\x67\x1f\x46\xa0'),
+    (-1.1,    4, BYTEORDER_BIG,          '\xbf\xf1\x99\x99\x99\x99\x99\x9a'),
+    (-2,      4, BYTEORDER_BIG,          '\xc0\x00\x00\x00\x00\x00\x00\x00'),
+    (-3.6e30, 4, BYTEORDER_BIG,          '\xc6\x46\xb8\x1d\x1a\x43\xb2\x06'),
+    (-3.6e30, 4, BYTEORDER_LITTLE,       '\x06\xb2\x43\x1a\x1d\xb8\x46\xc6'),
+    (-3.6e30, 4, BYTEORDER_BIG_SWAP,     '\x46\xc6\x1d\xb8\x43\x1a\x06\xb2'),
+    (-3.6e30, 4, BYTEORDER_LITTLE_SWAP,  '\xb2\x06\x1a\x43\xb8\x1d\xc6\x46'),
+    # Example from https://www.simplymodbus.ca/FAQ.htm (truncated float on page)
+    (-4.3959787e-11, 2, BYTEORDER_BIG,         '\xAE\x41\x56\x52'),
+    # Shifted byte positions manually
+    (-4.3959787e-11, 2, BYTEORDER_LITTLE,      '\x52\x56\x41\xAE'),
+    # Shifted byte positions manually
+    (-4.3959787e-11, 2, BYTEORDER_BIG_SWAP,    '\x41\xAE\x52\x56'),
+    # Shifted byte positions manually
+    (-4.3959787e-11, 2, BYTEORDER_LITTLE_SWAP, '\x56\x52\xAE\x41'),
+    # Calculated by  https://www.h-schmidt.net/FloatConverter/IEEE754.html
+    (123456.00, 2, BYTEORDER_BIG, '\x47\xF1\x20\x00'),
+    # Example from https://store.chipkin.com/articles/how-real-floating-point-
+    #         and-32-bit-data-is-encoded-in-modbus-rtu-messages
+    #         Byte order = "No swap"
+    (123456.00, 2, BYTEORDER_LITTLE, '\x00\x20\xF1\x47'),
     ]
 
     def testKnownValues(self):
-        for value, number_of_registers, knownstring in self.knownValues:
-            resultstring = minimalmodbus._float_to_bytestring(value, number_of_registers)
+        for value, number_of_registers, byteorder, knownstring in self.knownValues:
+            resultstring = minimalmodbus._float_to_bytestring(value, number_of_registers, byteorder)
             self.assertEqual(resultstring, knownstring)
         self.assertEqual(minimalmodbus._float_to_bytestring(1.5e999, 2), '\x7f\x80\x00\x00') # +inf
 
@@ -1129,12 +1157,12 @@ class TestBytestringToFloat(ExtendedTestCase):
     knownValues=TestFloatToBytestring.knownValues
 
     def testKnownValues(self):
-        for knownvalue, number_of_registers, bytestring in self.knownValues:
-            resultvalue = minimalmodbus._bytestring_to_float(bytestring, number_of_registers)
+        for knownvalue, number_of_registers, byteorder, bytestring in self.knownValues:
+            resultvalue = minimalmodbus._bytestring_to_float(bytestring, number_of_registers, byteorder)
             self.assertAlmostEqualRatio(resultvalue, knownvalue)
 
     def testWrongInputValue(self):
-        for bytestring in ['', 'A', 'AB', 'ABC', 'ABCDE', 'ABCDEF', 'ABCDEFG']:
+        for bytestring in ['', 'A', 'AB', 'ABC', 'ABCDE', 'ABCDEF', 'ABCDEFG', 'ABCDEFGHI']:
             self.assertRaises(ValueError, minimalmodbus._bytestring_to_float, bytestring, 2)
             self.assertRaises(ValueError, minimalmodbus._bytestring_to_float, bytestring, 4)
         for number_of_registers in [0, 1, 3, 5, 6, 7, 8, 16]:
@@ -1153,9 +1181,9 @@ class TestSanityFloat(ExtendedTestCase):
     knownValues=TestFloatToBytestring.knownValues
 
     def testSanity(self):
-        for value, number_of_registers, knownstring in self.knownValues:
+        for value, number_of_registers, byteorder, bytestring in self.knownValues:
             resultvalue = minimalmodbus._bytestring_to_float( \
-                minimalmodbus._float_to_bytestring(value, number_of_registers), number_of_registers)
+                minimalmodbus._float_to_bytestring(value, number_of_registers, byteorder), number_of_registers, byteorder)
             self.assertAlmostEqualRatio(resultvalue, value)
 
 
@@ -1363,6 +1391,29 @@ class TestUnpack(ExtendedTestCase):
             self.assertRaises(TypeError, minimalmodbus._unpack, value, '\xff\xb3')
             self.assertRaises(TypeError, minimalmodbus._unpack, '>h',  value)
 
+
+class TestSwap(ExtendedTestCase):
+
+    knownValues=[
+        ("",             ""),
+        ("AB",           "BA"),
+        ("ABCD",         "BADC"),
+        ("ABCDEF",       "BADCFE"),
+        ("ABCDEFGH",     "BADCFEHG"),
+        ("ABCDEFGHIJ",   "BADCFEHGJI"),
+        ("ABCDEFGHIJKL", "BADCFEHGJILK"),
+    ]
+
+    wrongValues = ["A", "ABC", "ABCDE", "A"*123]
+
+    def testKnownValues(self):
+        for inputvalue, knownresult in self.knownValues:
+            result = minimalmodbus._swap(inputvalue)
+            self.assertEqual(result, knownresult)
+
+    def testWrongValues(self):
+        for value in self.wrongValues:
+            self.assertRaises(ValueError, minimalmodbus._swap, value)
 
 class TestSanityPackUnpack(ExtendedTestCase):
 
@@ -3607,7 +3658,7 @@ if __name__ == '__main__':
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestDummyCommunicationHandleLocalEcho)
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestCalculateCrcString)
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestHexdecode)
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestParsePayload)
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestFloatToBytestring)
     unittest.TextTestRunner(verbosity=2).run(suite)
 
 

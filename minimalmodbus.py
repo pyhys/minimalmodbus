@@ -2449,7 +2449,24 @@ def _unpack(formatstring, packed):
     return value
 
 def _swap(bytestring):
-    return bytestring
+    """Swap characters pairwise in a string.
+
+    This corresponds to a "byte swap".
+
+    Args:
+        * bytestring (str): input. The length should be an even number.
+
+    Return the string with characters swapped.
+
+    """
+    length = len(bytestring)
+    if length % 2:
+        raise ValueError(
+            "The length of the bytestring should be even. Given {!r}.".format(bytestring)
+        )
+    templist = list(bytestring)
+    templist[1:length:2], templist[:length:2] = templist[:length:2], templist[1:length:2]
+    return "".join(templist)
 
 def _hexencode(bytestring, insert_spaces=False):
     r"""Convert a byte string to a hex encoded string.
