@@ -1012,7 +1012,6 @@ class TestLongToBytestring(ExtendedTestCase):
         (-1,          True,  BYTEORDER_BIG,         '\xff\xff\xff\xff'),
         (-2147483648, True,  BYTEORDER_BIG,         '\x80\x00\x00\x00'),
         (-200000000,  True,  BYTEORDER_BIG,        '\xf4\x14\x3e\x00'),
-            #
         # Example from https://www.simplymodbus.ca/FAQ.htm
         (2923517522,  False, BYTEORDER_BIG,         '\xAE\x41\x56\x52'),
         # Example from https://www.simplymodbus.ca/FAQ.htm
@@ -1119,6 +1118,7 @@ class TestFloatToBytestring(ExtendedTestCase):
     (-3.6e30, 4, BYTEORDER_LITTLE,       '\x06\xb2\x43\x1a\x1d\xb8\x46\xc6'),
     (-3.6e30, 4, BYTEORDER_BIG_SWAP,     '\x46\xc6\x1d\xb8\x43\x1a\x06\xb2'),
     (-3.6e30, 4, BYTEORDER_LITTLE_SWAP,  '\xb2\x06\x1a\x43\xb8\x1d\xc6\x46'),
+        #
     # Example from https://www.simplymodbus.ca/FAQ.htm (truncated float on page)
     (-4.3959787e-11, 2, BYTEORDER_BIG,         '\xAE\x41\x56\x52'),
     # Shifted byte positions manually
@@ -2370,6 +2370,10 @@ class TestDummyCommunication(ExtendedTestCase):
     def testWriteFloat(self):
         self.instrument.write_float(103, 1.1)
         self.instrument.write_float(103, 1.1, 4)
+        self.instrument.write_float(240, -4.3959787e-11)  # BYTEORDER_BIG
+        self.instrument.write_float(240, -4.3959787e-11, byteorder=BYTEORDER_BIG_SWAP)
+        self.instrument.write_float(240, -4.3959787e-11, byteorder=BYTEORDER_LITTLE_SWAP)
+        self.instrument.write_float(240, -4.3959787e-11, byteorder=BYTEORDER_LITTLE)
 
     def testWriteFloatWrongValue(self):
         self.assertRaises(ValueError, self.instrument.write_float, -1,     1.1) # Wrong register address
@@ -3368,6 +3372,44 @@ GOOD_RTU_RESPONSES['\x01\x10' + '\x00g\x00\x02\x04?\x8c\xcc\xcd' + '\xed\x0b'] =
 # Response: Slave address 1, function code 16. Register address 103, 4 registers. CRC.
 GOOD_RTU_RESPONSES['\x01\x10' + '\x00g\x00\x04\x08?\xf1\x99\x99\x99\x99\x99\x9a' + 'u\xf7'] = '\x01\x10' + '\x00g\x00\x04' + 'p\x15'
 
+# Write float 1.1 to address 103 (4 registers) on slave 1 using function code 16 #
+# -------------------------------------------------------------------------------#
+# Message:  Slave address 1, function code 16. Register address 103, 4 registers, 8 bytes, value=1.1 . CRC.
+# Response: Slave address 1, function code 16. Register address 103, 4 registers. CRC.
+GOOD_RTU_RESPONSES['\x01\x10' + '\x00g\x00\x04\x08?\xf1\x99\x99\x99\x99\x99\x9a' + 'u\xf7'] = '\x01\x10' + '\x00g\x00\x04' + 'p\x15'
+
+# Write float -4.3959787e-11 to address 240 (42 registers) on slave 1 using function code 16 #
+# Example from https://www.simplymodbus.ca/FAQ.htm (truncated float on page)
+# BYTEORDER_BIG
+# -------------------------------------------------------------------------------#
+# Message:  Slave address 1, function code 16. Register address 240, 2 registers, 4 bytes, value. CRC.
+# Response: Slave address 1, function code 16. Register address 240, 2 registers. CRC.
+GOOD_RTU_RESPONSES['\x01\x10' + '\x00\xF0\x00\x02\x04\xAEAVR' + '2J'] = '\x01\x10' + '\x00\xF0\x00\x02' + 'Aû'
+
+# Write float -4.3959787e-11 to address 240 (42 registers) on slave 1 using function code 16 #
+# Example from https://www.simplymodbus.ca/FAQ.htm (truncated float on page, manually reshuffled)
+# BYTEORDER_LITTLE
+# -------------------------------------------------------------------------------#
+# Message:  Slave address 1, function code 16. Register address 240, 2 registers, 4 bytes, value. CRC.
+# Response: Slave address 1, function code 16. Register address 240, 2 registers. CRC.
+GOOD_RTU_RESPONSES['\x01\x10' + '\x00\xF0\x00\x02\x04RVA\xAE' + '½¯'] = '\x01\x10' + '\x00\xF0\x00\x02' + 'Aû'
+
+# Write float -4.3959787e-11 to address 240 (42 registers) on slave 1 using function code 16 #
+# Example from https://www.simplymodbus.ca/FAQ.htm (truncated float on page, manually reshuffled)
+# BYTEORDER_LITTLE_SWAP
+# -------------------------------------------------------------------------------#
+# Message:  Slave address 1, function code 16. Register address 240, 2 registers, 4 bytes, value. CRC.
+# Response: Slave address 1, function code 16. Register address 240, 2 registers. CRC.
+GOOD_RTU_RESPONSES['\x01\x10' + '\x00\xF0\x00\x02\x04VR\xAEA' + '\xF0\xE2'] = '\x01\x10' + '\x00\xF0\x00\x02' + 'Aû'
+
+# Write float -4.3959787e-11 to address 240 (42 registers) on slave 1 using function code 16 #
+# Example from https://www.simplymodbus.ca/FAQ.htm (truncated float on page, manually reshuffled)
+# BYTEORDER_BIG_SWAP
+# -------------------------------------------------------------------------------#
+# Message:  Slave address 1, function code 16. Register address 240, 2 registers, 4 bytes, value. CRC.
+# Response: Slave address 1, function code 16. Register address 240, 2 registers. CRC.
+GOOD_RTU_RESPONSES['\x01\x10' + '\x00\xF0\x00\x02\x04A\xAERV' + '4h'] = '\x01\x10' + '\x00\xF0\x00\x02' + 'Aû'
+
 
 #                ##  READ STRING  ##
 
@@ -3738,7 +3780,7 @@ if __name__ == '__main__':
         ## Run a single test ##
 
     suite = unittest.TestSuite()
-    suite.addTest(TestDummyCommunication("testReadLong"))
+    suite.addTest(TestDummyCommunication("testReadFloat"))
     #suite.addTest(TestDummyCommunication("testGenericCommand"))
     unittest.TextTestRunner(verbosity=2).run(suite)
 
