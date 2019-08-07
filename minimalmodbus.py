@@ -44,6 +44,7 @@ _MAX_NUMBER_OF_REGISTERS_TO_READ = 125
 _MAX_NUMBER_OF_BITS_TO_WRITE = 1968  # 0x7B0
 _MAX_NUMBER_OF_BITS_TO_READ = 2000  # 0x7D0
 _MAX_NUMBER_OF_DECIMALS = 10  # Some instrument might store 0.00000154 Ampere as 154 etc
+_MAX_BYTEORDER_VALUE = 1
 _SECONDS_TO_MILLISECONDS = 1000
 _BITS_PER_BYTE = 8
 _ASCII_HEADER = ":"
@@ -64,6 +65,8 @@ _latest_read_times = {}  # Key: port name (str), value: timestamp (float)
 
 MODE_RTU = "rtu"
 MODE_ASCII = "ascii"
+BYTEORDER_BIG = 0
+BYTEORDER_LITTLE = 1
 
 # Replace with enum when Python3 only
 _PAYLOADFORMAT_BIT = "bit"
@@ -482,7 +485,7 @@ class Instrument:
             payloadformat=_PAYLOADFORMAT_REGISTER,
         )
 
-    def read_long(self, registeraddress, functioncode=3, signed=False, little_endian=False):
+    def read_long(self, registeraddress, functioncode=3, signed=False, byteorder=BYTEORDER_BIG):
         """Read a long integer (32 bits) from the slave.
 
         Long integers (32 bits = 4 bytes) are stored in two consecutive 16-bit
@@ -493,7 +496,7 @@ class Instrument:
               not hex).
             * functioncode (int): Modbus function code. Can be 3 or 4.
             * signed (bool): Whether the data should be interpreted as unsigned or signed.
-            * little_endian (bool): How multi-register data should be interpreted.
+            * byteorder (int): How multi-register data should be interpreted.
 
         ============== ================== ================ ==========================
         ``signed``     Data type in slave Alternative name Range
@@ -517,11 +520,11 @@ class Instrument:
             registeraddress,
             number_of_registers=2,
             signed=signed,
-            little_endian=little_endian,
+            byteorder=byteorder,
             payloadformat=_PAYLOADFORMAT_LONG,
         )
 
-    def write_long(self, registeraddress, value, signed=False, little_endian=False):
+    def write_long(self, registeraddress, value, signed=False, byteorder=BYTEORDER_BIG):
         """Write a long integer (32 bits) to the slave.
 
         Long integers (32 bits = 4 bytes) are stored in two consecutive 16-bit
@@ -537,7 +540,7 @@ class Instrument:
               numbers, not hex).
             * value (int or long): The value to store in the slave.
             * signed (bool): Whether the data should be interpreted as unsigned or signed.
-            * little_endian (bool): How multi-register data should be interpreted.
+            * byteorder (int): How multi-register data should be interpreted.
 
         Returns:
             None
@@ -563,11 +566,11 @@ class Instrument:
             value,
             number_of_registers=2,
             signed=signed,
-            little_endian=little_endian,
+            byteorder=byteorder,
             payloadformat=_PAYLOADFORMAT_LONG,
         )
 
-    def read_float(self, registeraddress, functioncode=3, number_of_registers=2, little_endian=False):
+    def read_float(self, registeraddress, functioncode=3, number_of_registers=2, byteorder=BYTEORDER_BIG):
         r"""Read a floating point number from the slave.
 
         Floats are stored in two or more consecutive 16-bit registers in the slave.
@@ -585,7 +588,7 @@ class Instrument:
             * functioncode (int): Modbus function code. Can be 3 or 4.
             * number_of_registers (int): The number of registers allocated for the float.
               Can be 2 or 4.
-            * little_endian (bool): How multi-register data should be interpreted.
+            * byteorder (int): How multi-register data should be interpreted.
 
         ====================================== ================= =========== =================
         Type of floating point number in slave Size              Registers   Range
@@ -613,11 +616,11 @@ class Instrument:
             functioncode,
             registeraddress,
             number_of_registers=number_of_registers,
-            little_endian=little_endian,
+            byteorder=byteorder,
             payloadformat=_PAYLOADFORMAT_FLOAT,
         )
 
-    def write_float(self, registeraddress, value, number_of_registers=2, little_endian=False):
+    def write_float(self, registeraddress, value, number_of_registers=2, byteorder=BYTEORDER_BIG):
         """Write a floating point number to the slave.
 
         Floats are stored in two or more consecutive 16-bit registers in the slave.
@@ -633,7 +636,7 @@ class Instrument:
             * value (float or int): The value to store in the slave
             * number_of_registers (int): The number of registers allocated for the float.
               Can be 2 or 4.
-            * little_endian (bool): How multi-register data should be interpreted.
+            * byteorder (int): How multi-register data should be interpreted.
 
         Returns:
             None
@@ -655,7 +658,7 @@ class Instrument:
             registeraddress,
             value,
             number_of_registers=number_of_registers,
-            little_endian=little_endian,
+            byteorder=byteorder,
             payloadformat=_PAYLOADFORMAT_FLOAT,
         )
 
@@ -843,7 +846,7 @@ class Instrument:
         number_of_registers=0,
         number_of_bits=0,
         signed=False,
-        little_endian=False,
+        byteorder=BYTEORDER_BIG,
         payloadformat=None,
     ):
         """Perform generic command for reading and writing registers and bits.
@@ -860,7 +863,7 @@ class Instrument:
             * number_of_bits (int):T he number of registers to read/write.
             * signed (bool): Whether the data should be interpreted as unsigned or
               signed. Only for a single register or for payloadformat='long'.
-            * little_endian (bool): How multi-register data should be interpreted.
+            * byteorder (int): How multi-register data should be interpreted.
             * payloadformat (None or string): Any of the _PAYLOADFORMAT_* values
 
         If a value of 77.0 is stored internally in the slave register as 770,
@@ -912,7 +915,12 @@ class Instrument:
             description="number of bits",
         )
         _check_bool(signed, description="signed")
-        _check_bool(little_endian, description="little_endian")
+        _check_int(
+            byteorder,
+            minvalue=0,
+            maxvalue=_MAX_BYTEORDER_VALUE,
+            description="byteorder",
+        )
 
         if payloadformat not in _ALL_PAYLOADFORMATS:
             if not isinstance(payloadformat, str):
@@ -934,7 +942,7 @@ class Instrument:
                 + "{!r}. Given: {!r}.".format(payloadformat, functioncode)
             )
 
-        # Check combinations: Signed
+        # Check combinations: signed
         if signed:
             if payloadformat not in [_PAYLOADFORMAT_REGISTER, _PAYLOADFORMAT_LONG]:
                 raise ValueError(
@@ -950,11 +958,11 @@ class Instrument:
                     + "Given format: {0!r}.".format(payloadformat)
                 )
 
-        # Check combinations: little_endian
-        if little_endian:
+        # Check combinations: byteorder
+        if byteorder:
             if payloadformat not in [_PAYLOADFORMAT_FLOAT, _PAYLOADFORMAT_LONG]:
                 raise ValueError(
-                    'The "little_endian" parameter can not be used for this payload format. '
+                    'The "byteorder" parameter can not be used for this payload format. '
                     + "Given format: {0!r}.".format(payloadformat)
                 )
 
@@ -1087,7 +1095,7 @@ class Instrument:
             number_of_registers,
             number_of_bits,
             signed,
-            little_endian,
+            byteorder,
             payloadformat,
         )
 
@@ -1104,7 +1112,7 @@ class Instrument:
             number_of_registers,
             number_of_bits,
             signed,
-            little_endian,
+            byteorder,
             payloadformat,
         )
 
@@ -1396,7 +1404,7 @@ def _create_payload(
     number_of_registers,
     number_of_bits,
     signed,
-    little_endian,
+    byteorder,
     payloadformat,
 ):
     """Create the payload.
@@ -1441,9 +1449,9 @@ def _create_payload(
         elif payloadformat == _PAYLOADFORMAT_STRING:
             registerdata = _textstring_to_bytestring(value, number_of_registers)
         elif payloadformat == _PAYLOADFORMAT_LONG:
-            registerdata = _long_to_bytestring(value, signed, number_of_registers, little_endian)
+            registerdata = _long_to_bytestring(value, signed, number_of_registers, byteorder)
         elif payloadformat == _PAYLOADFORMAT_FLOAT:
-            registerdata = _float_to_bytestring(value, number_of_registers, little_endian)
+            registerdata = _float_to_bytestring(value, number_of_registers, byteorder)
         elif payloadformat == _PAYLOADFORMAT_REGISTERS:
             registerdata = _valuelist_to_bytestring(value, number_of_registers)
 
@@ -1467,7 +1475,7 @@ def _parse_payload(
     number_of_registers,
     number_of_bits,
     signed,
-    little_endian,
+    byteorder,
     payloadformat,
 ):
     _check_response_payload(
@@ -1479,7 +1487,7 @@ def _parse_payload(
         number_of_registers,
         number_of_bits,
         signed,
-        little_endian,
+        byteorder,
         payloadformat,
     )
 
@@ -1500,11 +1508,11 @@ def _parse_payload(
                 registerdata,
                 signed,
                 number_of_registers,
-                little_endian
+                byteorder,
             )
 
         elif payloadformat == _PAYLOADFORMAT_FLOAT:
-            return _bytestring_to_float(registerdata, number_of_registers, little_endian)
+            return _bytestring_to_float(registerdata, number_of_registers, byteorder)
 
         elif payloadformat == _PAYLOADFORMAT_REGISTERS:
             return _bytestring_to_valuelist(registerdata, number_of_registers)
@@ -1861,9 +1869,9 @@ def _num_to_twobyte_string(value, number_of_decimals=0, lsb_first=False, signed=
     Args:
         * value (float or int): The numerical value to be converted.
         * number_of_decimals (int): Number of decimals, 0 or more, for scaling.
-        * lsb_first (bol): Whether the least significant byte should be first in
+        * lsb_first (bool): Whether the least significant byte should be first in
           the resulting string.
-        * signed (bol): Whether negative values should be accepted.
+        * signed (bool): Whether negative values should be accepted.
 
     Returns:
         A two-byte string.
@@ -1977,7 +1985,7 @@ def _twobyte_string_to_num(bytestring, number_of_decimals=0, signed=False):
     return fullregister / float(divisor)
 
 
-def _long_to_bytestring(value, signed=False, number_of_registers=2, little_endian=False):
+def _long_to_bytestring(value, signed=False, number_of_registers=2, byteorder=BYTEORDER_BIG):
     """Convert a long integer to a bytestring.
 
     Long integers (32 bits = 4 bytes) are stored in two consecutive 16-bit registers
@@ -1988,7 +1996,7 @@ def _long_to_bytestring(value, signed=False, number_of_registers=2, little_endia
         * signed (bool): Whether large positive values should be interpreted as
           negative values.
         * number_of_registers (int): Should be 2. For error checking only.
-        * little_endian (bool): How multi-register data should be interpreted.
+        * byteorder (int): How multi-register data should be interpreted.
 
     Returns:
         A bytestring (4 bytes).
@@ -2002,8 +2010,14 @@ def _long_to_bytestring(value, signed=False, number_of_registers=2, little_endia
     _check_int(
         number_of_registers, minvalue=2, maxvalue=2, description="number of registers"
     )
+    _check_int(
+            byteorder,
+            minvalue=0,
+            maxvalue=_MAX_BYTEORDER_VALUE,
+            description="byteorder",
+    )
 
-    formatcode = "<" if little_endian else ">"
+    formatcode = ">"
     if signed:
         formatcode += "l"  # (Signed) long (4 bytes)
     else:
@@ -2014,7 +2028,7 @@ def _long_to_bytestring(value, signed=False, number_of_registers=2, little_endia
     return outstring
 
 
-def _bytestring_to_long(bytestring, signed=False, number_of_registers=2, little_endian=False):
+def _bytestring_to_long(bytestring, signed=False, number_of_registers=2, byteorder=BYTEORDER_BIG):
     """Convert a bytestring to a long integer.
 
     Long integers (32 bits = 4 bytes) are stored in two consecutive 16-bit registers
@@ -2025,7 +2039,7 @@ def _bytestring_to_long(bytestring, signed=False, number_of_registers=2, little_
         * signed (bol): Whether large positive values should be interpreted as
           negative values.
         * number_of_registers (int): Should be 2. For error checking only.
-        * little_endian (bool): How multi-register data should be interpreted.
+        * byteorder (int): How multi-register data should be interpreted.
 
     Returns:
         The numerical value (int).
@@ -2039,8 +2053,14 @@ def _bytestring_to_long(bytestring, signed=False, number_of_registers=2, little_
     _check_int(
         number_of_registers, minvalue=2, maxvalue=2, description="number of registers"
     )
+    _check_int(
+            byteorder,
+            minvalue=0,
+            maxvalue=_MAX_BYTEORDER_VALUE,
+            description="byteorder",
+    )
 
-    formatcode = "<" if little_endian else ">"
+    formatcode = ">"
     if signed:
         formatcode += "l"  # (Signed) long (4 bytes)
     else:
@@ -2049,7 +2069,7 @@ def _bytestring_to_long(bytestring, signed=False, number_of_registers=2, little_
     return _unpack(formatcode, bytestring)
 
 
-def _float_to_bytestring(value, number_of_registers=2, little_endian=False):
+def _float_to_bytestring(value, number_of_registers=2, byteorder=BYTEORDER_BIG):
     r"""Convert a numerical value to a bytestring.
 
     Floats are stored in two or more consecutive 16-bit registers in the slave. The
@@ -2068,7 +2088,7 @@ def _float_to_bytestring(value, number_of_registers=2, little_endian=False):
     Args:
         * value (float or int): The numerical value to be converted.
         * number_of_registers (int): Can be 2 or 4.
-        * little_endian (bool): How multi-register data should be interpreted.
+        * byteorder (int): How multi-register data should be interpreted.
 
     Returns:
         A bytestring (4 or 8 bytes).
@@ -2081,8 +2101,14 @@ def _float_to_bytestring(value, number_of_registers=2, little_endian=False):
     _check_int(
         number_of_registers, minvalue=2, maxvalue=4, description="number of registers"
     )
+    _check_int(
+            byteorder,
+            minvalue=0,
+            maxvalue=_MAX_BYTEORDER_VALUE,
+            description="byteorder",
+    )
 
-    formatcode = "<" if little_endian else ">"
+    formatcode = ">"
     if number_of_registers == 2:
         formatcode += "f"  # Float (4 bytes)
         lengthtarget = 4
@@ -2101,7 +2127,7 @@ def _float_to_bytestring(value, number_of_registers=2, little_endian=False):
     return outstring
 
 
-def _bytestring_to_float(bytestring, number_of_registers=2, little_endian=False):
+def _bytestring_to_float(bytestring, number_of_registers=2, byteorder=BYTEORDER_BIG):
     """Convert a four-byte string to a float.
 
     Floats are stored in two or more consecutive 16-bit registers in the slave.
@@ -2112,7 +2138,7 @@ def _bytestring_to_float(bytestring, number_of_registers=2, little_endian=False)
     Args:
         * bytestring (str): A string of length 4 or 8.
         * number_of_registers (int): Can be 2 or 4.
-        * little_endian (bool): How multi-register data should be interpreted.
+        * byteorder (int): How multi-register data should be interpreted.
 
     Returns:
         A float.
@@ -2125,10 +2151,15 @@ def _bytestring_to_float(bytestring, number_of_registers=2, little_endian=False)
     _check_int(
         number_of_registers, minvalue=2, maxvalue=4, description="number of registers"
     )
-
+    _check_int(
+            byteorder,
+            minvalue=0,
+            maxvalue=_MAX_BYTEORDER_VALUE,
+            description="byteorder",
+    )
     number_of_bytes = _NUMBER_OF_BYTES_PER_REGISTER * number_of_registers
 
-    formatcode = "<" if little_endian else ">"
+    formatcode = ">"
     if number_of_registers == 2:
         formatcode += "f"  # Float (4 bytes)
     elif number_of_registers == 4:
@@ -3199,7 +3230,7 @@ def _check_response_payload(
     number_of_registers,
     number_of_bits,
     signed,
-    little_endian,
+    byteorder,
     payloadformat,
 ):
     if functioncode in [1, 2, 3, 4]:

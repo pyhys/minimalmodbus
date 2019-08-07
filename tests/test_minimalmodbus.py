@@ -76,6 +76,8 @@ from minimalmodbus import _PAYLOADFORMAT_FLOAT
 from minimalmodbus import _PAYLOADFORMAT_STRING
 from minimalmodbus import _PAYLOADFORMAT_REGISTER
 from minimalmodbus import _PAYLOADFORMAT_REGISTERS
+from minimalmodbus import BYTEORDER_BIG
+from minimalmodbus import BYTEORDER_LITTLE
 
 ALSO_TIME_CONSUMING_TESTS = True
 """Set this to :const:`False` to skip the most time consuming tests"""
@@ -2513,9 +2515,9 @@ class TestDummyCommunication(ExtendedTestCase):
             self.assertRaises(TypeError, self.instrument._generic_command, 3,     289, number_of_decimals=value)
             self.assertRaises(TypeError, self.instrument._generic_command, 3,     289, number_of_registers=value)
             self.assertRaises(TypeError, self.instrument._generic_command, 3,     289, number_of_bits=value)
+            self.assertRaises(TypeError, self.instrument._generic_command, 3,     289, byteorder=value)
         for value in _NOT_BOOLEANS:
             self.assertRaises(TypeError, self.instrument._generic_command, 3, 289, signed=value)
-            self.assertRaises(TypeError, self.instrument._generic_command, 3, 289, little_endian=value)
         for value in _NOT_STRINGS_OR_NONE:
             self.assertRaises(TypeError, self.instrument._generic_command, 3, 289, payloadformat=value)
 
@@ -2535,7 +2537,7 @@ class TestDummyCommunication(ExtendedTestCase):
                           self.instrument._generic_command, 5, 71, 1, number_of_bits=1, signed=True,
                                                            payloadformat=_PAYLOADFORMAT_BIT)
         self.assertRaises(ValueError,
-                          self.instrument._generic_command, 5, 71, 1, number_of_bits=1, little_endian=True,
+                          self.instrument._generic_command, 5, 71, 1, number_of_bits=1, byteorder=BYTEORDER_LITTLE,
                                                            payloadformat=_PAYLOADFORMAT_BIT)
         self.assertRaises(ValueError,
                           self.instrument._generic_command, 5, 71, 2, number_of_bits=1, payloadformat=_PAYLOADFORMAT_BIT)

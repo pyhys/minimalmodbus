@@ -104,6 +104,10 @@ Some extensions not covered by the official standard
     or register address. Both use a numeric index but the JBUS index starts at 0 while
     the Modbus index starts at 1."
 
+**Slave addresses larger than 255**
+    Sometimes the slave address is encoded in two bytes to allow values larger than 255.
+    Not supported by this software.
+
 
 Implemented functions
 ---------------------
