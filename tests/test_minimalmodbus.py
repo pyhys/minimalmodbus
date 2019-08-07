@@ -1118,7 +1118,6 @@ class TestFloatToBytestring(ExtendedTestCase):
     (-3.6e30, 4, BYTEORDER_LITTLE,       '\x06\xb2\x43\x1a\x1d\xb8\x46\xc6'),
     (-3.6e30, 4, BYTEORDER_BIG_SWAP,     '\x46\xc6\x1d\xb8\x43\x1a\x06\xb2'),
     (-3.6e30, 4, BYTEORDER_LITTLE_SWAP,  '\xb2\x06\x1a\x43\xb8\x1d\xc6\x46'),
-        #
     # Example from https://www.simplymodbus.ca/FAQ.htm (truncated float on page)
     (-4.3959787e-11, 2, BYTEORDER_BIG,         '\xAE\x41\x56\x52'),
     # Shifted byte positions manually
@@ -2098,7 +2097,7 @@ class TestDummyCommunication(ExtendedTestCase):
 
         # Initialize a (dummy) instrument
         self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1, minimalmodbus.MODE_RTU) # port name, slave address (in decimal)
-        self.instrument.debug = True
+        self.instrument.debug = False
 
 
     ## Read bit ##
@@ -2340,6 +2339,10 @@ class TestDummyCommunication(ExtendedTestCase):
     ## Read Float ##
 
     def testReadFloat(self):
+        self.assertAlmostEqualRatio(self.instrument.read_float(241), -4.3959787e-11) # BYTEORDER_BIG
+        self.assertAlmostEqualRatio(self.instrument.read_float(242, byteorder=BYTEORDER_BIG_SWAP), -4.3959787e-11)
+        self.assertAlmostEqualRatio(self.instrument.read_float(243, byteorder=BYTEORDER_LITTLE_SWAP), -4.3959787e-11)
+        self.assertAlmostEqualRatio(self.instrument.read_float(244, byteorder=BYTEORDER_LITTLE), -4.3959787e-11)
         self.assertEqual( self.instrument.read_float(103),       1.0 )
         self.assertEqual( self.instrument.read_float(103, 3),    1.0 )
         self.assertEqual( self.instrument.read_float(103, 3, 2), 1.0 )
@@ -3356,6 +3359,38 @@ GOOD_RTU_RESPONSES['\x01\x04' + '\x00g\x00\x02' + '\xc0\x14'] = '\x01\x04' + '\x
 # Message:  Slave address 1, function code 3. Register address 103, 4 registers. CRC.
 # Response: Slave address 1, function code 3. 8 bytes, value=-2.0 CRC.
 GOOD_RTU_RESPONSES['\x01\x03' + '\x00g\x00\x04' + '\xf5\xd6'] = '\x01\x03' + '\x08\xc0\x00\x00\x00\x00\x00\x00\x00' + '\x99\x87'
+
+# Read float from address 241 (2 registers) on slave 1 using function code 3 #
+# Example from https://www.simplymodbus.ca/FAQ.htm (truncated float on page)
+# BYTEORDER_BIG
+# ---------------------------------------------------------------------------#
+# Message:  Slave address 1, function code 3. Register address 241, 2 registers. CRC.
+# Response: Slave address 1, function code 3. 4 bytes, value=-4.3959787e-11 CRC.
+GOOD_RTU_RESPONSES['\x01\x03' + '\x00\xF1\x00\x02' + '\x95\xF8'] = '\x01\x03' + '\x04\xAEAVR' + '4\x92'
+
+# Read float from address 242 (2 registers) on slave 1 using function code 3 #
+# Example from https://www.simplymodbus.ca/FAQ.htm (truncated float on page, manually reshuffled)
+# BYTEORDER_BIG_SWAP
+# ---------------------------------------------------------------------------#
+# Message:  Slave address 1, function code 3. Register address 242, 2 registers. CRC.
+# Response: Slave address 1, function code 3. 4 bytes, value=-4.3959787e-11 CRC.
+GOOD_RTU_RESPONSES['\x01\x03' + '\x00\xF2\x00\x02' + '\x65\xF8'] = '\x01\x03' + '\x04A\xAERV' + '2°'
+
+# Read float from address 243 (2 registers) on slave 1 using function code 3 #
+# Example from https://www.simplymodbus.ca/FAQ.htm (truncated float on page, manually reshuffled)
+# BYTEORDER_LITTLE_SWAP
+# ---------------------------------------------------------------------------#
+# Message:  Slave address 1, function code 3. Register address 243, 2 registers. CRC.
+# Response: Slave address 1, function code 3. 4 bytes, value=-4.3959787e-11 CRC.
+GOOD_RTU_RESPONSES['\x01\x03' + '\x00\xF3\x00\x02' + '\x34\x38'] = '\x01\x03' + '\x04VR\xAEA' + 'ö:'
+
+# Read float from address 244 (2 registers) on slave 1 using function code 3 #
+# Example from https://www.simplymodbus.ca/FAQ.htm (truncated float on page, manually reshuffled)
+# BYTEORDER_LITTLE
+# ---------------------------------------------------------------------------#
+# Message:  Slave address 1, function code 3. Register address 244, 2 registers. CRC.
+# Response: Slave address 1, function code 3. 4 bytes, value=-4.3959787e-11 CRC.
+GOOD_RTU_RESPONSES['\x01\x03' + '\x00\xF4\x00\x02' + '\x85\xF9'] = '\x01\x03' + '\x04RVA\xAE' + '»w'
 
 
 #                ##  WRITE FLOAT ##
