@@ -1012,6 +1012,7 @@ class TestLongToBytestring(ExtendedTestCase):
         (-1,          True,  BYTEORDER_BIG,         '\xff\xff\xff\xff'),
         (-2147483648, True,  BYTEORDER_BIG,         '\x80\x00\x00\x00'),
         (-200000000,  True,  BYTEORDER_BIG,        '\xf4\x14\x3e\x00'),
+            #
         # Example from https://www.simplymodbus.ca/FAQ.htm
         (2923517522,  False, BYTEORDER_BIG,         '\xAE\x41\x56\x52'),
         # Example from https://www.simplymodbus.ca/FAQ.htm
@@ -2097,7 +2098,7 @@ class TestDummyCommunication(ExtendedTestCase):
 
         # Initialize a (dummy) instrument
         self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1, minimalmodbus.MODE_RTU) # port name, slave address (in decimal)
-        self.instrument.debug = False
+        self.instrument.debug = True
 
 
     ## Read bit ##
@@ -2288,6 +2289,10 @@ class TestDummyCommunication(ExtendedTestCase):
     def testReadLong(self):
         self.assertEqual( self.instrument.read_long(102),              4294967295)
         self.assertEqual( self.instrument.read_long(102, signed=True), -1)
+        self.assertEqual( self.instrument.read_long(223, byteorder=BYTEORDER_BIG),         2923517522)
+        self.assertEqual( self.instrument.read_long(224, byteorder=BYTEORDER_BIG_SWAP),    2923517522)
+        self.assertEqual( self.instrument.read_long(225, byteorder=BYTEORDER_LITTLE_SWAP), 2923517522)
+        self.assertEqual( self.instrument.read_long(226, byteorder=BYTEORDER_LITTLE),      2923517522)
 
     def testReadLongWrongValue(self):
         self.assertRaises(ValueError, self.instrument.read_long, -1) # Wrong register address
@@ -2312,6 +2317,10 @@ class TestDummyCommunication(ExtendedTestCase):
         self.instrument.write_long(102, -5, signed=True)
         self.instrument.write_long(102, 3,  False)
         self.instrument.write_long(102, -3, True)
+        self.instrument.write_long(222, 2923517522, byteorder=BYTEORDER_LITTLE_SWAP)
+        self.instrument.write_long(222, 2923517522, byteorder=BYTEORDER_BIG_SWAP)
+        self.instrument.write_long(222, 2923517522, byteorder=BYTEORDER_LITTLE)
+        self.instrument.write_long(222, 2923517522) # BYTEORDER_BIG
 
     def testWriteLongWrongValue(self):
         self.assertRaises(ValueError, self.instrument.write_long, -1,    5) # Wrong register address
@@ -3232,6 +3241,38 @@ WRONG_RTU_RESPONSES['\x01\x06' + '\x00\x37\x00\x63' + 'x-'] = '\x01\x06' + '\x00
 # Response: Slave address 1, function code 3. 4 bytes, value=-1 or 4294967295 (depending on interpretation). CRC
 GOOD_RTU_RESPONSES['\x01\x03' + '\x00f\x00\x02' + '$\x14'] = '\x01\x03' + '\x04\xff\xff\xff\xff' + '\xfb\xa7'
 
+# Read long (2 registers, starting at 223) on slave 1 using function code 3 #
+# Example from https://www.simplymodbus.ca/FAQ.htm
+# Byte order BYTEORDER_BIG
+# --------------------------------------------------------------------------------------------#
+# Message: Slave address 1, function code 3. Register address 223, 2 registers. CRC.
+# Response: Slave address 1, function code 3. 4 bytes, Value 2923517522. CRC
+GOOD_RTU_RESPONSES['\x01\x03' + '\x00\xDF\x00\x02' + '\xF5\xF1'] = '\x01\x03' + '\x04\xAEAVR' + '4\x92'
+
+# Read long (2 registers, starting at 224) on slave 1 using function code 3 #
+# Example from https://www.simplymodbus.ca/FAQ.htm
+# Byte order BYTEORDER_BIG_SWAP
+# --------------------------------------------------------------------------------------------#
+# Message: Slave address 1, function code 3. Register address 224, 2 registers. CRC.
+# Response: Slave address 1, function code 3. 4 bytes, Value 2923517522. CRC
+GOOD_RTU_RESPONSES['\x01\x03' + '\x00\xE0\x00\x02' + '\xC5\xFD'] = '\x01\x03' + '\x04A\xAERV' + '2°'
+
+# Read long (2 registers, starting at 225) on slave 1 using function code 3 #
+# Example from https://www.simplymodbus.ca/FAQ.htm
+# Byte order BYTEORDER_LITTLE_SWAP
+# --------------------------------------------------------------------------------------------#
+# Message: Slave address 1, function code 3. Register address 225, 2 registers. CRC.
+# Response: Slave address 1, function code 3. 4 bytes, Value 2923517522. CRC
+GOOD_RTU_RESPONSES['\x01\x03' + '\x00\xE1\x00\x02' + '\x94='] = '\x01\x03' + '\x04VR\xAEA' + 'ö:'
+
+# Read long (2 registers, starting at 226) on slave 1 using function code 3 #
+# Example from https://www.simplymodbus.ca/FAQ.htm
+# Byte order BYTEORDER_LITTLE
+# --------------------------------------------------------------------------------------------#
+# Message: Slave address 1, function code 3. Register address 226, 2 registers. CRC.
+# Response: Slave address 1, function code 3. 4 bytes, Value 2923517522. CRC
+GOOD_RTU_RESPONSES['\x01\x03' + '\x00\xE2\x00\x02' + '\x64\x3D'] = '\x01\x03' + '\x04RVA\xAE' + '»w'
+
 
 #                ##  WRITE LONG ##
 
@@ -3258,6 +3299,38 @@ GOOD_RTU_RESPONSES['\x01\x10' + '\x00f\x00\x02\x04\x00\x00\x00\x03' + '5\xac'] =
 # Message: Slave address 1, function code 16. Register address 102, 2 registers, 4 bytes, value=-3. CRC.
 # Response: Slave address 1, function code 16. Register address 102, 2 registers. CRC
 GOOD_RTU_RESPONSES['\x01\x10' + '\x00f\x00\x02\x04\xff\xff\xff\xfd' + '\xf5\xf8'] = '\x01\x10' + '\x00f\x00\x02' + '\xa1\xd7'
+
+# Write long (2 registers, starting at 222) on slave 1 using function code 16, with value 2923517522 #
+# Example from https://www.simplymodbus.ca/FAQ.htm
+# Byte order BYTEORDER_BIG
+# --------------------------------------------------------------------------------------------#
+# Message: Slave address 1, function code 16. Register address 222, 2 registers, 4 bytes, value. CRC.
+# Response: Slave address 1, function code 16. Register address 222, 2 registers. CRC
+GOOD_RTU_RESPONSES['\x01\x10' + '\x00\xDE\x00\x02\x04\xAEAVR' + '±Þ'] = '\x01\x10' + '\x00\xDE\x00\x02' + '!ò'
+
+# Write long (2 registers, starting at 222) on slave 1 using function code 16, with value 2923517522 #
+# Example from https://www.simplymodbus.ca/FAQ.htm
+# Byte order BYTEORDER_LITTLE
+# --------------------------------------------------------------------------------------------#
+# Message: Slave address 1, function code 16. Register address 222, 2 registers, 4 bytes, value. CRC.
+# Response: Slave address 1, function code 16. Register address 222, 2 registers. CRC
+GOOD_RTU_RESPONSES['\x01\x10' + '\x00\xDE\x00\x02\x04RVA\xAE' + '\x3E\x3B'] = '\x01\x10' + '\x00\xDE\x00\x02' + '!ò'
+
+# Write long (2 registers, starting at 222) on slave 1 using function code 16, with value 2923517522 #
+# Example from https://www.simplymodbus.ca/FAQ.htm
+# Byte order BYTEORDER_BIG_SWAP
+# --------------------------------------------------------------------------------------------#
+# Message: Slave address 1, function code 16. Register address 222, 2 registers, 4 bytes, value. CRC.
+# Response: Slave address 1, function code 16. Register address 222, 2 registers. CRC
+GOOD_RTU_RESPONSES['\x01\x10' + '\x00\xDE\x00\x02\x04A\xAERV' + '\xB7\xFC'] = '\x01\x10' + '\x00\xDE\x00\x02' + '!ò'
+
+# Write long (2 registers, starting at 222) on slave 1 using function code 16, with value 2923517522 #
+# Example from https://www.simplymodbus.ca/FAQ.htm
+# Byte order BYTEORDER_LITTLE_SWAP
+# --------------------------------------------------------------------------------------------#
+# Message: Slave address 1, function code 16. Register address 222, 2 registers, 4 bytes, value. CRC.
+# Response: Slave address 1, function code 16. Register address 222, 2 registers. CRC
+GOOD_RTU_RESPONSES['\x01\x10' + '\x00\xDE\x00\x02\x04VR\xAEA' + 'sv'] = '\x01\x10' + '\x00\xDE\x00\x02' + '!ò'
 
 
 #                ##  READ FLOAT ##
@@ -3658,16 +3731,16 @@ if __name__ == '__main__':
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestDummyCommunicationHandleLocalEcho)
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestCalculateCrcString)
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestHexdecode)
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestFloatToBytestring)
-    unittest.TextTestRunner(verbosity=2).run(suite)
+    #suite = unittest.TestLoader().loadTestsFromTestCase(TestFloatToBytestring)
+    #unittest.TextTestRunner(verbosity=2).run(suite)
 
 
         ## Run a single test ##
 
-    #suite = unittest.TestSuite()
-    #suite.addTest(TestDummyCommunication("testReadLong"))
+    suite = unittest.TestSuite()
+    suite.addTest(TestDummyCommunication("testReadLong"))
     #suite.addTest(TestDummyCommunication("testGenericCommand"))
-    #unittest.TextTestRunner(verbosity=2).run(suite)
+    unittest.TextTestRunner(verbosity=2).run(suite)
 
 
         ## Run individual commands ##
