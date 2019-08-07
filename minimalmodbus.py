@@ -2019,13 +2019,19 @@ def _long_to_bytestring(value, signed=False, number_of_registers=2, byteorder=BY
             description="byteorder",
     )
 
-    formatcode = ">"
+    if byteorder in [BYTEORDER_BIG, BYTEORDER_BIG_SWAP]:
+        formatcode = ">"
+    else:
+        formatcode = "<"
     if signed:
         formatcode += "l"  # (Signed) long (4 bytes)
     else:
         formatcode += "L"  # Unsigned long (4 bytes)
 
     outstring = _pack(formatcode, value)
+    if byteorder in [BYTEORDER_BIG_SWAP, BYTEORDER_LITTLE_SWAP]:
+        outstring = _swap(outstring)
+
     assert len(outstring) == 4
     return outstring
 
@@ -2062,11 +2068,17 @@ def _bytestring_to_long(bytestring, signed=False, number_of_registers=2, byteord
             description="byteorder",
     )
 
-    formatcode = ">"
+    if byteorder in [BYTEORDER_BIG, BYTEORDER_BIG_SWAP]:
+        formatcode = ">"
+    else:
+        formatcode = "<"
     if signed:
         formatcode += "l"  # (Signed) long (4 bytes)
     else:
         formatcode += "L"  # Unsigned long (4 bytes)
+
+    if byteorder in [BYTEORDER_BIG_SWAP, BYTEORDER_LITTLE_SWAP]:
+        bytestring = _swap(bytestring)
 
     return _unpack(formatcode, bytestring)
 
@@ -2110,7 +2122,10 @@ def _float_to_bytestring(value, number_of_registers=2, byteorder=BYTEORDER_BIG):
             description="byteorder",
     )
 
-    formatcode = ">"
+    if byteorder in [BYTEORDER_BIG, BYTEORDER_BIG_SWAP]:
+        formatcode = ">"
+    else:
+        formatcode = "<"
     if number_of_registers == 2:
         formatcode += "f"  # Float (4 bytes)
         lengthtarget = 4
@@ -2125,6 +2140,8 @@ def _float_to_bytestring(value, number_of_registers=2, byteorder=BYTEORDER_BIG):
         )
 
     outstring = _pack(formatcode, value)
+    if byteorder in [BYTEORDER_BIG_SWAP, BYTEORDER_LITTLE_SWAP]:
+        outstring = _swap(outstring)
     assert len(outstring) == lengthtarget
     return outstring
 
@@ -2161,7 +2178,10 @@ def _bytestring_to_float(bytestring, number_of_registers=2, byteorder=BYTEORDER_
     )
     number_of_bytes = _NUMBER_OF_BYTES_PER_REGISTER * number_of_registers
 
-    formatcode = ">"
+    if byteorder in [BYTEORDER_BIG, BYTEORDER_BIG_SWAP]:
+        formatcode = ">"
+    else:
+        formatcode = "<"
     if number_of_registers == 2:
         formatcode += "f"  # Float (4 bytes)
     elif number_of_registers == 4:
@@ -2181,6 +2201,8 @@ def _bytestring_to_float(bytestring, number_of_registers=2, byteorder=BYTEORDER_
             )
         )
 
+    if byteorder in [BYTEORDER_BIG_SWAP, BYTEORDER_LITTLE_SWAP]:
+        bytestring = _swap(bytestring)
     return _unpack(formatcode, bytestring)
 
 
@@ -2426,6 +2448,8 @@ def _unpack(formatstring, packed):
 
     return value
 
+def _swap(bytestring):
+    return bytestring
 
 def _hexencode(bytestring, insert_spaces=False):
     r"""Convert a byte string to a hex encoded string.
