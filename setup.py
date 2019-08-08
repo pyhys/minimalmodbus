@@ -17,7 +17,8 @@ with open("HISTORY.rst") as history_file:
     history = history_file.read().replace(".. :changelog:", "")
 
 # Read version number etc from other file
-# http://stackoverflow.com/questions/2058802/how-can-i-get-the-version-defined-in-setup-py-setuptools-in-my-package
+# http://stackoverflow.com/questions/2058802/how-can-i-get-the-version-defined
+# -in-setup-py-setuptools-in-my-package
 with open("minimalmodbus.py") as mainfile:
     main_py = mainfile.read()
 metadata = dict(re.findall('__([a-z]+)__ *= *"([^"]+)"', main_py))
@@ -40,7 +41,7 @@ setup(
     python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*",
     install_requires=["pyserial>=3.0"],
     py_modules=["minimalmodbus"],
-    test_suite="tests",
+    test_suite="tests",  # Discover all testcases in all files in this subdir
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
