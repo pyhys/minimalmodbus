@@ -106,6 +106,9 @@ To automatically run the tests for the different Python versions::
 
     make test_all
 
+It will use the tox tool to run the tests, and the settings are done in
+the :file:`tox.ini` file. Note that Travis CI does not use tox (it has its own config file).
+
 Hardware tests are performed using a Delta DTB4824 process controller together
 with a USB-to-RS485 converter. See :ref:`testdtb4824` for more information.
 
@@ -416,8 +419,7 @@ Travis CI
 Each commit to Github is tested on the Travis CI server.
 Log in to https://travis-ci.org/ using your Github account.
 
-The settings are done in the :file:`.travis.yml` file. Note that Travis CI does not use tox,
-so the settings needs to be done also in this file.
+The settings are done in the :file:`.travis.yml` file. Note that Travis CI does not use tox.
 
 
 Codecov.io
