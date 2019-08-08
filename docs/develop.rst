@@ -411,6 +411,19 @@ The HTML theme used is the Sphinx 'sphinx_rtd_theme' theme.
 Note that Sphinx version 1.3 or later is required to build the documentation.
 
 
+Travis CI
+------------------------------------------------------------------------------
+Each commit to Github is tested on the Travis CI server.
+Log in to https://travis-ci.org/ using your Github account.
+
+The settings are done in the :file:`.travis.yml` file. Note that Travis CI does not use tox,
+so the settings needs to be done also in this file.
+
+
+Codecov.io
+------------------------------------------------------------------------------
+Log in to https://codecov.io/ using your Github account.
+
 
 Notes on distribution
 -------------------------------------------------------------------------------
