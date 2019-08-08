@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 #
 #   Copyright 2019 Jonas Berg
 #
@@ -56,6 +57,8 @@ __license__ = "Apache License, Version 2.0"
 import sys
 import time
 import unittest
+
+sys.path.append('.')
 
 import dummy_serial
 import minimalmodbus
@@ -865,22 +868,6 @@ class TestSanityTwoByteString(ExtendedTestCase):
             for value in range(0x10000):
                 resultvalue = minimalmodbus._twobyte_string_to_num( minimalmodbus._num_to_twobyte_string(value) )
                 self.assertEqual(resultvalue, value)
-
-
-# class TestBytestringToBit(ExtendedTestCase):
-
-#     def testKnownValues(self):
-#         self.assertEqual(minimalmodbus._bytestring_to_bit('\x00'), 0)
-#         self.assertEqual(minimalmodbus._bytestring_to_bit('\x01'), 1)
-
-#     def testWrongValues(self):
-#         self.assertRaises(ValueError, minimalmodbus._bytestring_to_bit, 'ABC')   # Too long string
-#         self.assertRaises(InvalidResponseError, minimalmodbus._bytestring_to_bit, 'A')     # Wrong string
-#         self.assertRaises(InvalidResponseError, minimalmodbus._bytestring_to_bit, '\x03')  # Wrong string
-
-#     def testWrongType(self):
-#         for value in _NOT_STRINGS:
-#             self.assertRaises(TypeError, minimalmodbus._bytestring_to_bit, value)
 
 
 class TestBytestringToBits(ExtendedTestCase):
@@ -2316,10 +2303,10 @@ class TestDummyCommunication(ExtendedTestCase):
         self.instrument.write_long(102, -5, signed=True)
         self.instrument.write_long(102, 3,  False)
         self.instrument.write_long(102, -3, True)
-        self.instrument.write_long(222, 2923517522, byteorder=BYTEORDER_LITTLE_SWAP)
-        self.instrument.write_long(222, 2923517522, byteorder=BYTEORDER_BIG_SWAP)
-        self.instrument.write_long(222, 2923517522, byteorder=BYTEORDER_LITTLE)
         self.instrument.write_long(222, 2923517522) # BYTEORDER_BIG
+        self.instrument.write_long(222, 2923517522, byteorder=BYTEORDER_BIG_SWAP)
+        self.instrument.write_long(222, 2923517522, byteorder=BYTEORDER_LITTLE_SWAP)
+        self.instrument.write_long(222, 2923517522, byteorder=BYTEORDER_LITTLE)
 
     def testWriteLongWrongValue(self):
         self.assertRaises(ValueError, self.instrument.write_long, -1,    5) # Wrong register address
@@ -2498,7 +2485,7 @@ class TestDummyCommunication(ExtendedTestCase):
 
         # read_bits(196, 22, functioncode=2)
         self.assertEqual(self.instrument._generic_command(2, 196, number_of_bits=22, payloadformat=_PAYLOADFORMAT_BITS),
-                         [0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1])
+                        [0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1])
 
         # read_bits(19, 19, functioncode=1)
         self.assertEqual(self.instrument._generic_command(1, 19, number_of_bits=19, payloadformat=_PAYLOADFORMAT_BITS),
@@ -3057,7 +3044,7 @@ GOOD_RTU_RESPONSES['\x01\x05' + '\x00\x47\xff\x00' + '</'] = '\x01\x05' + '\x00\
 # -------------------------------------------------------- #
 # Message:  Slave address 1, function code 5. Register address 71, value 0 (0000). CRC.
 # Response: Slave address 1, function code 5. Register address 71, value 0 (0000). CRC.
-GOOD_RTU_RESPONSES['\x01\x05' + '\x00\x47\x00\x00' + '}ß'] = '\x01\x05' + '\x00\x47\x00\x00' + '}ß'
+GOOD_RTU_RESPONSES['\x01\x05' + '\x00\x47\x00\x00' + '}\xDF'] = '\x01\x05' + '\x00\x47\x00\x00' + '}\xDF'
 
 # Write bit register 72 on slave 1 using function code 15 #
 # ------------------------------------------------------ #
@@ -3094,7 +3081,7 @@ GOOD_RTU_RESPONSES['\x01\x01' + '\x00\x13\x00\x13' + '\x8c\x02'] = '\x01\x01' + 
 # ----------------------------------------------------------------------------------------- #
 # Message:  Slave address 1, function code 2. Register address 196, 22 coils. CRC.
 # Response: Slave address 1, function code 2. 3 bytes, values. CRC.
-GOOD_RTU_RESPONSES['\x01\x02' + '\x00\xC4\x00\x16' + '¸9'] = '\x01\x02' + '\x03\xAC\xDB\x35' + '"\x88'
+GOOD_RTU_RESPONSES['\x01\x02' + '\x00\xC4\x00\x16' + '\xB89'] = '\x01\x02' + '\x03\xAC\xDB\x35' + '"\x88'
 
 
 #                ##  WRITE BITS  ##
@@ -3105,7 +3092,7 @@ GOOD_RTU_RESPONSES['\x01\x02' + '\x00\xC4\x00\x16' + '¸9'] = '\x01\x02' + '\x03
 # ----------------------------------------------------------------------------------------- #
 # Message:  Slave address 1, function code 15. Address 19, 10 coils, 2 bytes, values. CRC.
 # Response: Slave address 1, function code 15. Address 19, 10 coils. CRC.
-GOOD_RTU_RESPONSES['\x01\x0f' + '\x00\x13\x00\x0A\x02\xCD\x01' + 'rË'] = '\x01\x0f' + '\x00\x13\x00\x0A' + '$\t'
+GOOD_RTU_RESPONSES['\x01\x0f' + '\x00\x13\x00\x0A\x02\xCD\x01' + '\x72\xCB'] = '\x01\x0f' + '\x00\x13\x00\x0A' + '$\t'
 
 
 #                ##  READ REGISTER  ##
@@ -3262,7 +3249,7 @@ GOOD_RTU_RESPONSES['\x01\x03' + '\x00\xDF\x00\x02' + '\xF5\xF1'] = '\x01\x03' + 
 # --------------------------------------------------------------------------------------------#
 # Message: Slave address 1, function code 3. Register address 224, 2 registers. CRC.
 # Response: Slave address 1, function code 3. 4 bytes, Value 2923517522. CRC
-GOOD_RTU_RESPONSES['\x01\x03' + '\x00\xE0\x00\x02' + '\xC5\xFD'] = '\x01\x03' + '\x04A\xAERV' + '2°'
+GOOD_RTU_RESPONSES['\x01\x03' + '\x00\xE0\x00\x02' + '\xC5\xFD'] = '\x01\x03' + '\x04A\xAERV' + '2\xB0'
 
 # Read long (2 registers, starting at 225) on slave 1 using function code 3 #
 # Example from https://www.simplymodbus.ca/FAQ.htm
@@ -3270,7 +3257,7 @@ GOOD_RTU_RESPONSES['\x01\x03' + '\x00\xE0\x00\x02' + '\xC5\xFD'] = '\x01\x03' + 
 # --------------------------------------------------------------------------------------------#
 # Message: Slave address 1, function code 3. Register address 225, 2 registers. CRC.
 # Response: Slave address 1, function code 3. 4 bytes, Value 2923517522. CRC
-GOOD_RTU_RESPONSES['\x01\x03' + '\x00\xE1\x00\x02' + '\x94='] = '\x01\x03' + '\x04VR\xAEA' + 'ö:'
+GOOD_RTU_RESPONSES['\x01\x03' + '\x00\xE1\x00\x02' + '\x94='] = '\x01\x03' + '\x04VR\xAEA' + '\xF6:'
 
 # Read long (2 registers, starting at 226) on slave 1 using function code 3 #
 # Example from https://www.simplymodbus.ca/FAQ.htm
@@ -3278,7 +3265,7 @@ GOOD_RTU_RESPONSES['\x01\x03' + '\x00\xE1\x00\x02' + '\x94='] = '\x01\x03' + '\x
 # --------------------------------------------------------------------------------------------#
 # Message: Slave address 1, function code 3. Register address 226, 2 registers. CRC.
 # Response: Slave address 1, function code 3. 4 bytes, Value 2923517522. CRC
-GOOD_RTU_RESPONSES['\x01\x03' + '\x00\xE2\x00\x02' + '\x64\x3D'] = '\x01\x03' + '\x04RVA\xAE' + '»w'
+GOOD_RTU_RESPONSES['\x01\x03' + '\x00\xE2\x00\x02' + '\x64\x3D'] = '\x01\x03' + '\x04RVA\xAE' + '\xBBw'
 
 
 #                ##  WRITE LONG ##
@@ -3313,7 +3300,7 @@ GOOD_RTU_RESPONSES['\x01\x10' + '\x00f\x00\x02\x04\xff\xff\xff\xfd' + '\xf5\xf8'
 # --------------------------------------------------------------------------------------------#
 # Message: Slave address 1, function code 16. Register address 222, 2 registers, 4 bytes, value. CRC.
 # Response: Slave address 1, function code 16. Register address 222, 2 registers. CRC
-GOOD_RTU_RESPONSES['\x01\x10' + '\x00\xDE\x00\x02\x04\xAEAVR' + '±Þ'] = '\x01\x10' + '\x00\xDE\x00\x02' + '!ò'
+GOOD_RTU_RESPONSES['\x01\x10' + '\x00\xDE\x00\x02\x04\xAEAVR' + '\xB1\xDE'] = '\x01\x10' + '\x00\xDE\x00\x02' + '\x21\xF2'
 
 # Write long (2 registers, starting at 222) on slave 1 using function code 16, with value 2923517522 #
 # Example from https://www.simplymodbus.ca/FAQ.htm
@@ -3321,7 +3308,7 @@ GOOD_RTU_RESPONSES['\x01\x10' + '\x00\xDE\x00\x02\x04\xAEAVR' + '±Þ'] = '\x01\
 # --------------------------------------------------------------------------------------------#
 # Message: Slave address 1, function code 16. Register address 222, 2 registers, 4 bytes, value. CRC.
 # Response: Slave address 1, function code 16. Register address 222, 2 registers. CRC
-GOOD_RTU_RESPONSES['\x01\x10' + '\x00\xDE\x00\x02\x04RVA\xAE' + '\x3E\x3B'] = '\x01\x10' + '\x00\xDE\x00\x02' + '!ò'
+GOOD_RTU_RESPONSES['\x01\x10' + '\x00\xDE\x00\x02\x04RVA\xAE' + '\x3E\x3B'] = '\x01\x10' + '\x00\xDE\x00\x02' + '\x21\xF2'
 
 # Write long (2 registers, starting at 222) on slave 1 using function code 16, with value 2923517522 #
 # Example from https://www.simplymodbus.ca/FAQ.htm
@@ -3329,7 +3316,7 @@ GOOD_RTU_RESPONSES['\x01\x10' + '\x00\xDE\x00\x02\x04RVA\xAE' + '\x3E\x3B'] = '\
 # --------------------------------------------------------------------------------------------#
 # Message: Slave address 1, function code 16. Register address 222, 2 registers, 4 bytes, value. CRC.
 # Response: Slave address 1, function code 16. Register address 222, 2 registers. CRC
-GOOD_RTU_RESPONSES['\x01\x10' + '\x00\xDE\x00\x02\x04A\xAERV' + '\xB7\xFC'] = '\x01\x10' + '\x00\xDE\x00\x02' + '!ò'
+GOOD_RTU_RESPONSES['\x01\x10' + '\x00\xDE\x00\x02\x04A\xAERV' + '\xB7\xFC'] = '\x01\x10' + '\x00\xDE\x00\x02' + '\x21\xF2'
 
 # Write long (2 registers, starting at 222) on slave 1 using function code 16, with value 2923517522 #
 # Example from https://www.simplymodbus.ca/FAQ.htm
@@ -3337,7 +3324,7 @@ GOOD_RTU_RESPONSES['\x01\x10' + '\x00\xDE\x00\x02\x04A\xAERV' + '\xB7\xFC'] = '\
 # --------------------------------------------------------------------------------------------#
 # Message: Slave address 1, function code 16. Register address 222, 2 registers, 4 bytes, value. CRC.
 # Response: Slave address 1, function code 16. Register address 222, 2 registers. CRC
-GOOD_RTU_RESPONSES['\x01\x10' + '\x00\xDE\x00\x02\x04VR\xAEA' + 'sv'] = '\x01\x10' + '\x00\xDE\x00\x02' + '!ò'
+GOOD_RTU_RESPONSES['\x01\x10' + '\x00\xDE\x00\x02\x04VR\xAEA' + 'sv'] = '\x01\x10' + '\x00\xDE\x00\x02' + '\x21\xF2'
 
 
 #                ##  READ FLOAT ##
@@ -3374,7 +3361,7 @@ GOOD_RTU_RESPONSES['\x01\x03' + '\x00\xF1\x00\x02' + '\x95\xF8'] = '\x01\x03' + 
 # ---------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 3. Register address 242, 2 registers. CRC.
 # Response: Slave address 1, function code 3. 4 bytes, value=-4.3959787e-11 CRC.
-GOOD_RTU_RESPONSES['\x01\x03' + '\x00\xF2\x00\x02' + '\x65\xF8'] = '\x01\x03' + '\x04A\xAERV' + '2°'
+GOOD_RTU_RESPONSES['\x01\x03' + '\x00\xF2\x00\x02' + '\x65\xF8'] = '\x01\x03' + '\x04A\xAERV' + '2\xB0'
 
 # Read float from address 243 (2 registers) on slave 1 using function code 3 #
 # Example from https://www.simplymodbus.ca/FAQ.htm (truncated float on page, manually reshuffled)
@@ -3382,7 +3369,7 @@ GOOD_RTU_RESPONSES['\x01\x03' + '\x00\xF2\x00\x02' + '\x65\xF8'] = '\x01\x03' + 
 # ---------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 3. Register address 243, 2 registers. CRC.
 # Response: Slave address 1, function code 3. 4 bytes, value=-4.3959787e-11 CRC.
-GOOD_RTU_RESPONSES['\x01\x03' + '\x00\xF3\x00\x02' + '\x34\x38'] = '\x01\x03' + '\x04VR\xAEA' + 'ö:'
+GOOD_RTU_RESPONSES['\x01\x03' + '\x00\xF3\x00\x02' + '\x34\x38'] = '\x01\x03' + '\x04VR\xAEA' + '\xf6:'
 
 # Read float from address 244 (2 registers) on slave 1 using function code 3 #
 # Example from https://www.simplymodbus.ca/FAQ.htm (truncated float on page, manually reshuffled)
@@ -3390,7 +3377,7 @@ GOOD_RTU_RESPONSES['\x01\x03' + '\x00\xF3\x00\x02' + '\x34\x38'] = '\x01\x03' + 
 # ---------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 3. Register address 244, 2 registers. CRC.
 # Response: Slave address 1, function code 3. 4 bytes, value=-4.3959787e-11 CRC.
-GOOD_RTU_RESPONSES['\x01\x03' + '\x00\xF4\x00\x02' + '\x85\xF9'] = '\x01\x03' + '\x04RVA\xAE' + '»w'
+GOOD_RTU_RESPONSES['\x01\x03' + '\x00\xF4\x00\x02' + '\x85\xF9'] = '\x01\x03' + '\x04RVA\xAE' + '\xBBw'
 
 
 #                ##  WRITE FLOAT ##
@@ -3419,7 +3406,7 @@ GOOD_RTU_RESPONSES['\x01\x10' + '\x00g\x00\x04\x08?\xf1\x99\x99\x99\x99\x99\x9a'
 # -------------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 240, 2 registers, 4 bytes, value. CRC.
 # Response: Slave address 1, function code 16. Register address 240, 2 registers. CRC.
-GOOD_RTU_RESPONSES['\x01\x10' + '\x00\xF0\x00\x02\x04\xAEAVR' + '2J'] = '\x01\x10' + '\x00\xF0\x00\x02' + 'Aû'
+GOOD_RTU_RESPONSES['\x01\x10' + '\x00\xF0\x00\x02\x04\xAEAVR' + '2J'] = '\x01\x10' + '\x00\xF0\x00\x02' + 'A\xFB'
 
 # Write float -4.3959787e-11 to address 240 (42 registers) on slave 1 using function code 16 #
 # Example from https://www.simplymodbus.ca/FAQ.htm (truncated float on page, manually reshuffled)
@@ -3427,7 +3414,7 @@ GOOD_RTU_RESPONSES['\x01\x10' + '\x00\xF0\x00\x02\x04\xAEAVR' + '2J'] = '\x01\x1
 # -------------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 240, 2 registers, 4 bytes, value. CRC.
 # Response: Slave address 1, function code 16. Register address 240, 2 registers. CRC.
-GOOD_RTU_RESPONSES['\x01\x10' + '\x00\xF0\x00\x02\x04RVA\xAE' + '½¯'] = '\x01\x10' + '\x00\xF0\x00\x02' + 'Aû'
+GOOD_RTU_RESPONSES['\x01\x10' + '\x00\xF0\x00\x02\x04RVA\xAE' + '\xBD\xAF'] = '\x01\x10' + '\x00\xF0\x00\x02' + 'A\xFB'
 
 # Write float -4.3959787e-11 to address 240 (42 registers) on slave 1 using function code 16 #
 # Example from https://www.simplymodbus.ca/FAQ.htm (truncated float on page, manually reshuffled)
@@ -3435,7 +3422,7 @@ GOOD_RTU_RESPONSES['\x01\x10' + '\x00\xF0\x00\x02\x04RVA\xAE' + '½¯'] = '\x01\
 # -------------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 240, 2 registers, 4 bytes, value. CRC.
 # Response: Slave address 1, function code 16. Register address 240, 2 registers. CRC.
-GOOD_RTU_RESPONSES['\x01\x10' + '\x00\xF0\x00\x02\x04VR\xAEA' + '\xF0\xE2'] = '\x01\x10' + '\x00\xF0\x00\x02' + 'Aû'
+GOOD_RTU_RESPONSES['\x01\x10' + '\x00\xF0\x00\x02\x04VR\xAEA' + '\xF0\xE2'] = '\x01\x10' + '\x00\xF0\x00\x02' + 'A\xFB'
 
 # Write float -4.3959787e-11 to address 240 (42 registers) on slave 1 using function code 16 #
 # Example from https://www.simplymodbus.ca/FAQ.htm (truncated float on page, manually reshuffled)
@@ -3443,7 +3430,7 @@ GOOD_RTU_RESPONSES['\x01\x10' + '\x00\xF0\x00\x02\x04VR\xAEA' + '\xF0\xE2'] = '\
 # -------------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 240, 2 registers, 4 bytes, value. CRC.
 # Response: Slave address 1, function code 16. Register address 240, 2 registers. CRC.
-GOOD_RTU_RESPONSES['\x01\x10' + '\x00\xF0\x00\x02\x04A\xAERV' + '4h'] = '\x01\x10' + '\x00\xF0\x00\x02' + 'Aû'
+GOOD_RTU_RESPONSES['\x01\x10' + '\x00\xF0\x00\x02\x04A\xAERV' + '4h'] = '\x01\x10' + '\x00\xF0\x00\x02' + 'A\xFB'
 
 
 #                ##  READ STRING  ##
@@ -3800,7 +3787,7 @@ if __name__ == '__main__':
 
         ## Run all tests ##
 
-    #unittest.main(verbosity=VERBOSITY)
+    unittest.main(verbosity=VERBOSITY)
 
 
         ## Run a test class ##
@@ -3814,10 +3801,13 @@ if __name__ == '__main__':
 
         ## Run a single test ##
 
-    suite = unittest.TestSuite()
-    suite.addTest(TestDummyCommunication("testReadFloat"))
+    #suite = unittest.TestSuite()
     #suite.addTest(TestDummyCommunication("testGenericCommand"))
-    unittest.TextTestRunner(verbosity=2).run(suite)
+    #suite.addTest(TestDummyCommunication("testWriteBits"))
+    #suite.addTest(TestDummyCommunication("testReadBits"))
+    #suite.addTest(TestDummyCommunication("testWriteBit"))
+    #suite.addTest(TestDummyCommunication("testWriteFloat"))
+    #unittest.TextTestRunner(verbosity=2).run(suite)
 
 
         ## Run individual commands ##

@@ -1,8 +1,6 @@
 .PHONY: clean-pyc clean-build docs clean clean-docs
 
 help:
-
-
 	@echo "devdeps - install dependencies required for development"
 	@echo "lint - check style with flake8"
 	@echo "black - modify code style using the black tool"
@@ -64,10 +62,19 @@ devdeps:
 		setuptools \
 		sphinx_rtd_theme \
 		sphinx \
+		tox \
 		twine \
 		wheel
 
 lint:
+	@echo "Show non-ascii characters (for Python2 compability)"
+	grep --color='auto' -P -n "[\x80-\xFF]" minimalmodbus.py || true
+	grep --color='auto' -P -n "[\x80-\xFF]" dummy_serial.py || true
+	grep --color='auto' -P -n "[\x80-\xFF]" setup.py || true
+	grep --color='auto' -P -n "[\x80-\xFF]" tests/test_minimalmodbus.py || true
+	grep --color='auto' -P -n "[\x80-\xFF]" tests/test_deltaDTB4824.py || true
+	@echo " "
+	@echo " "
 	flake8 minimalmodbus.py --max-line-length=100 || true  # Includes pycodestyle
 	@echo " "
 	@echo " "
@@ -81,6 +88,7 @@ black:
 
 test:
 	python3 setup.py test
+	# TODO CHANGE
 
 test-all:
 	rm -fr .tox/
