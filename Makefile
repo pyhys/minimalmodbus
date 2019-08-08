@@ -87,8 +87,7 @@ black:
 	black minimalmodbus.py dummy_serial.py setup.py
 
 test:
-	python3 setup.py test
-	# TODO CHANGE
+	python3 tests/test_minimalmodbus.py
 
 test-all:
 	rm -fr .tox/

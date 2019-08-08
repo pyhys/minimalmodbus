@@ -1,6 +1,5 @@
-#!/usr/bin/env python
 #
-#   Copyright 2015 Jonas Berg
+#   Copyright 2019 Jonas Berg
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -22,12 +21,3 @@
 
 __author__ = "Jonas Berg"
 __license__ = "Apache License, Version 2.0"
-
-import unittest
-
-import tests.test_minimalmodbus
-
-
-def suite_all_simulated():
-    suite = unittest.TestLoader().loadTestsFromModule(test_minimalmodbus)
-    return suite

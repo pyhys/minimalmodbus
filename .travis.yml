@@ -1,5 +1,8 @@
 # Config file for automatic testing at travis-ci.org
 
+# Note that local tests with tox do not use this config file.
+# See tox.ini file instead.
+
 language: python
 
 python:
