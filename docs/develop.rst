@@ -116,9 +116,9 @@ Run it with::
 
    python3 tests/test_deltaDTB4824.py
 
-The baudrate and portname can optionally be set from command line::
+The baudrate, portname and mode can optionally be set from command line::
 
-    python3 tests/test_deltaDTB4824.py 19200 /dev/ttyUSB0
+    python3 tests/test_deltaDTB4824.py -b19200 -D/dev/ttyUSB0 -ascii
 
 For more details on testing with this hardware, see :ref:`testdtb4824`.
 
@@ -180,6 +180,7 @@ It is possible to run just a few tests. To load a single class of test cases::
 If necessary::
 
     reload(test_minimalmodbus.minimalmodbus)
+
 
 Recording communication data for unittesting
 -------------------------------------------------------------------------
@@ -362,7 +363,6 @@ but you need to generate the payload yourself. Note that the same data is sent::
 Use this if you are to implement other Modbus function codes, as it takes care of CRC generation etc.
 
 
-
 Other useful internal functions
 ------------------------------------------------------------------------------
 There are several useful (module level) helper functions available in
@@ -416,15 +416,19 @@ Note that Sphinx version 1.3 or later is required to build the documentation.
 
 Travis CI
 ------------------------------------------------------------------------------
-Each commit to Github is tested on the Travis CI server.
-Log in to https://travis-ci.org/ using your Github account.
+Each commit to GitHub is tested on the Travis CI server.
+Log in to https://travis-ci.org/ using your GitHub account.
 
 The settings are done in the :file:`.travis.yml` file. Note that Travis CI does not use tox.
+
+Enable the webhook from GitHub to Travis CI.
 
 
 Codecov.io
 ------------------------------------------------------------------------------
 Log in to https://codecov.io/ using your Github account.
+
+Enable the webhook from GitHub to Codecov.io.
 
 
 Notes on distribution
@@ -498,8 +502,17 @@ Also make sure that these are functional (see sections below):
   * Documentation generation
   * Test coverage report generation
 
+
 Git
 ``````````````````````
+Make a tag in the git repository. See below.
+
+
+GitHub
+``````````````````````
+Log in to GitHub and register the tag as an offical release.
+In the release notes, paste text from HISTORY.rst.
+
 
 Upload to PyPI
 ``````````````
@@ -522,6 +535,11 @@ Make sure that the installer works, and the dependencies are handled correctly.
 Try at least Linux and Windows.
 
 
+Test on hardware
+`````````````````````
+Test the package on hardware from Linux and Windows.
+
+
 Backup
 ``````
 Burn a CD/DVD with these items:
@@ -531,9 +549,6 @@ Burn a CD/DVD with these items:
 * Windows installer
 * Generated HTML files
 * PDF documentation
-
-
-
 
 
 
@@ -561,7 +576,7 @@ pycodestyle
 Git usage
 ---------------------------
 
-Clone the repository from Github (it will create a directory)::
+Clone the repository from GitHub (it will create a directory)::
 
     git clone https://github.com/pyhys/minimalmodbus.git
 
@@ -579,9 +594,50 @@ Commit locally::
 
     git commit -m "test1"
 
-Commit remotely (will ask for Github username and password)::
+Commit remotely (will ask for GitHub username and password)::
 
     git push origin
+
+
+Git branches
+````````````````````````````
+Create a new branch::
+
+    git branch develop
+
+List branches::
+
+    git branch
+
+Change branch::
+
+    git checkout develop
+
+Commit other branch remotely::
+
+    git push origin develop
+
+
+Make a tag in Git
+````````````````````````````
+See the section on Git usage.
+
+The release is done in the 'master' branch, not the 'develop' branch.
+List tags::
+
+    git tag
+
+Make a tag in Git::
+
+    git tag -a 0.7 -m 'Release 0.7'
+
+Show info about a tag::
+
+    git show 0.7
+
+Commit tags to remote server::
+
+    git push origin --tags
 
 
 
@@ -717,7 +773,7 @@ Configurations are made in a [flake8] section of the :file:`tox.ini` file.
 TODO
 ----
 
-See also Github issues: https://github.com/pyhys/minimalmodbus/issues
+See also GitHub issues: https://github.com/pyhys/minimalmodbus/issues
 
 * Increase test coverage for minimalmodbus.py
 * Improve the dummy_serial behavior, to better mimic Windows behavior.

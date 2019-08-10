@@ -81,7 +81,7 @@ serial adaptor, to verify that the proper kernel driver is loaded.
 Known issues
 --------------
 
-See github page.
+See GitHub page.
 
 
 Issues when running under Windows

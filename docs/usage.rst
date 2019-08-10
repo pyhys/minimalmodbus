@@ -4,6 +4,7 @@
 Usage
 ========
 
+
 General on Modbus protocol
 --------------------------
 Modbus is a serial communications protocol published by Modicon in 1979,
@@ -92,17 +93,18 @@ Default values
 --------------
 Most of the serial port parameters have the default values defined in the Modbus standard (19200 8N1)::
 
-    instrument.serial.port          # this is the serial port name
-    instrument.serial.baudrate = 19200   # Baud
+    instrument.serial.port                     # this is the serial port name
+    instrument.serial.baudrate = 19200         # Baud
     instrument.serial.bytesize = 8
     instrument.serial.parity   = serial.PARITY_NONE
     instrument.serial.stopbits = 1
-    instrument.serial.timeout  = 0.05   # seconds
+    instrument.serial.timeout  = 0.05          # seconds
 
-    instrument.address     # this is the slave address number
+    instrument.address                         # this is the slave address number
     instrument.mode = minimalmodbus.MODE_RTU   # rtu or ascii mode
+    instrument.clear_buffers_before_each_transaction = True
 
-These can be overridden::
+Change the values like this::
 
     instrument.serial.timeout = 0.2
 
@@ -122,8 +124,8 @@ or alternatively (to avoid import of ``serial``)::
 
     instrument.serial.parity = minimalmodbus.serial.PARITY_EVEN
 
-
 .. warning:: The module level constants minimalmodbus.BAUDRATE etc were removed in version 1.0
+
 
 Confusing Modbus register addresses
 -----------------------------------
@@ -160,6 +162,7 @@ The instruments sharing the same serial port share the same ``serial`` Python ob
 You can use instruments on different serial ports in the same script, but
 running several scripts using the same port will give problems.
 
+
 Closing serial port after each call
 -----------------------------------
 
@@ -168,6 +171,8 @@ In some cases (mostly on Windows) the serial port must be closed after each call
 Enable that behavior with::
 
     instrument.close_port_after_each_call = True
+
+This will slow down the port considerably.
 
 
 Handling communication errors

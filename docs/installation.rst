@@ -51,7 +51,7 @@ You can also download the source directly from Linux command line::
 
 Change version number to the appropriate value.
 
-Downloading from Github::
+Downloading from GitHub::
 
     wget https://github.com/pyhys/minimalmodbus/archive/master.zip
     unzip master.zip
@@ -61,7 +61,7 @@ This will create a directory 'minimalmodbus-master'.
 
 Alternate installation on Windows
 -------------------------------------
-Install from Github, using pip::
+Install from GitHub, using pip::
 
     C:\Python34\Scripts>pip3.4 install https://github.com/pyhys/minimalmodbus/archive/master.zip
     TODO

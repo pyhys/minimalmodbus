@@ -57,3 +57,5 @@ It is open source, and has the Apache License, Version 2.0.
 Tested with Python 2.7, 3.5, 3.6 and 3.7.
 
 Support for Python2 will be dropped in 2020.
+
+This package uses semantic versioning.

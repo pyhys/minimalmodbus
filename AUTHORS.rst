@@ -20,10 +20,10 @@ Significant contributions by:
 * Dino
 * Dominik Socha
 * Edwin van den Oetelaar
-* Github user: draput
-* Github user: gnbl
-* Github user: mrrs6
-* Github user: noafterglow
+* GitHub user: draput
+* GitHub user: gnbl
+* GitHub user: mrrs6
+* GitHub user: noafterglow
 * Luca Di Gregorio
 * Matthias Bolte
 * Michael Penza

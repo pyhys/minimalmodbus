@@ -3,11 +3,14 @@
 History
 =======
 
-Release 1.0 (2019-08-??)
+
+Release 1.0.0 (2019-08-10)
 -------------------------
+
 New features:
 
 * Implements reading and writing multiple bits simultaneously.
+* Support more byteorders (endianness) for floats and long integers.
 
 Breaking changes:
 
@@ -21,13 +24,13 @@ Breaking changes:
 
 Other fixes:
 
-* Allow slave addresses also in the reserved range (up to 255). Reported by Github user gnbl.
+* Allow slave addresses also in the reserved range (up to 255). Reported by GitHub user gnbl.
 * Serial port read and write buffers are cleared before each request to the instrument.
-  Pull request from Github user mrrs6.
+  Pull request from GitHub user mrrs6.
 * Check whether the serial port is open before trying to open it. Reported by Matthias Bolte.
 * Custom exceptions for Modbus errors, by Russ Garrett.
 * Silent period between messages is at least 1.75 ms to fulfill Modbus standard. Reported
-  by Github user draput.
+  by GitHub user draput.
 * Use time.monotonic if available. Suggested by Matthias Bolte.
 * Implemented write timeout, to avoid hanging when writing. Instead it will raise an exception.
   Reported by Austin Stover.
@@ -44,7 +47,7 @@ Release 0.7 (2015-07-30)
 * Improved debug messages (thanks to Dino)
 * Using project setup by the cookie-cutter tool.
 * Reshuffled source files and documentation.
-* Moved source to Github from Sourceforge.
+* Moved source to GitHub from Sourceforge.
 * Moved documentation to readthedocs.org
 * Using the tox tool for testing on multiple Python versions.
 * Using Travis CI test framework
