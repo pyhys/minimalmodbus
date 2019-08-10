@@ -109,276 +109,244 @@ import time
 
 import minimalmodbus
 
-SECONDS_TO_MILLISECONDS = 1000
-
-##############
-## Settings ##
-##############
-
-DEFAULT_PORT_NAME = "/dev/ttyUSB0"
 SLAVE_ADDRESS = 1
-DEFAULT_BAUDRATE = 38400  # baud (pretty much bits/s). Use 2400 or 38400 bits/s.
 TIMEOUT = 0.2  # seconds. At least 0.2 seconds required for 2400 bits/s.
+DEFAULT_PORT_NAME = "/dev/ttyUSB0"
+DEFAULT_BAUDRATE = 38400  # baud (pretty much bits/s). Use 2400 or 38400 bits/s.
 
 
-###############################
-## Select which tests to run ##
-###############################
-
-RUN_VERIFY_EXAMPLES = True
-RUN_READOUT_PRESENT_SETTINGS = True
-RUN_START_AND_STOP_REGULATOR = True
-RUN_MEASURE_ROUNDTRIP_TIME = True
-RUN_VERIFY_TWO_INSTRUMENTS = True
+def _print_out(text):
+    # Python2 and 3 compatible
+    sys.stdout.write("{}\n".format(text))
+    sys.stdout.flush()
 
 
-def main():
-    #################################
-    ## Read command line arguments ##
-    #################################
+def _box(description=None, value=None):
+    MAX_WIDTH = 85
+    DESCR_WIDTH = 30
+    if description is None:
+        _print_out("#"*MAX_WIDTH)
+    else:
+        if value is None:
+            line = "## {}".format(description)
+        else:
+            line = "## {}:".format(description).ljust(DESCR_WIDTH) + str(value)
+        line = line.ljust(MAX_WIDTH - 2) + "##"
+        _print_out(line)
 
+
+def show_test_settings(mode, baudrate, portname):
+    _box()
+    _box("Hardware test with Delta DTB4824")
+    _box("Minimalmodbus version", minimalmodbus.__version__)
+    _box(" ")
+    _box("Platform", sys.platform)
+    _box("Python version", "{}.{}.{}".format(sys.version_info[0], sys.version_info[1], sys.version_info[2]))
+    _box("Modbus mode", mode)
+    _box("Baudrate (-b)", baudrate)
+    _box("Port name (-D)", portname)
+    _box("Slave address", SLAVE_ADDRESS)
+    _box("Timeout", TIMEOUT)
+    _box("Full file path", os.path.abspath(__file__))
+    _box()
+    _print_out("")
+
+
+def show_current_values(instr):
+    _box()
+    _box("Current values")
+    _box(" ")
+    _box("Process value", instr.read_register(0x1000))
+    _box("Setpoint", instr.read_register(0x1001, 1))
+    _box("Sensor type", instr.read_register(0x1004))
+    _box("Heating/cooling selection", instr.read_register(0x1006))
+    _box("Output 1 value", instr.read_register(0x1012, 1))
+    _box("Output 2 value", instr.read_register(0x1013, 1))
+    _box("System alarm setting", instr.read_register(0x1023))
+    _box("LED status", instr.read_register(0x102A))
+    _box("Pushbutton status", instr.read_register(0x102B))
+    _box("Firmware version", instr.read_register(0x102F))
+    _box("LED AT", instr.read_bit(0x0800))
+    _box("LED Out1", instr.read_bit(0x0801))
+    _box("LED Out2", instr.read_bit(0x0802))
+    _box("LED degF", instr.read_bit(0x0804))
+    _box("LED degC", instr.read_bit(0x0805))
+    _box("RUN/STOP setting", instr.read_bit(0x0814))
+    _box()
+    _print_out(" ")
+
+
+def show_instrument_settings(instr):
+    _print_out("Instrument settings:")
+    _print_out(repr(instr).replace(",", ",\n"))
+    _print_out(" ")
+
+
+def verify_value_for_register(instr, value):
+    # value should be an integer
+    START_READ_ADDR = 0x1000
+    ADDRESS_SETPOINT = 0x1001
+
+    instr.write_register(ADDRESS_SETPOINT, value)
+    assert value == instr.read_register(ADDRESS_SETPOINT)
+    registers = instr.read_registers(START_READ_ADDR, 8)
+    _print_out(registers)
+    assert value == registers[ADDRESS_SETPOINT - START_READ_ADDR]
+
+
+def verify_state_for_bits(instr, state):
+    START_READ_ADDR = 0x800
+    ADDR_UNITSELECTOR = 0x811
+    ADDR_LED_F = 0x804
+    ADDR_LED_C = 0x805
+
+    instr.write_bit(ADDR_UNITSELECTOR, state)  # 1=deg C, 0=deg F
+    bits = instr.read_bits(START_READ_ADDR, 24)
+    _print_out(repr(bits))
+
+    assert bits[ADDR_UNITSELECTOR - START_READ_ADDR] == state
+    assert instr.read_bit(ADDR_UNITSELECTOR) == state
+
+    assert bits[ADDR_LED_C - START_READ_ADDR] == state
+    assert instr.read_bit(ADDR_LED_C) == state
+
+    assert bits[ADDR_LED_F - START_READ_ADDR] != state
+    assert instr.read_bit(ADDR_LED_F) != state
+
+
+def verify_bits(instr):
+    NUMBER_OF_LOOPS = 5
+
+    _print_out("Verifying writing and reading bits")
+    states = [0, 1] * NUMBER_OF_LOOPS
+    for state in states:
+        verify_state_for_bits(instr, state)
+    _print_out("Passed test for writing and reading bits\n")
+
+
+def verify_readonly_register(instr):
+    ADDRESS_FIRMWARE_VERSION = 0x102F
+    NEW_FIRMWARE_VERSION = 300
+
+    _print_out("Verify detecting a READONLY register")
+    did_report_error = False
+    try:
+        instr.write_register(ADDRESS_FIRMWARE_VERSION, NEW_FIRMWARE_VERSION)
+    except minimalmodbus.SlaveReportedException:
+        did_report_error = True
+
+    if not did_report_error:
+        raise ValueError("Failed to detect READONLY register")
+    _print_out("Passed test for READONLY register\n")
+
+
+def verify_register(instr):
+    _print_out("Verify writing and reading a register")
+    for value in range(250, 400, 10):  # Setpoint 25 to 40 deg C
+        verify_value_for_register(instr, value)
+    _print_out("Passed test for writing and reading a register\n")
+
+
+def verify_two_instrument_instances(instr, portname, mode, baudrate):
+    ADDRESS_SETPOINT = 0x1001
+
+    _print_out("Verify using two instrument instances")
+    instr2 = minimalmodbus.Instrument(portname, SLAVE_ADDRESS, mode=mode)
+    instr2.serial.timeout = TIMEOUT
+
+    instr.read_register(ADDRESS_SETPOINT)
+    instr2.read_register(ADDRESS_SETPOINT)
+
+    _print_out("... and verify port closure")
+    instr.clear_buffers_before_each_transaction = False
+    instr2.close_port_after_each_call = True
+    instr.read_register(ADDRESS_SETPOINT)
+    instr2.read_register(ADDRESS_SETPOINT)
+    instr.read_register(ADDRESS_SETPOINT)
+    instr2.read_register(ADDRESS_SETPOINT)
+    _print_out("Passing test for using two instrument instances")
+
+
+def measure_roundtrip_time(instr):
+    ADDR_SETPOINT = 0x1001
+    SECONDS_TO_MILLISECONDS = 1000
+    NUMBER_OF_VALUES = 100
+    START_VALUE = 200
+    STOP_VALUE = 500
+    STEPSIZE = 5
+
+    _print_out("Measure request-response round trip time")
+    _print_out("Setting the setpoint value {} times. Baudrate {} bits/s.".format(
+        NUMBER_OF_VALUES, instr.serial.baudrate
+    ))
+
+    value = START_VALUE
+    step = STEPSIZE
+    start_time = time.time()
+    for i in range(NUMBER_OF_VALUES):
+        if value > STOP_VALUE or value < START_VALUE:
+            step = -step
+        value += step
+        instr.write_register(ADDR_SETPOINT, value, functioncode=6)
+
+    time_per_value = (
+        (time.time() - start_time)
+        * float(SECONDS_TO_MILLISECONDS)
+        / NUMBER_OF_VALUES
+    )
+    _print_out("Time per value: {:0.1f} ms.\n".format(time_per_value))
+
+
+def parse_commandline(argv):
     # Do manual parsing of command line,
     # as none of the modules in the standard library handles python 2.6 to 3.x
 
-    MODE = minimalmodbus.MODE_RTU
-    BAUDRATE = DEFAULT_BAUDRATE
-    PORT_NAME = DEFAULT_PORT_NAME
+    mode = minimalmodbus.MODE_RTU
+    baudrate = DEFAULT_BAUDRATE
+    portname = DEFAULT_PORT_NAME
 
-    for arg in sys.argv:
+    for arg in argv:
         if arg.startswith("-ascii"):
-            MODE = minimalmodbus.MODE_ASCII
+            mode = minimalmodbus.MODE_ASCII
 
         elif arg.startswith("-rtu"):
-            MODE = minimalmodbus.MODE_RTU
+            mode = minimalmodbus.MODE_RTU
 
         elif arg.startswith("-b"):
             if len(arg) < 3:
-                minimalmodbus._print_out("Wrong usage of the -b option. Use -b9600")
+                _print_out("Wrong usage of the -b option. Use -b9600")
                 sys.exit()
-            BAUDRATE = int(arg[2:])
+            baudrate = int(arg[2:])
 
         elif arg.startswith("-D"):
             if len(arg) < 3:
-                minimalmodbus._print_out(
+                _print_out(
                     "Wrong usage of the -D option. Use -D/dev/ttyUSB0 or -DCOM4"
                 )
                 sys.exit()
-            PORT_NAME = arg[2:]
+            portname = arg[2:]
 
-    ################################
-    ## Create instrument instance ##
-    ################################
-    instrument = minimalmodbus.Instrument(PORT_NAME, SLAVE_ADDRESS, MODE)
-    instrument.serial.baudrate = BAUDRATE
-    instrument.serial.timeout = TIMEOUT
-    instrument.debug = False
-    instrument.precalculate_read_size = True
+    return portname, mode, baudrate
 
-    text = "\n"
-    text += "###############################################################\n"
-    text += "## Hardware test with Delta DTB4824                          ##\n"
-    text += "## Minimalmodbus version: {:8}                           ##\n".format(
-        minimalmodbus.__version__
-    )
-    text += "##                                                           ##\n"
-    text += "## Modbus mode:    {:15}                           ##\n".format(
-        instrument.mode
-    )
-    text += "## Python version: {}.{}.{}                                     ##\n".format(
-        sys.version_info[0], sys.version_info[1], sys.version_info[2]
-    )
-    text += "## Baudrate (-b):  {:>5} bits/s                              ##\n".format(
-        instrument.serial.baudrate
-    )
-    text += "## Platform:       {:15}                           ##\n".format(
-        sys.platform
-    )
-    text += "##                                                           ##\n"
-    text += "## Port name (-D): {:15}                           ##\n".format(
-        instrument.serial.port
-    )
-    text += "## Slave address:  {:<15}                           ##\n".format(
-        instrument.address
-    )
-    text += "## Timeout:        {:0.3f} s                                   ##\n".format(
-        instrument.serial.timeout
-    )
-    text += "## Full file path: " + os.path.abspath(__file__) + "\n"
-    text += "###############################################################\n"
-    minimalmodbus._print_out(text)
 
-    minimalmodbus._print_out(repr(instrument))
+def main():
+    portname, mode, baudrate = parse_commandline(sys.argv)
+    show_test_settings(mode, baudrate, portname)
 
-    if RUN_VERIFY_EXAMPLES:
-        #########################################################################################
-        ## Examples from page 11 in the "DTB Series Temperature Controller Instruction Sheet", ##
-        ## version 2010-04-20                                                                  ##
-        #########################################################################################
-        instrument.debug = False
+    inst = minimalmodbus.Instrument(portname, SLAVE_ADDRESS, mode=mode)
+    inst.serial.timeout = TIMEOUT
+    inst.serial.baudrate = baudrate
 
-        # Read two registers starting at 0x1000. This is process value (PV) and setpoint (SV).
-        # Should send '\x01\x03\x10\x00\x00\x02\xc0\xcb' OK!
-        minimalmodbus._print_out("\nReading register 0x1000 and 0x1001:")
-        minimalmodbus._print_out(repr(instrument.read_registers(0x1000, 2)))
+    show_instrument_settings(inst)
+    show_current_values(inst)
+    measure_roundtrip_time(inst)
 
-        # Read 9 bits starting at 0x0810.
-        # Should send '\x01\x02\x08\x10\x00\x09\xbb\xa9' OK!
-        minimalmodbus._print_out("\nReading 9 bits starting at 0x0810:")
-        minimalmodbus._print_out(
-            repr(instrument._performCommand(2, "\x08\x10\x00\x09"))
-        )
-
-        # Write value 800 to register 0x1001. This is a setpoint of 80.0 degrees (Centigrades, dependent on setting).
-        # Should send '\x01\x06\x10\x01\x03\x20\xdd\xe2' OK!
-        instrument.write_register(0x1001, 0x0320, functioncode=6)
-        # Response from instrument: '\x01\x06\x10\x01\x03 \xdd\xe2' OK!
-        # Note that the slave will indicate an error if the CoSH parameter in the controller
-        # does not allow writing.
-        # ASCII mode: Request  ':010610010320C5\r\n'
-        #             Response ':010610010320C5\r\n'
-
-        # Write 1 to one bit at 0x0810. This is "Communication write in enabled".
-        # Should send '\x01\x05\x08\x10\xff\x00\x8f\x9f' OK!
-        instrument.write_bit(0x0810, 1)
-        # Response from instrument: '\x01\x05\x08\x10\xff\x00\x8f\x9f' OK!
-
-        # instrument.read_register(0x1001)
-        # ASCII mode: Request  ':010310010001EA\r\n'
-        #             Response ':0103020320D7\r\n'
-
-    if RUN_READOUT_PRESENT_SETTINGS:
-        ###############################
-        ## Read out present settings ##
-        ###############################
-        instrument.debug = False
-
-        minimalmodbus._print_out("\nPV: " + str(instrument.read_register(0x1000)))
-        minimalmodbus._print_out(
-            "Setpoint: " + str(instrument.read_register(0x1001, 1))
-        )
-        minimalmodbus._print_out(
-            "Sensor type: " + str(instrument.read_register(0x1004))
-        )
-        minimalmodbus._print_out(
-            "Control method: " + str(instrument.read_register(0x1005))
-        )
-        minimalmodbus._print_out(
-            "Heating/cooling selection: " + str(instrument.read_register(0x1006))
-        )
-        minimalmodbus._print_out(
-            "Output 1 value: " + str(instrument.read_register(0x1012, 1))
-        )
-        minimalmodbus._print_out(
-            "Output 2 value: " + str(instrument.read_register(0x1013, 1))
-        )
-        minimalmodbus._print_out(
-            "System alarm setting: " + str(instrument.read_register(0x1023))
-        )
-        minimalmodbus._print_out("LED status: " + str(instrument.read_register(0x102A)))
-        minimalmodbus._print_out(
-            "Pushbutton status: " + str(instrument.read_register(0x102B))
-        )
-        minimalmodbus._print_out(
-            "Firmware version: " + str(instrument.read_register(0x102F))
-        )
-
-        minimalmodbus._print_out("LED AT: " + str(instrument.read_bit(0x0800)))
-        minimalmodbus._print_out("LED Out1: " + str(instrument.read_bit(0x0801)))
-        minimalmodbus._print_out("LED Out2: " + str(instrument.read_bit(0x0802)))
-        minimalmodbus._print_out(
-            "RUN/STOP setting: " + str(instrument.read_bit(0x0814))
-        )
-
-    if RUN_START_AND_STOP_REGULATOR:
-        ###################################################
-        ## Start and stop the regulator, change setpoint ##
-        ###################################################
-        instrument.debug = False
-
-        SLEEP_TIME = 2
-
-        instrument.write_bit(0x0814, 0)  # Stop
-        setpoint_value = 25
-        instrument.write_register(0x1001, setpoint_value, 1, functioncode=6)
-        minimalmodbus._print_out(
-            "\nSetpoint:" + str(instrument.read_register(0x1001, 1))
-        )
-        minimalmodbus._print_out("RUN/STOP setting:" + str(instrument.read_bit(0x0814)))
-        time.sleep(SLEEP_TIME)
-
-        instrument.write_bit(0x0814, 1)  # Run
-        minimalmodbus._print_out(
-            "\nSetpoint:" + str(instrument.read_register(0x1001, 1))
-        )
-        minimalmodbus._print_out("RUN/STOP setting:" + str(instrument.read_bit(0x0814)))
-        time.sleep(SLEEP_TIME)
-
-        setpoint_value = 35
-        instrument.write_register(0x1001, setpoint_value, 1, functioncode=6)
-        minimalmodbus._print_out(
-            "\nSetpoint:" + str(instrument.read_register(0x1001, 1))
-        )
-        minimalmodbus._print_out("RUN/STOP setting:" + str(instrument.read_bit(0x0814)))
-        time.sleep(SLEEP_TIME)
-
-        instrument.write_bit(0x0814, 0)  # Stop
-        minimalmodbus._print_out(
-            "\nSetpoint:" + str(instrument.read_register(0x1001, 1))
-        )
-        minimalmodbus._print_out("RUN/STOP setting:" + str(instrument.read_bit(0x0814)))
-
-    if RUN_MEASURE_ROUNDTRIP_TIME:
-        ####################################################
-        ## Measure roundtrip time                         ##
-        ## Loop setpoint value (20 to 50 deg C, and back) ##
-        ####################################################
-        instrument.debug = False
-
-        NUMBER_OF_VALUES = 100
-
-        START_VALUE = 200
-        STOP_VALUE = 500
-        STEPSIZE = 5
-
-        value = START_VALUE
-        step = STEPSIZE
-
-        text = "\nSetting the SP value {} times. Baudrate {} bits/s.".format(
-            NUMBER_OF_VALUES, instrument.serial.baudrate
-        )
-        minimalmodbus._print_out(text)
-
-        start_time = time.time()
-        for i in range(NUMBER_OF_VALUES):
-            if value > STOP_VALUE or value < START_VALUE:
-                step = -step
-            value += step
-            instrument.write_register(0x1001, value, functioncode=6)
-
-        time_per_value = (
-            (time.time() - start_time)
-            * float(SECONDS_TO_MILLISECONDS)
-            / NUMBER_OF_VALUES
-        )
-        text = "Time per value: {:0.1f} ms.".format(time_per_value)
-        minimalmodbus._print_out(text)
-
-    if RUN_VERIFY_TWO_INSTRUMENTS:
-        #######################################################
-        ## Verify that two instruments can use the same port ##
-        #######################################################
-
-        instrument.debug = False
-        minimalmodbus._print_out("\nInstrument1 SP:")
-        minimalmodbus._print_out(str(instrument.read_register(0x1001, 1)))
-
-        instrument2 = minimalmodbus.Instrument(PORT_NAME, SLAVE_ADDRESS, MODE)
-        instrument2.debug = False
-        instrument2.serial.baudrate = BAUDRATE
-        instrument2.serial.timeout = TIMEOUT
-
-        minimalmodbus._print_out("\nInstrument2 SP:")
-        minimalmodbus._print_out(str(instrument2.read_register(0x1001, 1)))
+    verify_register(inst)
+    verify_readonly_register(inst)
+    verify_bits(inst)
+    verify_two_instrument_instances(inst, portname, mode, baudrate)
+    _print_out(" ")
+    _print_out("All tests did pass")
 
 
 if __name__ == "__main__":
