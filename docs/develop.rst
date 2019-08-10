@@ -522,8 +522,8 @@ Build the source distribution and wheel, and upload to PYPI::
     make upload
 
 
-Test documentation
-``````````````````
+Test the documentation
+``````````````````````
 Test links on the PyPI page. If adjustments are required
 on the PyPI page, log in and manually adjust the text. This might be for
 example parsing problems with the ReST text (allows no Sphinx-specific constructs).
