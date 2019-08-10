@@ -212,10 +212,7 @@ class Instrument:
         else:
             self._print_debug("Serial port {} already exists".format(port))
             self.serial = _serialports[port]
-            if self.serial.port is None:
-                self._print_debug("Serial port {} is None. Opening.".format(port))
-                self.serial.open()
-            if not self.serial.is_open:
+            if (self.serial.port is None) or (not self.serial.is_open):
                 self._print_debug("Serial port {} is closed. Opening.".format(port))
                 self.serial.open()
 
@@ -1573,11 +1570,6 @@ def _parse_payload(
             return _twobyte_string_to_num(
                 registerdata, number_of_decimals, signed=signed
             )
-
-        raise ValueError(
-            "Wrong payloadformat for return value generation. "
-            + "Given {0}".format(payloadformat)
-        )
 
 
 def _embed_payload(slaveaddress, mode, functioncode, payloaddata):

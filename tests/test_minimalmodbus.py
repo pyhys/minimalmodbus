@@ -315,6 +315,11 @@ class TestCreatePayload(ExtendedTestCase):
         self.assertEqual(minimalmodbus._create_payload(16, 105, [2, 4, 8], 0, 3, 0, False, False, _PAYLOADFORMAT_REGISTERS),
                         '\x00\x69\x00\x03\x06\x00\x02\x00\x04\x00\x08')
 
+    def testWrongValues(self):
+        # NOTE: Most of the error checking is done in other methods
+        self.assertRaises(ValueError, minimalmodbus._create_payload, 25, 104, 'A', 0, 4, 0, False, False, _PAYLOADFORMAT_STRING)
+
+
 class TestParsePayload(ExtendedTestCase):
 
     def testKnownValues(self):
@@ -641,10 +646,12 @@ class TestPredictResponseSize(ExtendedTestCase):
     ('rtu',  1,     '\x00\x3e\x00\x07', 6),
     ('rtu',  1,     '\x00\x3e\x00\x08', 6),
     ('rtu',  1,     '\x00\x3e\x00\x09', 7),
+    ('rtu',  2,     '\x00\x3e\x00\x09', 7),
     ('rtu',  3,     'AB\x00\x07', 19),
     ('rtu',  4,     'AB\x00\x07', 19),
     ('rtu',  4,     'AB\x01\x07', 531),
     ('rtu',  5,     '\x00\x47\xff\x00', 8),
+    ('rtu',  6,     '\x00\x47\xFF\xFF', 8),
     ('rtu',  16,    '\x00\x48\x00\x01\x01\x01', 8),
     ('ascii',  1,   '\x00\x3e\x00\x01', 13),
     ('ascii',  1,   '\x00\x3e\x00\x07', 13),
@@ -686,8 +693,8 @@ class TestPredictResponseSize(ExtendedTestCase):
 
     def testWrongInputValue(self):
         self.assertRaises(ValueError, minimalmodbus._predict_response_size, 'asciiii',    6,      'ABCD') # Wrong mode
-        self.assertRaises(ValueError, minimalmodbus._predict_response_size, 'ascii',      999,    'ABCD') # Wrong function code
-        self.assertRaises(ValueError, minimalmodbus._predict_response_size, 'rtu',        999,    'ABCD') # Wrong function code
+        self.assertRaises(ValueError, minimalmodbus._predict_response_size, 'ascii',      35,    'ABCD') # Wrong function code
+        self.assertRaises(ValueError, minimalmodbus._predict_response_size, 'rtu',        35,    'ABCD') # Wrong function code
         self.assertRaises(ValueError, minimalmodbus._predict_response_size, 'ascii',      1,      'ABC')  # Too short message
         self.assertRaises(ValueError, minimalmodbus._predict_response_size, 'rtu',        1,      'ABC')  # Too short message
         self.assertRaises(ValueError, minimalmodbus._predict_response_size, 'ascii',      1,      'AB')   # Too short message
@@ -1918,8 +1925,9 @@ class TestCheckString(ExtendedTestCase):
         self.assertRaises(ValueError, minimalmodbus._check_string, 'DEFG', minlength=1, maxlength=3, description='ABC')
 
     def testNotAscii(self):
-        # TODO When Python3 only, check the force_ascii mechanism
-        pass
+        if sys.version > "3":
+            self.assertRaises(ValueError, minimalmodbus._check_string,
+                "\u0394P", minlength=2, maxlength=2, description='ABC', force_ascii=True)
 
     def testInconsistentLengthlimits(self):
         self.assertRaises(ValueError, minimalmodbus._check_string, 'DEFG', minlength=4,  maxlength=3, description='ABC')
@@ -2068,23 +2076,17 @@ class TestPrintOut(ExtendedTestCase):
 
 class TestDummyCommunication(ExtendedTestCase):
 
-
     ## Test fixture ##
 
     def setUp(self):
 
-        # Prepare a dummy serial port to have proper responses
+        # Prepare a dummy serial port to have proper responses,
+        # and monkey-patch minimalmodbus to use it
         dummy_serial.VERBOSE = False
         dummy_serial.RESPONSES = RTU_RESPONSES
-        dummy_serial.DEFAULT_RESPONSE = 'NotFoundInResponseDictionary'
-        dummy_serial.DEFAULT_TIMEOUT = 0.01
-
-        # Monkey-patch a dummy serial port for testing purpose
         minimalmodbus.serial.Serial = dummy_serial.Serial
 
-        # Initialize a (dummy) instrument
-        self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1, minimalmodbus.MODE_RTU) # port name, slave address (in decimal)
-        self.instrument.debug = False
+        self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1)
 
 
     ## Read bit ##
@@ -2416,13 +2418,14 @@ class TestDummyCommunication(ExtendedTestCase):
         self.instrument.write_string(104, 'ABCDEFGH', 4)
 
     def testWriteStringWrongValue(self):
-        self.assertRaises(ValueError, self.instrument.write_string, -1,    'A') # Wrong register address
+        self.assertRaises(ValueError, self.instrument.write_string, -1,    'A')  # Wrong register address
         self.assertRaises(ValueError, self.instrument.write_string, 65536, 'A')
-        self.assertRaises(ValueError, self.instrument.write_string, 104,   'AAA',       1) # Too long string
+        self.assertRaises(ValueError, self.instrument.write_string, 104,   'AAA',       1)  # Too long string
         self.assertRaises(ValueError, self.instrument.write_string, 104,   'ABCDEFGHI', 4)
-        self.assertRaises(ValueError, self.instrument.write_string, 104,   'A',         -1) # Wrong number of registers
+        self.assertRaises(ValueError, self.instrument.write_string, 104,   'A',         -1)  # Wrong number of registers
         self.assertRaises(ValueError, self.instrument.write_string, 104,   'A',         124)
-        # TODO When Python3 only, add test with non-ASCII characters and force_ascii=True
+        if sys.version > "3":
+            self.assertRaises(ValueError, self.instrument.write_string, 104, "\u0394P", 1)  # Non-ASCII
 
     def testWriteStringWrongType(self):
         for value in _NOT_INTERGERS:
@@ -2733,6 +2736,10 @@ class TestDummyCommunication(ExtendedTestCase):
     ## Tear down test fixture ##
 
     def tearDown(self):
+        try:
+            self.instrument.serial.close()
+        except:
+            pass
         self.instrument = None
         del(self.instrument)
 
@@ -2742,11 +2749,8 @@ class TestDummyCommunicationOmegaSlave1(ExtendedTestCase):
     def setUp(self):
         dummy_serial.VERBOSE = False
         dummy_serial.RESPONSES = RTU_RESPONSES
-        dummy_serial.DEFAULT_RESPONSE = 'NotFoundInResponseDictionary'
-        dummy_serial.DEFAULT_TIMEOUT = 0.01
         minimalmodbus.serial.Serial = dummy_serial.Serial
-        minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = False
-        self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1) # port name, slave address (in decimal)
+        self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1)
 
     def testReadBit(self):
         self.assertEqual( self.instrument.read_bit(2068), 1 )
@@ -2765,20 +2769,20 @@ class TestDummyCommunicationOmegaSlave1(ExtendedTestCase):
         self.instrument.write_register(4097, 823.6, 1)
 
     def tearDown(self):
+        try:
+            self.instrument.serial.close()
+        except:
+            pass
         self.instrument = None
         del(self.instrument)
-
 
 class TestDummyCommunicationOmegaSlave10(ExtendedTestCase):
 
     def setUp(self):
         dummy_serial.VERBOSE = False
         dummy_serial.RESPONSES = RTU_RESPONSES
-        dummy_serial.DEFAULT_RESPONSE = 'NotFoundInResponseDictionary'
-        dummy_serial.DEFAULT_TIMEOUT = 0.01
         minimalmodbus.serial.Serial = dummy_serial.Serial
-        minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = False
-        self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 10) # port name, slave address (in decimal)
+        self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 10)
 
     def testReadBit(self):
         self.assertEqual( self.instrument.read_bit(2068), 1 )
@@ -2797,6 +2801,10 @@ class TestDummyCommunicationOmegaSlave10(ExtendedTestCase):
         self.instrument.write_register(4097, 200.0, 1)
 
     def tearDown(self):
+        try:
+            self.instrument.serial.close()
+        except:
+            pass
         self.instrument = None
         del(self.instrument)
 
@@ -2806,11 +2814,8 @@ class TestDummyCommunicationDTB4824_RTU(ExtendedTestCase):
     def setUp(self):
         dummy_serial.VERBOSE = False
         dummy_serial.RESPONSES = RTU_RESPONSES
-        dummy_serial.DEFAULT_RESPONSE = 'NotFoundInResponseDictionary'
-        dummy_serial.DEFAULT_TIMEOUT = 0.01
         minimalmodbus.serial.Serial = dummy_serial.Serial
-        minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = False
-        self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 7) # port name, slave address (in decimal)
+        self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 7)
 
     def testReadBit(self):
         self.assertEqual( self.instrument.read_bit(0x0800), 0) # LED AT
@@ -2848,19 +2853,21 @@ class TestDummyCommunicationDTB4824_RTU(ExtendedTestCase):
         self.instrument.write_register(0x1001, 25, 1,  functioncode=6) # Setpoint
 
     def tearDown(self):
+        try:
+            self.instrument.serial.close()
+        except:
+            pass
         self.instrument = None
         del(self.instrument)
+
 
 class TestDummyCommunicationDTB4824_ASCII(ExtendedTestCase):
 
     def setUp(self):
         dummy_serial.VERBOSE = False
         dummy_serial.RESPONSES = ASCII_RESPONSES
-        dummy_serial.DEFAULT_RESPONSE = 'NotFoundInResponseDictionary'
-        dummy_serial.DEFAULT_TIMEOUT = 0.01
         minimalmodbus.serial.Serial = dummy_serial.Serial
-        minimalmodbus.CLOSE_PORT_AFTER_EACH_CALL = False
-        self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 7, 'ascii') # port name, slave address (in decimal), mode
+        self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 7, minimalmodbus.MODE_ASCII)
 
     def testReadBit(self):
         self.assertEqual( self.instrument.read_bit(0x0800), 0) # LED AT
@@ -2897,19 +2904,23 @@ class TestDummyCommunicationDTB4824_ASCII(ExtendedTestCase):
         self.instrument.write_register(0x1001, 25, 1,  functioncode=6) # Setpoint
 
     def tearDown(self):
+        try:
+            self.instrument.serial.close()
+        except:
+            pass
         self.instrument = None
         del(self.instrument)
+
 
 class TestDummyCommunicationWithPortClosure(ExtendedTestCase):
 
     def setUp(self):
         dummy_serial.VERBOSE = False
         dummy_serial.RESPONSES = RTU_RESPONSES
-        dummy_serial.DEFAULT_RESPONSE = 'NotFoundInResponseDictionary'
-        dummy_serial.DEFAULT_TIMEOUT = 0.01
         minimalmodbus.serial.Serial = dummy_serial.Serial
-        self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1) # port name, slave address (in decimal)
-        self.instrument.close_port_after_each_call = True # Mimic a WindowsXP serial port
+
+        # Mimic a WindowsXP serial port
+        self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1, close_port_after_each_call = True)
 
     def testReadRegisterSeveralTimes(self):
         self.assertEqual(self.instrument.read_register(289), 770)
@@ -2935,11 +2946,9 @@ class TestVerboseDummyCommunicationWithPortClosure(ExtendedTestCase):
     def setUp(self):
         dummy_serial.VERBOSE = True
         dummy_serial.RESPONSES = RTU_RESPONSES
-        dummy_serial.DEFAULT_RESPONSE = 'NotFoundInResponseDictionary'
-        dummy_serial.DEFAULT_TIMEOUT = 0.01
         minimalmodbus.serial.Serial = dummy_serial.Serial
-        self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1) # port name, slave address (in decimal)
-        self.instrument.close_port_after_each_call = True # Mimic a WindowsXP serial port
+        self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1, debug=True)
+        self.instrument.close_port_after_each_call = True  # Mimic a WindowsXP serial port
 
     def testReadRegister(self):
         self.assertEqual( self.instrument.read_register(289), 770 )
@@ -2953,43 +2962,74 @@ class TestVerboseDummyCommunicationWithPortClosure(ExtendedTestCase):
         del(self.instrument)
 
 
-class TestDummyCommunicationDebugmode(ExtendedTestCase):
+class TestDummyCommunicationThreeInstrumentsPortClosure(ExtendedTestCase):
 
     def setUp(self):
         dummy_serial.VERBOSE = False
         dummy_serial.RESPONSES = RTU_RESPONSES
-        dummy_serial.DEFAULT_RESPONSE = 'NotFoundInResponseDictionary'
-        dummy_serial.DEFAULT_TIMEOUT = 0.01
         minimalmodbus.serial.Serial = dummy_serial.Serial
-        self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1) # port name, slave address (in decimal)
-        self.instrument.debug = True
+        self.instrumentA = minimalmodbus.Instrument(
+            'DUMMYPORTNAME', 1, close_port_after_each_call=True, debug=True
+        )
+        self.instrumentA.serial.baudrate = 2400
+        self.instrumentB = minimalmodbus.Instrument(
+            'DUMMYPORTNAME', 1, close_port_after_each_call=True, debug=True
+        )
+        self.instrumentC = minimalmodbus.Instrument(
+            'DUMMYPORTNAME', 7, close_port_after_each_call=True, debug=True
+        )
 
-    def testReadRegister(self):
-        self.assertEqual( self.instrument.read_register(289), 770 )
+    def testCommunication(self):
+        self.assertEqual(self.instrumentA.read_register(289), 770)
+        self.assertEqual(self.instrumentB.read_register(289), 770)
+        self.assertEqual(self.instrumentC.read_bit(0x0800), 0)
+        self.assertEqual(self.instrumentA.read_register(289), 770)
+        self.assertEqual(self.instrumentB.read_register(289), 770)
+        self.assertEqual(self.instrumentC.read_bit(0x0800), 0)
 
     def tearDown(self):
-        self.instrument = None
-        del(self.instrument)
+        try:
+            self.instrumentA.serial.close()
+        except:
+            pass
+        self.instrumentA = None
+        del(self.instrumentA)
+
+        try:
+            self.instrumentB.serial.close()
+        except:
+            pass
+        self.instrumentB = None
+        del(self.instrumentB)
+
+        try:
+            self.instrumentC.serial.close()
+        except:
+            pass
+        self.instrumentC = None
+        del(self.instrumentC)
+
 
 class TestDummyCommunicationHandleLocalEcho(ExtendedTestCase):
 
     def setUp(self):
         dummy_serial.VERBOSE = True
         dummy_serial.RESPONSES = RTU_RESPONSES
-        dummy_serial.DEFAULT_RESPONSE = 'NotFoundInResponseDictionary'
-        dummy_serial.DEFAULT_TIMEOUT = 0.01
         minimalmodbus.serial.Serial = dummy_serial.Serial
-        self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 20) # port name, slave address (in decimal)
-        self.instrument.debug = True
+        self.instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 20, debug=True)
         self.instrument.handle_local_echo = True
 
     def testReadRegister(self):
-        self.assertEqual( self.instrument.read_register(289), 770 )
+        self.assertEqual(self.instrument.read_register(289), 770)
 
     def testReadRegisterWrongEcho(self):
-        self.assertRaises(IOError, self.instrument.read_register, 290)
+        self.assertRaises(minimalmodbus.LocalEchoError, self.instrument.read_register, 290)
 
     def tearDown(self):
+        try:
+            self.instrument.serial.close()
+        except:
+            pass
         self.instrument = None
         del(self.instrument)
 

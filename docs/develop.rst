@@ -769,7 +769,6 @@ Run it::
 Configurations are made in a [flake8] section of the :file:`tox.ini` file.
 
 
-
 TODO
 ----
 
@@ -778,8 +777,6 @@ See also GitHub issues: https://github.com/pyhys/minimalmodbus/issues
 * Troubleshoot local PDF generation
 * Improve installation troubleshooting
 * Test virtual serial port on Windows using com0com
-* Increase test coverage for minimalmodbus.py
-* Improve the dummy_serial behavior, to better mimic Windows behavior.
 * Unittests for measuring the sleep time in _communicate.
 * Logging instead of _print_out()
 
@@ -792,4 +789,3 @@ Change to Python3 only, and then:
 * Add type hinting
 * Run mypy checks
 * Possibly use pytest instead
-

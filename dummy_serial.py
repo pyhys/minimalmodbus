@@ -26,7 +26,7 @@ __license__ = "Apache License, Version 2.0"
 import sys
 import time
 
-DEFAULT_TIMEOUT = 5
+DEFAULT_TIMEOUT = 0.01
 """The default timeot value in seconds. Used if not set by the constructor."""
 
 
@@ -54,7 +54,7 @@ Intended to be monkey-patched in the calling test module.
 RESPONSES["EXAMPLEREQUEST"] = "EXAMPLERESPONSE"
 
 
-DEFAULT_RESPONSE = "NONE"
+DEFAULT_RESPONSE = "NotFoundInResponseDictionary"
 """Response when no matching message (key) is found in the look-up dictionary.
 
 Should not be an empty string, as that is interpreted as "no data available on port".
@@ -84,7 +84,7 @@ class Serial:
         self._waiting_data = NO_DATA_PRESENT
         self._isOpen = True
         self.port = kwargs["port"]  # Serial port name.
-        self.initial_port_name = self.port  # Initial name given to the serial port
+        self._initial_port_name = self.port  # Initial name given to the serial port
         try:
             self.timeout = kwargs["timeout"]
         except:
@@ -130,7 +130,7 @@ class Serial:
             raise IOError("Dummy_serial: The port is already open")
 
         self._isOpen = True
-        self.port = self.initial_port_name
+        self.port = self._initial_port_name
 
     def close(self):
         """Close a port on dummy_serial."""
