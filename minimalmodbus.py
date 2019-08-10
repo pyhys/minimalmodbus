@@ -600,7 +600,13 @@ class Instrument:
             payloadformat=_PAYLOADFORMAT_LONG,
         )
 
-    def read_float(self, registeraddress, functioncode=3, number_of_registers=2, byteorder=BYTEORDER_BIG):
+    def read_float(
+        self,
+        registeraddress,
+        functioncode=3,
+        number_of_registers=2,
+        byteorder=BYTEORDER_BIG
+    ):
         r"""Read a floating point number from the slave.
 
         Floats are stored in two or more consecutive 16-bit registers in the slave.
@@ -2490,6 +2496,7 @@ def _unpack(formatstring, packed):
 
     return value
 
+
 def _swap(bytestring):
     """Swap characters pairwise in a string.
 
@@ -2509,6 +2516,7 @@ def _swap(bytestring):
     templist = list(bytestring)
     templist[1:length:2], templist[:length:2] = templist[:length:2], templist[1:length:2]
     return "".join(templist)
+
 
 def _hexencode(bytestring, insert_spaces=False):
     r"""Convert a byte string to a hex encoded string.
@@ -3315,8 +3323,8 @@ def _check_response_payload(
     number_of_registers,
     number_of_bits,
     signed,
-    byteorder,
-    payloadformat,
+    byteorder,  # Not used. For keeping same signature as _parse_payload()
+    payloadformat,  # Not used. For keeping same signature as _parse_payload()
 ):
     if functioncode in [1, 2, 3, 4]:
         _check_response_bytecount(payload)
@@ -3780,7 +3788,6 @@ def _check_bool(inputvalue, description="inputvalue"):
 #####################
 
 
-
 def _print_out(inputstring):
     """Print the inputstring. To make it compatible with Python2 and Python3.
 
@@ -3808,7 +3815,7 @@ def _print_out(inputstring):
 
 #     For example, the string ``'\n\x03\x10\x01\x00\x01\xd0q'`` should give something like::
 
-#         TODO: update
+#         T ODO: update
 
 #         Modbus bytestring decoder
 #         Input string (length 8 characters): '\n\x03\x10\x01\x00\x01\xd0q'
@@ -3953,7 +3960,7 @@ def _print_out(inputstring):
 #     For example, the payload ``'\x10\x01\x00\x01'`` for functioncode 3 should give
 #         something like::
 
-#             TODO: Update
+#             T ODO: Update
 
 #     """
 #     raise NotImplementedError()
