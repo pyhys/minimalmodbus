@@ -111,7 +111,7 @@ class Instrument:
     """
 
     def __init__(
-        self, port, slaveaddress, mode=MODE_RTU, close_port_after_each_call=False
+        self, port, slaveaddress, mode=MODE_RTU, close_port_after_each_call=False, debug=False
     ):
         """Initialize instrument and open corresponding serial port."""
         self.address = slaveaddress
@@ -132,9 +132,12 @@ class Instrument:
         New in version 0.5.
         """
 
-        self.debug = False
+        self.debug = debug
         """Set this to :const:`True` to print the communication details.
-        Defaults to :const:`False`."""
+        Defaults to :const:`False`.
+
+        Most often set by the constructor (see the class documentation).
+        """
 
         self.clear_buffers_before_each_transaction = True
         """If this is :const:`True`, the serial port read and write buffers are
@@ -184,7 +187,8 @@ class Instrument:
                 - Defaults to 2.0 s.
         """
 
-        if port not in _serialports or not _serialports[port]:  # TODO ??
+        if port not in _serialports or not _serialports[port]:
+            self._print_debug("Create serial port {}".format(port))
             self.serial = _serialports[port] = serial.Serial(
                 port=port,
                 baudrate=19200,
@@ -195,13 +199,17 @@ class Instrument:
                 write_timeout=2.0,
             )
         else:
+            self._print_debug("Serial port {} already exists".format(port))
             self.serial = _serialports[port]
-            if self.serial.port is None:  # TODO ??
+            if self.serial.port is None:
+                self._print_debug("Serial port {} is None. Opening.".format(port))
                 self.serial.open()
             if not self.serial.is_open:
+                self._print_debug("Serial port {} is closed. Opening.".format(port))
                 self.serial.open()
 
         if self.close_port_after_each_call:
+            self._print_debug("Closing serial port {}".format(port))
             self.serial.close()
 
     def __repr__(self):
@@ -224,6 +232,10 @@ class Instrument:
             self.debug,
             self.serial,
         )
+
+    def _print_debug(self, text):
+        if self.debug:
+            _print_out("MinimalModbus debug mode. " + text)
 
     # ################################# #
     #  Methods for talking to the slave #
@@ -1193,11 +1205,10 @@ class Instrument:
             except Exception:
                 if self.debug:
                     template = (
-                        "MinimalModbus debug mode. Could not precalculate response "
-                        + "size for Modbus {} mode. "
-                        + "Will read {} bytes. request: {!r}"
+                        "Could not precalculate response size for Modbus {} mode. "
+                        + "Will read {} bytes. Request: {!r}"
                     )
-                    _print_out(
+                    self._print_debug(
                         template.format(self.mode, number_of_bytes_to_read, request)
                     )
 
@@ -1259,20 +1270,17 @@ class Instrument:
         _check_string(request, minlength=1, description="request")
         _check_int(number_of_bytes_to_read)
 
-        if self.debug:
-            _print_out(
-                "\nMinimalModbus debug mode. Will write to instrument (expecting"
-                + " {} bytes back): {!r} ({})".format(
+        self._print_debug("Will write to instrument (expecting {} bytes back): {!r} ({})".format(
                     number_of_bytes_to_read, request, _hexlify(request)
                 )
             )
 
         if not self.serial.is_open:
+            self._print_debug("Opening port {}".format(self.serial.port))
             self.serial.open()
 
         if self.clear_buffers_before_each_transaction:
-            if self.debug:
-                _print_out("Clearing serial buffers ...")
+            self._print_debug("Clearing serial buffers for port {}".format(self.serial.port))
             self.serial.reset_input_buffer()
             self.serial.reset_output_buffer()
 
@@ -1290,7 +1298,7 @@ class Instrument:
 
             if self.debug:
                 template = (
-                    "MinimalModbus debug mode. Sleeping {:.2f} ms before sending. "
+                    "Sleeping {:.2f} ms before sending. "
                     + "Minimum silent period: {:.2f} ms, time since read: {:.2f} ms."
                 )
                 text = template.format(
@@ -1298,20 +1306,20 @@ class Instrument:
                     minimum_silent_period * _SECONDS_TO_MILLISECONDS,
                     time_since_read * _SECONDS_TO_MILLISECONDS,
                 )
-                _print_out(text)
+                self._print_debug(text)
 
             time.sleep(sleep_time)
 
         elif self.debug:
             template = (
-                "MinimalModbus debug mode. No sleep required before write. "
+                "No sleep required before write. "
                 + "Time since previous read: {:.2f} ms, minimum silent period: {:.2f} ms."
             )
             text = template.format(
                 time_since_read * _SECONDS_TO_MILLISECONDS,
                 minimum_silent_period * _SECONDS_TO_MILLISECONDS,
             )
-            _print_out(text)
+            self._print_debug(text)
 
         # Write request
         latest_write_time = _now()
@@ -1321,11 +1329,11 @@ class Instrument:
         if self.handle_local_echo:
             local_echo_to_discard = self.serial.read(len(request))
             if self.debug:
-                template = "MinimalModbus debug mode. Discarding this local echo: {!r} ({} bytes)."
+                template = "Discarding this local echo: {!r} ({} bytes)."
                 text = template.format(
                     local_echo_to_discard, len(local_echo_to_discard)
                 )
-                _print_out(text)
+                self._print_debug(text)
             if local_echo_to_discard != request:
                 template = (
                     "Local echo handling is enabled, but the local echo does "
@@ -1345,6 +1353,7 @@ class Instrument:
         _latest_read_times[self.serial.port] = _now()
 
         if self.close_port_after_each_call:
+            self._print_debug("Closing port {}".format(self.serial.port))
             self.serial.close()
 
         if sys.version_info[0] > 2:
@@ -1353,7 +1362,7 @@ class Instrument:
 
         if self.debug:
             template = (
-                "MinimalModbus debug mode. Response from instrument: {!r} ({}) ({} bytes), "
+                "Response from instrument: {!r} ({}) ({} bytes), "
                 + "roundtrip time: {:.1f} ms. Timeout for reading: {:.1f} ms.\n"
             )
             text = template.format(
@@ -1364,7 +1373,7 @@ class Instrument:
                 * _SECONDS_TO_MILLISECONDS,
                 self.serial.timeout * _SECONDS_TO_MILLISECONDS,
             )
-            _print_out(text)
+            self._print_debug(text)
 
         if not answer:
             raise NoResponseError("No communication with the instrument (no answer)")
@@ -3767,6 +3776,7 @@ def _check_bool(inputvalue, description="inputvalue"):
 #####################
 
 
+
 def _print_out(inputstring):
     """Print the inputstring. To make it compatible with Python2 and Python3.
 
@@ -3780,6 +3790,7 @@ def _print_out(inputstring):
     _check_string(inputstring, description="string to print")
 
     sys.stdout.write(inputstring + "\n")
+    sys.stdout.flush()
 
 
 # def _interpretRawMessage(inputstr):
