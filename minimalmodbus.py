@@ -14,7 +14,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-"""MinimalModbus: A Python driver for the Modbus RTU/ASCII via serial port (via RS485 or RS232)."""
+"""MinimalModbus: A Python driver for Modbus RTU/ASCII via serial port (via USB, RS485 or RS232)."""
 
 __author__ = "Jonas Berg"
 __license__ = "Apache License, Version 2.0"
@@ -107,6 +107,7 @@ class Instrument:
         * mode (str): Mode selection. Can be MODE_RTU or MODE_ASCII.
         * close_port_after_each_call (bool): If the serial port should be closed after
           each call to the instrument.
+        * debug (bool): Set this to :const:`True` to print the communication details
 
     """
 
@@ -122,12 +123,16 @@ class Instrument:
         """Slave mode (str), can be MODE_RTU or MODE_ASCII.
         Most often set by the constructor (see the class documentation).
 
+        Changing this will not affect how other instruments use the same serial port.
+
         New in version 0.6.
         """
 
         self.precalculate_read_size = True
         """If this is :const:`False`, the serial port reads until timeout
         instead of just reading a specific number of bytes. Defaults to :const:`True`.
+
+        Changing this will not affect how other instruments use the same serial port.
 
         New in version 0.5.
         """
@@ -137,12 +142,15 @@ class Instrument:
         Defaults to :const:`False`.
 
         Most often set by the constructor (see the class documentation).
+
+        Changing this will not affect how other instruments use the same serial port.
         """
 
         self.clear_buffers_before_each_transaction = True
         """If this is :const:`True`, the serial port read and write buffers are
         cleared before each request to the instrument, to avoid cumulative byte
         sync errors across multiple messages. Defaults to :const:`True`.
+
         Changing this will not affect how other instruments use the same serial port.
 
         New in version 1.0.
@@ -150,8 +158,9 @@ class Instrument:
 
         self.close_port_after_each_call = close_port_after_each_call
         """If this is :const:`True`, the serial port will be closed after each
-        call. Defaults to :const:`False`. Changing this will not affect how other
-        instruments use the same serial port.
+        call. Defaults to :const:`False`.
+
+        Changing this will not affect how other instruments use the same serial port.
 
         Most often set by the constructor (see the class documentation).
         """
@@ -161,8 +170,9 @@ class Instrument:
         Then the transmitted message will immeadiately appear at the receive
         line of the RS-485 adaptor. MinimalModbus will then read and discard
         this data, before reading the data from the slave.
-        Defaults to :const:`False`. Changing this will not affect how other
-        instruments use the same serial port.
+        Defaults to :const:`False`.
+
+        Changing this will not affect how other instruments use the same serial port.
 
         New in version 0.7.
         """
@@ -171,6 +181,7 @@ class Instrument:
         """The serial port object as defined by the pySerial module. Created by the constructor.
 
         Attributes that could be changed after initialisation:
+
             - port (str):      Serial port name.
                 - Most often set by the constructor (see the class documentation).
             - baudrate (int):  Baudrate in Baud.
@@ -338,9 +349,8 @@ class Instrument:
         Args:
             * registeraddress (int): The slave register start address (use decimal
               numbers, not hex).
-            * values (list of int or bool): 0 or 1, or True or False
-
-        The first value in the list is for the bit at the given address.
+            * values (list of int or bool): 0 or 1, or True or False. The first
+              value in the list is for the bit at the given address.
 
         Returns:
             None
@@ -602,8 +612,8 @@ class Instrument:
         There are differences in the byte order used by different manufacturers.
         A floating point value of 1.0 is encoded (in single precision) as 3f800000
         (hex). In this implementation the data will be sent as ``'\x3f\x80'``
-        and ``'\x00\x00'`` to two consecutetive registers . Make sure to test that
-        it makes sense for your instrument.
+        and ``'\x00\x00'`` to two consecutetive registers by default. Make sure to test that
+        it makes sense for your instrument. If not, change the ``byteorder`` argument.
 
         Args:
             * registeraddress (int): The slave register start address (use decimal
@@ -804,7 +814,8 @@ class Instrument:
         (two's complement) must be done manually.
 
         Returns:
-            The register data (a list of int).
+            The register data (a list of int). The first value in the list is for
+            the register at the given address.
 
         Raises:
             TypeError, ValueError, ModbusException,
@@ -840,7 +851,8 @@ class Instrument:
             * registeraddress (int): The slave register start address (use decimal
               numbers, not hex).
             * values (list of int): The values to store in the slave registers,
-              max 123 values.
+              max 123 values. The first value in the list is for the register
+              at the given address.
 
         .. note:: The parameter number_of_registers was named numberOfRegisters
                   before MinimalModbus 1.0

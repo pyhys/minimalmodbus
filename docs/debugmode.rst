@@ -8,11 +8,10 @@ Debug mode
 ----------
 To switch on the debug mode, where the communication details are printed::
 
-    #!/usr/bin/env python
+    #!/usr/bin/env python3
     import minimalmodbus
 
-    instrument = minimalmodbus.Instrument('/dev/ttyUSB1', 1) # port name, slave address (in decimal)
-    instrument.debug = True
+    instrument = minimalmodbus.Instrument('/dev/ttyUSB1', 1, debug = True)
     print(instrument.read_register(289, 1))
 
 With this you can easily see what is sent to and from your instrument, and immediately see what is wrong.

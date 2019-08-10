@@ -29,7 +29,7 @@ For this reason there is type checking for for the parameters in most functions.
 This is rather un-pythonic, but is intended to give more clear error
 messages (for easier remote support).
 
-Note that the term 'address' is ambigous, why it is better
+Note that the term 'address' is ambiguous, why it is better
 to use the terms 'register address' or 'slave address'.
 
 Use only external links in the README.txt, otherwise they will not work on Python
@@ -226,10 +226,10 @@ A dummy serial port is included for testing purposes, see :mod:`dummy_serial`. U
 
     >>> import dummy_serial
     >>> import test_minimalmodbus
-    >>> dummy_serial.RESPONSES = test_minimalmodbus.RESPONSES # Load previously recorded responses
+    >>> dummy_serial.RESPONSES = test_minimalmodbus.RESPONSES  # Load previously recorded responses
     >>> import minimalmodbus
-    >>> minimalmodbus.serial.Serial = dummy_serial.Serial # Monkey-patch a dummy serial port
-    >>> instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1) # port name, slave address (in decimal)
+    >>> minimalmodbus.serial.Serial = dummy_serial.Serial  # Monkey-patch a dummy serial port
+    >>> instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1)  # port name, slave address (in decimal)
     >>> instrument.read_register(4097, 1)
     823.6
 
@@ -253,10 +253,10 @@ The dummy serial port can be used also with instrument drivers built on top of M
 
     >>> import dummy_serial
     >>> import test_omegacn7500
-    >>> dummy_serial.RESPONSES = test_omegacn7500.RESPONSES # Load previously recorded responses
+    >>> dummy_serial.RESPONSES = test_omegacn7500.RESPONSES  # Load previously recorded responses
     >>> import omegacn7500
-    >>> omegacn7500.minimalmodbus.serial.Serial = dummy_serial.Serial # Monkey-patch a dummy serial port
-    >>> instrument = omegacn7500.OmegaCN7500('DUMMYPORTNAME', 1) # port name, slave address
+    >>> omegacn7500.minimalmodbus.serial.Serial = dummy_serial.Serial  # Monkey-patch a dummy serial port
+    >>> instrument = omegacn7500.OmegaCN7500('DUMMYPORTNAME', 1)  # port name, slave address
     >>> instrument.get_pv()
     24.6
 
@@ -264,7 +264,7 @@ To see the generated request data (without bothering about the response)::
 
     >>> import dummy_serial
     >>> import minimalmodbus
-    >>> minimalmodbus.serial.Serial = dummy_serial.Serial # Monkey-patch a dummy serial port
+    >>> minimalmodbus.serial.Serial = dummy_serial.Serial  # Monkey-patch a dummy serial port
     >>> instrument = minimalmodbus.Instrument('DUMMYPORTNAME', 1)
     >>> instrument.debug = True
     >>> instrument.read_bit(2068)
@@ -297,7 +297,7 @@ Type conversion in Python3
 ```````````````````````````
 To convert a **string** to **bytes**, use one of these::
 
-    bytes(st, 'latin1') # Note that 'ascii' encoding gives error for some values.
+    bytes(st, 'latin1')  # Note that 'ascii' encoding gives error for some values.
     st.encode('latin1')
 
 To convert **bytes** to **string**, use one of these::
@@ -320,13 +320,13 @@ synonym for :func:`str`.
 
 To convert from '**bytes**'(**string**) to **string**::
 
-    str(by) # not possible to give encoding
-    by.decode('latin1') # Gives unicode
+    str(by)  # not possible to give encoding
+    by.decode('latin1')  # Gives unicode
 
 To convert from **string** to '**bytes**'(**string**)::
 
-    bytes(st) # not possible to give encoding
-    st.encode('latin1') # Can not be used for values larger than 127
+    bytes(st)  # not possible to give encoding
+    st.encode('latin1')  # Can not be used for values larger than 127
 
 It is thus not possible to use exactly the same code for both Python2 and Python3.
 Where it is unavoidable, use::

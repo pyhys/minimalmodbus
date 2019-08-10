@@ -69,7 +69,8 @@ Some extensions not covered by the official standard
     These require 32 bits, and are implemented as two consecutive 16-bit registers.
     The range is 0 to 4294967295, which is called 'unsigned INT32'. Alternatively
     negative values can be stored if the instrument is defined that way, and is
-    then called 'INT32' which has the range -2147483648 to 2147483647.
+    then called 'INT32' which has the range -2147483648 to 2147483647. Unfortunately
+    the byte order might differ between manufacturers of Modbus instruments.
 
 **Floats (single or double precision)**
     Single precision floating point values (binary32) are defined by 32 bits (4 bytes),
