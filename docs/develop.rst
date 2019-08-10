@@ -523,25 +523,25 @@ Build the source distribution and wheel, and upload to PYPI::
 
 
 Test documentation
-`````````````````````
+``````````````````
 Test links on the PyPI page. If adjustments are required
 on the PyPI page, log in and manually adjust the text. This might be for
 example parsing problems with the ReST text (allows no Sphinx-specific constructs).
 
 
 Force documentation rebuild on readthedocs
-````````````````````````````````````````````
+``````````````````````````````````````````
 Log in to https://readthedocs.org and force rebuild on the master branch
 
 
-Test installer
-``````````````
+Test the installers
+```````````````````
 Make sure that the installer works, and the dependencies are handled correctly.
 Try at least Linux and Windows.
 
 
 Test on hardware
-`````````````````````
+````````````````
 Test the package on hardware from Linux and Windows.
 
 

@@ -112,7 +112,12 @@ class Instrument:
     """
 
     def __init__(
-        self, port, slaveaddress, mode=MODE_RTU, close_port_after_each_call=False, debug=False
+        self,
+        port,
+        slaveaddress,
+        mode=MODE_RTU,
+        close_port_after_each_call=False,
+        debug=False,
     ):
         """Initialize instrument and open corresponding serial port."""
         self.address = slaveaddress
@@ -513,7 +518,9 @@ class Instrument:
             payloadformat=_PAYLOADFORMAT_REGISTER,
         )
 
-    def read_long(self, registeraddress, functioncode=3, signed=False, byteorder=BYTEORDER_BIG):
+    def read_long(
+        self, registeraddress, functioncode=3, signed=False, byteorder=BYTEORDER_BIG
+    ):
         """Read a long integer (32 bits) from the slave.
 
         Long integers (32 bits = 4 bytes) are stored in two consecutive 16-bit
@@ -605,7 +612,7 @@ class Instrument:
         registeraddress,
         functioncode=3,
         number_of_registers=2,
-        byteorder=BYTEORDER_BIG
+        byteorder=BYTEORDER_BIG,
     ):
         r"""Read a floating point number from the slave.
 
@@ -660,7 +667,9 @@ class Instrument:
             payloadformat=_PAYLOADFORMAT_FLOAT,
         )
 
-    def write_float(self, registeraddress, value, number_of_registers=2, byteorder=BYTEORDER_BIG):
+    def write_float(
+        self, registeraddress, value, number_of_registers=2, byteorder=BYTEORDER_BIG
+    ):
         """Write a floating point number to the slave.
 
         Floats are stored in two or more consecutive 16-bit registers in the slave.
@@ -1285,17 +1294,20 @@ class Instrument:
         _check_string(request, minlength=1, description="request")
         _check_int(number_of_bytes_to_read)
 
-        self._print_debug("Will write to instrument (expecting {} bytes back): {!r} ({})".format(
-                    number_of_bytes_to_read, request, _hexlify(request)
-                )
+        self._print_debug(
+            "Will write to instrument (expecting {} bytes back): {!r} ({})".format(
+                number_of_bytes_to_read, request, _hexlify(request)
             )
+        )
 
         if not self.serial.is_open:
             self._print_debug("Opening port {}".format(self.serial.port))
             self.serial.open()
 
         if self.clear_buffers_before_each_transaction:
-            self._print_debug("Clearing serial buffers for port {}".format(self.serial.port))
+            self._print_debug(
+                "Clearing serial buffers for port {}".format(self.serial.port)
+            )
             self.serial.reset_input_buffer()
             self.serial.reset_output_buffer()
 
@@ -1504,7 +1516,9 @@ def _create_payload(
         elif payloadformat == _PAYLOADFORMAT_STRING:
             registerdata = _textstring_to_bytestring(value, number_of_registers)
         elif payloadformat == _PAYLOADFORMAT_LONG:
-            registerdata = _long_to_bytestring(value, signed, number_of_registers, byteorder)
+            registerdata = _long_to_bytestring(
+                value, signed, number_of_registers, byteorder
+            )
         elif payloadformat == _PAYLOADFORMAT_FLOAT:
             registerdata = _float_to_bytestring(value, number_of_registers, byteorder)
         elif payloadformat == _PAYLOADFORMAT_REGISTERS:
@@ -1560,10 +1574,7 @@ def _parse_payload(
 
         elif payloadformat == _PAYLOADFORMAT_LONG:
             return _bytestring_to_long(
-                registerdata,
-                signed,
-                number_of_registers,
-                byteorder,
+                registerdata, signed, number_of_registers, byteorder
             )
 
         elif payloadformat == _PAYLOADFORMAT_FLOAT:
@@ -1699,7 +1710,7 @@ def _extract_payload(response, slaveaddress, mode, functioncode):
                     _ASCII_HEADER, response
                 )
             )
-        elif response[-len(_ASCII_FOOTER):] != _ASCII_FOOTER:
+        elif response[-len(_ASCII_FOOTER) :] != _ASCII_FOOTER:
             raise InvalidResponseError(
                 "Did not find footer "
                 + "({!r}) as end of ASCII response. The plain response is: {!r}".format(
@@ -1731,7 +1742,7 @@ def _extract_payload(response, slaveaddress, mode, functioncode):
         number_of_checksum_bytes = NUMBER_OF_CRC_BYTES
 
     received_checksum = response[-number_of_checksum_bytes:]
-    response_without_checksum = response[0:(len(response) - number_of_checksum_bytes)]
+    response_without_checksum = response[0 : (len(response) - number_of_checksum_bytes)]
     calculated_checksum = calculate_checksum(response_without_checksum)
 
     if received_checksum != calculated_checksum:
@@ -2035,7 +2046,9 @@ def _twobyte_string_to_num(bytestring, number_of_decimals=0, signed=False):
     return fullregister / float(divisor)
 
 
-def _long_to_bytestring(value, signed=False, number_of_registers=2, byteorder=BYTEORDER_BIG):
+def _long_to_bytestring(
+    value, signed=False, number_of_registers=2, byteorder=BYTEORDER_BIG
+):
     """Convert a long integer to a bytestring.
 
     Long integers (32 bits = 4 bytes) are stored in two consecutive 16-bit registers
@@ -2061,10 +2074,7 @@ def _long_to_bytestring(value, signed=False, number_of_registers=2, byteorder=BY
         number_of_registers, minvalue=2, maxvalue=2, description="number of registers"
     )
     _check_int(
-            byteorder,
-            minvalue=0,
-            maxvalue=_MAX_BYTEORDER_VALUE,
-            description="byteorder",
+        byteorder, minvalue=0, maxvalue=_MAX_BYTEORDER_VALUE, description="byteorder"
     )
 
     if byteorder in [BYTEORDER_BIG, BYTEORDER_BIG_SWAP]:
@@ -2084,7 +2094,9 @@ def _long_to_bytestring(value, signed=False, number_of_registers=2, byteorder=BY
     return outstring
 
 
-def _bytestring_to_long(bytestring, signed=False, number_of_registers=2, byteorder=BYTEORDER_BIG):
+def _bytestring_to_long(
+    bytestring, signed=False, number_of_registers=2, byteorder=BYTEORDER_BIG
+):
     """Convert a bytestring to a long integer.
 
     Long integers (32 bits = 4 bytes) are stored in two consecutive 16-bit registers
@@ -2110,10 +2122,7 @@ def _bytestring_to_long(bytestring, signed=False, number_of_registers=2, byteord
         number_of_registers, minvalue=2, maxvalue=2, description="number of registers"
     )
     _check_int(
-            byteorder,
-            minvalue=0,
-            maxvalue=_MAX_BYTEORDER_VALUE,
-            description="byteorder",
+        byteorder, minvalue=0, maxvalue=_MAX_BYTEORDER_VALUE, description="byteorder"
     )
 
     if byteorder in [BYTEORDER_BIG, BYTEORDER_BIG_SWAP]:
@@ -2164,10 +2173,7 @@ def _float_to_bytestring(value, number_of_registers=2, byteorder=BYTEORDER_BIG):
         number_of_registers, minvalue=2, maxvalue=4, description="number of registers"
     )
     _check_int(
-            byteorder,
-            minvalue=0,
-            maxvalue=_MAX_BYTEORDER_VALUE,
-            description="byteorder",
+        byteorder, minvalue=0, maxvalue=_MAX_BYTEORDER_VALUE, description="byteorder"
     )
 
     if byteorder in [BYTEORDER_BIG, BYTEORDER_BIG_SWAP]:
@@ -2219,10 +2225,7 @@ def _bytestring_to_float(bytestring, number_of_registers=2, byteorder=BYTEORDER_
         number_of_registers, minvalue=2, maxvalue=4, description="number of registers"
     )
     _check_int(
-            byteorder,
-            minvalue=0,
-            maxvalue=_MAX_BYTEORDER_VALUE,
-            description="byteorder",
+        byteorder, minvalue=0, maxvalue=_MAX_BYTEORDER_VALUE, description="byteorder"
     )
     number_of_bytes = _NUMBER_OF_BYTES_PER_REGISTER * number_of_registers
 
@@ -2402,7 +2405,7 @@ def _bytestring_to_valuelist(bytestring, number_of_registers):
     values = []
     for i in range(number_of_registers):
         offset = _NUMBER_OF_BYTES_PER_REGISTER * i
-        substring = bytestring[offset:(offset + _NUMBER_OF_BYTES_PER_REGISTER)]
+        substring = bytestring[offset : (offset + _NUMBER_OF_BYTES_PER_REGISTER)]
         values.append(_twobyte_string_to_num(substring))
 
     return values
@@ -2511,10 +2514,15 @@ def _swap(bytestring):
     length = len(bytestring)
     if length % 2:
         raise ValueError(
-            "The length of the bytestring should be even. Given {!r}.".format(bytestring)
+            "The length of the bytestring should be even. Given {!r}.".format(
+                bytestring
+            )
         )
     templist = list(bytestring)
-    templist[1:length:2], templist[:length:2] = templist[:length:2], templist[1:length:2]
+    templist[1:length:2], templist[:length:2] = (
+        templist[:length:2],
+        templist[1:length:2],
+    )
     return "".join(templist)
 
 
@@ -2677,7 +2685,7 @@ def _bits_to_bytestring(valuelist):
     list_position = 0
     outputstring = ""
     while list_position < len(valuelist):
-        sublist = valuelist[list_position:(list_position + _BITS_PER_BYTE)]
+        sublist = valuelist[list_position : (list_position + _BITS_PER_BYTE)]
 
         bytevalue = 0
         for bitposition, value in enumerate(sublist):
@@ -3611,9 +3619,7 @@ def _check_string(
     except TypeError:
         raise TypeError(
             "The exception_type must be an exception class. "
-            + "It not even a class. Given: {0!r}".format(
-                type(exception_type)
-            )
+            + "It not even a class. Given: {0!r}".format(type(exception_type))
         )
     if not issubclass(exception_type, Exception):
         raise TypeError(
