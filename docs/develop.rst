@@ -775,6 +775,9 @@ TODO
 
 See also GitHub issues: https://github.com/pyhys/minimalmodbus/issues
 
+* Troubleshoot local PDF generation
+* Improve installation troubleshooting
+* Test virtual serial port on Windows using com0com
 * Increase test coverage for minimalmodbus.py
 * Improve the dummy_serial behavior, to better mimic Windows behavior.
 * Unittests for measuring the sleep time in _communicate.

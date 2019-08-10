@@ -2163,6 +2163,10 @@ class TestDummyCommunication(ExtendedTestCase):
         self.assertEqual(self.instrument.read_bits(19, 19, functioncode=1),
                          [1, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1])
 
+        # Recorded on Delta DTB4824
+        self.assertEqual(self.instrument.read_bits(0x800, 16),
+                         [0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0])
+
     def testReadBitsWrongValue(self):
         self.assertRaises(ValueError, self.instrument.read_bits, -1, 4)
 
@@ -2820,7 +2824,8 @@ class TestDummyCommunicationDTB4824_RTU(ExtendedTestCase):
         self.instrument.write_bit(0x0814, 1) # RUN
 
     def testReadBits(self):
-        self.assertEqual( self.instrument._perform_command(2, '\x08\x10\x00\x09'), '\x02\x07\x00')
+        self.assertEqual(self.instrument._perform_command(2, '\x08\x10\x00\x09'),
+                         '\x02\x07\x00')
 
     def testReadRegister(self):
         self.assertEqual( self.instrument.read_register(0x1000), 64990) # Process value (PV)
@@ -3082,6 +3087,13 @@ GOOD_RTU_RESPONSES['\x01\x01' + '\x00\x13\x00\x13' + '\x8c\x02'] = '\x01\x01' + 
 # Message:  Slave address 1, function code 2. Register address 196, 22 coils. CRC.
 # Response: Slave address 1, function code 2. 3 bytes, values. CRC.
 GOOD_RTU_RESPONSES['\x01\x02' + '\x00\xC4\x00\x16' + '\xB89'] = '\x01\x02' + '\x03\xAC\xDB\x35' + '"\x88'
+
+# Read 16 bits starting at address 0x800 on slave 1 using function code 2.
+# Recorded on Delta DTB4824
+# ----------------------------------------------------------------------------------------- #
+# Message:  Slave address 1, function code 2. Register address 0x800, 16 coils. CRC.
+# Response: Slave address 1, function code 2. 2 bytes, values. CRC.
+GOOD_RTU_RESPONSES['\x01\x02' + '\x08\x00\x00\x10' + '\x7B\xA6'] = '\x01\x02' + '\x02\x20\x0f' + '\xE0\x7C'
 
 
 #                ##  WRITE BITS  ##
