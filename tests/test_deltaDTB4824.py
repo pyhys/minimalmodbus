@@ -110,7 +110,7 @@ import time
 import minimalmodbus
 
 SLAVE_ADDRESS = 1
-TIMEOUT = 0.2  # seconds. At least 0.2 seconds required for 2400 bits/s.
+TIMEOUT = 0.3  # seconds. At least 0.3 seconds required for 2400 bits/s ASCII mode.
 DEFAULT_PORT_NAME = "/dev/ttyUSB0"
 DEFAULT_BAUDRATE = 38400  # baud (pretty much bits/s). Use 2400 or 38400 bits/s.
 
@@ -156,7 +156,7 @@ def show_current_values(instr):
     _box()
     _box("Current values")
     _box(" ")
-    _box("Process value", instr.read_register(0x1000))
+    _box("Process value", instr.read_register(0x1000, 1))
     _box("Setpoint", instr.read_register(0x1001, 1))
     _box("Sensor type", instr.read_register(0x1004))
     _box("Heating/cooling selection", instr.read_register(0x1006))
