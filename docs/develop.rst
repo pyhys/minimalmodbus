@@ -465,7 +465,7 @@ Preparation for release
 Change version number etc
 `````````````````````````
 * Manually change the ``__version__`` field in the :file:`minimalmodbus.py` source file.
-* Manually change the release date in :file:`CHANGES.txt`
+* Manually change the release date in :file:`HISTORY.rst`
 
 (Note that the version number in the Sphinx configuration file :file:`doc/conf.py`
 and in the file :file:`setup.py` are changed automatically.
@@ -510,8 +510,7 @@ Make a tag in the git repository. See below.
 
 GitHub
 ``````````````````````
-Log in to GitHub and register the tag as an offical release.
-In the release notes, paste text from HISTORY.rst.
+Releases are automatically generated on GitHub from tags in the repo.
 
 
 Upload to PyPI
@@ -531,7 +530,9 @@ example parsing problems with the ReST text (allows no Sphinx-specific construct
 
 Force documentation rebuild on readthedocs
 ``````````````````````````````````````````
-Log in to https://readthedocs.org and force rebuild on the master branch
+Log in to https://readthedocs.org and force rebuild on the master branch.
+
+Enable the "master" and "stable" documentation versions.
 
 
 Test the installers
@@ -539,10 +540,26 @@ Test the installers
 Make sure that the installer works, and the dependencies are handled correctly.
 Try at least Linux and Windows.
 
+On windows you might need to use::
+
+    py -m pip install minimalmodbus
+
 
 Test on hardware
 ````````````````
-Test the package on hardware from Linux and Windows.
+Test the package on hardware from Linux and Windows. Download the file ``test_deltaDTB4824.py``.
+
+To run the hardware test on Windows::
+
+    C:\Python27>python.exe C:\Users\jonas\Documents\Pythonprogram\testmodbus\test_deltaDTB4824.py -DCOM7 -b2400 -ascii
+
+For python3 you might need to use the ``py`` command.
+
+
+Begin a new development version
+```````````````````````````````
+Check in a new version on GitHub master branch.
+If the previous release was ``X.Y.Z``, then use ``X.Y.(Z+1)a1``.
 
 
 Backup
