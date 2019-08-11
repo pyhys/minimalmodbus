@@ -3,6 +3,12 @@
 History
 =======
 
+Release 1.0.2 (2019-08-11)
+--------------------------
+* Adjusted settings for hardware tests
+* Improved developer documentation
+
+
 Release 1.0.1 (2019-08-10)
 --------------------------
 * Corrected version number
