@@ -22,7 +22,7 @@ __status__ = "Production"
 __url__ = "https://github.com/pyhys/minimalmodbus"
 __version__ = "1.0.3a1"
 
-
+from gpiozero import LEDBoard
 import os
 import struct
 import sys
@@ -88,6 +88,10 @@ _ALL_PAYLOADFORMATS = [
     _PAYLOADFORMAT_REGISTERS,
     _PAYLOADFORMAT_STRING,
 ]
+
+#impl test
+from time import sleep
+RTS = LEDBoard(17, 18)
 
 # ######################## #
 # Modbus instrument object #
@@ -1350,7 +1354,12 @@ class Instrument:
 
         # Write request
         latest_write_time = _now()
+        #impl test
+        RTS.on()
+        sleep(0.01)
         self.serial.write(request)
+        sleep(0.009)
+        RTS.off()
 
         # Read and discard local echo
         if self.handle_local_echo:
