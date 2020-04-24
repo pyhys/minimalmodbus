@@ -1169,6 +1169,9 @@ class Instrument:
         # Communicate with instrument
         payload_from_slave = self._perform_command(functioncode, payload_to_slave)
 
+        if self.address == 0:
+            return None
+
         # Parse response payload
         return _parse_payload(
             payload_from_slave,
@@ -1221,7 +1224,9 @@ class Instrument:
 
         # Calculate number of bytes to read
         number_of_bytes_to_read = DEFAULT_NUMBER_OF_BYTES_TO_READ
-        if self.precalculate_read_size:
+        if self.address == 0:
+            number_of_bytes_to_read = 0
+        elif self.precalculate_read_size:
             try:
                 number_of_bytes_to_read = _predict_response_size(
                     self.mode, functioncode, payload_to_slave
@@ -1239,6 +1244,8 @@ class Instrument:
         # Communicate
         response = self._communicate(request, number_of_bytes_to_read)
 
+        if number_of_bytes_to_read == 0:
+            return ''
         # Extract payload
         payload_from_slave = _extract_payload(
             response, self.address, self.mode, functioncode
@@ -1376,7 +1383,11 @@ class Instrument:
                 raise LocalEchoError(text)
 
         # Read response
-        answer = self.serial.read(number_of_bytes_to_read)
+        if number_of_bytes_to_read > 0:
+            answer = self.serial.read(number_of_bytes_to_read)
+        else:
+            answer = b''
+            self.serial.flush()
         _latest_read_times[self.serial.port] = _now()
 
         if self.close_port_after_each_call:
@@ -1402,7 +1413,7 @@ class Instrument:
             )
             self._print_debug(text)
 
-        if not answer:
+        if not answer and number_of_bytes_to_read > 0:
             raise NoResponseError("No communication with the instrument (no answer)")
 
         return answer
