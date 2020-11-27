@@ -159,7 +159,7 @@ which byte order that is used.
 Name                  Description                  Use                    Example
 ===================== ============================ ====================== =======
 Big endian (Motorola) High order byte first        BYTEORDER_BIG          ABCD
-?                     Big endian with byte swap    BYTEORDER_BIG_SWAP     BADC
+PDP endian (PDP-11)   Big endian with byte swap    BYTEORDER_BIG_SWAP     BADC
 ?                     Little endian with byte swap BYTEORDER_LITTLE_SWAP  CDAB
 Little endian (Intel) Low order byte first         BYTEORDER_LITTLE       DCBA
 ===================== ============================ ====================== =======
