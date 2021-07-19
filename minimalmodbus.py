@@ -20,7 +20,7 @@ __author__ = "Jonas Berg"
 __license__ = "Apache License, Version 2.0"
 __status__ = "Production"
 __url__ = "https://github.com/pyhys/minimalmodbus"
-__version__ = "1.0.3a1"
+__version__ = "1.0.4a1"
 
 
 import os
@@ -118,6 +118,7 @@ class Instrument:
         mode=MODE_RTU,
         close_port_after_each_call=False,
         debug=False,
+        before_transfer=None
     ):
         """Initialize instrument and open corresponding serial port."""
         self.address = slaveaddress
@@ -140,6 +141,25 @@ class Instrument:
         Changing this will not affect how other instruments use the same serial port.
 
         New in version 0.5.
+        """
+
+        self.before_transfer = before_transfer
+        """A callback function with two arguments that is called before each
+        read or write to serial port.
+
+        It can be used to switch the actual transiever to read or write mode
+        with GPIO pin.
+
+        Example:
+
+        def before_transfer_handler(instrument, is_write):
+            # Wait until serial port completes a transfer
+            instrument.serial.flush()
+
+            # Pseudo code, replace with actual GPIO pin write
+            gpio.set_value(transmit_pin, is_write)
+
+        New in version 1.0.4.
         """
 
         self.debug = debug
@@ -1349,11 +1369,18 @@ class Instrument:
             self._print_debug(text)
 
         # Write request
+        if self.before_transfer:
+            self.before_transfer(self, True)
+
         latest_write_time = _now()
         self.serial.write(request)
 
         # Read and discard local echo
         if self.handle_local_echo:
+
+            if self.before_transfer:
+                self.before_transfer(self, False)
+
             local_echo_to_discard = self.serial.read(len(request))
             if self.debug:
                 template = "Discarding this local echo: {!r} ({} bytes)."
@@ -1376,6 +1403,9 @@ class Instrument:
                 raise LocalEchoError(text)
 
         # Read response
+        if self.before_transfer:
+            self.before_transfer(self, False)
+
         answer = self.serial.read(number_of_bytes_to_read)
         _latest_read_times[self.serial.port] = _now()
 
