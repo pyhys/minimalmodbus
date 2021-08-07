@@ -1353,7 +1353,7 @@ class Instrument:
 
         # Sleep to make sure 3.5 character times have passed
         minimum_silent_period = _calculate_minimum_silent_period(self.serial.baudrate)
-        time_since_read = _now() - _latest_read_times.get(portname, 0)
+        time_since_read = time.monotonic() - _latest_read_times.get(portname, 0)
 
         if time_since_read < minimum_silent_period:
             sleep_time = minimum_silent_period - time_since_read
@@ -1384,7 +1384,7 @@ class Instrument:
             self._print_debug(text)
 
         # Write request
-        latest_write_time = _now()
+        latest_write_time = time.monotonic()
         self.serial.write(request_bytes)
 
         # Read and discard local echo
@@ -1412,7 +1412,7 @@ class Instrument:
 
         # Read response
         answer_bytes = self.serial.read(number_of_bytes_to_read)
-        _latest_read_times[portname] = _now()
+        _latest_read_times[portname] = time.monotonic()
 
         if self.close_port_after_each_call:
             self._print_debug("Closing port {}".format(portname))
@@ -2493,17 +2493,6 @@ def _bytestring_to_valuelist(bytestring: str, number_of_registers: int) -> List[
         values.append(int(_twobyte_string_to_num(substring)))
 
     return values
-
-
-def _now() -> float:
-    """Return a timestamp for time duration measurements.
-
-    Returns a float, that increases with 1.0 per second.
-    The starting point is undefined.
-    """
-    if hasattr(time, "monotonic"):  # TODO
-        return time.monotonic()
-    return time.time()
 
 
 def _pack(formatstring: str, value: Any) -> str:

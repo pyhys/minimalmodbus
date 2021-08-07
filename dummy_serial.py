@@ -85,7 +85,7 @@ class Serial:
     timeout: float
     baudrate: int
     _initial_port_name: Optional[str]  # Initial name given to the serial port
-    _waiting_data: str  # TODOs
+    _waiting_data: str  # TODO
     _isOpen: bool
 
     def __init__(
@@ -111,8 +111,8 @@ class Serial:
         self.baudrate = baudrate
 
         if VERBOSE:
-            _print_out("\nDummy_serial: Initializing")
-            _print_out(
+            print("\nDummy_serial: Initializing")
+            print(
                 "dummy_serial initialization. Port: {0} Baud rate: {1} Timeout {2}".format(
                     self.port, self.baudrate, self.timeout
                 )
@@ -143,7 +143,7 @@ class Serial:
     def open(self) -> None:
         """Open a (previously initialized) port on dummy_serial."""
         if VERBOSE:
-            _print_out("\nDummy_serial: Opening port\n")
+            print("\nDummy_serial: Opening port\n")
 
         if self._isOpen:
             raise IOError("Dummy_serial: The port is already open")
@@ -154,7 +154,7 @@ class Serial:
     def close(self) -> None:
         """Close a port on dummy_serial."""
         if VERBOSE:
-            _print_out("\nDummy_serial: Closing port\n")
+            print("\nDummy_serial: Closing port\n")
 
         if not self._isOpen:
             raise IOError("Dummy_serial: The port is already closed")
@@ -174,9 +174,7 @@ class Serial:
 
         """
         if VERBOSE:
-            _print_out(
-                "\nDummy_serial: Writing to port. Given:" + repr(inputdata) + "\n"
-            )
+            print("\nDummy_serial: Writing to port. Given:" + repr(inputdata) + "\n")
 
         if not type(inputdata) == bytes:
             raise TypeError("The input must be type bytes. Given:" + repr(inputdata))
@@ -213,7 +211,7 @@ class Serial:
 
         """
         if VERBOSE:
-            _print_out(
+            print(
                 "\nDummy_serial: Reading from port (max length {!r} bytes)".format(
                     numberOfBytes
                 )
@@ -238,7 +236,7 @@ class Serial:
             self._waiting_data = NO_DATA_PRESENT
         elif numberOfBytes < len(self._waiting_data):
             if VERBOSE:
-                _print_out(
+                print(
                     "Dummy_serial: The numberOfBytes to read is smaller than the available data. "
                     + "Some bytes will be kept for later. Available data: {!r} (length = {}), numberOfBytes: {}".format(
                         self._waiting_data, len(self._waiting_data), numberOfBytes
@@ -248,7 +246,7 @@ class Serial:
             self._waiting_data = self._waiting_data[numberOfBytes:]
         else:  # Wait for timeout, as we have asked for more data than available
             if VERBOSE:
-                _print_out(
+                print(
                     "Dummy_serial: The numberOfBytes to read is larger than the available data. "
                     + "Will sleep until timeout. Available  data: {!r} (length = {}), numberOfBytes: {}".format(
                         self._waiting_data, len(self._waiting_data), numberOfBytes
@@ -261,16 +259,10 @@ class Serial:
         # TODO Adapt the behavior to better mimic the Windows behavior
 
         if VERBOSE:
-            _print_out(
+            print(
                 "Dummy_serial read return data: {!r} (has length {})\n".format(
                     returnstring, len(returnstring)
                 )
             )
 
         return bytes(returnstring, encoding="latin1")
-
-
-# TODO remove
-def _print_out(inputstring: str) -> None:
-    """Print the inputstring. To make it compatible with Python2 and Python3."""
-    sys.stdout.write(inputstring + "\n")
