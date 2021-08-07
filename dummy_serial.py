@@ -46,16 +46,16 @@ Might be monkey-patched in the calling test module.
 RESPONSES = {}
 """A dictionary of respones from the dummy serial port.
 
-The key is the message (string) sent to the dummy serial port, and the item is the response (string)
+The key is the message (bytes) sent to the dummy serial port, and the item is the response (bytes)
 from the dummy serial port.
 
 Intended to be monkey-patched in the calling test module.
 
 """
-RESPONSES["EXAMPLEREQUEST"] = "EXAMPLERESPONSE"
+RESPONSES[b"EXAMPLEREQUEST"] = b"EXAMPLERESPONSE"
 
 
-DEFAULT_RESPONSE = "NotFoundInResponseDictionary"
+DEFAULT_RESPONSE = b"NotFoundInResponseDictionary"
 """Response when no matching message (key) is found in the look-up dictionary.
 
 Should not be an empty string, as that is interpreted as "no data available on port".
@@ -64,7 +64,7 @@ Might be monkey-patched in the calling test module.
 
 """
 
-NO_DATA_PRESENT = ""
+NO_DATA_PRESENT = b""
 
 
 class Serial:
@@ -85,7 +85,7 @@ class Serial:
     timeout: float
     baudrate: int
     _initial_port_name: Optional[str]  # Initial name given to the serial port
-    _waiting_data: str  # TODO
+    _waiting_data: bytes
     _isOpen: bool
 
     def __init__(
@@ -113,9 +113,7 @@ class Serial:
         if VERBOSE:
             print("\nDummy_serial: Initializing")
             print(
-                "dummy_serial initialization. Port: {0} Baud rate: {1} Timeout {2}".format(
-                    self.port, self.baudrate, self.timeout
-                )
+                f"dummy_serial initialization. Port: {self.port} Baud rate: {self.baudrate} Timeout {self.timeout}"
             )
 
     def __repr__(self) -> str:
@@ -178,7 +176,6 @@ class Serial:
 
         if not type(inputdata) == bytes:
             raise TypeError("The input must be type bytes. Given:" + repr(inputdata))
-        inputstring = str(inputdata, encoding="latin1")
 
         if not self._isOpen:
             raise IOError(
@@ -188,72 +185,68 @@ class Serial:
 
         # Look up which data that should be waiting for subsequent read commands
         try:
-            response = RESPONSES[inputstring]
+            response = RESPONSES[inputdata]
         except:
             response = DEFAULT_RESPONSE
         self._waiting_data = response
 
-        return len(inputstring)
+        return len(inputdata)
 
-    def read(self, numberOfBytes: int) -> bytes:
+    def read(self, size: int) -> bytes:
         """Read from a port on dummy_serial.
 
         The response is dependent on what was written last to the port on dummy_serial,
         and what is defined in the :data:`RESPONSES` dictionary.
 
         Args:
-            numberOfBytes (int): For compability with the real function.
+            size (int): For compability with the real function.
 
-        Returns a **string** for Python2 and **bytes** for Python3.
-
-        If the response is shorter than numberOfBytes, it will sleep for timeout.
-        If the response is longer than numberOfBytes, it will return only numberOfBytes bytes.
+        If the response is shorter than size, it will sleep for timeout.
+        If the response is longer than size, it will return only size bytes.
 
         """
         if VERBOSE:
             print(
-                "\nDummy_serial: Reading from port (max length {!r} bytes)".format(
-                    numberOfBytes
-                )
+                "\nDummy_serial: Reading from port (max length {!r} bytes)".format(size)
             )
 
-        if numberOfBytes < 0:
+        if size < 0:
             raise IOError(
-                "Dummy_serial: The numberOfBytes to read must not be negative. Given: {!r}".format(
-                    numberOfBytes
+                "Dummy_serial: The size to read must not be negative. Given: {!r}".format(
+                    size
                 )
             )
 
         if not self._isOpen:
             raise IOError("Dummy_serial: Trying to read, but the port is not open.")
 
-        # Do the actual reading from the waiting data, and simulate the influence of numberOfBytes
+        # Do the actual reading from the waiting data, and simulate the influence of size
 
         if self._waiting_data == DEFAULT_RESPONSE:
-            returnstring = self._waiting_data
-        elif numberOfBytes == len(self._waiting_data):
-            returnstring = self._waiting_data
+            returnbytes = self._waiting_data
+        elif size == len(self._waiting_data):
+            returnbytes = self._waiting_data
             self._waiting_data = NO_DATA_PRESENT
-        elif numberOfBytes < len(self._waiting_data):
+        elif size < len(self._waiting_data):
             if VERBOSE:
                 print(
-                    "Dummy_serial: The numberOfBytes to read is smaller than the available data. "
-                    + "Some bytes will be kept for later. Available data: {!r} (length = {}), numberOfBytes: {}".format(
-                        self._waiting_data, len(self._waiting_data), numberOfBytes
+                    "Dummy_serial: The size to read is smaller than the available data. "
+                    + "Some bytes will be kept for later. Available data: {!r} (length = {}), size: {}".format(
+                        self._waiting_data, len(self._waiting_data), size
                     )
                 )
-            returnstring = self._waiting_data[:numberOfBytes]
-            self._waiting_data = self._waiting_data[numberOfBytes:]
+            returnbytes = self._waiting_data[:size]
+            self._waiting_data = self._waiting_data[size:]
         else:  # Wait for timeout, as we have asked for more data than available
             if VERBOSE:
                 print(
-                    "Dummy_serial: The numberOfBytes to read is larger than the available data. "
-                    + "Will sleep until timeout. Available  data: {!r} (length = {}), numberOfBytes: {}".format(
-                        self._waiting_data, len(self._waiting_data), numberOfBytes
+                    "Dummy_serial: The size to read is larger than the available data. "
+                    + "Will sleep until timeout. Available  data: {!r} (length = {}), size: {}".format(
+                        self._waiting_data, len(self._waiting_data), size
                     )
                 )
             time.sleep(self.timeout)
-            returnstring = self._waiting_data
+            returnbytes = self._waiting_data
             self._waiting_data = NO_DATA_PRESENT
 
         # TODO Adapt the behavior to better mimic the Windows behavior
@@ -261,8 +254,8 @@ class Serial:
         if VERBOSE:
             print(
                 "Dummy_serial read return data: {!r} (has length {})\n".format(
-                    returnstring, len(returnstring)
+                    returnbytes, len(returnbytes)
                 )
             )
 
-        return bytes(returnstring, encoding="latin1")
+        return returnbytes

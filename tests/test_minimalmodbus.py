@@ -1568,10 +1568,11 @@ class TestPredictResponseSize(ExtendedTestCase):
     def testRecordedRtuMessages(self) -> None:
         ## Use the dictionary where the key is the 'message', and the item is the 'response'
         for message in GOOD_RTU_RESPONSES:
-            slaveaddress = ord(message[0])
-            functioncode = ord(message[1])
+            slaveaddress = message[0]
+            functioncode = message[1]
+            messagestring = str(message, encoding="latin1")
             payload_to_slave = minimalmodbus._extract_payload(
-                message, slaveaddress, "rtu", functioncode
+                messagestring, slaveaddress, "rtu", functioncode
             )
             result = minimalmodbus._predict_response_size(
                 "rtu", functioncode, payload_to_slave
@@ -1585,8 +1586,9 @@ class TestPredictResponseSize(ExtendedTestCase):
         for message in GOOD_ASCII_RESPONSES:
             slaveaddress = int(message[1:3])
             functioncode = int(message[3:5])
+            messagestring = str(message, encoding="latin1")
             payload_to_slave = minimalmodbus._extract_payload(
-                message, slaveaddress, "ascii", functioncode
+                messagestring, slaveaddress, "ascii", functioncode
             )
             result = minimalmodbus._predict_response_size(
                 "ascii", functioncode, payload_to_slave
@@ -5021,18 +5023,17 @@ class TestDummyCommunicationHandleLocalEcho(ExtendedTestCase):
         del self.instrument
 
 
-RTU_RESPONSES: Dict[str, str] = {}
-GOOD_RTU_RESPONSES: Dict[str, str] = {}
-WRONG_RTU_RESPONSES: Dict[str, str] = {}
-ASCII_RESPONSES: Dict[str, str] = {}
-GOOD_ASCII_RESPONSES: Dict[str, str] = {}
-WRONG_ASCII_RESPONSES: Dict[str, str] = {}
+RTU_RESPONSES: Dict[bytes, bytes] = {}
+GOOD_RTU_RESPONSES: Dict[bytes, bytes] = {}
+WRONG_RTU_RESPONSES: Dict[bytes, bytes] = {}
+ASCII_RESPONSES: Dict[bytes, bytes] = {}
+GOOD_ASCII_RESPONSES: Dict[bytes, bytes] = {}
+WRONG_ASCII_RESPONSES: Dict[bytes, bytes] = {}
 """A dictionary of respones from a dummy instrument.
 
 The key is the message (string) sent to the serial port, and the item is the response (string)
 from the dummy serial port.
 
-TODO convert to use Dict[bytes, bytes] in the dummy_serial 
 """
 # Note that the string 'AAAAAAA' might be easier to read if grouped,
 # like 'AA' + 'AAAA' + 'A' for the initial part (address etc) + payload + CRC.
@@ -5044,31 +5045,31 @@ TODO convert to use Dict[bytes, bytes] in the dummy_serial
 # ----------------------------------------------------------------------------------------- #
 # Message:  Slave address 1, function code 2. Register address 61, 1 coil. CRC.
 # Response: Slave address 1, function code 2. 1 byte, value=1. CRC.
-GOOD_RTU_RESPONSES["\x01\x02" + "\x00\x3d\x00\x01" + "(\x06"] = (
-    "\x01\x02" + "\x01\x01" + "`H"
+GOOD_RTU_RESPONSES[b"\x01\x02" + b"\x00\x3d\x00\x01" + b"(\x06"] = (
+    b"\x01\x02" + b"\x01\x01" + b"`H"
 )
 
 # Read bit register 62 on slave 1 using function code 1 #
 # ----------------------------------------------------- #
 # Message:  Slave address 1, function code 1. Register address 62, 1 coil. CRC.
 # Response: Slave address 1, function code 1. 1 byte, value=0. CRC.
-GOOD_RTU_RESPONSES["\x01\x01" + "\x00\x3e\x00\x01" + "\x9c\x06"] = (
-    "\x01\x01" + "\x01\x00" + "Q\x88"
+GOOD_RTU_RESPONSES[b"\x01\x01" + b"\x00\x3e\x00\x01" + b"\x9c\x06"] = (
+    b"\x01\x01" + b"\x01\x00" + b"Q\x88"
 )
 
 # Read bit register 63 on slave 1 using function code 2, slave gives wrong byte count #
 # ----------------------------------------------------------------------------------- #
 # Message:  Slave address 1, function code 2. Register address 63, 1 coil. CRC.
 # Response: Slave address 1, function code 2. 2 bytes (wrong), value=1. CRC.
-WRONG_RTU_RESPONSES["\x01\x02" + "\x00\x3f\x00\x01" + "\x89\xc6"] = (
-    "\x01\x02" + "\x02\x01" + "`\xb8"
+WRONG_RTU_RESPONSES[b"\x01\x02" + b"\x00\x3f\x00\x01" + b"\x89\xc6"] = (
+    b"\x01\x02" + b"\x02\x01" + b"`\xb8"
 )
 
 # Read bit register 64 on slave 1 using function code 2, slave gives no response #
 # ------------------------------------------------------------------------------ #
 # Message:  Slave address 1, function code 2. Register address 64, 1 coil. CRC.
 # Response: (empty string)
-WRONG_RTU_RESPONSES["\x01\x02" + "\x00\x40\x00\x01" + "\xb8\x1e"] = ""
+WRONG_RTU_RESPONSES[b"\x01\x02" + b"\x00\x40\x00\x01" + b"\xb8\x1e"] = b""
 
 
 #                ##  WRITE BIT  ##
@@ -5077,40 +5078,40 @@ WRONG_RTU_RESPONSES["\x01\x02" + "\x00\x40\x00\x01" + "\xb8\x1e"] = ""
 # -------------------------------------------------------- #
 # Message:  Slave address 1, function code 5. Register address 71, value 1 (FF00). CRC.
 # Response: Slave address 1, function code 5. Register address 71, value 1 (FF00). CRC.
-GOOD_RTU_RESPONSES["\x01\x05" + "\x00\x47\xff\x00" + "</"] = (
-    "\x01\x05" + "\x00\x47\xff\x00" + "</"
+GOOD_RTU_RESPONSES[b"\x01\x05" + b"\x00\x47\xff\x00" + b"</"] = (
+    b"\x01\x05" + b"\x00\x47\xff\x00" + b"</"
 )
 
 # Write bit=0 register 71 on slave 1 using function code 5 #
 # -------------------------------------------------------- #
 # Message:  Slave address 1, function code 5. Register address 71, value 0 (0000). CRC.
 # Response: Slave address 1, function code 5. Register address 71, value 0 (0000). CRC.
-GOOD_RTU_RESPONSES["\x01\x05" + "\x00\x47\x00\x00" + "}\xDF"] = (
-    "\x01\x05" + "\x00\x47\x00\x00" + "}\xDF"
+GOOD_RTU_RESPONSES[b"\x01\x05" + b"\x00\x47\x00\x00" + b"}\xDF"] = (
+    b"\x01\x05" + b"\x00\x47\x00\x00" + b"}\xDF"
 )
 
 # Write bit register 72 on slave 1 using function code 15 #
 # ------------------------------------------------------ #
 # Message:  Slave address 1, function code 15. Register address 72, 1 bit, 1 byte, value 1 (0100). CRC.
 # Response: Slave address 1, function code 15. Register address 72, 1 bit. CRC.
-GOOD_RTU_RESPONSES["\x01\x0f" + "\x00\x48\x00\x01\x01\x01" + "\x0fY"] = (
-    "\x01\x0f" + "\x00\x48\x00\x01" + "\x14\x1d"
+GOOD_RTU_RESPONSES[b"\x01\x0f" + b"\x00\x48\x00\x01\x01\x01" + b"\x0fY"] = (
+    b"\x01\x0f" + b"\x00\x48\x00\x01" + b"\x14\x1d"
 )
 
 # Write bit register 73 on slave 1 using function code 15, slave gives wrong number of registers #
 # ---------------------------------------------------------------------------------------------- #
 # Message:  Slave address 1, function code 15. Register address 73, 1 bit, 1 byte, value 1 (0100). CRC.
 # Response: Slave address 1, function code 15. Register address 73, 2 bits (wrong). CRC.
-WRONG_RTU_RESPONSES["\x01\x0f" + "\x00\x49\x00\x01\x01\x01" + "2\x99"] = (
-    "\x01\x0f" + "\x00\x49\x00\x02" + "\x05\xdc"
+WRONG_RTU_RESPONSES[b"\x01\x0f" + b"\x00\x49\x00\x01\x01\x01" + b"2\x99"] = (
+    b"\x01\x0f" + b"\x00\x49\x00\x02" + b"\x05\xdc"
 )
 
 # Write bit register 74 on slave 1 using function code 5, slave gives wrong write data #
 # ------------------------------------------------------------------------------------ #
 # Message:  Slave address 1, function code 5. Register address 74, value 1 (FF00). CRC.
 # Response: Slave address 1, function code 5. Register address 74, value 0 (0000, wrong). CRC.
-WRONG_RTU_RESPONSES["\x01\x05" + "\x00\x4a\xff\x00" + "\xad\xec"] = (
-    "\x01\x05" + "\x00\x47\x00\x00" + "}\xdf"
+WRONG_RTU_RESPONSES[b"\x01\x05" + b"\x00\x4a\xff\x00" + b"\xad\xec"] = (
+    b"\x01\x05" + b"\x00\x47\x00\x00" + b"}\xdf"
 )
 
 
@@ -5122,8 +5123,8 @@ WRONG_RTU_RESPONSES["\x01\x05" + "\x00\x4a\xff\x00" + "\xad\xec"] = (
 # ----------------------------------------------------------------------------------------- #
 # Message:  Slave address 1, function code 1. Register address 19, 19 coils. CRC.
 # Response: Slave address 1, function code 1. 3 bytes, values. CRC.
-GOOD_RTU_RESPONSES["\x01\x01" + "\x00\x13\x00\x13" + "\x8c\x02"] = (
-    "\x01\x01" + "\x03\xCD\x6B\x05" + "B\x82"
+GOOD_RTU_RESPONSES[b"\x01\x01" + b"\x00\x13\x00\x13" + b"\x8c\x02"] = (
+    b"\x01\x01" + b"\x03\xCD\x6B\x05" + b"B\x82"
 )
 
 # Read 22 bits starting at address 196 on slave 1 using function code 2.
@@ -5132,8 +5133,8 @@ GOOD_RTU_RESPONSES["\x01\x01" + "\x00\x13\x00\x13" + "\x8c\x02"] = (
 # ----------------------------------------------------------------------------------------- #
 # Message:  Slave address 1, function code 2. Register address 196, 22 coils. CRC.
 # Response: Slave address 1, function code 2. 3 bytes, values. CRC.
-GOOD_RTU_RESPONSES["\x01\x02" + "\x00\xC4\x00\x16" + "\xB89"] = (
-    "\x01\x02" + "\x03\xAC\xDB\x35" + '"\x88'
+GOOD_RTU_RESPONSES[b"\x01\x02" + b"\x00\xC4\x00\x16" + b"\xB89"] = (
+    b"\x01\x02" + b"\x03\xAC\xDB\x35" + b'"\x88'
 )
 
 # Read 16 bits starting at address 0x800 on slave 1 using function code 2.
@@ -5141,8 +5142,8 @@ GOOD_RTU_RESPONSES["\x01\x02" + "\x00\xC4\x00\x16" + "\xB89"] = (
 # ----------------------------------------------------------------------------------------- #
 # Message:  Slave address 1, function code 2. Register address 0x800, 16 coils. CRC.
 # Response: Slave address 1, function code 2. 2 bytes, values. CRC.
-GOOD_RTU_RESPONSES["\x01\x02" + "\x08\x00\x00\x10" + "\x7B\xA6"] = (
-    "\x01\x02" + "\x02\x20\x0f" + "\xE0\x7C"
+GOOD_RTU_RESPONSES[b"\x01\x02" + b"\x08\x00\x00\x10" + b"\x7B\xA6"] = (
+    b"\x01\x02" + b"\x02\x20\x0f" + b"\xE0\x7C"
 )
 
 
@@ -5154,8 +5155,8 @@ GOOD_RTU_RESPONSES["\x01\x02" + "\x08\x00\x00\x10" + "\x7B\xA6"] = (
 # ----------------------------------------------------------------------------------------- #
 # Message:  Slave address 1, function code 15. Address 19, 10 coils, 2 bytes, values. CRC.
 # Response: Slave address 1, function code 15. Address 19, 10 coils. CRC.
-GOOD_RTU_RESPONSES["\x01\x0f" + "\x00\x13\x00\x0A\x02\xCD\x01" + "\x72\xCB"] = (
-    "\x01\x0f" + "\x00\x13\x00\x0A" + "$\t"
+GOOD_RTU_RESPONSES[b"\x01\x0f" + b"\x00\x13\x00\x0A\x02\xCD\x01" + b"\x72\xCB"] = (
+    b"\x01\x0f" + b"\x00\x13\x00\x0A" + b"$\t"
 )
 
 
@@ -5165,56 +5166,56 @@ GOOD_RTU_RESPONSES["\x01\x0f" + "\x00\x13\x00\x0A\x02\xCD\x01" + "\x72\xCB"] = (
 # ---------------------------------------------------#
 # Message:  Slave address 1, function code 3. Register address 289, 1 register. CRC.
 # Response: Slave address 1, function code 3. 2 bytes, value=770. CRC=14709.
-GOOD_RTU_RESPONSES["\x01\x03" + "\x01!\x00\x01" + "\xd5\xfc"] = (
-    "\x01\x03" + "\x02\x03\x02" + "\x39\x75"
+GOOD_RTU_RESPONSES[b"\x01\x03" + b"\x01!\x00\x01" + b"\xd5\xfc"] = (
+    b"\x01\x03" + b"\x02\x03\x02" + b"\x39\x75"
 )
 
 # Read register 5 on slave 1 using function code 3 #
 # ---------------------------------------------------#
 # Message: Slave address 1, function code 3. Register address 289, 1 register. CRC.
 # Response: Slave address 1, function code 3. 2 bytes, value=184. CRC
-GOOD_RTU_RESPONSES["\x01\x03" + "\x00\x05\x00\x01" + "\x94\x0b"] = (
-    "\x01\x03" + "\x02\x00\xb8" + "\xb86"
+GOOD_RTU_RESPONSES[b"\x01\x03" + b"\x00\x05\x00\x01" + b"\x94\x0b"] = (
+    b"\x01\x03" + b"\x02\x00\xb8" + b"\xb86"
 )
 
 # Read register 14 on slave 1 using function code 4 #
 # --------------------------------------------------#
 # Message:  Slave address 1, function code 4. Register address 14, 1 register. CRC.
 # Response: Slave address 1, function code 4. 2 bytes, value=880. CRC.
-GOOD_RTU_RESPONSES["\x01\x04" + "\x00\x0e\x00\x01" + "P\t"] = (
-    "\x01\x04" + "\x02\x03\x70" + "\xb8$"
+GOOD_RTU_RESPONSES[b"\x01\x04" + b"\x00\x0e\x00\x01" + b"P\t"] = (
+    b"\x01\x04" + b"\x02\x03\x70" + b"\xb8$"
 )
 
 # Read register 101 on slave 1 using function code 3 #
 # ---------------------------------------------------#
 # Message: Slave address 1, function code 3. Register address 101, 1 register. CRC.
 # Response: Slave address 1, function code 3. 2 bytes, value=-5 or 65531 (depending on interpretation). CRC
-GOOD_RTU_RESPONSES["\x01\x03" + "\x00e\x00\x01" + "\x94\x15"] = (
-    "\x01\x03" + "\x02\xff\xfb" + "\xb87"
+GOOD_RTU_RESPONSES[b"\x01\x03" + b"\x00e\x00\x01" + b"\x94\x15"] = (
+    b"\x01\x03" + b"\x02\xff\xfb" + b"\xb87"
 )
 
 # Read register 201 on slave 1 using function code 3 #
 # ---------------------------------------------------#
 # Message: Slave address 1, function code 3. Register address 201, 1 register. CRC.
 # Response: Slave address 1, function code 3. 2 bytes, value=9. CRC
-GOOD_RTU_RESPONSES["\x01\x03" + "\x00\xc9\x00\x01" + "T4"] = (
-    "\x01\x03" + "\x02\x00\x09" + "xB"
+GOOD_RTU_RESPONSES[b"\x01\x03" + b"\x00\xc9\x00\x01" + b"T4"] = (
+    b"\x01\x03" + b"\x02\x00\x09" + b"xB"
 )
 
 # Read register 202 on slave 1 using function code 3. Too long response #
 # ----------------------------------------------------------------------#
 # Message: Slave address 1, function code 3. Register address 202, 1 register. CRC.
 # Response: Slave address 1, function code 3. 2 bytes (wrong!), value=9. CRC
-WRONG_RTU_RESPONSES["\x01\x03" + "\x00\xca\x00\x01" + "\xa44"] = (
-    "\x01\x03" + "\x02\x00\x00\x09" + "\x84t"
+WRONG_RTU_RESPONSES[b"\x01\x03" + b"\x00\xca\x00\x01" + b"\xa44"] = (
+    b"\x01\x03" + b"\x02\x00\x00\x09" + b"\x84t"
 )
 
 # Read register 203 on slave 1 using function code 3. Too short response #
 # ----------------------------------------------------------------------#
 # Message: Slave address 1, function code 3. Register address 203, 1 register. CRC.
 # Response: Slave address 1, function code 3. 2 bytes (wrong!), value=9. CRC
-WRONG_RTU_RESPONSES["\x01\x03" + "\x00\xcb\x00\x01" + "\xf5\xf4"] = (
-    "\x01\x03" + "\x02\x09" + "0\xbe"
+WRONG_RTU_RESPONSES[b"\x01\x03" + b"\x00\xcb\x00\x01" + b"\xf5\xf4"] = (
+    b"\x01\x03" + b"\x02\x09" + b"0\xbe"
 )
 
 
@@ -5224,112 +5225,112 @@ WRONG_RTU_RESPONSES["\x01\x03" + "\x00\xcb\x00\x01" + "\xf5\xf4"] = (
 # ----------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 24, 1 register, 2 bytes, value=50. CRC.
 # Response: Slave address 1, function code 16. Register address 24, 1 register. CRC.
-GOOD_RTU_RESPONSES["\x01\x10" + "\x00\x18\x00\x01\x02\x002" + "$]"] = (
-    "\x01\x10" + "\x00\x18\x00\x01" + "\x81\xce"
+GOOD_RTU_RESPONSES[b"\x01\x10" + b"\x00\x18\x00\x01\x02\x002" + b"$]"] = (
+    b"\x01\x10" + b"\x00\x18\x00\x01" + b"\x81\xce"
 )
 
 # Write value 20 in register 35 on slave 1 using function code 16 #
 # ----------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 35, 1 register, 2 bytes, value=20. CRC.
 # Response: Slave address 1, function code 16. Register address 35, 1 register. CRC.
-GOOD_RTU_RESPONSES["\x01\x10" + "\x00#\x00\x01" + "\x02\x00\x14" + "\xa1\x0c"] = (
-    "\x01\x10" + "\x00#\x00\x01" + "\xf0\x03"
+GOOD_RTU_RESPONSES[b"\x01\x10" + b"\x00#\x00\x01" + b"\x02\x00\x14" + b"\xa1\x0c"] = (
+    b"\x01\x10" + b"\x00#\x00\x01" + b"\xf0\x03"
 )
 
 # Write value 88 in register 45 on slave 1 using function code 6 #
 # ---------------------------------------------------------------#
 # Message:  Slave address 1, function code 6. Register address 45, value=88. CRC.
 # Response: Slave address 1, function code 6. Register address 45, value=88. CRC.
-GOOD_RTU_RESPONSES["\x01\x06" + "\x00\x2d\x00\x58" + "\x189"] = (
-    "\x01\x06" + "\x00\x2d\x00\x58" + "\x189"
+GOOD_RTU_RESPONSES[b"\x01\x06" + b"\x00\x2d\x00\x58" + b"\x189"] = (
+    b"\x01\x06" + b"\x00\x2d\x00\x58" + b"\x189"
 )
 
 # Write value 5 in register 101 on slave 1 using function code 16 #
 # ----------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 101, 1 register, 2 bytes, value=5. CRC.
 # Response: Slave address 1, function code 16. Register address 101, 1 register. CRC.
-GOOD_RTU_RESPONSES["\x01\x10" + "\x00e\x00\x01\x02\x00\x05" + "o\xa6"] = (
-    "\x01\x10" + "\x00e\x00\x01" + "\x11\xd6"
+GOOD_RTU_RESPONSES[b"\x01\x10" + b"\x00e\x00\x01\x02\x00\x05" + b"o\xa6"] = (
+    b"\x01\x10" + b"\x00e\x00\x01" + b"\x11\xd6"
 )
 
 # Write value 50 in register 101 on slave 1 using function code 16 #
 # ----------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 101, 1 register, 2 bytes, value=5. CRC.
 # Response: Slave address 1, function code 16. Register address 101, 1 register. CRC.
-GOOD_RTU_RESPONSES["\x01\x10" + "\x00e\x00\x01\x02\x002" + ".p"] = (
-    "\x01\x10" + "\x00e\x00\x01" + "\x11\xd6"
+GOOD_RTU_RESPONSES[b"\x01\x10" + b"\x00e\x00\x01\x02\x002" + b".p"] = (
+    b"\x01\x10" + b"\x00e\x00\x01" + b"\x11\xd6"
 )
 
 # Write value -5 in register 101 on slave 1 using function code 16 #
 # ----------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 101, 1 register, 2 bytes, value=-5. CRC.
 # Response: Slave address 1, function code 16. Register address 101, 1 register. CRC.
-GOOD_RTU_RESPONSES["\x01\x10" + "\x00e\x00\x01\x02\xff\xfb" + "\xaf\xd6"] = (
-    "\x01\x10" + "\x00e\x00\x01" + "\x11\xd6"
+GOOD_RTU_RESPONSES[b"\x01\x10" + b"\x00e\x00\x01\x02\xff\xfb" + b"\xaf\xd6"] = (
+    b"\x01\x10" + b"\x00e\x00\x01" + b"\x11\xd6"
 )
 
 # Write value -50 in register 101 on slave 1 using function code 16 #
 # ----------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 101, 1 register, 2 bytes, value=-50. CRC.
 # Response: Slave address 1, function code 16. Register address 101, 1 register. CRC.
-GOOD_RTU_RESPONSES["\x01\x10" + "\x00e\x00\x01\x02\xff\xce" + "o\xc1"] = (
-    "\x01\x10" + "\x00e\x00\x01" + "\x11\xd6"
+GOOD_RTU_RESPONSES[b"\x01\x10" + b"\x00e\x00\x01\x02\xff\xce" + b"o\xc1"] = (
+    b"\x01\x10" + b"\x00e\x00\x01" + b"\x11\xd6"
 )
 
 # Write value 99 in register 51 on slave 1 using function code 16, slave gives wrong CRC #
 # ---------------------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 51, 1 register, 2 bytes, value=99. CRC.
 # Response: Slave address 1, function code 16. Register address 51, 1 register. Wrong CRC.
-WRONG_RTU_RESPONSES["\x01\x10" + "\x00\x33\x00\x01" + "\x02\x00\x63" + "\xe3\xba"] = (
-    "\x01\x10" + "\x00\x33\x00\x01" + "AB"
-)
+WRONG_RTU_RESPONSES[
+    b"\x01\x10" + b"\x00\x33\x00\x01" + b"\x02\x00\x63" + b"\xe3\xba"
+] = (b"\x01\x10" + b"\x00\x33\x00\x01" + b"AB")
 
 # Write value 99 in register 52 on slave 1 using function code 16, slave gives wrong number of registers #
 # -------------------------------------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 52, 1 register, 2 bytes, value=99. CRC.
 # Response: Slave address 1, function code 16. Register address 52, 2 registers (wrong). CRC.
-WRONG_RTU_RESPONSES["\x01\x10" + "\x00\x34\x00\x01" + "\x02\x00\x63" + "\xe2\r"] = (
-    "\x01\x10" + "\x00\x34\x00\x02" + "\x00\x06"
+WRONG_RTU_RESPONSES[b"\x01\x10" + b"\x00\x34\x00\x01" + b"\x02\x00\x63" + b"\xe2\r"] = (
+    b"\x01\x10" + b"\x00\x34\x00\x02" + b"\x00\x06"
 )
 
 # Write value 99 in register 53 on slave 1 using function code 16, slave gives wrong register address #
 # ----------------------------------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 53, 1 register, 2 bytes, value=99. CRC.
 # Response: Slave address 1, function code 16. Register address 54 (wrong), 1 register. CRC.
-WRONG_RTU_RESPONSES["\x01\x10" + "\x00\x35\x00\x01" + "\x02\x00\x63" + "\xe3\xdc"] = (
-    "\x01\x10" + "\x00\x36\x00\x01" + "\xe1\xc7"
-)
+WRONG_RTU_RESPONSES[
+    b"\x01\x10" + b"\x00\x35\x00\x01" + b"\x02\x00\x63" + b"\xe3\xdc"
+] = (b"\x01\x10" + b"\x00\x36\x00\x01" + b"\xe1\xc7")
 
 # Write value 99 in register 54 on slave 1 using function code 16, slave gives wrong slave address #
 # ------------------------------------------------------------------------------------------------ #
 # Message:  Slave address 1, function code 16. Register address 54, 1 register, 2 bytes, value=99. CRC.
 # Response: Slave address 2 (wrong), function code 16. Register address 54, 1 register. CRC.
-GOOD_RTU_RESPONSES["\x01\x10" + "\x00\x36\x00\x01" + "\x02\x00\x63" + "\xe3\xef"] = (
-    "\x02\x10" + "\x00\x36\x00\x01" + "\xe1\xf4"
-)
+GOOD_RTU_RESPONSES[
+    b"\x01\x10" + b"\x00\x36\x00\x01" + b"\x02\x00\x63" + b"\xe3\xef"
+] = (b"\x02\x10" + b"\x00\x36\x00\x01" + b"\xe1\xf4")
 
 # Write value 99 in register 55 on slave 1 using function code 16, slave gives wrong functioncode #
 # ----------------------------------------------------------------------------------------------- #
 # Message:  Slave address 1, function code 16. Register address 55, 1 register, 2 bytes, value=99. CRC.
 # Response: Slave address 1, function code 6 (wrong). Register address 55, 1 register. CRC.
-WRONG_RTU_RESPONSES["\x01\x10" + "\x00\x37\x00\x01" + "\x02\x00\x63" + "\xe2>"] = (
-    "\x01\x06" + "\x00\x37\x00\x01" + "\xf9\xc4"
+WRONG_RTU_RESPONSES[b"\x01\x10" + b"\x00\x37\x00\x01" + b"\x02\x00\x63" + b"\xe2>"] = (
+    b"\x01\x06" + b"\x00\x37\x00\x01" + b"\xf9\xc4"
 )
 
 # Write value 99 in register 56 on slave 1 using function code 16, slave gives wrong functioncode (indicates an error) #
 # -------------------------------------------------------------------------------------------------------------------- #
 # Message:  Slave address 1, function code 16. Register address 56, 1 register, 2 bytes, value=99. CRC.
 # Response: Slave address 1, function code 144 (wrong). Register address 56, 1 register. CRC.
-WRONG_RTU_RESPONSES["\x01\x10" + "\x00\x38\x00\x01" + "\x02\x00\x63" + "\xe2\xc1"] = (
-    "\x01\x90" + "\x00\x38\x00\x01" + "\x81\xda"
-)
+WRONG_RTU_RESPONSES[
+    b"\x01\x10" + b"\x00\x38\x00\x01" + b"\x02\x00\x63" + b"\xe2\xc1"
+] = (b"\x01\x90" + b"\x00\x38\x00\x01" + b"\x81\xda")
 
 # Write value 99 in register 55 on slave 1 using function code 6, slave gives wrong write data #
 # -------------------------------------------------------------------------------------------- #
 # Message:  Slave address 1, function code 6. Register address 55, value=99. CRC.
 # Response: Slave address 1, function code 6. Register address 55, value=98 (wrong). CRC.
-WRONG_RTU_RESPONSES["\x01\x06" + "\x00\x37\x00\x63" + "x-"] = (
-    "\x01\x06" + "\x00\x37\x00\x62" + "\xb9\xed"
+WRONG_RTU_RESPONSES[b"\x01\x06" + b"\x00\x37\x00\x63" + b"x-"] = (
+    b"\x01\x06" + b"\x00\x37\x00\x62" + b"\xb9\xed"
 )
 
 
@@ -5339,8 +5340,8 @@ WRONG_RTU_RESPONSES["\x01\x06" + "\x00\x37\x00\x63" + "x-"] = (
 # --------------------------------------------------------------------------#
 # Message: Slave address 1, function code 3. Register address 289, 2 registers. CRC.
 # Response: Slave address 1, function code 3. 4 bytes, value=-1 or 4294967295 (depending on interpretation). CRC
-GOOD_RTU_RESPONSES["\x01\x03" + "\x00f\x00\x02" + "$\x14"] = (
-    "\x01\x03" + "\x04\xff\xff\xff\xff" + "\xfb\xa7"
+GOOD_RTU_RESPONSES[b"\x01\x03" + b"\x00f\x00\x02" + b"$\x14"] = (
+    b"\x01\x03" + b"\x04\xff\xff\xff\xff" + b"\xfb\xa7"
 )
 
 # Read long (2 registers, starting at 223) on slave 1 using function code 3 #
@@ -5349,8 +5350,8 @@ GOOD_RTU_RESPONSES["\x01\x03" + "\x00f\x00\x02" + "$\x14"] = (
 # --------------------------------------------------------------------------------------------#
 # Message: Slave address 1, function code 3. Register address 223, 2 registers. CRC.
 # Response: Slave address 1, function code 3. 4 bytes, Value 2923517522. CRC
-GOOD_RTU_RESPONSES["\x01\x03" + "\x00\xDF\x00\x02" + "\xF5\xF1"] = (
-    "\x01\x03" + "\x04\xAEAVR" + "4\x92"
+GOOD_RTU_RESPONSES[b"\x01\x03" + b"\x00\xDF\x00\x02" + b"\xF5\xF1"] = (
+    b"\x01\x03" + b"\x04\xAEAVR" + b"4\x92"
 )
 
 # Read long (2 registers, starting at 224) on slave 1 using function code 3 #
@@ -5359,8 +5360,8 @@ GOOD_RTU_RESPONSES["\x01\x03" + "\x00\xDF\x00\x02" + "\xF5\xF1"] = (
 # --------------------------------------------------------------------------------------------#
 # Message: Slave address 1, function code 3. Register address 224, 2 registers. CRC.
 # Response: Slave address 1, function code 3. 4 bytes, Value 2923517522. CRC
-GOOD_RTU_RESPONSES["\x01\x03" + "\x00\xE0\x00\x02" + "\xC5\xFD"] = (
-    "\x01\x03" + "\x04A\xAERV" + "2\xB0"
+GOOD_RTU_RESPONSES[b"\x01\x03" + b"\x00\xE0\x00\x02" + b"\xC5\xFD"] = (
+    b"\x01\x03" + b"\x04A\xAERV" + b"2\xB0"
 )
 
 # Read long (2 registers, starting at 225) on slave 1 using function code 3 #
@@ -5369,8 +5370,8 @@ GOOD_RTU_RESPONSES["\x01\x03" + "\x00\xE0\x00\x02" + "\xC5\xFD"] = (
 # --------------------------------------------------------------------------------------------#
 # Message: Slave address 1, function code 3. Register address 225, 2 registers. CRC.
 # Response: Slave address 1, function code 3. 4 bytes, Value 2923517522. CRC
-GOOD_RTU_RESPONSES["\x01\x03" + "\x00\xE1\x00\x02" + "\x94="] = (
-    "\x01\x03" + "\x04VR\xAEA" + "\xF6:"
+GOOD_RTU_RESPONSES[b"\x01\x03" + b"\x00\xE1\x00\x02" + b"\x94="] = (
+    b"\x01\x03" + b"\x04VR\xAEA" + b"\xF6:"
 )
 
 # Read long (2 registers, starting at 226) on slave 1 using function code 3 #
@@ -5379,8 +5380,8 @@ GOOD_RTU_RESPONSES["\x01\x03" + "\x00\xE1\x00\x02" + "\x94="] = (
 # --------------------------------------------------------------------------------------------#
 # Message: Slave address 1, function code 3. Register address 226, 2 registers. CRC.
 # Response: Slave address 1, function code 3. 4 bytes, Value 2923517522. CRC
-GOOD_RTU_RESPONSES["\x01\x03" + "\x00\xE2\x00\x02" + "\x64\x3D"] = (
-    "\x01\x03" + "\x04RVA\xAE" + "\xBBw"
+GOOD_RTU_RESPONSES[b"\x01\x03" + b"\x00\xE2\x00\x02" + b"\x64\x3D"] = (
+    b"\x01\x03" + b"\x04RVA\xAE" + b"\xBBw"
 )
 
 
@@ -5390,32 +5391,32 @@ GOOD_RTU_RESPONSES["\x01\x03" + "\x00\xE2\x00\x02" + "\x64\x3D"] = (
 # -------------------------------------------------------------------------------------------#
 # Message: Slave address 1, function code 16. Register address 102, 2 registers, 4 bytes, value=5. CRC.
 # Response: Slave address 1, function code 16. Register address 102, 2 registers. CRC
-GOOD_RTU_RESPONSES["\x01\x10" + "\x00f\x00\x02\x04\x00\x00\x00\x05" + "\xb5\xae"] = (
-    "\x01\x10" + "\x00f\x00\x02" + "\xa1\xd7"
+GOOD_RTU_RESPONSES[b"\x01\x10" + b"\x00f\x00\x02\x04\x00\x00\x00\x05" + b"\xb5\xae"] = (
+    b"\x01\x10" + b"\x00f\x00\x02" + b"\xa1\xd7"
 )
 
 # Write long (2 registers, starting at 102) on slave 1 using function code 16, with value -5. #
 # --------------------------------------------------------------------------------------------#
 # Message: Slave address 1, function code 16. Register address 102, 2 registers, 4 bytes, value=-5. CRC.
 # Response: Slave address 1, function code 16. Register address 102, 2 registers. CRC
-GOOD_RTU_RESPONSES["\x01\x10" + "\x00f\x00\x02\x04\xff\xff\xff\xfb" + "u\xfa"] = (
-    "\x01\x10" + "\x00f\x00\x02" + "\xa1\xd7"
+GOOD_RTU_RESPONSES[b"\x01\x10" + b"\x00f\x00\x02\x04\xff\xff\xff\xfb" + b"u\xfa"] = (
+    b"\x01\x10" + b"\x00f\x00\x02" + b"\xa1\xd7"
 )
 
 # Write long (2 registers, starting at 102) on slave 1 using function code 16, with value 3. #
 # -------------------------------------------------------------------------------------------#
 # Message: Slave address 1, function code 16. Register address 102, 2 registers, 4 bytes, value=3. CRC.
 # Response: Slave address 1, function code 16. Register address 102, 2 registers. CRC
-GOOD_RTU_RESPONSES["\x01\x10" + "\x00f\x00\x02\x04\x00\x00\x00\x03" + "5\xac"] = (
-    "\x01\x10" + "\x00f\x00\x02" + "\xa1\xd7"
+GOOD_RTU_RESPONSES[b"\x01\x10" + b"\x00f\x00\x02\x04\x00\x00\x00\x03" + b"5\xac"] = (
+    b"\x01\x10" + b"\x00f\x00\x02" + b"\xa1\xd7"
 )
 
 # Write long (2 registers, starting at 102) on slave 1 using function code 16, with value -3. #
 # --------------------------------------------------------------------------------------------#
 # Message: Slave address 1, function code 16. Register address 102, 2 registers, 4 bytes, value=-3. CRC.
 # Response: Slave address 1, function code 16. Register address 102, 2 registers. CRC
-GOOD_RTU_RESPONSES["\x01\x10" + "\x00f\x00\x02\x04\xff\xff\xff\xfd" + "\xf5\xf8"] = (
-    "\x01\x10" + "\x00f\x00\x02" + "\xa1\xd7"
+GOOD_RTU_RESPONSES[b"\x01\x10" + b"\x00f\x00\x02\x04\xff\xff\xff\xfd" + b"\xf5\xf8"] = (
+    b"\x01\x10" + b"\x00f\x00\x02" + b"\xa1\xd7"
 )
 
 # Write long (2 registers, starting at 222) on slave 1 using function code 16, with value 2923517522 #
@@ -5424,8 +5425,8 @@ GOOD_RTU_RESPONSES["\x01\x10" + "\x00f\x00\x02\x04\xff\xff\xff\xfd" + "\xf5\xf8"
 # --------------------------------------------------------------------------------------------#
 # Message: Slave address 1, function code 16. Register address 222, 2 registers, 4 bytes, value. CRC.
 # Response: Slave address 1, function code 16. Register address 222, 2 registers. CRC
-GOOD_RTU_RESPONSES["\x01\x10" + "\x00\xDE\x00\x02\x04\xAEAVR" + "\xB1\xDE"] = (
-    "\x01\x10" + "\x00\xDE\x00\x02" + "\x21\xF2"
+GOOD_RTU_RESPONSES[b"\x01\x10" + b"\x00\xDE\x00\x02\x04\xAEAVR" + b"\xB1\xDE"] = (
+    b"\x01\x10" + b"\x00\xDE\x00\x02" + b"\x21\xF2"
 )
 
 # Write long (2 registers, starting at 222) on slave 1 using function code 16, with value 2923517522 #
@@ -5434,8 +5435,8 @@ GOOD_RTU_RESPONSES["\x01\x10" + "\x00\xDE\x00\x02\x04\xAEAVR" + "\xB1\xDE"] = (
 # --------------------------------------------------------------------------------------------#
 # Message: Slave address 1, function code 16. Register address 222, 2 registers, 4 bytes, value. CRC.
 # Response: Slave address 1, function code 16. Register address 222, 2 registers. CRC
-GOOD_RTU_RESPONSES["\x01\x10" + "\x00\xDE\x00\x02\x04RVA\xAE" + "\x3E\x3B"] = (
-    "\x01\x10" + "\x00\xDE\x00\x02" + "\x21\xF2"
+GOOD_RTU_RESPONSES[b"\x01\x10" + b"\x00\xDE\x00\x02\x04RVA\xAE" + b"\x3E\x3B"] = (
+    b"\x01\x10" + b"\x00\xDE\x00\x02" + b"\x21\xF2"
 )
 
 # Write long (2 registers, starting at 222) on slave 1 using function code 16, with value 2923517522 #
@@ -5444,8 +5445,8 @@ GOOD_RTU_RESPONSES["\x01\x10" + "\x00\xDE\x00\x02\x04RVA\xAE" + "\x3E\x3B"] = (
 # --------------------------------------------------------------------------------------------#
 # Message: Slave address 1, function code 16. Register address 222, 2 registers, 4 bytes, value. CRC.
 # Response: Slave address 1, function code 16. Register address 222, 2 registers. CRC
-GOOD_RTU_RESPONSES["\x01\x10" + "\x00\xDE\x00\x02\x04A\xAERV" + "\xB7\xFC"] = (
-    "\x01\x10" + "\x00\xDE\x00\x02" + "\x21\xF2"
+GOOD_RTU_RESPONSES[b"\x01\x10" + b"\x00\xDE\x00\x02\x04A\xAERV" + b"\xB7\xFC"] = (
+    b"\x01\x10" + b"\x00\xDE\x00\x02" + b"\x21\xF2"
 )
 
 # Write long (2 registers, starting at 222) on slave 1 using function code 16, with value 2923517522 #
@@ -5454,8 +5455,8 @@ GOOD_RTU_RESPONSES["\x01\x10" + "\x00\xDE\x00\x02\x04A\xAERV" + "\xB7\xFC"] = (
 # --------------------------------------------------------------------------------------------#
 # Message: Slave address 1, function code 16. Register address 222, 2 registers, 4 bytes, value. CRC.
 # Response: Slave address 1, function code 16. Register address 222, 2 registers. CRC
-GOOD_RTU_RESPONSES["\x01\x10" + "\x00\xDE\x00\x02\x04VR\xAEA" + "sv"] = (
-    "\x01\x10" + "\x00\xDE\x00\x02" + "\x21\xF2"
+GOOD_RTU_RESPONSES[b"\x01\x10" + b"\x00\xDE\x00\x02\x04VR\xAEA" + b"sv"] = (
+    b"\x01\x10" + b"\x00\xDE\x00\x02" + b"\x21\xF2"
 )
 
 
@@ -5465,24 +5466,24 @@ GOOD_RTU_RESPONSES["\x01\x10" + "\x00\xDE\x00\x02\x04VR\xAEA" + "sv"] = (
 # ---------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 3. Register address 103, 2 registers. CRC.
 # Response: Slave address 1, function code 3. 4 bytes, value=1.0. CRC.
-GOOD_RTU_RESPONSES["\x01\x03" + "\x00g\x00\x02" + "u\xd4"] = (
-    "\x01\x03" + "\x04\x3f\x80\x00\x00" + "\xf7\xcf"
+GOOD_RTU_RESPONSES[b"\x01\x03" + b"\x00g\x00\x02" + b"u\xd4"] = (
+    b"\x01\x03" + b"\x04\x3f\x80\x00\x00" + b"\xf7\xcf"
 )
 
 # Read float from address 103 (2 registers) on slave 1 using function code 4 #
 # ---------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 4. Register address 103, 2 registers. CRC.
 # Response: Slave address 1, function code 4. 4 bytes, value=3.65e30. CRC.
-GOOD_RTU_RESPONSES["\x01\x04" + "\x00g\x00\x02" + "\xc0\x14"] = (
-    "\x01\x04" + "\x04\x72\x38\x47\x25" + "\x93\x1a"
+GOOD_RTU_RESPONSES[b"\x01\x04" + b"\x00g\x00\x02" + b"\xc0\x14"] = (
+    b"\x01\x04" + b"\x04\x72\x38\x47\x25" + b"\x93\x1a"
 )
 
 # Read float from address 103 (4 registers) on slave 1 using function code 3 #
 # ---------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 3. Register address 103, 4 registers. CRC.
 # Response: Slave address 1, function code 3. 8 bytes, value=-2.0 CRC.
-GOOD_RTU_RESPONSES["\x01\x03" + "\x00g\x00\x04" + "\xf5\xd6"] = (
-    "\x01\x03" + "\x08\xc0\x00\x00\x00\x00\x00\x00\x00" + "\x99\x87"
+GOOD_RTU_RESPONSES[b"\x01\x03" + b"\x00g\x00\x04" + b"\xf5\xd6"] = (
+    b"\x01\x03" + b"\x08\xc0\x00\x00\x00\x00\x00\x00\x00" + b"\x99\x87"
 )
 
 # Read float from address 241 (2 registers) on slave 1 using function code 3 #
@@ -5491,8 +5492,8 @@ GOOD_RTU_RESPONSES["\x01\x03" + "\x00g\x00\x04" + "\xf5\xd6"] = (
 # ---------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 3. Register address 241, 2 registers. CRC.
 # Response: Slave address 1, function code 3. 4 bytes, value=-4.3959787e-11 CRC.
-GOOD_RTU_RESPONSES["\x01\x03" + "\x00\xF1\x00\x02" + "\x95\xF8"] = (
-    "\x01\x03" + "\x04\xAEAVR" + "4\x92"
+GOOD_RTU_RESPONSES[b"\x01\x03" + b"\x00\xF1\x00\x02" + b"\x95\xF8"] = (
+    b"\x01\x03" + b"\x04\xAEAVR" + b"4\x92"
 )
 
 # Read float from address 242 (2 registers) on slave 1 using function code 3 #
@@ -5501,8 +5502,8 @@ GOOD_RTU_RESPONSES["\x01\x03" + "\x00\xF1\x00\x02" + "\x95\xF8"] = (
 # ---------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 3. Register address 242, 2 registers. CRC.
 # Response: Slave address 1, function code 3. 4 bytes, value=-4.3959787e-11 CRC.
-GOOD_RTU_RESPONSES["\x01\x03" + "\x00\xF2\x00\x02" + "\x65\xF8"] = (
-    "\x01\x03" + "\x04A\xAERV" + "2\xB0"
+GOOD_RTU_RESPONSES[b"\x01\x03" + b"\x00\xF2\x00\x02" + b"\x65\xF8"] = (
+    b"\x01\x03" + b"\x04A\xAERV" + b"2\xB0"
 )
 
 # Read float from address 243 (2 registers) on slave 1 using function code 3 #
@@ -5511,8 +5512,8 @@ GOOD_RTU_RESPONSES["\x01\x03" + "\x00\xF2\x00\x02" + "\x65\xF8"] = (
 # ---------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 3. Register address 243, 2 registers. CRC.
 # Response: Slave address 1, function code 3. 4 bytes, value=-4.3959787e-11 CRC.
-GOOD_RTU_RESPONSES["\x01\x03" + "\x00\xF3\x00\x02" + "\x34\x38"] = (
-    "\x01\x03" + "\x04VR\xAEA" + "\xf6:"
+GOOD_RTU_RESPONSES[b"\x01\x03" + b"\x00\xF3\x00\x02" + b"\x34\x38"] = (
+    b"\x01\x03" + b"\x04VR\xAEA" + b"\xf6:"
 )
 
 # Read float from address 244 (2 registers) on slave 1 using function code 3 #
@@ -5521,8 +5522,8 @@ GOOD_RTU_RESPONSES["\x01\x03" + "\x00\xF3\x00\x02" + "\x34\x38"] = (
 # ---------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 3. Register address 244, 2 registers. CRC.
 # Response: Slave address 1, function code 3. 4 bytes, value=-4.3959787e-11 CRC.
-GOOD_RTU_RESPONSES["\x01\x03" + "\x00\xF4\x00\x02" + "\x85\xF9"] = (
-    "\x01\x03" + "\x04RVA\xAE" + "\xBBw"
+GOOD_RTU_RESPONSES[b"\x01\x03" + b"\x00\xF4\x00\x02" + b"\x85\xF9"] = (
+    b"\x01\x03" + b"\x04RVA\xAE" + b"\xBBw"
 )
 
 
@@ -5532,8 +5533,8 @@ GOOD_RTU_RESPONSES["\x01\x03" + "\x00\xF4\x00\x02" + "\x85\xF9"] = (
 # -------------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 103, 2 registers, 4 bytes, value=1.1 . CRC.
 # Response: Slave address 1, function code 16. Register address 103, 2 registers. CRC.
-GOOD_RTU_RESPONSES["\x01\x10" + "\x00g\x00\x02\x04?\x8c\xcc\xcd" + "\xed\x0b"] = (
-    "\x01\x10" + "\x00g\x00\x02" + "\xf0\x17"
+GOOD_RTU_RESPONSES[b"\x01\x10" + b"\x00g\x00\x02\x04?\x8c\xcc\xcd" + b"\xed\x0b"] = (
+    b"\x01\x10" + b"\x00g\x00\x02" + b"\xf0\x17"
 )
 
 # Write float 1.1 to address 103 (4 registers) on slave 1 using function code 16 #
@@ -5541,16 +5542,16 @@ GOOD_RTU_RESPONSES["\x01\x10" + "\x00g\x00\x02\x04?\x8c\xcc\xcd" + "\xed\x0b"] =
 # Message:  Slave address 1, function code 16. Register address 103, 4 registers, 8 bytes, value=1.1 . CRC.
 # Response: Slave address 1, function code 16. Register address 103, 4 registers. CRC.
 GOOD_RTU_RESPONSES[
-    "\x01\x10" + "\x00g\x00\x04\x08?\xf1\x99\x99\x99\x99\x99\x9a" + "u\xf7"
-] = ("\x01\x10" + "\x00g\x00\x04" + "p\x15")
+    b"\x01\x10" + b"\x00g\x00\x04\x08?\xf1\x99\x99\x99\x99\x99\x9a" + b"u\xf7"
+] = (b"\x01\x10" + b"\x00g\x00\x04" + b"p\x15")
 
 # Write float 1.1 to address 103 (4 registers) on slave 1 using function code 16 #
 # -------------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 103, 4 registers, 8 bytes, value=1.1 . CRC.
 # Response: Slave address 1, function code 16. Register address 103, 4 registers. CRC.
 GOOD_RTU_RESPONSES[
-    "\x01\x10" + "\x00g\x00\x04\x08?\xf1\x99\x99\x99\x99\x99\x9a" + "u\xf7"
-] = ("\x01\x10" + "\x00g\x00\x04" + "p\x15")
+    b"\x01\x10" + b"\x00g\x00\x04\x08?\xf1\x99\x99\x99\x99\x99\x9a" + b"u\xf7"
+] = (b"\x01\x10" + b"\x00g\x00\x04" + b"p\x15")
 
 # Write float -4.3959787e-11 to address 240 (42 registers) on slave 1 using function code 16 #
 # Example from https://www.simplymodbus.ca/FAQ.htm (truncated float on page)
@@ -5558,8 +5559,8 @@ GOOD_RTU_RESPONSES[
 # -------------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 240, 2 registers, 4 bytes, value. CRC.
 # Response: Slave address 1, function code 16. Register address 240, 2 registers. CRC.
-GOOD_RTU_RESPONSES["\x01\x10" + "\x00\xF0\x00\x02\x04\xAEAVR" + "2J"] = (
-    "\x01\x10" + "\x00\xF0\x00\x02" + "A\xFB"
+GOOD_RTU_RESPONSES[b"\x01\x10" + b"\x00\xF0\x00\x02\x04\xAEAVR" + b"2J"] = (
+    b"\x01\x10" + b"\x00\xF0\x00\x02" + b"A\xFB"
 )
 
 # Write float -4.3959787e-11 to address 240 (42 registers) on slave 1 using function code 16 #
@@ -5568,8 +5569,8 @@ GOOD_RTU_RESPONSES["\x01\x10" + "\x00\xF0\x00\x02\x04\xAEAVR" + "2J"] = (
 # -------------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 240, 2 registers, 4 bytes, value. CRC.
 # Response: Slave address 1, function code 16. Register address 240, 2 registers. CRC.
-GOOD_RTU_RESPONSES["\x01\x10" + "\x00\xF0\x00\x02\x04RVA\xAE" + "\xBD\xAF"] = (
-    "\x01\x10" + "\x00\xF0\x00\x02" + "A\xFB"
+GOOD_RTU_RESPONSES[b"\x01\x10" + b"\x00\xF0\x00\x02\x04RVA\xAE" + b"\xBD\xAF"] = (
+    b"\x01\x10" + b"\x00\xF0\x00\x02" + b"A\xFB"
 )
 
 # Write float -4.3959787e-11 to address 240 (42 registers) on slave 1 using function code 16 #
@@ -5578,8 +5579,8 @@ GOOD_RTU_RESPONSES["\x01\x10" + "\x00\xF0\x00\x02\x04RVA\xAE" + "\xBD\xAF"] = (
 # -------------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 240, 2 registers, 4 bytes, value. CRC.
 # Response: Slave address 1, function code 16. Register address 240, 2 registers. CRC.
-GOOD_RTU_RESPONSES["\x01\x10" + "\x00\xF0\x00\x02\x04VR\xAEA" + "\xF0\xE2"] = (
-    "\x01\x10" + "\x00\xF0\x00\x02" + "A\xFB"
+GOOD_RTU_RESPONSES[b"\x01\x10" + b"\x00\xF0\x00\x02\x04VR\xAEA" + b"\xF0\xE2"] = (
+    b"\x01\x10" + b"\x00\xF0\x00\x02" + b"A\xFB"
 )
 
 # Write float -4.3959787e-11 to address 240 (42 registers) on slave 1 using function code 16 #
@@ -5588,8 +5589,8 @@ GOOD_RTU_RESPONSES["\x01\x10" + "\x00\xF0\x00\x02\x04VR\xAEA" + "\xF0\xE2"] = (
 # -------------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 240, 2 registers, 4 bytes, value. CRC.
 # Response: Slave address 1, function code 16. Register address 240, 2 registers. CRC.
-GOOD_RTU_RESPONSES["\x01\x10" + "\x00\xF0\x00\x02\x04A\xAERV" + "4h"] = (
-    "\x01\x10" + "\x00\xF0\x00\x02" + "A\xFB"
+GOOD_RTU_RESPONSES[b"\x01\x10" + b"\x00\xF0\x00\x02\x04A\xAERV" + b"4h"] = (
+    b"\x01\x10" + b"\x00\xF0\x00\x02" + b"A\xFB"
 )
 
 
@@ -5599,16 +5600,16 @@ GOOD_RTU_RESPONSES["\x01\x10" + "\x00\xF0\x00\x02\x04A\xAERV" + "4h"] = (
 # ---------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 3. Register address 104, 1 register. CRC.
 # Response: Slave address 1, function code 3. 2 bytes, value = 'AB'.  CRC.
-GOOD_RTU_RESPONSES["\x01\x03" + "\x00h\x00\x01" + "\x05\xd6"] = (
-    "\x01\x03" + "\x02AB" + "\x08%"
+GOOD_RTU_RESPONSES[b"\x01\x03" + b"\x00h\x00\x01" + b"\x05\xd6"] = (
+    b"\x01\x03" + b"\x02AB" + b"\x08%"
 )
 
 # Read string from address 104 (4 registers) on slave 1 using function code 3 #
 # ----------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 3. Register address 104, 4 registers. CRC.
 # Response: Slave address 1, function code 3.  8 bytes, value = 'ABCDEFGH'.  CRC.
-GOOD_RTU_RESPONSES["\x01\x03" + "\x00h\x00\x04" + "\xc5\xd5"] = (
-    "\x01\x03" + "\x08ABCDEFGH" + "\x0b\xcc"
+GOOD_RTU_RESPONSES[b"\x01\x03" + b"\x00h\x00\x04" + b"\xc5\xd5"] = (
+    b"\x01\x03" + b"\x08ABCDEFGH" + b"\x0b\xcc"
 )
 
 
@@ -5618,24 +5619,24 @@ GOOD_RTU_RESPONSES["\x01\x03" + "\x00h\x00\x04" + "\xc5\xd5"] = (
 # -------------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 104, 1 register, 2 bytes, value='A ' . CRC.
 # Response: Slave address 1, function code 16. Register address 104, 1 register. CRC.
-GOOD_RTU_RESPONSES["\x01\x10" + "\x00h\x00\x01\x02A " + "\x9f0"] = (
-    "\x01\x10" + "\x00h\x00\x01" + "\x80\x15"
+GOOD_RTU_RESPONSES[b"\x01\x10" + b"\x00h\x00\x01\x02A " + b"\x9f0"] = (
+    b"\x01\x10" + b"\x00h\x00\x01" + b"\x80\x15"
 )
 
 # Write string 'A' to address 104 (4 registers) on slave 1 using function code 16 #
 # --------------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 104, 4 registers, 8 bytes, value='A       ' . CRC.
 # Response: Slave address 1, function code 16. Register address 104, 2 registers. CRC.
-GOOD_RTU_RESPONSES["\x01\x10" + "\x00h\x00\x04\x08A       " + "\xa7\xae"] = (
-    "\x01\x10" + "\x00h\x00\x04" + "@\x16"
+GOOD_RTU_RESPONSES[b"\x01\x10" + b"\x00h\x00\x04\x08A       " + b"\xa7\xae"] = (
+    b"\x01\x10" + b"\x00h\x00\x04" + b"@\x16"
 )
 
 # Write string 'ABCDEFGH' to address 104 (4 registers) on slave 1 using function code 16 #
 # ---------------------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 104, 4 registers, 8 bytes, value='ABCDEFGH' . CRC.
 # Response: Slave address 1, function code 16. Register address 104, 4 registers. CRC.
-GOOD_RTU_RESPONSES["\x01\x10" + "\x00h\x00\x04\x08ABCDEFGH" + "I>"] = (
-    "\x01\x10" + "\x00h\x00\x04" + "@\x16"
+GOOD_RTU_RESPONSES[b"\x01\x10" + b"\x00h\x00\x04\x08ABCDEFGH" + b"I>"] = (
+    b"\x01\x10" + b"\x00h\x00\x04" + b"@\x16"
 )
 
 
@@ -5645,16 +5646,16 @@ GOOD_RTU_RESPONSES["\x01\x10" + "\x00h\x00\x04\x08ABCDEFGH" + "I>"] = (
 # --------------------------------------------------------------------#
 # Message:  Slave address 1, function code 3. Register address 105, 1 register. CRC.
 # Response: Slave address 1, function code 3. 2 bytes, value = 16.  CRC.
-GOOD_RTU_RESPONSES["\x01\x03" + "\x00i\x00\x01" + "T\x16"] = (
-    "\x01\x03" + "\x02\x00\x10" + "\xb9\x88"
+GOOD_RTU_RESPONSES[b"\x01\x03" + b"\x00i\x00\x01" + b"T\x16"] = (
+    b"\x01\x03" + b"\x02\x00\x10" + b"\xb9\x88"
 )
 
 # Read from address 105 (3 registers) on slave 1 using function code 3 #
 # ---------------------------------------------------------------------#
 # Message:  Slave address 1, function code 3. Register address 105, 3 registers. CRC.
 # Response: Slave address 1, function code 3. 6 bytes, value = 16, 32, 64. CRC.
-GOOD_RTU_RESPONSES["\x01\x03" + "\x00i\x00\x03" + "\xd5\xd7"] = (
-    "\x01\x03" + "\x06\x00\x10\x00\x20\x00\x40" + "\xe0\x8c"
+GOOD_RTU_RESPONSES[b"\x01\x03" + b"\x00i\x00\x03" + b"\xd5\xd7"] = (
+    b"\x01\x03" + b"\x06\x00\x10\x00\x20\x00\x40" + b"\xe0\x8c"
 )
 
 
@@ -5664,8 +5665,8 @@ GOOD_RTU_RESPONSES["\x01\x03" + "\x00i\x00\x03" + "\xd5\xd7"] = (
 # ------------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 105, 1 register, 2 bytes, value=2 . CRC.
 # Response: Slave address 1, function code 16. Register address 105, 1 register. CRC.
-GOOD_RTU_RESPONSES["\x01\x10" + "\x00i\x00\x01\x02\x00\x02" + ".\xa8"] = (
-    "\x01\x10" + "\x00i\x00\x01" + "\xd1\xd5"
+GOOD_RTU_RESPONSES[b"\x01\x10" + b"\x00i\x00\x01\x02\x00\x02" + b".\xa8"] = (
+    b"\x01\x10" + b"\x00i\x00\x01" + b"\xd1\xd5"
 )
 
 # Write value [2, 4, 8] to address 105 (3 registers) on slave 1 using function code 16 #
@@ -5673,57 +5674,60 @@ GOOD_RTU_RESPONSES["\x01\x10" + "\x00i\x00\x01\x02\x00\x02" + ".\xa8"] = (
 # Message:  Slave address 1, function code 16. Register address 105, 3 register, 6 bytes, value=2, 4, 8. CRC.
 # Response: Slave address 1, function code 16. Register address 105, 3 registers. CRC.
 GOOD_RTU_RESPONSES[
-    "\x01\x10" + "\x00i\x00\x03\x06\x00\x02\x00\x04\x00\x08" + "\x0c\xd6"
-] = ("\x01\x10" + "\x00i\x00\x03" + "P\x14")
+    b"\x01\x10" + b"\x00i\x00\x03\x06\x00\x02\x00\x04\x00\x08" + b"\x0c\xd6"
+] = (b"\x01\x10" + b"\x00i\x00\x03" + b"P\x14")
 
 
 #                ##  OTHER RESPONSES  ##
 
 # Retrieve an empty response (for testing the _communicate method) #
 # ---------------------------------------------------------------- #
-WRONG_RTU_RESPONSES["MessageForEmptyResponse"] = ""
+WRONG_RTU_RESPONSES[b"MessageForEmptyResponse"] = b""
 
 # Retrieve an known response (for testing the _communicate method) #
 # ---------------------------------------------------------------- #
-WRONG_RTU_RESPONSES["TESTMESSAGE"] = "TESTRESPONSE"
+WRONG_RTU_RESPONSES[b"TESTMESSAGE"] = b"TESTRESPONSE"
 
 # Retrieve an known response with local echo (for testing the _communicate method) #
 # ---------------------------------------------------------------- #
-WRONG_RTU_RESPONSES["TESTMESSAGE2"] = "TESTMESSAGE2TESTRESPONSE2"
+WRONG_RTU_RESPONSES[b"TESTMESSAGE2"] = b"TESTMESSAGE2TESTRESPONSE2"
 
 # Retrieve a response with wrong local echo (for testing the _communicate method) #
 # ---------------------------------------------------------------- #
-WRONG_RTU_RESPONSES["TESTMESSAGE3"] = "TESTMeSSAGE3TESTRESPONSE3"
+WRONG_RTU_RESPONSES[b"TESTMESSAGE3"] = b"TESTMeSSAGE3TESTRESPONSE3"
 
 # Retrieve an known response (for testing the _perform_command method) #
 # ---------------------------------------------------------------- #
 WRONG_RTU_RESPONSES[
-    "\x01\x10TESTCOMMAND\x08B"
-] = "\x01\x10TRspU<"  # Response should be 8 bytes
+    b"\x01\x10TESTCOMMAND\x08B"
+] = b"\x01\x10TRspU<"  # Response should be 8 bytes
 WRONG_RTU_RESPONSES[
-    "\x01\x4bTESTCOMMAND2\x18\xc8"
-] = "\x01\x4bTESTCOMMANDRESPONSE2K\x8c"
+    b"\x01\x4bTESTCOMMAND2\x18\xc8"
+] = b"\x01\x4bTESTCOMMANDRESPONSE2K\x8c"
 WRONG_RTU_RESPONSES[
-    "\x01\x01TESTCOMMAND4~"
-] = "\x02\x01TESTCOMMANDRESPONSEx]"  # Wrong slave address in response
+    b"\x01\x01TESTCOMMAND4~"
+] = b"\x02\x01TESTCOMMANDRESPONSEx]"  # Wrong slave address in response
 WRONG_RTU_RESPONSES[
-    "\x01\x02TESTCOMMAND0z"
-] = "\x01\x03TESTCOMMANDRESPONSE2\x8c"  # Wrong function code in response
+    b"\x01\x02TESTCOMMAND0z"
+] = b"\x01\x03TESTCOMMANDRESPONSE2\x8c"  # Wrong function code in response
 WRONG_RTU_RESPONSES[
-    "\x01\x03TESTCOMMAND\xcd\xb9"
-] = "\x01\x03TESTCOMMANDRESPONSEab"  # Wrong CRC in response
-WRONG_RTU_RESPONSES["\x01\x04TESTCOMMAND8r"] = "A"  # Too short response message
+    b"\x01\x03TESTCOMMAND\xcd\xb9"
+] = b"\x01\x03TESTCOMMANDRESPONSEab"  # Wrong CRC in response
+WRONG_RTU_RESPONSES[b"\x01\x04TESTCOMMAND8r"] = b"A"  # Too short response message
 WRONG_RTU_RESPONSES[
-    "\x01\x05TESTCOMMAND\xc5\xb1"
-] = "\x01\x85TESTCOMMANDRESPONSE\xa54"  # Error indication from slave
+    b"\x01\x05TESTCOMMAND\xc5\xb1"
+] = b"\x01\x85TESTCOMMANDRESPONSE\xa54"  # Error indication from slave
 
 
 # Handle local echo: Read register 289 on slave 20 using function code 3 #
 # ---------------------------------------------------------------------- #
 # Message:  Slave address 20, function code 3. Register address 289, 1 register. CRC.
 # Response: Echo. Slave address 20, function code 3. 2 bytes, value=770. CRC.
-WRONG_RTU_RESPONSES["\x14\x03" + "\x01!\x00\x01" + "\xd79"] = (
-    ("\x14\x03" + "\x01!\x00\x01" + "\xd79") + "\x14\x03" + "\x02\x03\x02" + "4\xb6"
+WRONG_RTU_RESPONSES[b"\x14\x03" + b"\x01!\x00\x01" + b"\xd79"] = (
+    (b"\x14\x03" + b"\x01!\x00\x01" + b"\xd79")
+    + b"\x14\x03"
+    + b"\x02\x03\x02"
+    + b"4\xb6"
 )
 
 # Handle local echo: Read register 290 on slave 20 using function code 3. Wrong echo #
@@ -5731,11 +5735,11 @@ WRONG_RTU_RESPONSES["\x14\x03" + "\x01!\x00\x01" + "\xd79"] = (
 # Message:  Slave address 20, function code 3. Register address 290, 1 register. CRC.
 # Response: Wrong echo. Slave address 20, function code 3. 2 bytes, value=770. CRC.
 
-WRONG_RTU_RESPONSES["\x14\x03" + "\x01\x22\x00\x01" + "\x27\x39"] = (
-    ("\x14\x03" + "\x01\x22\x00\x02" + "\x27\x39")
-    + "\x14\x03"
-    + "\x02\x03\x02"
-    + "4\xb6"
+WRONG_RTU_RESPONSES[b"\x14\x03" + b"\x01\x22\x00\x01" + b"\x27\x39"] = (
+    (b"\x14\x03" + b"\x01\x22\x00\x02" + b"\x27\x39")
+    + b"\x14\x03"
+    + b"\x02\x03\x02"
+    + b"4\xb6"
 )
 
 
@@ -5744,58 +5748,60 @@ WRONG_RTU_RESPONSES["\x14\x03" + "\x01\x22\x00\x01" + "\x27\x39"] = (
 # (Sorted by slave address, register address)
 
 # Slave address 1, read_bit(2068) Response value 1.
-GOOD_RTU_RESPONSES["\x01\x02\x08\x14\x00\x01\xfb\xae"] = "\x01\x02\x01\x01`H"
+GOOD_RTU_RESPONSES[b"\x01\x02\x08\x14\x00\x01\xfb\xae"] = b"\x01\x02\x01\x01`H"
 
 # Slave address 1, write_bit(2068, 0)
 GOOD_RTU_RESPONSES[
-    "\x01\x05\x08\x14\x00\x00\x8f\xae"
-] = "\x01\x05\x08\x14\x00\x00\x8f\xae"
+    b"\x01\x05\x08\x14\x00\x00\x8f\xae"
+] = b"\x01\x05\x08\x14\x00\x00\x8f\xae"
 
 # Slave address 1, write_bit(2068, 1)
-GOOD_RTU_RESPONSES["\x01\x05\x08\x14\xff\x00\xce^"] = "\x01\x05\x08\x14\xff\x00\xce^"
+GOOD_RTU_RESPONSES[b"\x01\x05\x08\x14\xff\x00\xce^"] = b"\x01\x05\x08\x14\xff\x00\xce^"
 
 # Slave address 1, read_register(4097, 1) Response value 823.6
-GOOD_RTU_RESPONSES["\x01\x03\x10\x01\x00\x01\xd1\n"] = "\x01\x03\x02 ,\xa0Y"
+GOOD_RTU_RESPONSES[b"\x01\x03\x10\x01\x00\x01\xd1\n"] = b"\x01\x03\x02 ,\xa0Y"
 
 # Slave address 1, write_register(4097, 700.0, 1)
 GOOD_RTU_RESPONSES[
-    "\x01\x10\x10\x01\x00\x01\x02\x1bX\xbdJ"
-] = "\x01\x10\x10\x01\x00\x01T\xc9"
+    b"\x01\x10\x10\x01\x00\x01\x02\x1bX\xbdJ"
+] = b"\x01\x10\x10\x01\x00\x01T\xc9"
 
 # Slave address 1, write_register(4097, 823.6, 1)
 GOOD_RTU_RESPONSES[
-    "\x01\x10\x10\x01\x00\x01\x02 ,\xae]"
-] = "\x01\x10\x10\x01\x00\x01T\xc9"
+    b"\x01\x10\x10\x01\x00\x01\x02 ,\xae]"
+] = b"\x01\x10\x10\x01\x00\x01T\xc9"
 
 # Slave address 10, read_bit(2068) Response value 1
-GOOD_RTU_RESPONSES["\n\x02\x08\x14\x00\x01\xfa\xd5"] = "\n\x02\x01\x01bl"
+GOOD_RTU_RESPONSES[b"\n\x02\x08\x14\x00\x01\xfa\xd5"] = b"\n\x02\x01\x01bl"
 
 # Slave address 10, write_bit(2068, 0)
-GOOD_RTU_RESPONSES["\n\x05\x08\x14\x00\x00\x8e\xd5"] = "\n\x05\x08\x14\x00\x00\x8e\xd5"
+GOOD_RTU_RESPONSES[
+    b"\n\x05\x08\x14\x00\x00\x8e\xd5"
+] = b"\n\x05\x08\x14\x00\x00\x8e\xd5"
 
 # Slave address 10, write_bit(2068, 1)
-GOOD_RTU_RESPONSES["\n\x05\x08\x14\xff\x00\xcf%"] = "\n\x05\x08\x14\xff\x00\xcf%"
+GOOD_RTU_RESPONSES[b"\n\x05\x08\x14\xff\x00\xcf%"] = b"\n\x05\x08\x14\xff\x00\xcf%"
 
 # Slave address 10, read_register(4096, 1) Response value 25.0
-GOOD_RTU_RESPONSES["\n\x03\x10\x00\x00\x01\x81\xb1"] = "\n\x03\x02\x00\xfa\x9d\xc6"
+GOOD_RTU_RESPONSES[b"\n\x03\x10\x00\x00\x01\x81\xb1"] = b"\n\x03\x02\x00\xfa\x9d\xc6"
 
 # Slave address 10, read_register(4097, 1) Response value 325.8
-GOOD_RTU_RESPONSES["\n\x03\x10\x01\x00\x01\xd0q"] = "\n\x03\x02\x0c\xba\x996"
+GOOD_RTU_RESPONSES[b"\n\x03\x10\x01\x00\x01\xd0q"] = b"\n\x03\x02\x0c\xba\x996"
 
 # Slave address 10, write_register(4097, 325.8, 1)
 GOOD_RTU_RESPONSES[
-    "\n\x10\x10\x01\x00\x01\x02\x0c\xbaA\xc3"
-] = "\n\x10\x10\x01\x00\x01U\xb2"
+    b"\n\x10\x10\x01\x00\x01\x02\x0c\xbaA\xc3"
+] = b"\n\x10\x10\x01\x00\x01U\xb2"
 
 # Slave address 10, write_register(4097, 20.0, 1)
 GOOD_RTU_RESPONSES[
-    "\n\x10\x10\x01\x00\x01\x02\x00\xc8\xc4\xe6"
-] = "\n\x10\x10\x01\x00\x01U\xb2"
+    b"\n\x10\x10\x01\x00\x01\x02\x00\xc8\xc4\xe6"
+] = b"\n\x10\x10\x01\x00\x01U\xb2"
 
 # Slave address 10, write_register(4097, 200.0, 1)
 GOOD_RTU_RESPONSES[
-    "\n\x10\x10\x01\x00\x01\x02\x07\xd0\xc6\xdc"
-] = "\n\x10\x10\x01\x00\x01U\xb2"
+    b"\n\x10\x10\x01\x00\x01\x02\x07\xd0\xc6\xdc"
+] = b"\n\x10\x10\x01\x00\x01U\xb2"
 
 
 ## Recorded RTU data from Delta DTB4824 ##
@@ -5804,93 +5810,99 @@ GOOD_RTU_RESPONSES[
 
 # Slave address 7, read_bit(0x0800). This is LED AT.
 # Response value 0
-GOOD_RTU_RESPONSES["\x07\x02\x08\x00\x00\x01\xbb\xcc"] = "\x07\x02\x01\x00\xa1\x00"
+GOOD_RTU_RESPONSES[b"\x07\x02\x08\x00\x00\x01\xbb\xcc"] = b"\x07\x02\x01\x00\xa1\x00"
 
 # Slave address 7, read_bit(0x0801). This is LED Out1.
 # Response value 0
-GOOD_RTU_RESPONSES["\x07\x02\x08\x01\x00\x01\xea\x0c"] = "\x07\x02\x01\x00\xa1\x00"
+GOOD_RTU_RESPONSES[b"\x07\x02\x08\x01\x00\x01\xea\x0c"] = b"\x07\x02\x01\x00\xa1\x00"
 
 # Slave address 7, read_bit(0x0802). This is LED Out2.
 # Response value 0
-GOOD_RTU_RESPONSES["\x07\x02\x08\x02\x00\x01\x1a\x0c"] = "\x07\x02\x01\x00\xa1\x00"
+GOOD_RTU_RESPONSES[b"\x07\x02\x08\x02\x00\x01\x1a\x0c"] = b"\x07\x02\x01\x00\xa1\x00"
 
 # Slave address 7, write_bit(0x0810, 1) This is "Communication write in enabled".
 GOOD_RTU_RESPONSES[
-    "\x07\x05\x08\x10\xff\x00\x8f\xf9"
-] = "\x07\x05\x08\x10\xff\x00\x8f\xf9"
+    b"\x07\x05\x08\x10\xff\x00\x8f\xf9"
+] = b"\x07\x05\x08\x10\xff\x00\x8f\xf9"
 
 # Slave address 7, _perform_command(2, '\x08\x10\x00\x09'). This is reading 9 bits starting at 0x0810.
 # Response value '\x02\x07\x00'
-GOOD_RTU_RESPONSES["\x07\x02\x08\x10\x00\t\xbb\xcf"] = "\x07\x02\x02\x07\x003\x88"
+GOOD_RTU_RESPONSES[b"\x07\x02\x08\x10\x00\t\xbb\xcf"] = b"\x07\x02\x02\x07\x003\x88"
 
 # Slave address 7, read_bit(0x0814). This is RUN/STOP setting.
 # Response value 0
-GOOD_RTU_RESPONSES["\x07\x02\x08\x14\x00\x01\xfb\xc8"] = "\x07\x02\x01\x00\xa1\x00"
+GOOD_RTU_RESPONSES[b"\x07\x02\x08\x14\x00\x01\xfb\xc8"] = b"\x07\x02\x01\x00\xa1\x00"
 
 # Slave address 7, write_bit(0x0814, 0). This is STOP.
 GOOD_RTU_RESPONSES[
-    "\x07\x05\x08\x14\x00\x00\x8f\xc8"
-] = "\x07\x05\x08\x14\x00\x00\x8f\xc8"
+    b"\x07\x05\x08\x14\x00\x00\x8f\xc8"
+] = b"\x07\x05\x08\x14\x00\x00\x8f\xc8"
 
 # Slave address 7, write_bit(0x0814, 1). This is RUN.
-GOOD_RTU_RESPONSES["\x07\x05\x08\x14\xff\x00\xce8"] = "\x07\x05\x08\x14\xff\x00\xce8"
+GOOD_RTU_RESPONSES[b"\x07\x05\x08\x14\xff\x00\xce8"] = b"\x07\x05\x08\x14\xff\x00\xce8"
 
 # Slave address 7, read_registers(0x1000, 2). This is process value (PV) and setpoint (SV).
 # Response value [64990, 350]
 GOOD_RTU_RESPONSES[
-    "\x07\x03\x10\x00\x00\x02\xc0\xad"
-] = "\x07\x03\x04\xfd\xde\x01^M\xcd"
+    b"\x07\x03\x10\x00\x00\x02\xc0\xad"
+] = b"\x07\x03\x04\xfd\xde\x01^M\xcd"
 
 # Slave address 7, read_register(0x1000). This is process value (PV).
 # Response value 64990
-GOOD_RTU_RESPONSES["\x07\x03\x10\x00\x00\x01\x80\xac"] = "\x07\x03\x02\xfd\xde\xf0\x8c"
+GOOD_RTU_RESPONSES[
+    b"\x07\x03\x10\x00\x00\x01\x80\xac"
+] = b"\x07\x03\x02\xfd\xde\xf0\x8c"
 
 # Slave address 7, read_register(0x1001, 1). This is setpoint (SV).
 # Response value 80.0
-GOOD_RTU_RESPONSES["\x07\x03\x10\x01\x00\x01\xd1l"] = "\x07\x03\x02\x03 1l"
+GOOD_RTU_RESPONSES[b"\x07\x03\x10\x01\x00\x01\xd1l"] = b"\x07\x03\x02\x03 1l"
 
 # Slave address 7, write_register(0x1001, 25, 1, functioncode=6)
-GOOD_RTU_RESPONSES["\x07\x06\x10\x01\x00\xfa\\\xef"] = "\x07\x06\x10\x01\x00\xfa\\\xef"
+GOOD_RTU_RESPONSES[
+    b"\x07\x06\x10\x01\x00\xfa\\\xef"
+] = b"\x07\x06\x10\x01\x00\xfa\\\xef"
 
 # Slave address 7, write_register(0x1001, 0x0320, functioncode=6) # Write value 800 to register 0x1001.
 # This is a setpoint of 80.0 degrees (Centigrades, dependent on setting).
-GOOD_RTU_RESPONSES["\x07\x06\x10\x01\x03 \xdd\x84"] = "\x07\x06\x10\x01\x03 \xdd\x84"
+GOOD_RTU_RESPONSES[b"\x07\x06\x10\x01\x03 \xdd\x84"] = b"\x07\x06\x10\x01\x03 \xdd\x84"
 
 # Slave address 7, read_register(0x1004). This is sensor type.
 # Response value 14
-GOOD_RTU_RESPONSES["\x07\x03\x10\x04\x00\x01\xc1m"] = "\x07\x03\x02\x00\x0e\xb1\x80"
+GOOD_RTU_RESPONSES[b"\x07\x03\x10\x04\x00\x01\xc1m"] = b"\x07\x03\x02\x00\x0e\xb1\x80"
 
 # Slave address 7, read_register(0x1005) This is control method.
 # Response value 1
-GOOD_RTU_RESPONSES["\x07\x03\x10\x05\x00\x01\x90\xad"] = "\x07\x03\x02\x00\x01\xf1\x84"
+GOOD_RTU_RESPONSES[
+    b"\x07\x03\x10\x05\x00\x01\x90\xad"
+] = b"\x07\x03\x02\x00\x01\xf1\x84"
 
 # Slave address 7, read_register(0x1006). This is heating/cooling selection.
 # Response value 0
-GOOD_RTU_RESPONSES["\x07\x03\x10\x06\x00\x01`\xad"] = "\x07\x03\x02\x00\x000D"
+GOOD_RTU_RESPONSES[b"\x07\x03\x10\x06\x00\x01`\xad"] = b"\x07\x03\x02\x00\x000D"
 
 # Slave address 7, read_register(0x1012, 1). This is output 1.
 # Response value 0.0
-GOOD_RTU_RESPONSES["\x07\x03\x10\x12\x00\x01 \xa9"] = "\x07\x03\x02\x00\x000D"
+GOOD_RTU_RESPONSES[b"\x07\x03\x10\x12\x00\x01 \xa9"] = b"\x07\x03\x02\x00\x000D"
 
 # Slave address 7, read_register(0x1013, 1). This is output 2.
 # Response value 0.0
-GOOD_RTU_RESPONSES["\x07\x03\x10\x13\x00\x01qi"] = "\x07\x03\x02\x00\x000D"
+GOOD_RTU_RESPONSES[b"\x07\x03\x10\x13\x00\x01qi"] = b"\x07\x03\x02\x00\x000D"
 
 # Slave address 7, read_register(0x1023). This is system alarm setting.
 # Response value 0
-GOOD_RTU_RESPONSES["\x07\x03\x10#\x00\x01qf"] = "\x07\x03\x02\x00\x000D"
+GOOD_RTU_RESPONSES[b"\x07\x03\x10#\x00\x01qf"] = b"\x07\x03\x02\x00\x000D"
 
 # Slave address 7, read_register(0x102A). This is LED status.
 # Response value 0
-GOOD_RTU_RESPONSES["\x07\x03\x10*\x00\x01\xa1d"] = "\x07\x03\x02\x00\x000D"
+GOOD_RTU_RESPONSES[b"\x07\x03\x10*\x00\x01\xa1d"] = b"\x07\x03\x02\x00\x000D"
 
 # Slave address 7, read_register(0x102B). This is pushbutton status.
 # Response value 15
-GOOD_RTU_RESPONSES["\x07\x03\x10+\x00\x01\xf0\xa4"] = "\x07\x03\x02\x00\x0fp@"
+GOOD_RTU_RESPONSES[b"\x07\x03\x10+\x00\x01\xf0\xa4"] = b"\x07\x03\x02\x00\x0fp@"
 
 # Slave address 7, read_register(0x102F). This is firmware version.
 # Response value 400
-GOOD_RTU_RESPONSES["\x07\x03\x10/\x00\x01\xb1e"] = "\x07\x03\x02\x01\x901\xb8"
+GOOD_RTU_RESPONSES[b"\x07\x03\x10/\x00\x01\xb1e"] = b"\x07\x03\x02\x01\x901\xb8"
 
 
 ## Recorded ASCII data from Delta DTB4824 ##
@@ -5899,87 +5911,87 @@ GOOD_RTU_RESPONSES["\x07\x03\x10/\x00\x01\xb1e"] = "\x07\x03\x02\x01\x901\xb8"
 
 # Slave address 7, read_bit(0x0800). This is LED AT.
 # Response value 0
-GOOD_ASCII_RESPONSES[":070208000001EE\r\n"] = ":07020100F6\r\n"
+GOOD_ASCII_RESPONSES[b":070208000001EE\r\n"] = b":07020100F6\r\n"
 
 # Slave address 7, read_bit(0x0801). This is LED Out1.
 # Response value 1
-GOOD_ASCII_RESPONSES[":070208010001ED\r\n"] = ":07020101F5\r\n"
+GOOD_ASCII_RESPONSES[b":070208010001ED\r\n"] = b":07020101F5\r\n"
 
 # Slave address 7, read_bit(0x0802). This is LED Out2.
 # Response value 0
-GOOD_ASCII_RESPONSES[":070208020001EC\r\n"] = ":07020100F6\r\n"
+GOOD_ASCII_RESPONSES[b":070208020001EC\r\n"] = b":07020100F6\r\n"
 
 # Slave address 7, _perform_command(2, '\x08\x10\x00\x09'). This is reading 9 bits starting at 0x0810.
 # Response value '\x02\x17\x00'
-GOOD_ASCII_RESPONSES[":070208100009D6\r\n"] = ":0702021700DE\r\n"
+GOOD_ASCII_RESPONSES[b":070208100009D6\r\n"] = b":0702021700DE\r\n"
 
 # Slave address 7, write_bit(0x0810, 1) This is "Communication write in enabled".
-GOOD_ASCII_RESPONSES[":07050810FF00DD\r\n"] = ":07050810FF00DD\r\n"
+GOOD_ASCII_RESPONSES[b":07050810FF00DD\r\n"] = b":07050810FF00DD\r\n"
 
 # Slave address 7, read_bit(0x0814). This is RUN/STOP setting.
 # Response value 1
-GOOD_ASCII_RESPONSES[":070208140001DA\r\n"] = ":07020101F5\r\n"
+GOOD_ASCII_RESPONSES[b":070208140001DA\r\n"] = b":07020101F5\r\n"
 
 # Slave address 7, write_bit(0x0814, 0). This is STOP.
-GOOD_ASCII_RESPONSES[":070508140000D8\r\n"] = ":070508140000D8\r\n"
+GOOD_ASCII_RESPONSES[b":070508140000D8\r\n"] = b":070508140000D8\r\n"
 
 # Slave address 7, write_bit(0x0814, 1). This is RUN.
-GOOD_ASCII_RESPONSES[":07050814FF00D9\r\n"] = ":07050814FF00D9\r\n"
+GOOD_ASCII_RESPONSES[b":07050814FF00D9\r\n"] = b":07050814FF00D9\r\n"
 
 # Slave address 7, read_registers(0x1000, 2). This is process value (PV) and setpoint (SV).
 # Response value [64990, 350]
-GOOD_ASCII_RESPONSES[":070310000002E4\r\n"] = ":070304FDDE015EB8\r\n"
+GOOD_ASCII_RESPONSES[b":070310000002E4\r\n"] = b":070304FDDE015EB8\r\n"
 
 # Slave address 7, read_register(0x1000). This is process value (PV).
 # Response value 64990
-GOOD_ASCII_RESPONSES[":070310000001E5\r\n"] = ":070302FDDE19\r\n"
+GOOD_ASCII_RESPONSES[b":070310000001E5\r\n"] = b":070302FDDE19\r\n"
 
 # Slave address 7, read_register(0x1001, 1). This is setpoint (SV).
 # Response value 80.0
-GOOD_ASCII_RESPONSES[":070310010001E4\r\n"] = ":0703020320D1\r\n"
+GOOD_ASCII_RESPONSES[b":070310010001E4\r\n"] = b":0703020320D1\r\n"
 
 # Slave address 7, write_register(0x1001, 25, 1, functioncode=6)
-GOOD_ASCII_RESPONSES[":0706100100FAE8\r\n"] = ":0706100100FAE8\r\n"
+GOOD_ASCII_RESPONSES[b":0706100100FAE8\r\n"] = b":0706100100FAE8\r\n"
 
 # Slave address 7, write_register(0x1001, 0x0320, functioncode=6) # Write value 800 to register 0x1001.
 # This is a setpoint of 80.0 degrees (Centigrades, dependent on setting).
-GOOD_ASCII_RESPONSES[":070610010320BF\r\n"] = ":070610010320BF\r\n"
+GOOD_ASCII_RESPONSES[b":070610010320BF\r\n"] = b":070610010320BF\r\n"
 
 # Slave address 7, read_register(0x1004). This is sensor type.
 # Response value 14
-GOOD_ASCII_RESPONSES[":070310040001E1\r\n"] = ":070302000EE6\r\n"
+GOOD_ASCII_RESPONSES[b":070310040001E1\r\n"] = b":070302000EE6\r\n"
 
 # Slave address 7, read_register(0x1005) This is control method.
 # Response value 1
-GOOD_ASCII_RESPONSES[":070310050001E0\r\n"] = ":0703020001F3\r\n"
+GOOD_ASCII_RESPONSES[b":070310050001E0\r\n"] = b":0703020001F3\r\n"
 
 # Slave address 7, read_register(0x1006). This is heating/cooling selection.
 # Response value 0
-GOOD_ASCII_RESPONSES[":070310060001DF\r\n"] = ":0703020000F4\r\n"
+GOOD_ASCII_RESPONSES[b":070310060001DF\r\n"] = b":0703020000F4\r\n"
 
 # Slave address 7, read_register(0x1012, 1). This is output 1.
 # Response value 100.0
-GOOD_ASCII_RESPONSES[":070310120001D3\r\n"] = ":07030203E809\r\n"
+GOOD_ASCII_RESPONSES[b":070310120001D3\r\n"] = b":07030203E809\r\n"
 
 # Slave address 7, read_register(0x1013, 1). This is output 2.
 # Response value 0.0
-GOOD_ASCII_RESPONSES[":070310130001D2\r\n"] = ":0703020000F4\r\n"
+GOOD_ASCII_RESPONSES[b":070310130001D2\r\n"] = b":0703020000F4\r\n"
 
 # Slave address 7, read_register(0x1023). This is system alarm setting.
 # Response value 0
-GOOD_ASCII_RESPONSES[":070310230001C2\r\n"] = ":0703020000F4\r\n"
+GOOD_ASCII_RESPONSES[b":070310230001C2\r\n"] = b":0703020000F4\r\n"
 
 # Slave address 7, read_register(0x102A). This is LED status.
 # Response value 64
-GOOD_ASCII_RESPONSES[":0703102A0001BB\r\n"] = ":0703020040B4\r\n"
+GOOD_ASCII_RESPONSES[b":0703102A0001BB\r\n"] = b":0703020040B4\r\n"
 
 # Slave address 7, read_register(0x102B). This is pushbutton status.
 # Response value 15
-GOOD_ASCII_RESPONSES[":0703102B0001BA\r\n"] = ":070302000FE5\r\n"
+GOOD_ASCII_RESPONSES[b":0703102B0001BA\r\n"] = b":070302000FE5\r\n"
 
 # Slave address 7, read_register(0x102F). This is firmware version.
 # Response value 400
-GOOD_ASCII_RESPONSES[":0703102F0001B6\r\n"] = ":070302019063\r\n"
+GOOD_ASCII_RESPONSES[b":0703102F0001B6\r\n"] = b":070302019063\r\n"
 
 
 #######################
