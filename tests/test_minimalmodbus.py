@@ -120,7 +120,7 @@ class ExtendedTestCase(unittest.TestCase):
 
     """
 
-    def assertRaises(
+    def assertRaises(  # type: ignore
         self,
         excClass: Union[Type[BaseException], Tuple[Type[BaseException], ...]],
         callableObj: Callable[..., Any],
@@ -765,53 +765,59 @@ class TestParsePayload(ExtendedTestCase):
         )
 
         # read_float(103, functioncode=3, number_of_registers=2)
+        parsed_value = minimalmodbus._parse_payload(
+            "\x04\x3f\x80\x00\x00",
+            3,
+            103,
+            None,
+            0,
+            2,
+            0,
+            False,
+            False,
+            _PAYLOADFORMAT_FLOAT,
+        )
+        assert isinstance(parsed_value, float)
         self.assertAlmostEqual(
-            minimalmodbus._parse_payload(
-                "\x04\x3f\x80\x00\x00",
-                3,
-                103,
-                None,
-                0,
-                2,
-                0,
-                False,
-                False,
-                _PAYLOADFORMAT_FLOAT,
-            ),
+            parsed_value,
             1.0,
         )
 
         # read_float(103, functioncode=3, number_of_registers=4)
+        parsed_value = minimalmodbus._parse_payload(
+            "\x08\xc0\x00\x00\x00\x00\x00\x00\x00",
+            3,
+            103,
+            None,
+            0,
+            4,
+            0,
+            False,
+            False,
+            _PAYLOADFORMAT_FLOAT,
+        )
+        assert isinstance(parsed_value, float)
         self.assertAlmostEqual(
-            minimalmodbus._parse_payload(
-                "\x08\xc0\x00\x00\x00\x00\x00\x00\x00",
-                3,
-                103,
-                None,
-                0,
-                4,
-                0,
-                False,
-                False,
-                _PAYLOADFORMAT_FLOAT,
-            ),
+            parsed_value,
             -2.0,
         )
 
         # read_float(103, functioncode=4, number_of_registers=2)
+        parsed_value = minimalmodbus._parse_payload(
+            "\x04\x72\x38\x47\x25",
+            4,
+            103,
+            None,
+            0,
+            2,
+            0,
+            False,
+            False,
+            _PAYLOADFORMAT_FLOAT,
+        )
+        assert isinstance(parsed_value, float)
         self.assertAlmostEqualRatio(
-            minimalmodbus._parse_payload(
-                "\x04\x72\x38\x47\x25",
-                4,
-                103,
-                None,
-                0,
-                2,
-                0,
-                False,
-                False,
-                _PAYLOADFORMAT_FLOAT,
-            ),
+            parsed_value,
             3.65e30,
         )
 
@@ -1431,13 +1437,13 @@ class TestExtractPayload(ExtendedTestCase):
                 value,
             )  # Wrong functioncode
 
-        for value in ["RTU", "ASCII", "asc", "", " "]:
+        for value_str in ["RTU", "ASCII", "asc", "", " "]:
             self.assertRaises(
                 ValueError,
                 minimalmodbus._extract_payload,
                 "\x02\x02123X\xc2",
                 2,
-                value,
+                value_str,
                 2,
             )  # Wrong mode
 
@@ -3654,9 +3660,10 @@ class TestDummyCommunication(ExtendedTestCase):
 
         # Prepare a dummy serial port to have proper responses,
         # and monkey-patch minimalmodbus to use it
+        # Note that mypy is unhappy about this: https://github.com/python/mypy/issues/1152
         dummy_serial.VERBOSE = False
         dummy_serial.RESPONSES = RTU_RESPONSES
-        minimalmodbus.serial.Serial = dummy_serial.Serial
+        minimalmodbus.serial.Serial = dummy_serial.Serial  # type: ignore
 
         self.instrument = minimalmodbus.Instrument("DUMMYPORTNAME", 1)
 
@@ -3961,16 +3968,16 @@ class TestDummyCommunication(ExtendedTestCase):
 
     def testReadFloat(self) -> None:
         # BYTEORDER_BIG
-        self.assertAlmostEqualRatio(self.instrument.read_float(241), -4.3959787e-11)
-        self.assertAlmostEqualRatio(
+        self.assertAlmostEqual(self.instrument.read_float(241), -4.3959787e-11)
+        self.assertAlmostEqual(
             self.instrument.read_float(242, byteorder=BYTEORDER_BIG_SWAP),
             -4.3959787e-11,
         )
-        self.assertAlmostEqualRatio(
+        self.assertAlmostEqual(
             self.instrument.read_float(243, byteorder=BYTEORDER_LITTLE_SWAP),
             -4.3959787e-11,
         )
-        self.assertAlmostEqualRatio(
+        self.assertAlmostEqual(
             self.instrument.read_float(244, byteorder=BYTEORDER_LITTLE), -4.3959787e-11
         )
         self.assertEqual(self.instrument.read_float(103), 1.0)
@@ -4650,6 +4657,7 @@ class TestDummyCommunication(ExtendedTestCase):
         )  # TODO is this correct?
 
     def testPortWillBeOpened(self) -> None:
+        assert self.instrument.serial is not None
         self.instrument.serial.close()
         self.instrument.write_bit(71, 1)
 
@@ -4672,15 +4680,18 @@ class TestDummyCommunication(ExtendedTestCase):
     ## Test the dummy serial port itself ##
 
     def testReadPortClosed(self) -> None:
+        assert self.instrument.serial is not None
         self.instrument.serial.close()
         # Error raised by dummy_serial
         self.assertRaises(IOError, self.instrument.serial.read, 1000)
 
     def testPortAlreadyOpen(self) -> None:
+        assert self.instrument.serial is not None
         # Error raised by dummy_serial
         self.assertRaises(IOError, self.instrument.serial.open)
 
     def testPortAlreadyClosed(self) -> None:
+        assert self.instrument.serial is not None
         self.instrument.serial.close()
         # Error raised by dummy_serial
         self.assertRaises(IOError, self.instrument.serial.close)
@@ -4688,11 +4699,11 @@ class TestDummyCommunication(ExtendedTestCase):
     ## Tear down test fixture ##
 
     def tearDown(self) -> None:
-        try:
-            self.instrument.serial.close()
-        except:
-            pass
-        self.instrument = None
+        if self.instrument.serial is not None:
+            try:
+                self.instrument.serial.close()
+            except:
+                pass
         del self.instrument
 
 
@@ -4700,7 +4711,7 @@ class TestDummyCommunicationOmegaSlave1(ExtendedTestCase):
     def setUp(self) -> None:
         dummy_serial.VERBOSE = False
         dummy_serial.RESPONSES = RTU_RESPONSES
-        minimalmodbus.serial.Serial = dummy_serial.Serial
+        minimalmodbus.serial.Serial = dummy_serial.Serial  # type: ignore
         self.instrument = minimalmodbus.Instrument("DUMMYPORTNAME", 1)
 
     def testReadBit(self) -> None:
@@ -4720,11 +4731,11 @@ class TestDummyCommunicationOmegaSlave1(ExtendedTestCase):
         self.instrument.write_register(4097, 823.6, 1)
 
     def tearDown(self) -> None:
-        try:
-            self.instrument.serial.close()
-        except:
-            pass
-        self.instrument = None
+        if self.instrument.serial is not None:
+            try:
+                self.instrument.serial.close()
+            except:
+                pass
         del self.instrument
 
 
@@ -4732,7 +4743,7 @@ class TestDummyCommunicationOmegaSlave10(ExtendedTestCase):
     def setUp(self) -> None:
         dummy_serial.VERBOSE = False
         dummy_serial.RESPONSES = RTU_RESPONSES
-        minimalmodbus.serial.Serial = dummy_serial.Serial
+        minimalmodbus.serial.Serial = dummy_serial.Serial  # type: ignore
         self.instrument = minimalmodbus.Instrument("DUMMYPORTNAME", 10)
 
     def testReadBit(self) -> None:
@@ -4752,11 +4763,11 @@ class TestDummyCommunicationOmegaSlave10(ExtendedTestCase):
         self.instrument.write_register(4097, 200.0, 1)
 
     def tearDown(self) -> None:
-        try:
-            self.instrument.serial.close()
-        except:
-            pass
-        self.instrument = None
+        if self.instrument.serial is not None:
+            try:
+                self.instrument.serial.close()
+            except:
+                pass
         del self.instrument
 
 
@@ -4764,7 +4775,7 @@ class TestDummyCommunicationDTB4824_RTU(ExtendedTestCase):
     def setUp(self) -> None:
         dummy_serial.VERBOSE = False
         dummy_serial.RESPONSES = RTU_RESPONSES
-        minimalmodbus.serial.Serial = dummy_serial.Serial
+        minimalmodbus.serial.Serial = dummy_serial.Serial  # type: ignore
         self.instrument = minimalmodbus.Instrument("DUMMYPORTNAME", 7)
 
     def testReadBit(self) -> None:
@@ -4817,11 +4828,11 @@ class TestDummyCommunicationDTB4824_RTU(ExtendedTestCase):
         self.instrument.write_register(0x1001, 25, 1, functioncode=6)  # Setpoint
 
     def tearDown(self) -> None:
-        try:
-            self.instrument.serial.close()
-        except:
-            pass
-        self.instrument = None
+        if self.instrument.serial is not None:
+            try:
+                self.instrument.serial.close()
+            except:
+                pass
         del self.instrument
 
 
@@ -4829,7 +4840,7 @@ class TestDummyCommunicationDTB4824_ASCII(ExtendedTestCase):
     def setUp(self) -> None:
         dummy_serial.VERBOSE = False
         dummy_serial.RESPONSES = ASCII_RESPONSES
-        minimalmodbus.serial.Serial = dummy_serial.Serial
+        minimalmodbus.serial.Serial = dummy_serial.Serial  # type: ignore
         self.instrument = minimalmodbus.Instrument(
             "DUMMYPORTNAME", 7, minimalmodbus.MODE_ASCII
         )
@@ -4884,11 +4895,11 @@ class TestDummyCommunicationDTB4824_ASCII(ExtendedTestCase):
         self.instrument.write_register(0x1001, 25, 1, functioncode=6)  # Setpoint
 
     def tearDown(self) -> None:
-        try:
-            self.instrument.serial.close()
-        except:
-            pass
-        self.instrument = None
+        if self.instrument.serial is not None:
+            try:
+                self.instrument.serial.close()
+            except:
+                pass
         del self.instrument
 
 
@@ -4896,7 +4907,7 @@ class TestDummyCommunicationWithPortClosure(ExtendedTestCase):
     def setUp(self) -> None:
         dummy_serial.VERBOSE = False
         dummy_serial.RESPONSES = RTU_RESPONSES
-        minimalmodbus.serial.Serial = dummy_serial.Serial
+        minimalmodbus.serial.Serial = dummy_serial.Serial  # type: ignore
 
         # Mimic a WindowsXP serial port
         self.instrument = minimalmodbus.Instrument(
@@ -4910,15 +4921,16 @@ class TestDummyCommunicationWithPortClosure(ExtendedTestCase):
 
     def testPortAlreadyClosed(self) -> None:
         self.assertEqual(self.instrument.read_register(289), 770)
+        assert self.instrument.serial is not None
         self.assertEqual(self.instrument.serial.is_open, False)
         self.assertRaises(IOError, self.instrument.serial.close)
 
     def tearDown(self) -> None:
-        try:
-            self.instrument.serial.close()
-        except:
-            pass
-        self.instrument = None
+        if self.instrument.serial is not None:
+            try:
+                self.instrument.serial.close()
+            except:
+                pass
         del self.instrument
 
 
@@ -4926,7 +4938,7 @@ class TestVerboseDummyCommunicationWithPortClosure(ExtendedTestCase):
     def setUp(self) -> None:
         dummy_serial.VERBOSE = True
         dummy_serial.RESPONSES = RTU_RESPONSES
-        minimalmodbus.serial.Serial = dummy_serial.Serial
+        minimalmodbus.serial.Serial = dummy_serial.Serial  # type: ignore
         self.instrument = minimalmodbus.Instrument("DUMMYPORTNAME", 1, debug=True)
         # Mimic a WindowsXP serial port
         self.instrument.close_port_after_each_call = True
@@ -4935,11 +4947,11 @@ class TestVerboseDummyCommunicationWithPortClosure(ExtendedTestCase):
         self.assertEqual(self.instrument.read_register(289), 770)
 
     def tearDown(self) -> None:
-        try:
-            self.instrument.serial.close()
-        except:
-            pass
-        self.instrument = None
+        if self.instrument.serial is not None:
+            try:
+                self.instrument.serial.close()
+            except:
+                pass
         del self.instrument
 
 
@@ -4947,14 +4959,18 @@ class TestDummyCommunicationThreeInstrumentsPortClosure(ExtendedTestCase):
     def setUp(self) -> None:
         dummy_serial.VERBOSE = False
         dummy_serial.RESPONSES = RTU_RESPONSES
-        minimalmodbus.serial.Serial = dummy_serial.Serial
+        minimalmodbus.serial.Serial = dummy_serial.Serial  # type: ignore
+
         self.instrumentA = minimalmodbus.Instrument(
             "DUMMYPORTNAME", 1, close_port_after_each_call=True, debug=True
         )
+        assert self.instrumentA.serial is not None
         self.instrumentA.serial.baudrate = 2400
+
         self.instrumentB = minimalmodbus.Instrument(
             "DUMMYPORTNAME", 1, close_port_after_each_call=True, debug=True
         )
+
         self.instrumentC = minimalmodbus.Instrument(
             "DUMMYPORTNAME", 7, close_port_after_each_call=True, debug=True
         )
@@ -4968,25 +4984,25 @@ class TestDummyCommunicationThreeInstrumentsPortClosure(ExtendedTestCase):
         self.assertEqual(self.instrumentC.read_bit(0x0800), 0)
 
     def tearDown(self) -> None:
-        try:
-            self.instrumentA.serial.close()
-        except:
-            pass
-        self.instrumentA = None
+        if self.instrumentA.serial is not None:
+            try:
+                self.instrumentA.serial.close()
+            except:
+                pass
         del self.instrumentA
 
-        try:
-            self.instrumentB.serial.close()
-        except:
-            pass
-        self.instrumentB = None
+        if self.instrumentB.serial is not None:
+            try:
+                self.instrumentB.serial.close()
+            except:
+                pass
         del self.instrumentB
 
-        try:
-            self.instrumentC.serial.close()
-        except:
-            pass
-        self.instrumentC = None
+        if self.instrumentC.serial is not None:
+            try:
+                self.instrumentC.serial.close()
+            except:
+                pass
         del self.instrumentC
 
 
@@ -4994,7 +5010,7 @@ class TestDummyCommunicationHandleLocalEcho(ExtendedTestCase):
     def setUp(self) -> None:
         dummy_serial.VERBOSE = True
         dummy_serial.RESPONSES = RTU_RESPONSES
-        minimalmodbus.serial.Serial = dummy_serial.Serial
+        minimalmodbus.serial.Serial = dummy_serial.Serial  # type: ignore
         self.instrument = minimalmodbus.Instrument("DUMMYPORTNAME", 20, debug=True)
         self.instrument.handle_local_echo = True
 
@@ -5007,11 +5023,11 @@ class TestDummyCommunicationHandleLocalEcho(ExtendedTestCase):
         )
 
     def tearDown(self) -> None:
-        try:
-            self.instrument.serial.close()
-        except:
-            pass
-        self.instrument = None
+        if self.instrument.serial is not None:
+            try:
+                self.instrument.serial.close()
+            except:
+                pass
         del self.instrument
 
 

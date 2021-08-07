@@ -56,7 +56,7 @@ Typical usage
 -------------
 The instrument is typically connected via a serial port, and a USB-to-serial
 adaptor should be used on most modern computers. How to configure such a serial
-port is described on the pySerial page: https://pythonhosted.org/pyserial/
+port is described on the pySerial page: https://pyserial.readthedocs.io
 
 For example, consider an instrument (slave) with Modbus RTU mode and address number 1
 to which we are to communicate via a serial port with the name

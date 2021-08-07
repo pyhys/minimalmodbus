@@ -10,12 +10,10 @@ or possibly::
 
     sudo pip3 install -U minimalmodbus
 
-For legacy Python (2.7), use ``pip`` instead of ``pip3``.
 
 Dependencies
 ------------
-Python versions 2.7 and higher are supported (including 3.x).
-Tested with Python 2.7, 3.5, 3.6 and 3.7. This module is pure Python.
+Python versions 3.6 and higher are supported. This module is pure Python.
 
 This module relies on `pySerial <https://github.com/pyserial/pyserial>`_ (also pure Python)
 to do the heavy lifting, and it is the only dependency. It is BSD-3-Clause licensed.
@@ -38,8 +36,6 @@ To install a manually downloaded file, uncompress it and run (from within the di
 or possibly::
 
    sudo python3 setup.py install
-
-If using Python2, use ``python`` instead of ``python3``.
 
 To make sure it is installed properly, print the :func:`._get_diagnostic_string` message.
 See the :ref:`support` section for instructions.

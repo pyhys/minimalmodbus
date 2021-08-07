@@ -64,13 +64,20 @@ _latest_read_times: Dict[str, float] = {}  # Key: port name, value: timestamp
 # ############### #
 
 MODE_RTU = "rtu"
+"""Use Modbus RTU communication"""
 MODE_ASCII = "ascii"
-BYTEORDER_BIG = 0
-BYTEORDER_LITTLE = 1
-BYTEORDER_BIG_SWAP = 2
-BYTEORDER_LITTLE_SWAP = 3
+"""Use Modbus ASCII communication"""
 
-# TODO Replace with enum 
+BYTEORDER_BIG = 0
+"""Use big endian byteorder"""
+BYTEORDER_LITTLE = 1
+"""Use little endian byteorder"""
+BYTEORDER_BIG_SWAP = 2
+"""Use big endian byteorder, with swap"""
+BYTEORDER_LITTLE_SWAP = 3
+"""Use litte endian byteorder, with swap"""
+
+# TODO Replace with enum
 _PAYLOADFORMAT_BIT = "bit"
 _PAYLOADFORMAT_BITS = "bits"
 _PAYLOADFORMAT_FLOAT = "float"
@@ -103,7 +110,7 @@ class Instrument:
           ``/dev/tty.usbserial`` (OS X) or ``COM4`` (Windows).
         * slaveaddress: Slave address in the range 1 to 247 (use decimal numbers,
           not hex). Address 0 is for broadcast, and 248-255 are reserved.
-        * mode: Mode selection. Can be MODE_RTU or MODE_ASCII.
+        * mode: Mode selection. Can be :data:`.MODE_RTU` or :data:`.MODE_ASCII`.
         * close_port_after_each_call: If the serial port should be closed after
           each call to the instrument.
         * debug: Set this to :const:`True` to print the communication details
@@ -124,7 +131,7 @@ class Instrument:
         (see the class documentation). """
 
         self.mode = mode
-        """Slave mode (str), can be MODE_RTU or MODE_ASCII.
+        """Slave mode (str), can be :data:`.MODE_RTU` or :data:`.MODE_ASCII`.
         Most often set by the constructor (see the class documentation).
 
         Changing this will not affect how other instruments use the same serial port.
@@ -190,12 +197,12 @@ class Instrument:
                 - Most often set by the constructor (see the class documentation).
             - baudrate (int):  Baudrate in Baud.
                 - Defaults to 19200.
-            - parity (probably int): Parity. See the pySerial module for documentation.
-                - Defaults to serial.PARITY_NONE.
+            - parity (use PARITY_xxx constants): Parity. See the pySerial module for documentation.
+                - Defaults to :const:`serial.PARITY_NONE`.
             - bytesize (int):  Bytesize in bits.
                 - Defaults to 8.
-            - stopbits (int):  The number of stopbits.
-                - Defaults to 1.
+            - stopbits (use STOPBITS_xxx constants):  The number of stopbits. See the pySerial module for documentation.
+                - Defaults to :const:`serial.STOPBITS_ONE`.
             - timeout (float): Read timeout value in seconds.
                 - Defaults to 0.05 s.
             - write_timeout (float): Write timeout value in seconds.
@@ -271,11 +278,13 @@ class Instrument:
 
         """
         _check_functioncode(functioncode, [1, 2])
-        return self._generic_command(
-            functioncode,
-            registeraddress,
-            number_of_bits=1,
-            payloadformat=_PAYLOADFORMAT_BIT,
+        return int(
+            self._generic_command(
+                functioncode,
+                registeraddress,
+                number_of_bits=1,
+                payloadformat=_PAYLOADFORMAT_BIT,
+            )
         )
 
     def write_bit(
@@ -334,12 +343,15 @@ class Instrument:
             maxvalue=_MAX_NUMBER_OF_BITS_TO_READ,
             description="number of bits",
         )
-        return self._generic_command(
+        returnvalue = self._generic_command(
             functioncode,
             registeraddress,
             number_of_bits=number_of_bits,
             payloadformat=_PAYLOADFORMAT_BITS,
         )
+        # Make sure that we really return a list of integers
+        assert isinstance(returnvalue, list)
+        return [int(x) for x in returnvalue]
 
     def write_bits(self, registeraddress: int, values: List[int]) -> None:
         """Write multiple bits to the slave (instrument).
@@ -439,7 +451,7 @@ class Instrument:
             description="number of decimals",
         )
         _check_bool(signed, description="signed")
-        return self._generic_command(
+        returnvalue = self._generic_command(
             functioncode,
             registeraddress,
             number_of_decimals=number_of_decimals,
@@ -447,6 +459,10 @@ class Instrument:
             signed=signed,
             payloadformat=_PAYLOADFORMAT_REGISTER,
         )
+        if int(returnvalue) == returnvalue:
+            return int(returnvalue)
+        else:
+            return float(returnvalue)
 
     def write_register(
         self,
@@ -534,7 +550,7 @@ class Instrument:
             * functioncode: Modbus function code. Can be 3 or 4.
             * signed: Whether the data should be interpreted as unsigned or signed.
             * byteorder: How multi-register data should be interpreted.
-              Use the BYTEORDER_xxx constants. Defaults to BYTEORDER_BIG.
+              Use the BYTEORDER_xxx constants. Defaults to :data:`.BYTEORDER_BIG`.
 
 
         ============== ================== ================ ==========================
@@ -554,13 +570,15 @@ class Instrument:
         """
         _check_functioncode(functioncode, [3, 4])
         _check_bool(signed, description="signed")
-        return self._generic_command(
-            functioncode,
-            registeraddress,
-            number_of_registers=2,
-            signed=signed,
-            byteorder=byteorder,
-            payloadformat=_PAYLOADFORMAT_LONG,
+        return int(
+            self._generic_command(
+                functioncode,
+                registeraddress,
+                number_of_registers=2,
+                signed=signed,
+                byteorder=byteorder,
+                payloadformat=_PAYLOADFORMAT_LONG,
+            )
         )
 
     def write_long(
@@ -586,7 +604,7 @@ class Instrument:
             * value: The value to store in the slave.
             * signed: Whether the data should be interpreted as unsigned or signed.
             * byteorder: How multi-register data should be interpreted.
-              Use the BYTEORDER_xxx constants. Defaults to BYTEORDER_BIG.
+              Use the BYTEORDER_xxx constants. Defaults to :data:`.BYTEORDER_BIG`.
 
         Raises:
             TypeError, ValueError, ModbusException,
@@ -638,7 +656,7 @@ class Instrument:
             * number_of_registers: The number of registers allocated for the float.
               Can be 2 or 4.
             * byteorder: How multi-register data should be interpreted.
-              Use the BYTEORDER_xxx constants. Defaults to BYTEORDER_BIG.
+              Use the BYTEORDER_xxx constants. Defaults to :data:`.BYTEORDER_BIG`.
 
         .. note:: The parameter number_of_registers was named numberOfRegisters
                   before MinimalModbus 1.0
@@ -665,12 +683,14 @@ class Instrument:
             maxvalue=4,
             description="number of registers",
         )
-        return self._generic_command(
-            functioncode,
-            registeraddress,
-            number_of_registers=number_of_registers,
-            byteorder=byteorder,
-            payloadformat=_PAYLOADFORMAT_FLOAT,
+        return float(
+            self._generic_command(
+                functioncode,
+                registeraddress,
+                number_of_registers=number_of_registers,
+                byteorder=byteorder,
+                payloadformat=_PAYLOADFORMAT_FLOAT,
+            )
         )
 
     def write_float(
@@ -696,7 +716,7 @@ class Instrument:
             * number_of_registers: The number of registers allocated for the float.
               Can be 2 or 4.
             * byteorder: How multi-register data should be interpreted.
-              Use the BYTEORDER_xxx constants. Defaults to BYTEORDER_BIG.
+              Use the BYTEORDER_xxx constants. Defaults to :data:`.BYTEORDER_BIG`.
 
         .. note:: The parameter number_of_registers was named numberOfRegisters
                   before MinimalModbus 1.0
@@ -757,11 +777,13 @@ class Instrument:
             maxvalue=_MAX_NUMBER_OF_REGISTERS_TO_READ,
             description="number of registers for read string",
         )
-        return self._generic_command(
-            functioncode,
-            registeraddress,
-            number_of_registers=number_of_registers,
-            payloadformat=_PAYLOADFORMAT_STRING,
+        return str(
+            self._generic_command(
+                functioncode,
+                registeraddress,
+                number_of_registers=number_of_registers,
+                payloadformat=_PAYLOADFORMAT_STRING,
+            )
         )
 
     def write_string(
@@ -854,12 +876,15 @@ class Instrument:
             maxvalue=_MAX_NUMBER_OF_REGISTERS_TO_READ,
             description="number of registers",
         )
-        return self._generic_command(
+        returnvalue = self._generic_command(
             functioncode,
             registeraddress,
             number_of_registers=number_of_registers,
             payloadformat=_PAYLOADFORMAT_REGISTERS,
         )
+        # Make sure that we really return a list of integers
+        assert isinstance(returnvalue, list)
+        return [int(x) for x in returnvalue]
 
     def write_registers(self, registeraddress: int, values: List[int]) -> None:
         """Write integers to 16-bit registers in the slave.
@@ -1105,17 +1130,22 @@ class Instrument:
             )
 
         # Check combinations: Value for numerical
-        if functioncode == 16 and payloadformat in [
-            _PAYLOADFORMAT_REGISTER,
-            _PAYLOADFORMAT_FLOAT,
-            _PAYLOADFORMAT_LONG,
-        ]:
-            _check_numerical(value, description="input value")
-        if functioncode == 6 and payloadformat == _PAYLOADFORMAT_REGISTER:
-            _check_numerical(value, description="input value")
+        if (
+            functioncode == 16
+            and payloadformat
+            in [
+                _PAYLOADFORMAT_REGISTER,
+                _PAYLOADFORMAT_FLOAT,
+                _PAYLOADFORMAT_LONG,
+            ]
+        ) or (functioncode == 6 and payloadformat == _PAYLOADFORMAT_REGISTER):
+            if not isinstance(value, (int, float)):
+                raise TypeError(f"The input value must be numerical. Given: {value!r}")
 
         # Check combinations: Value for string
         if functioncode == 16 and payloadformat == _PAYLOADFORMAT_STRING:
+            if not isinstance(value, str):
+                raise TypeError(f"The input should be a string. Given: {value!r}")
             _check_string(
                 value, "input string", minlength=1, maxlength=number_of_register_bytes
             )
@@ -1140,6 +1170,8 @@ class Instrument:
 
         # Check combinations: Value for bit
         if functioncode in [5, 15] and payloadformat == _PAYLOADFORMAT_BIT:
+            if not isinstance(value, int):
+                raise TypeError(f"The input should be an integer. Given: {value!r}")
             _check_int(
                 value,
                 minvalue=0,
@@ -1310,25 +1342,27 @@ class Instrument:
             )
         )
 
+        if self.serial is None:
+            raise ModbusException("The serial port instance is None")
+
         if not self.serial.is_open:
             self._print_debug("Opening port {}".format(self.serial.port))
             self.serial.open()
 
+        portname: str = ""
+        if self.serial.port is not None:
+            portname = self.serial.port
+
         if self.clear_buffers_before_each_transaction:
-            self._print_debug(
-                "Clearing serial buffers for port {}".format(self.serial.port)
-            )
+            self._print_debug("Clearing serial buffers for port {}".format(portname))
             self.serial.reset_input_buffer()
             self.serial.reset_output_buffer()
 
-        if sys.version_info[0] > 2:
-            request = bytes(
-                request, encoding="latin1"
-            )  # Convert types to make it Python3 compatible
+        request_bytes = bytes(request, encoding="latin1")
 
         # Sleep to make sure 3.5 character times have passed
         minimum_silent_period = _calculate_minimum_silent_period(self.serial.baudrate)
-        time_since_read = _now() - _latest_read_times.get(self.serial.port, 0)
+        time_since_read = _now() - _latest_read_times.get(portname, 0)
 
         if time_since_read < minimum_silent_period:
             sleep_time = minimum_silent_period - time_since_read
@@ -1360,55 +1394,59 @@ class Instrument:
 
         # Write request
         latest_write_time = _now()
-        self.serial.write(request)
+        self.serial.write(request_bytes)
 
         # Read and discard local echo
         if self.handle_local_echo:
-            local_echo_to_discard = self.serial.read(len(request))
+            local_echo_to_discard = self.serial.read(len(request_bytes))
             if self.debug:
                 template = "Discarding this local echo: {!r} ({} bytes)."
                 text = template.format(
                     local_echo_to_discard, len(local_echo_to_discard)
                 )
                 self._print_debug(text)
-            if local_echo_to_discard != request:
+            if local_echo_to_discard != request_bytes:
                 template = (
                     "Local echo handling is enabled, but the local echo does "
                     + "not match the sent request. "
                     + "Request: {!r} ({} bytes), local echo: {!r} ({} bytes)."
                 )
                 text = template.format(
-                    request,
-                    len(request),
+                    request_bytes,
+                    len(request_bytes),
                     local_echo_to_discard,
                     len(local_echo_to_discard),
                 )
                 raise LocalEchoError(text)
 
         # Read response
-        answer = self.serial.read(number_of_bytes_to_read)
-        _latest_read_times[self.serial.port] = _now()
+        answer_bytes = self.serial.read(number_of_bytes_to_read)
+        _latest_read_times[portname] = _now()
 
         if self.close_port_after_each_call:
-            self._print_debug("Closing port {}".format(self.serial.port))
+            self._print_debug("Closing port {}".format(portname))
             self.serial.close()
 
-        if sys.version_info[0] > 2:
-            # Convert types to make it Python3 compatible
-            answer = str(answer, encoding="latin1")
+        answer = str(answer_bytes, encoding="latin1")
 
         if self.debug:
             template = (
                 "Response from instrument: {!r} ({}) ({} bytes), "
                 + "roundtrip time: {:.1f} ms. Timeout for reading: {:.1f} ms.\n"
             )
+            roundtrip_time = (
+                _latest_read_times.get(portname, 0) - latest_write_time
+            ) * _SECONDS_TO_MILLISECONDS
+            if isinstance(self.serial.timeout, float):
+                timeout_time = self.serial.timeout * _SECONDS_TO_MILLISECONDS
+            else:
+                timeout_time = 0
             text = template.format(
                 answer,
                 _hexlify(answer),
                 len(answer),
-                (_latest_read_times.get(self.serial.port, 0) - latest_write_time)
-                * _SECONDS_TO_MILLISECONDS,
-                self.serial.timeout * _SECONDS_TO_MILLISECONDS,
+                roundtrip_time,
+                timeout_time,
             )
             self._print_debug(text)
 
@@ -1500,16 +1538,23 @@ def _create_payload(
             number_of_registers
         )
     if functioncode == 5:
+        assert isinstance(value, int)
         return _num_to_twobyte_string(registeraddress) + _bit_to_bytestring(value)
     if functioncode == 6:
+        assert isinstance(value, (int, float))
         return _num_to_twobyte_string(registeraddress) + _num_to_twobyte_string(
             value, number_of_decimals, signed=signed
         )
     if functioncode == 15:
-        if payloadformat == _PAYLOADFORMAT_BIT:
+        if payloadformat == _PAYLOADFORMAT_BIT and isinstance(value, int):
             bitlist = [value]
-        else:
+        elif payloadformat == _PAYLOADFORMAT_BITS and isinstance(value, list):
             bitlist = value
+        else:
+            raise ValueError(
+                f"Wrong payloadformat {payloadformat} or type for the value for function code 15"
+            )
+
         return (
             _num_to_twobyte_string(registeraddress)
             + _num_to_twobyte_string(number_of_bits)
@@ -1520,18 +1565,23 @@ def _create_payload(
         )
     if functioncode == 16:
         if payloadformat == _PAYLOADFORMAT_REGISTER:
+            assert isinstance(value, (int, float))
             registerdata = _num_to_twobyte_string(
                 value, number_of_decimals, signed=signed
             )
         elif payloadformat == _PAYLOADFORMAT_STRING:
+            assert isinstance(value, str)
             registerdata = _textstring_to_bytestring(value, number_of_registers)
         elif payloadformat == _PAYLOADFORMAT_LONG:
+            assert isinstance(value, int)
             registerdata = _long_to_bytestring(
                 value, signed, number_of_registers, byteorder
             )
         elif payloadformat == _PAYLOADFORMAT_FLOAT:
+            assert isinstance(value, float)
             registerdata = _float_to_bytestring(value, number_of_registers, byteorder)
         elif payloadformat == _PAYLOADFORMAT_REGISTERS:
+            assert isinstance(value, list)
             registerdata = _valuelist_to_bytestring(value, number_of_registers)
 
         assert len(registerdata) == number_of_registers * _NUMBER_OF_BYTES_PER_REGISTER
@@ -1556,7 +1606,7 @@ def _parse_payload(
     signed: bool,
     byteorder: int,
     payloadformat: Optional[str],
-) -> Union[None, int, float, List[int], List[float]]:
+) -> Union[None, str, int, float, List[int], List[float]]:
     _check_response_payload(
         payload,
         functioncode,
@@ -1597,6 +1647,14 @@ def _parse_payload(
             return _twobyte_string_to_num(
                 registerdata, number_of_decimals, signed=signed
             )
+
+    if functioncode in [5, 6, 15, 16]:
+        # Response to write
+        return None
+
+    raise ValueError(
+        f"Wrong function code {functioncode} and payloadformat {payloadformat!r} combination"
+    )
 
 
 def _embed_payload(
@@ -1847,7 +1905,9 @@ def _predict_response_size(mode: str, functioncode: int, payload_to_slave: str) 
         response_payload_size = NUMBER_OF_PAYLOAD_BYTES_IN_WRITE_CONFIRMATION
 
     elif functioncode in [1, 2, 3, 4]:
-        given_size = _twobyte_string_to_num(payload_to_slave[BYTERANGE_FOR_GIVEN_SIZE])
+        given_size = int(
+            _twobyte_string_to_num(payload_to_slave[BYTERANGE_FOR_GIVEN_SIZE])
+        )
         if functioncode in [1, 2]:
             # Algorithm from MODBUS APPLICATION PROTOCOL SPECIFICATION V1.1b
             number_of_inputs = given_size
@@ -2059,7 +2119,7 @@ def _twobyte_string_to_num(
     else:
         formatcode += "H"  # Unsigned short (2 bytes)
 
-    fullregister = _unpack(formatcode, bytestring)
+    fullregister: int = _unpack(formatcode, bytestring)
 
     if number_of_decimals == 0:
         return fullregister
@@ -2164,7 +2224,7 @@ def _bytestring_to_long(
     if byteorder in [BYTEORDER_BIG_SWAP, BYTEORDER_LITTLE_SWAP]:
         bytestring = _swap(bytestring)
 
-    return _unpack(formatcode, bytestring)
+    return int(_unpack(formatcode, bytestring))
 
 
 def _float_to_bytestring(
@@ -2287,7 +2347,7 @@ def _bytestring_to_float(
 
     if byteorder in [BYTEORDER_BIG_SWAP, BYTEORDER_LITTLE_SWAP]:
         bytestring = _swap(bytestring)
-    return _unpack(formatcode, bytestring)
+    return float(_unpack(formatcode, bytestring))
 
 
 def _textstring_to_bytestring(inputstring: str, number_of_registers: int = 16) -> str:
@@ -2439,7 +2499,7 @@ def _bytestring_to_valuelist(bytestring: str, number_of_registers: int) -> List[
     for i in range(number_of_registers):
         offset = _NUMBER_OF_BYTES_PER_REGISTER * i
         substring = bytestring[offset : (offset + _NUMBER_OF_BYTES_PER_REGISTER)]
-        values.append(_twobyte_string_to_num(substring))
+        values.append(int(_twobyte_string_to_num(substring)))
 
     return values
 
@@ -2486,14 +2546,10 @@ def _pack(formatstring: str, value: Any) -> str:
         errortext += "conversion failed. Value: {0!r} Struct format code is: {1}"
         raise ValueError(errortext.format(value, formatstring))
 
-    if sys.version_info[0] > 2:
-        return str(
-            result, encoding="latin1"
-        )  # Convert types to make it Python3 compatible
-    return result
+    return str(result, encoding="latin1")
 
 
-def _unpack(formatstring: str, packed: Union[bytes, bytearray, memoryview]) -> Any:
+def _unpack(formatstring: str, packed: str) -> Any:
     """Unpack a bytestring into a value.
 
     Uses the built-in :mod:`struct` Python module.
@@ -2516,13 +2572,10 @@ def _unpack(formatstring: str, packed: Union[bytes, bytearray, memoryview]) -> A
     _check_string(formatstring, description="formatstring", minlength=1)
     _check_string(packed, description="packed string", minlength=1)
 
-    if sys.version_info[0] > 2:
-        packed = bytes(
-            packed, encoding="latin1"
-        )  # Convert types to make it Python3 compatible
+    packed_bytes = bytes(packed, encoding="latin1")
 
     try:
-        value = struct.unpack(formatstring, packed)[0]
+        value = struct.unpack(formatstring, packed_bytes)[0]
     except Exception:
         errortext = (
             "The received bytestring is probably wrong, as the bytestring-to-num "
@@ -2620,7 +2673,7 @@ def _hexdecode(hexstring: str) -> str:
             "The input hexstring must be of even length. Given: {!r}".format(hexstring)
         )
 
-    if sys.version_info[0] > 2:
+    if sys.version_info[0] > 2:  # TODO
         converted_bytes = bytes(hexstring, "latin1")
         try:
             return str(binascii.unhexlify(converted_bytes), encoding="latin1")

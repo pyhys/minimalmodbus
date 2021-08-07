@@ -7,5 +7,3 @@ API for MinimalModbus
    :members:
    :undoc-members:
    :show-inheritance:
-
-
