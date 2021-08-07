@@ -25,6 +25,7 @@ __license__ = "Apache License, Version 2.0"
 
 import sys
 import time
+from typing import Optional, Union
 
 DEFAULT_TIMEOUT = 0.01
 """The default timeot value in seconds. Used if not set by the constructor."""
@@ -80,26 +81,44 @@ class Serial:
 
     """
 
-    def __init__(self, *args, **kwargs):
+    port: Optional[str]  # Serial port name.
+    timeout: float
+    baudrate: int
+    _initial_port_name: Optional[str]  # Initial name given to the serial port
+    _waiting_data: str  # TODOs
+    _isOpen: bool
+
+    def __init__(
+        self,
+        port: Optional[str],
+        baudrate: int = DEFAULT_BAUDRATE,
+        bytesize: int = 8,
+        parity: str = "N",
+        stopbits: Union[int, float] = 1,
+        timeout: Optional[float] = None,
+        xonxoff: bool = False,
+        rtscts: bool = False,
+        write_timeout: Optional[float] = None,
+        dsrdtr: bool = False,
+        inter_byte_timeout: Optional[float] = None,
+    ) -> None:
         self._waiting_data = NO_DATA_PRESENT
         self._isOpen = True
-        self.port = kwargs["port"]  # Serial port name.
+        self.port = port  # Serial port name.
         self._initial_port_name = self.port  # Initial name given to the serial port
-        try:
-            self.timeout = kwargs["timeout"]
-        except:
-            self.timeout = DEFAULT_TIMEOUT
-        try:
-            self.baudrate = kwargs["baudrate"]
-        except:
-            self.baudrate = DEFAULT_BAUDRATE
+
+        self.timeout = timeout if timeout is not None else DEFAULT_TIMEOUT
+        self.baudrate = baudrate
 
         if VERBOSE:
             _print_out("\nDummy_serial: Initializing")
-            _print_out("dummy_serial initialization args: " + repr(args))
-            _print_out("dummy_serial initialization kwargs: " + repr(kwargs) + "\n")
+            _print_out(
+                "dummy_serial initialization. Port: {0} Baud rate: {1} Timeout {2}".format(
+                    self.port, self.baudrate, self.timeout
+                )
+            )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """String representation of the dummy_serial object"""
         return "{0}.{1}<id=0x{2:x}, open={3}>(port={4!r}, timeout={5!r}, waiting_data={6!r})".format(
             self.__module__,
@@ -112,16 +131,16 @@ class Serial:
         )
 
     @property
-    def is_open(self):
+    def is_open(self) -> bool:
         return self._isOpen
 
-    def reset_input_buffer(self):
+    def reset_input_buffer(self) -> None:
         pass
 
-    def reset_output_buffer(self):
+    def reset_output_buffer(self) -> None:
         pass
 
-    def open(self):
+    def open(self) -> None:
         """Open a (previously initialized) port on dummy_serial."""
         if VERBOSE:
             _print_out("\nDummy_serial: Opening port\n")
@@ -132,7 +151,7 @@ class Serial:
         self._isOpen = True
         self.port = self._initial_port_name
 
-    def close(self):
+    def close(self) -> None:
         """Close a port on dummy_serial."""
         if VERBOSE:
             _print_out("\nDummy_serial: Closing port\n")
@@ -143,14 +162,15 @@ class Serial:
         self._isOpen = False
         self.port = None
 
-    def write(self, inputdata):
+    def write(self, inputdata: bytes) -> int:
         """Write to a port on dummy_serial.
 
         Args:
-            inputdata (string/bytes): data for sending to the port on dummy_serial. Will affect the response
+            inputdata: data for sending to the port on dummy_serial. Will affect the response
             for subsequent read operations.
 
-        Note that for Python2, the inputdata should be a **string**. For Python3 it should be of type **bytes**.
+        Returns:
+            Number of bytes written
 
         """
         if VERBOSE:
@@ -158,14 +178,9 @@ class Serial:
                 "\nDummy_serial: Writing to port. Given:" + repr(inputdata) + "\n"
             )
 
-        if sys.version_info[0] > 2:
-            if not type(inputdata) == bytes:
-                raise TypeError(
-                    "The input must be type bytes. Given:" + repr(inputdata)
-                )
-            inputstring = str(inputdata, encoding="latin1")
-        else:
-            inputstring = inputdata
+        if not type(inputdata) == bytes:
+            raise TypeError("The input must be type bytes. Given:" + repr(inputdata))
+        inputstring = str(inputdata, encoding="latin1")
 
         if not self._isOpen:
             raise IOError(
@@ -180,7 +195,9 @@ class Serial:
             response = DEFAULT_RESPONSE
         self._waiting_data = response
 
-    def read(self, numberOfBytes):
+        return len(inputstring)
+
+    def read(self, numberOfBytes: int) -> bytes:
         """Read from a port on dummy_serial.
 
         The response is dependent on what was written last to the port on dummy_serial,
@@ -250,12 +267,10 @@ class Serial:
                 )
             )
 
-        if sys.version_info[0] > 2:  # Convert types to make it python3 compatible
-            return bytes(returnstring, encoding="latin1")
-        else:
-            return returnstring
+        return bytes(returnstring, encoding="latin1")
 
 
-def _print_out(inputstring):
+# TODO remove
+def _print_out(inputstring: str) -> None:
     """Print the inputstring. To make it compatible with Python2 and Python3."""
     sys.stdout.write(inputstring + "\n")

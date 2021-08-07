@@ -10,7 +10,7 @@ Usage
 
     python3 scriptname [-rtu] [-ascii] [-b38400] [-D/dev/ttyUSB0]
 
-Arguments:
+Arguments TODO:
  * -b : baud rate
  * -D : port name
 
@@ -106,6 +106,7 @@ Run these commands::
 import os
 import sys
 import time
+from typing import Any, Dict, List, Optional, Tuple, Type, Union
 
 import minimalmodbus
 
@@ -115,17 +116,18 @@ DEFAULT_PORT_NAME = "/dev/ttyUSB0"
 DEFAULT_BAUDRATE = 38400  # baud (pretty much bits/s). Use 2400 or 38400 bits/s.
 
 
-def _print_out(text):
+def _print_out(text: Any) -> None:
+    # TODO
     # Python2 and 3 compatible
     sys.stdout.write("{}\n".format(text))
     sys.stdout.flush()
 
 
-def _box(description=None, value=None):
+def _box(description: Optional[str] = None, value: Any = None) -> None:
     MAX_WIDTH = 85
     DESCR_WIDTH = 30
     if description is None:
-        _print_out("#"*MAX_WIDTH)
+        _print_out("#" * MAX_WIDTH)
     else:
         if value is None:
             line = "## {}".format(description)
@@ -135,13 +137,18 @@ def _box(description=None, value=None):
         _print_out(line)
 
 
-def show_test_settings(mode, baudrate, portname):
+def show_test_settings(mode: str, baudrate: int, portname: str) -> None:
     _box()
     _box("Hardware test with Delta DTB4824")
     _box("Minimalmodbus version", minimalmodbus.__version__)
     _box(" ")
     _box("Platform", sys.platform)
-    _box("Python version", "{}.{}.{}".format(sys.version_info[0], sys.version_info[1], sys.version_info[2]))
+    _box(
+        "Python version",
+        "{}.{}.{}".format(
+            sys.version_info[0], sys.version_info[1], sys.version_info[2]
+        ),
+    )
     _box("Modbus mode", mode)
     _box("Baudrate (-b)", baudrate)
     _box("Port name (-D)", portname)
@@ -152,7 +159,7 @@ def show_test_settings(mode, baudrate, portname):
     _print_out("")
 
 
-def show_current_values(instr):
+def show_current_values(instr: minimalmodbus.Instrument) -> None:
     _box()
     _box("Current values")
     _box(" ")
@@ -176,13 +183,13 @@ def show_current_values(instr):
     _print_out(" ")
 
 
-def show_instrument_settings(instr):
+def show_instrument_settings(instr: minimalmodbus.Instrument) -> None:
     _print_out("Instrument settings:")
     _print_out(repr(instr).replace(",", ",\n"))
     _print_out(" ")
 
 
-def verify_value_for_register(instr, value):
+def verify_value_for_register(instr: minimalmodbus.Instrument, value: int) -> None:
     # value should be an integer
     START_READ_ADDR = 0x1000
     ADDRESS_SETPOINT = 0x1001
@@ -194,7 +201,7 @@ def verify_value_for_register(instr, value):
     assert value == registers[ADDRESS_SETPOINT - START_READ_ADDR]
 
 
-def verify_state_for_bits(instr, state):
+def verify_state_for_bits(instr: minimalmodbus.Instrument, state: int) -> None:
     START_READ_ADDR = 0x800
     ADDR_UNITSELECTOR = 0x811
     ADDR_LED_F = 0x804
@@ -214,7 +221,7 @@ def verify_state_for_bits(instr, state):
     assert instr.read_bit(ADDR_LED_F) != state
 
 
-def verify_bits(instr):
+def verify_bits(instr: minimalmodbus.Instrument) -> None:
     NUMBER_OF_LOOPS = 5
 
     _print_out("Verifying writing and reading bits")
@@ -224,7 +231,7 @@ def verify_bits(instr):
     _print_out("Passed test for writing and reading bits\n")
 
 
-def verify_readonly_register(instr):
+def verify_readonly_register(instr: minimalmodbus.Instrument) -> None:
     ADDRESS_FIRMWARE_VERSION = 0x102F
     NEW_FIRMWARE_VERSION = 300
 
@@ -240,18 +247,23 @@ def verify_readonly_register(instr):
     _print_out("Passed test for READONLY register\n")
 
 
-def verify_register(instr):
+def verify_register(instr: minimalmodbus.Instrument) -> None:
     _print_out("Verify writing and reading a register")
     for value in range(250, 400, 10):  # Setpoint 25 to 40 deg C
         verify_value_for_register(instr, value)
     _print_out("Passed test for writing and reading a register\n")
 
 
-def verify_two_instrument_instances(instr, portname, mode, baudrate):
+def verify_two_instrument_instances(
+    instr: minimalmodbus.Instrument, portname: str, mode: str, baudrate: int
+) -> None:
     ADDRESS_SETPOINT = 0x1001
 
     _print_out("Verify using two instrument instances")
     instr2 = minimalmodbus.Instrument(portname, SLAVE_ADDRESS, mode=mode)
+    if instr2.serial is None:
+        _print_out("Failed to instanciate instr2")
+        return
     instr2.serial.timeout = TIMEOUT
 
     instr.read_register(ADDRESS_SETPOINT)
@@ -267,7 +279,7 @@ def verify_two_instrument_instances(instr, portname, mode, baudrate):
     _print_out("Passing test for using two instrument instances")
 
 
-def measure_roundtrip_time(instr):
+def measure_roundtrip_time(instr: minimalmodbus.Instrument) -> None:
     ADDR_SETPOINT = 0x1001
     SECONDS_TO_MILLISECONDS = 1000
     NUMBER_OF_VALUES = 100
@@ -276,9 +288,14 @@ def measure_roundtrip_time(instr):
     STEPSIZE = 5
 
     _print_out("Measure request-response round trip time")
-    _print_out("Setting the setpoint value {} times. Baudrate {} bits/s.".format(
-        NUMBER_OF_VALUES, instr.serial.baudrate
-    ))
+    if instr.serial is None:
+        _print_out("Instrument.serial is None")
+        return
+    _print_out(
+        "Setting the setpoint value {} times. Baudrate {} bits/s.".format(
+            NUMBER_OF_VALUES, instr.serial.baudrate
+        )
+    )
 
     value = START_VALUE
     step = STEPSIZE
@@ -290,14 +307,13 @@ def measure_roundtrip_time(instr):
         instr.write_register(ADDR_SETPOINT, value, functioncode=6)
 
     time_per_value = (
-        (time.time() - start_time)
-        * float(SECONDS_TO_MILLISECONDS)
-        / NUMBER_OF_VALUES
+        (time.time() - start_time) * float(SECONDS_TO_MILLISECONDS) / NUMBER_OF_VALUES
     )
     _print_out("Time per value: {:0.1f} ms.\n".format(time_per_value))
 
 
-def parse_commandline(argv):
+def parse_commandline(argv: List[str]) -> Tuple[str, str, int]:
+    # TODO
     # Do manual parsing of command line,
     # as none of the modules in the standard library handles python 2.6 to 3.x
 
@@ -320,20 +336,21 @@ def parse_commandline(argv):
 
         elif arg.startswith("-D"):
             if len(arg) < 3:
-                _print_out(
-                    "Wrong usage of the -D option. Use -D/dev/ttyUSB0 or -DCOM4"
-                )
+                _print_out("Wrong usage of the -D option. Use -D/dev/ttyUSB0 or -DCOM4")
                 sys.exit()
             portname = arg[2:]
 
     return portname, mode, baudrate
 
 
-def main():
+def main() -> None:
     portname, mode, baudrate = parse_commandline(sys.argv)
     show_test_settings(mode, baudrate, portname)
 
     inst = minimalmodbus.Instrument(portname, SLAVE_ADDRESS, mode=mode)
+    if inst.serial is None:
+        _print_out("Instrument.serial is None")
+        return
     inst.serial.timeout = TIMEOUT
     inst.serial.baudrate = baudrate
 

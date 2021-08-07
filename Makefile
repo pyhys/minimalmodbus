@@ -84,7 +84,10 @@ lint:
 	pylint minimalmodbus.py -d C0103 -d C0330 -d R0913 || true
 
 black:
-	black minimalmodbus.py dummy_serial.py setup.py
+	python3 -m black minimalmodbus.py dummy_serial.py setup.py tests/test_deltaDTB4824.py tests/test_minimalmodbus.py stubs/serial.pyi
+
+mypy:
+	python3 -m mypy minimalmodbus.py dummy_serial.py tests/ --strict 
 
 test:
 	python3 tests/test_minimalmodbus.py

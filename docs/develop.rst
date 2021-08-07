@@ -18,10 +18,6 @@ Only a few functions are implemented. It is very easy to implement lots of
 It is instead much better to implement the features when needed/requested.
 There are many Modbus function codes, but I guess that most are not used.
 
-It is a goal that the same driver should be compatible for both Python2 and
-Python3 programs. Some suggestions for making this possible are found here:
-https://wiki.python.org/moin/PortingPythonToPy3k
-
 There should be unittests for all functions, and mock communication data.
 
 Errors should be caught as early as possible, and the error messages should be informative.
@@ -41,7 +37,6 @@ Design priorities:
  * Catch errors early
  * Informative error messages
  * Good unittest coverage
- * Same codebase for Python2 and Python3
 
 
 General driver structure
@@ -802,12 +797,12 @@ See also GitHub issues: https://github.com/pyhys/minimalmodbus/issues
 * Unittests for measuring the sleep time in _communicate.
 * Logging instead of _print_out()
 
-Change to Python3 only, and then:
+Also:
 
-* Change internal representation to bytearray
-* Better printout of the bytearray in error messages
-* Tool for interpretation of Modbus messages
 * Use Enum for payloadformat
 * Add type hinting
 * Run mypy checks
 * Possibly use pytest instead
+* Change internal representation to bytearray
+* Better printout of the bytearray in error messages
+* Tool for interpretation of Modbus messages
