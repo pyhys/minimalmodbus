@@ -19,6 +19,7 @@ Significant contributions by:
 * Austin Stover
 * Dino
 * Dominik Socha
+* Edgar Bonet
 * Edwin van den Oetelaar
 * GitHub user: draput
 * GitHub user: gnbl
@@ -29,4 +30,4 @@ Significant contributions by:
 * Michael Penza
 * Peter
 * Russ Garrett
-* Simon Funke
+* Yurij Z (GitHub user: zyura)

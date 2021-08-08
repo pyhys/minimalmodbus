@@ -114,17 +114,17 @@ docs:	clean-docs
 linkcheck:
 	$(MAKE) -C docs linkcheck
 
-install: clean
-	pip3 install
+install: dist
+	pip3 install --force-reinstall dist/minimalmodbus*.whl
 
-installdev: clean
-	pip3 install -e .
+uninstall:
+	pip3 uninstall -y minimalmodbus
 
 list:
 	pip3 list
 
 show:
-	pip3 show
+	pip3 show minimalmodbus
 
 dist: clean
 	@echo "    "

@@ -132,5 +132,7 @@ RTS is set to True. The delay time is around 1 ms, as measured with an oscillosc
 This corresponds to approx 100 bit times when running at 115200 bps, but this 
 value also includes delays caused by the Python intepreter.
 
-
+If you would like to use this for low speed, it can be implemented as
+in the contributed pull request: https://github.com/pyhys/minimalmodbus/pull/70
+Then you should provide a callback that enables and disables the transmitter.
 

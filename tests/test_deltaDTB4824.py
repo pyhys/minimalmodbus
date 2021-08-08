@@ -26,10 +26,8 @@ Make sure that RUN_VERIFY_EXAMPLES and similar flags are all 'True'.
  * Run the tests under Linux and Windows
  * Use 2400 bps and 38400 bps
  * Use Modbus ASCII and Modbus RTU
- * Use Python 2.7 and Python 3.x
 
-
- Sequence (for each use Python 2.7 and 3.x):
+ Sequence:
 
   * 38400 bps RTU
   * 38400 bps ASCII
@@ -108,6 +106,7 @@ import sys
 import time
 from typing import Any, Dict, List, Optional, Tuple, Type, Union
 
+sys.path.insert(0,'..')
 import minimalmodbus
 
 SLAVE_ADDRESS = 1
@@ -117,6 +116,7 @@ DEFAULT_BAUDRATE = 38400  # baud (pretty much bits/s). Use 2400 or 38400 bits/s.
 
 
 def _box(description: Optional[str] = None, value: Any = None) -> None:
+    """"Print a single line in a box"""
     MAX_WIDTH = 85
     DESCR_WIDTH = 30
     if description is None:
@@ -153,6 +153,7 @@ def show_test_settings(mode: str, baudrate: int, portname: str) -> None:
 
 
 def show_current_values(instr: minimalmodbus.Instrument) -> None:
+    """Read current values via Modbus"""
     _box()
     _box("Current values")
     _box(" ")
@@ -183,33 +184,51 @@ def show_instrument_settings(instr: minimalmodbus.Instrument) -> None:
 
 
 def verify_value_for_register(instr: minimalmodbus.Instrument, value: int) -> None:
-    # value should be an integer
+    """Write and read back a value to a register, and validate result.
+
+    Also read back several registers.
+
+    Args:
+        instr: Instrument instance
+        value: Value to be written
+    """
     START_READ_ADDR = 0x1000
     ADDRESS_SETPOINT = 0x1001
 
     instr.write_register(ADDRESS_SETPOINT, value)
     assert value == instr.read_register(ADDRESS_SETPOINT)
+
     registers = instr.read_registers(START_READ_ADDR, 8)
     print(registers)
     assert value == registers[ADDRESS_SETPOINT - START_READ_ADDR]
 
 
 def verify_state_for_bits(instr: minimalmodbus.Instrument, state: int) -> None:
+    """Write and read back a value to a bit, and validate result.
+
+    Also read back several bits.
+
+    Args:
+        instr: Instrument instance
+        state: Value to be written (0 or 1)
+    """
     START_READ_ADDR = 0x800
     ADDR_UNITSELECTOR = 0x811
     ADDR_LED_F = 0x804
     ADDR_LED_C = 0x805
 
+    # Write and read selector for Celsius or Farenheit
     instr.write_bit(ADDR_UNITSELECTOR, state)  # 1=deg C, 0=deg F
     bits = instr.read_bits(START_READ_ADDR, 24)
     print(repr(bits))
-
     assert bits[ADDR_UNITSELECTOR - START_READ_ADDR] == state
     assert instr.read_bit(ADDR_UNITSELECTOR) == state
 
+    # Read LED for Celcius
     assert bits[ADDR_LED_C - START_READ_ADDR] == state
     assert instr.read_bit(ADDR_LED_C) == state
 
+    # Read LED for Farenheit
     assert bits[ADDR_LED_F - START_READ_ADDR] != state
     assert instr.read_bit(ADDR_LED_F) != state
 
@@ -225,10 +244,14 @@ def verify_bits(instr: minimalmodbus.Instrument) -> None:
 
 
 def verify_readonly_register(instr: minimalmodbus.Instrument) -> None:
+    """Verify that we detect the slave reported error when we
+       write to an read-only register.
+
+    """
     ADDRESS_FIRMWARE_VERSION = 0x102F
     NEW_FIRMWARE_VERSION = 300
 
-    print("Verify detecting a READONLY register")
+    print("Verify detecting a READONLY register (detect slave error)")
     did_report_error = False
     try:
         instr.write_register(ADDRESS_FIRMWARE_VERSION, NEW_FIRMWARE_VERSION)
@@ -241,7 +264,7 @@ def verify_readonly_register(instr: minimalmodbus.Instrument) -> None:
 
 
 def verify_register(instr: minimalmodbus.Instrument) -> None:
-    print("Verify writing and reading a register")
+    print("Verify writing and reading a register (and reading several registers)")
     for value in range(250, 400, 10):  # Setpoint 25 to 40 deg C
         verify_value_for_register(instr, value)
     print("Passed test for writing and reading a register\n")
