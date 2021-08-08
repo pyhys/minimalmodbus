@@ -11,7 +11,7 @@ MinimalModbus
         :alt: Documentation Status
 
 .. image:: https://img.shields.io/pypi/v/minimalmodbus.svg
-        :target: https://pypi.org/project/MinimalModbus/
+        :target: https://pypi.org/project/minimalmodbus/
         :alt: PyPI page link
 
 .. image:: https://codecov.io/gh/pyhys/minimalmodbus/branch/master/graphs/badge.svg?branch=master
@@ -26,7 +26,7 @@ Web resources
 
 * **Documentation**: https://minimalmodbus.readthedocs.io
 * Source code on **GitHub**: https://github.com/pyhys/minimalmodbus
-* Python package index (PyPI) with download: https://pypi.org/project/MinimalModbus/
+* Python package index (PyPI) with download: https://pypi.org/project/minimalmodbus/
 
 Other web pages:
 

@@ -1598,30 +1598,38 @@ class TestPredictResponseSize(ExtendedTestCase):
             self.assertEqual(result, len(responseFromSlave))
 
     def testWrongInputValue(self) -> None:
+        # Wrong mode
         self.assertRaises(
             ValueError, minimalmodbus._predict_response_size, "asciiii", 6, "ABCD"
-        )  # Wrong mode
+        )
+        # Wrong function code
         self.assertRaises(
             ValueError, minimalmodbus._predict_response_size, "ascii", 35, "ABCD"
-        )  # Wrong function code
+        )
+        # Wrong function code
         self.assertRaises(
             ValueError, minimalmodbus._predict_response_size, "rtu", 35, "ABCD"
-        )  # Wrong function code
+        )
+        # Too short message
         self.assertRaises(
             ValueError, minimalmodbus._predict_response_size, "ascii", 1, "ABC"
-        )  # Too short message
+        )
+        # Too short message
         self.assertRaises(
             ValueError, minimalmodbus._predict_response_size, "rtu", 1, "ABC"
-        )  # Too short message
+        )
+        # Too short message
         self.assertRaises(
             ValueError, minimalmodbus._predict_response_size, "ascii", 1, "AB"
-        )  # Too short message
+        )
+        # Too short message
         self.assertRaises(
             ValueError, minimalmodbus._predict_response_size, "ascii", 1, "A"
-        )  # Too short message
+        )
+        # Too short message
         self.assertRaises(
             ValueError, minimalmodbus._predict_response_size, "ascii", 1, ""
-        )  # Too short message
+        )
 
     def testWrongInputType(self) -> None:
         for value in _NOT_STRINGS:

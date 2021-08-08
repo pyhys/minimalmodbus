@@ -78,7 +78,6 @@ BYTEORDER_BIG_SWAP = 2
 BYTEORDER_LITTLE_SWAP = 3
 """Use litte endian byteorder, with swap"""
 
-
 @enum.unique
 class Payloadformat(enum.Enum):
     BIT = enum.auto()

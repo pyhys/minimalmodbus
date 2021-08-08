@@ -16,7 +16,7 @@ implemented in MinimalModbus by setting a generous timeout value, and let the
 serial ``read()`` function wait for timeout.
 
 The character time corresponds to 11 bit times, according to 
-https://www.automation.com/library/articles-white-papers/fieldbus-serial-bus-io-networks/introduction-to-modbus.
+https://www.automation.com/en-us/articles/2012-1/introduction-to-modbus
 
 According to the Modbus RTU standard, the minimum silent period should be 1.75 ms 
 regardless of the baud rate.
@@ -76,7 +76,7 @@ when it comes to RS485 communication. There are some options:
 
 **Using a USB-to-serial conversion chip that is capable of setting the TXENABLE pin properly**
     See for example the FTDI chip 
-    `FT232RL <https://www.ftdichip.com/Products/ICs/FT232R.htm>`_, which has a separate 
+    `FT232RL <https://ftdichip.com/products/ft232rq/>`_, which has a separate 
     output for this purpose (TXDEN in their terminology). The Sparkfun 
     breakout board `BOB-09822 <https://www.sparkfun.com/products/9822>`_ 
     combines this FTDI chip with a RS485 transceiver chip. The TXDEN output 

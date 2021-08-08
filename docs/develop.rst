@@ -577,7 +577,7 @@ Git
    Version control software. See https://git-scm.com/
 
 Sphinx
-   For generating HTML documentation. See http://www.sphinx-doc.org/
+   For generating HTML documentation. See https://www.sphinx-doc.org/
 
 Coverage.py
    Unittest coverage tool. See https://coverage.readthedocs.io/
@@ -660,7 +660,7 @@ Commit tags to remote server::
 
 Sphinx usage
 -------------------------------------------------------------------------------
-This documentation is generated with the Sphinx tool: http://www.sphinx-doc.org/
+This documentation is generated with the Sphinx tool: https://www.sphinx-doc.org/
 
 It is used to automatically generate HTML documentation from docstrings in the source code.
 See for example :ref:`internalminimalmodbus`. To see the source code of the Python
@@ -737,13 +737,13 @@ Useful Sphinx-related links
 Online resources for the formatting used (reStructuredText):
 
 Sphinx reStructuredText Primer
-    http://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html
+    https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html
 
 Example usage for API documentation
     https://pythonhosted.org/an_example_pypi_project/sphinx.html
 
 reStructuredText Markup Specification
-    http://docutils.sourceforge.net/docs/ref/rst/restructuredtext.html
+    https://docutils.sourceforge.io/docs/ref/rst/restructuredtext.html
 
 Sphinx build commands
 `````````````````````

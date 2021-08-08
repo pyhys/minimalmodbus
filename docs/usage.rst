@@ -22,12 +22,12 @@ Modbus ASCII
 Modbus TCP, and variants
     A protocol for communication over TCP/IP networks. Not supported by this software.
 
-For full documentation on the Modbus protocol, see `www.modbus.com <http://www.modbus.com/>`_.
+For full documentation on the Modbus protocol, see `www.modbus.com <https://www.modbus.com/>`_.
 
 Two important documents are:
 
-  * `Modbus application protocol V1.1b <http://www.modbus.com/docs/Modbus_Application_Protocol_V1_1b.pdf>`_
-  * `Modbus over serial line specification and implementation guide V1.02 <http://www.modbus.com/docs/Modbus_over_serial_line_V1_02.pdf>`_
+  * `Modbus application protocol V1.1b <https://www.modbus.com/docs/Modbus_Application_Protocol_V1_1b.pdf>`_
+  * `Modbus over serial line specification and implementation guide V1.02 <https://www.modbus.com/docs/Modbus_over_serial_line_V1_02.pdf>`_
 
 Note that the computer (master) actually is a client, and the instruments (slaves) are servers.
 

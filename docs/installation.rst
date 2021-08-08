@@ -25,7 +25,7 @@ The version of pyserial should be 3.0 or later.
 Alternate installation on Linux
 -------------------------------------
 You can also manually download the compressed source files from
-https://pypi.org/project/MinimalModbus/.
+https://pypi.org/project/minimalmodbus/.
 In that case you first need to manually install pySerial from https://pypi.org/project/pyserial.
 
 There are compressed source files for Unix/Linux (.tar.gz) and Windows (.zip).
