@@ -1,2 +1,14 @@
 [tool.mypy]
 mypy_path = "$MYPY_CONFIG_FILE_DIR/stubs"
+
+[tool.coverage.run]
+branch = true
+include = ["*", "tests/*"]
+
+[tool.coverage.report]
+show_missing = true
+ignore_errors = true
+precision = 1
+exclude_lines = ["pragma: no cover"]
+include = ["*", "tests/*"]
+omit = ["/usr/*", "*opt*", "*site-packages*", "*eggs*"]

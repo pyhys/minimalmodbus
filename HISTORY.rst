@@ -3,6 +3,17 @@
 History
 =======
 
+Release 2.0.0 (2021-08-??)
+--------------------------
+New features:
+
+* Type hints available
+
+Breaking changes:
+
+* Dropping support for Python 2
+
+
 Release 1.0.2 (2019-08-11)
 --------------------------
 * Adjusted settings for hardware tests

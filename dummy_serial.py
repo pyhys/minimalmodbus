@@ -23,9 +23,8 @@ dummy_serial: A dummy/mock implementation of a serial port for testing purposes.
 __author__ = "Jonas Berg"
 __license__ = "Apache License, Version 2.0"
 
-import sys
 import time
-from typing import Optional, Union
+from typing import Dict, Optional, Union
 
 DEFAULT_TIMEOUT = 0.01
 """The default timeot value in seconds. Used if not set by the constructor."""
@@ -43,7 +42,7 @@ Might be monkey-patched in the calling test module.
 """
 
 
-RESPONSES = {}
+RESPONSES : Dict[bytes, bytes] = {}
 """A dictionary of respones from the dummy serial port.
 
 The key is the message (bytes) sent to the dummy serial port, and the item is the response (bytes)

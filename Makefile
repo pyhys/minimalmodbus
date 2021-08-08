@@ -53,8 +53,11 @@ clean-docs:
 
 devdeps:
 	pip3 install --user --upgrade \
+		black \
 		coverage \
+		coverage[toml] \
 		flake8 \
+		mypy \
 		pip \
 		pycodestyle \
 		pydocstyle \
