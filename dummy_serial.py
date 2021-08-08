@@ -42,7 +42,7 @@ Might be monkey-patched in the calling test module.
 """
 
 
-RESPONSES : Dict[bytes, bytes] = {}
+RESPONSES: Dict[bytes, bytes] = {}
 """A dictionary of respones from the dummy serial port.
 
 The key is the message (bytes) sent to the dummy serial port, and the item is the response (bytes)

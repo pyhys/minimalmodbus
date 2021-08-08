@@ -28,7 +28,7 @@ messages (for easier remote support).
 Note that the term 'address' is ambiguous, why it is better
 to use the terms 'register address' or 'slave address'.
 
-Use only external links in the README.txt, otherwise they will not work on Python
+Use only external links in the README.rst, otherwise they will not work on Python
 Package Index (PyPI). No Sphinx-specific constructs are allowed in that file.
 
 Design priorities:
@@ -58,7 +58,7 @@ For a description of them, see :ref:`internalminimalmodbus`.
 
 Number conversion to and from bytestrings
 -----------------------------------------------
-The Python module :mod:`struct` is used for conversion. See https://docs.python.org/2/library/struct.html
+The Python module :mod:`struct` is used for conversion. See https://docs.python.org/3/library/struct.html
 
 Several wrapper functions are defined for easy use of the conversion.
 These functions also do argument validity checking.
@@ -391,10 +391,9 @@ Note that the API might change, as this is outside the official API.
 
 Generate documentation
 -----------------------------------
-Use the top-level Make to generate HTML and PDF documentation::
+Use the top-level Make to generate HTML documentation::
 
     make docs
-    make pdf
 
 Do linkchecking and measureme test coverage::
 
@@ -565,7 +564,7 @@ Burn a CD/DVD with these items:
 * Source distributions
 * Windows installer
 * Generated HTML files
-* PDF documentation
+
 
 
 
@@ -753,14 +752,6 @@ To build the documentation, in the top project directory run::
 
 That should generate HTML files to the directory :file:`docs/_build/html`.
 
-To generate PDF::
-
-   make pdf
-
-In order to generate PDF documentation, you need to install pdflatex (approx 1 GByte!)::
-
-    sudo apt-get install texlive texlive-latex-extra
-
 
 Unittest coverage measurement using coverage.py
 -----------------------------------------------------------------------------
@@ -791,18 +782,19 @@ TODO
 
 See also GitHub issues: https://github.com/pyhys/minimalmodbus/issues
 
-* Troubleshoot local PDF generation
-* Improve installation troubleshooting
-* Test virtual serial port on Windows using com0com
-* Unittests for measuring the sleep time in _communicate.
+* Use Github actions instead of Travis
+* Change internal representation to bytearray:
+
+  * Start with ``_communicate()``
+  * CRC and LRC generation
+  * ``_communicate()``
+  * Better printout of the bytearray in error messages
+  * ``_extract_payload()`` and ``_embed_payload()``
+  * ``_create_payload()``, ``_parse_payload()`` and all related functions
+
 * Logging instead of _print_out()
-
-Also:
-
-* Use Enum for payloadformat
-* Add type hinting
-* Run mypy checks
+* Improve installation troubleshooting
 * Possibly use pytest instead
-* Change internal representation to bytearray
-* Better printout of the bytearray in error messages
+* Test virtual serial port on Windows using com0com
+* Unittests for measuring the sleep time in ``_communicate()``.
 * Tool for interpretation of Modbus messages

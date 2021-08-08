@@ -10,7 +10,6 @@ help:
 	@echo "coverage - check code coverage quickly with the default Python"
 	@echo " "
 	@echo "docs - generate Sphinx HTML documentation"
-	@echo "pdf - generate Sphinx PDF documentation"
 	@echo "linkcheck - check documentation html links"
 	@echo " "
 	@echo "install - install the package to the active Python's site-packages"
@@ -44,6 +43,7 @@ clean-pyc:
 
 clean-test:
 	rm -fr .tox/
+	rm -fr .mypy_cache
 	rm -f .coverage
 	rm -f coverage.xml
 	rm -fr htmlcov/
@@ -87,7 +87,7 @@ lint:
 	pylint minimalmodbus.py -d C0103 -d C0330 -d R0913 || true
 
 black:
-	python3 -m black minimalmodbus.py dummy_serial.py setup.py tests/test_deltaDTB4824.py tests/test_minimalmodbus.py stubs/serial.pyi
+	python3 -m black .
 
 mypy:
 	python3 -m mypy minimalmodbus.py dummy_serial.py tests/ --strict 
@@ -117,14 +117,6 @@ docs:	clean-docs
 	@echo "    "
 	@echo "Opening web browser ..."
 	xdg-open docs/_build/html/index.html
-
-pdf:
-	$(MAKE) -C docs latexpdf
-	@echo "    "
-	@echo "    "
-	@echo "    "
-	@echo "Opening PDF reader ..."
-	xdg-open docs/_build/latex/minimalmodbus.pdf
 
 linkcheck:
 	$(MAKE) -C docs linkcheck

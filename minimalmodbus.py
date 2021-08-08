@@ -18,9 +18,8 @@
 
 __author__ = "Jonas Berg"
 __license__ = "Apache License, Version 2.0"
-__status__ = "Production"
 __url__ = "https://github.com/pyhys/minimalmodbus"
-__version__ = "1.0.3a1"
+__version__ = "2.0.0a1"
 
 import sys
 
@@ -77,6 +76,7 @@ BYTEORDER_BIG_SWAP = 2
 """Use big endian byteorder, with swap"""
 BYTEORDER_LITTLE_SWAP = 3
 """Use litte endian byteorder, with swap"""
+
 
 @enum.unique
 class Payloadformat(enum.Enum):
