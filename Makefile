@@ -54,6 +54,7 @@ clean-docs:
 devdeps:
 	pip3 install --user --upgrade \
 		black \
+		build \
 		coverage \
 		coverage[toml] \
 		flake8 \
@@ -126,8 +127,12 @@ show:
 	pip3 show
 
 dist: clean
-	python3 setup.py sdist bdist_wheel
+	@echo "    "
+	@echo "    "
+	python3 -m build
+	@echo "    "
+	@echo "    "
 	ls -l dist
 
 upload:
-	twine upload dist/*
+	python3 -m twine upload dist/*

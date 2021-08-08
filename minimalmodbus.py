@@ -455,8 +455,7 @@ class Instrument:
         )
         if int(returnvalue) == returnvalue:
             return int(returnvalue)
-        else:
-            return float(returnvalue)
+        return float(returnvalue)
 
     def write_register(
         self,
@@ -1085,12 +1084,12 @@ class Instrument:
                     number_of_registers, functioncode
                 )
             )
-        elif functioncode in [3, 4, 16] and not number_of_registers:
+        if functioncode in [3, 4, 16] and not number_of_registers:
             raise ValueError(
                 "The number_of_registers must be > 0 for functioncode "
                 + "{}.".format(functioncode)
             )
-        elif functioncode == 6 and number_of_registers != 1:
+        if functioncode == 6 and number_of_registers != 1:
             raise ValueError(
                 "The number_of_registers must be 1 for functioncode 6. "
                 + "Given: {}.".format(number_of_registers)
@@ -1113,7 +1112,7 @@ class Instrument:
                 "The input value must be given for this function code. "
                 + "Given {0!r} and {1}.".format(value, functioncode)
             )
-        elif functioncode in [1, 2, 3, 4] and value is not None:
+        if functioncode in [1, 2, 3, 4] and value is not None:
             raise ValueError(
                 "The input value should not be given for this function code. "
                 + "Given {0!r} and {1}.".format(value, functioncode)
@@ -1614,7 +1613,7 @@ def _parse_payload(
         registerdata = payload[_NUMBER_OF_BYTES_BEFORE_REGISTERDATA:]
         if payloadformat == _Payloadformat.BIT:
             return _bytestring_to_bits(registerdata, number_of_bits)[0]
-        elif payloadformat == _Payloadformat.BITS:
+        if payloadformat == _Payloadformat.BITS:
             return _bytestring_to_bits(registerdata, number_of_bits)
 
     if functioncode in [3, 4]:
@@ -1622,18 +1621,18 @@ def _parse_payload(
         if payloadformat == _Payloadformat.STRING:
             return _bytestring_to_textstring(registerdata, number_of_registers)
 
-        elif payloadformat == _Payloadformat.LONG:
+        if payloadformat == _Payloadformat.LONG:
             return _bytestring_to_long(
                 registerdata, signed, number_of_registers, byteorder
             )
 
-        elif payloadformat == _Payloadformat.FLOAT:
+        if payloadformat == _Payloadformat.FLOAT:
             return _bytestring_to_float(registerdata, number_of_registers, byteorder)
 
-        elif payloadformat == _Payloadformat.REGISTERS:
+        if payloadformat == _Payloadformat.REGISTERS:
             return _bytestring_to_valuelist(registerdata, number_of_registers)
 
-        elif payloadformat == _Payloadformat.REGISTER:
+        if payloadformat == _Payloadformat.REGISTER:
             return _twobyte_string_to_num(
                 registerdata, number_of_decimals, signed=signed
             )
@@ -1772,7 +1771,7 @@ def _extract_payload(
                     _ASCII_HEADER, response
                 )
             )
-        elif response[-len(_ASCII_FOOTER) :] != _ASCII_FOOTER:
+        if response[-len(_ASCII_FOOTER) :] != _ASCII_FOOTER:
             raise InvalidResponseError(
                 "Did not find footer "
                 + "({!r}) as end of ASCII response. The plain response is: {!r}".format(
@@ -1928,12 +1927,11 @@ def _predict_response_size(mode: str, functioncode: int, payload_to_slave: str) 
             + response_payload_size * RTU_TO_ASCII_PAYLOAD_FACTOR
             + NUMBER_OF_ASCII_RESPONSE_ENDBYTES
         )
-    else:
-        return (
-            NUMBER_OF_RTU_RESPONSE_STARTBYTES
-            + response_payload_size
-            + NUMBER_OF_RTU_RESPONSE_ENDBYTES
-        )
+    return (
+        NUMBER_OF_RTU_RESPONSE_STARTBYTES
+        + response_payload_size
+        + NUMBER_OF_RTU_RESPONSE_ENDBYTES
+    )
 
 
 def _calculate_minimum_silent_period(baudrate: Union[int, float]) -> float:
@@ -2714,8 +2712,7 @@ def _bit_to_bytestring(value: int) -> str:
 
     if value == 0:
         return "\x00\x00"
-    else:
-        return "\xff\x00"
+    return "\xff\x00"
 
 
 def _bits_to_bytestring(valuelist: List[int]) -> str:
