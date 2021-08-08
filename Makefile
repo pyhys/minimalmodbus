@@ -70,15 +70,7 @@ devdeps:
 		wheel
 
 lint:
-	@echo "Show non-ascii characters (for Python2 compability)"
-	grep --color='auto' -P -n "[\x80-\xFF]" minimalmodbus.py || true
-	grep --color='auto' -P -n "[\x80-\xFF]" dummy_serial.py || true
-	grep --color='auto' -P -n "[\x80-\xFF]" setup.py || true
-	grep --color='auto' -P -n "[\x80-\xFF]" tests/test_minimalmodbus.py || true
-	grep --color='auto' -P -n "[\x80-\xFF]" tests/test_deltaDTB4824.py || true
-	@echo " "
-	@echo " "
-	flake8 minimalmodbus.py --max-line-length=100 || true  # Includes pycodestyle
+	flake8 minimalmodbus.py || true  # Includes pycodestyle
 	@echo " "
 	@echo " "
 	pydocstyle minimalmodbus.py || true

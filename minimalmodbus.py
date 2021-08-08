@@ -79,7 +79,7 @@ BYTEORDER_LITTLE_SWAP = 3
 
 
 @enum.unique
-class Payloadformat(enum.Enum):
+class _Payloadformat(enum.Enum):
     BIT = enum.auto()
     BITS = enum.auto()
     FLOAT = enum.auto()
@@ -195,7 +195,7 @@ class Instrument:
                 - Defaults to :const:`serial.PARITY_NONE`.
             - bytesize (int):  Bytesize in bits.
                 - Defaults to 8.
-            - stopbits (use STOPBITS_xxx constants):  The number of stopbits. See the pySerial module for documentation.
+            - stopbits (use STOPBITS_xxx constants):  The number of stopbits. See pySerial docs.
                 - Defaults to :const:`serial.STOPBITS_ONE`.
             - timeout (float): Read timeout value in seconds.
                 - Defaults to 0.05 s.
@@ -277,7 +277,7 @@ class Instrument:
                 functioncode,
                 registeraddress,
                 number_of_bits=1,
-                payloadformat=Payloadformat.BIT,
+                payloadformat=_Payloadformat.BIT,
             )
         )
 
@@ -305,7 +305,7 @@ class Instrument:
             registeraddress,
             value,
             number_of_bits=1,
-            payloadformat=Payloadformat.BIT,
+            payloadformat=_Payloadformat.BIT,
         )
 
     def read_bits(
@@ -341,7 +341,7 @@ class Instrument:
             functioncode,
             registeraddress,
             number_of_bits=number_of_bits,
-            payloadformat=Payloadformat.BITS,
+            payloadformat=_Payloadformat.BITS,
         )
         # Make sure that we really return a list of integers
         assert isinstance(returnvalue, list)
@@ -382,7 +382,7 @@ class Instrument:
             registeraddress,
             values,
             number_of_bits=len(values),
-            payloadformat=Payloadformat.BITS,
+            payloadformat=_Payloadformat.BITS,
         )
 
     def read_register(
@@ -451,7 +451,7 @@ class Instrument:
             number_of_decimals=number_of_decimals,
             number_of_registers=1,
             signed=signed,
-            payloadformat=Payloadformat.REGISTER,
+            payloadformat=_Payloadformat.REGISTER,
         )
         if int(returnvalue) == returnvalue:
             return int(returnvalue)
@@ -523,7 +523,7 @@ class Instrument:
             number_of_decimals=number_of_decimals,
             number_of_registers=1,
             signed=signed,
-            payloadformat=Payloadformat.REGISTER,
+            payloadformat=_Payloadformat.REGISTER,
         )
 
     def read_long(
@@ -571,7 +571,7 @@ class Instrument:
                 number_of_registers=2,
                 signed=signed,
                 byteorder=byteorder,
-                payloadformat=Payloadformat.LONG,
+                payloadformat=_Payloadformat.LONG,
             )
         )
 
@@ -622,7 +622,7 @@ class Instrument:
             number_of_registers=2,
             signed=signed,
             byteorder=byteorder,
-            payloadformat=Payloadformat.LONG,
+            payloadformat=_Payloadformat.LONG,
         )
 
     def read_float(
@@ -683,7 +683,7 @@ class Instrument:
                 registeraddress,
                 number_of_registers=number_of_registers,
                 byteorder=byteorder,
-                payloadformat=Payloadformat.FLOAT,
+                payloadformat=_Payloadformat.FLOAT,
             )
         )
 
@@ -733,7 +733,7 @@ class Instrument:
             value,
             number_of_registers=number_of_registers,
             byteorder=byteorder,
-            payloadformat=Payloadformat.FLOAT,
+            payloadformat=_Payloadformat.FLOAT,
         )
 
     def read_string(
@@ -776,7 +776,7 @@ class Instrument:
                 functioncode,
                 registeraddress,
                 number_of_registers=number_of_registers,
-                payloadformat=Payloadformat.STRING,
+                payloadformat=_Payloadformat.STRING,
             )
         )
 
@@ -831,7 +831,7 @@ class Instrument:
             registeraddress,
             textstring,
             number_of_registers=number_of_registers,
-            payloadformat=Payloadformat.STRING,
+            payloadformat=_Payloadformat.STRING,
         )
 
     def read_registers(
@@ -874,7 +874,7 @@ class Instrument:
             functioncode,
             registeraddress,
             number_of_registers=number_of_registers,
-            payloadformat=Payloadformat.REGISTERS,
+            payloadformat=_Payloadformat.REGISTERS,
         )
         # Make sure that we really return a list of integers
         assert isinstance(returnvalue, list)
@@ -926,7 +926,7 @@ class Instrument:
             registeraddress,
             values,
             number_of_registers=len(values),
-            payloadformat=Payloadformat.REGISTERS,
+            payloadformat=_Payloadformat.REGISTERS,
         )
 
     # ############### #
@@ -943,7 +943,7 @@ class Instrument:
         number_of_bits: int = 0,
         signed: bool = False,
         byteorder: int = BYTEORDER_BIG,
-        payloadformat: Payloadformat = Payloadformat.REGISTER,
+        payloadformat: _Payloadformat = _Payloadformat.REGISTER,
     ) -> Any:
         """Perform generic command for reading and writing registers and bits.
 
@@ -960,7 +960,7 @@ class Instrument:
             * signed: Whether the data should be interpreted as unsigned or signed.
               Only for a single register or for payloadformat='long'.
             * byteorder: How multi-register data should be interpreted.
-            * payloadformat: An Payloadformat enum
+            * payloadformat: An _Payloadformat enum
 
         If a value of 77.0 is stored internally in the slave register as 770,
         then use ``number_of_decimals=1`` which will divide the received data
@@ -979,13 +979,13 @@ class Instrument:
         """
         ALL_ALLOWED_FUNCTIONCODES = [1, 2, 3, 4, 5, 6, 15, 16]
         ALLOWED_FUNCTIONCODES = {}
-        ALLOWED_FUNCTIONCODES[Payloadformat.BIT] = [1, 2, 5, 15]
-        ALLOWED_FUNCTIONCODES[Payloadformat.BITS] = [1, 2, 15]
-        ALLOWED_FUNCTIONCODES[Payloadformat.REGISTER] = [3, 4, 6, 16]
-        ALLOWED_FUNCTIONCODES[Payloadformat.FLOAT] = [3, 4, 16]
-        ALLOWED_FUNCTIONCODES[Payloadformat.STRING] = [3, 4, 16]
-        ALLOWED_FUNCTIONCODES[Payloadformat.LONG] = [3, 4, 16]
-        ALLOWED_FUNCTIONCODES[Payloadformat.REGISTERS] = [3, 4, 16]
+        ALLOWED_FUNCTIONCODES[_Payloadformat.BIT] = [1, 2, 5, 15]
+        ALLOWED_FUNCTIONCODES[_Payloadformat.BITS] = [1, 2, 15]
+        ALLOWED_FUNCTIONCODES[_Payloadformat.REGISTER] = [3, 4, 6, 16]
+        ALLOWED_FUNCTIONCODES[_Payloadformat.FLOAT] = [3, 4, 16]
+        ALLOWED_FUNCTIONCODES[_Payloadformat.STRING] = [3, 4, 16]
+        ALLOWED_FUNCTIONCODES[_Payloadformat.LONG] = [3, 4, 16]
+        ALLOWED_FUNCTIONCODES[_Payloadformat.REGISTERS] = [3, 4, 16]
 
         # Check input values
         _check_functioncode(functioncode, ALL_ALLOWED_FUNCTIONCODES)
@@ -1018,9 +1018,9 @@ class Instrument:
             description="byteorder",
         )
 
-        if not isinstance(payloadformat, Payloadformat):
+        if not isinstance(payloadformat, _Payloadformat):
             raise TypeError(
-                "The payload format should be an enum of type Payloadformat. Given: {!r}".format(
+                "The payload format should be an enum of type _Payloadformat. Given: {!r}".format(
                     payloadformat
                 )
             )
@@ -1036,7 +1036,7 @@ class Instrument:
 
         # Check combinations: signed
         if signed:
-            if payloadformat not in [Payloadformat.REGISTER, Payloadformat.LONG]:
+            if payloadformat not in [_Payloadformat.REGISTER, _Payloadformat.LONG]:
                 raise ValueError(
                     'The "signed" parameter can not be used for this payload format. '
                     + "Given format: {!r}.".format(payloadformat)
@@ -1044,7 +1044,7 @@ class Instrument:
 
         # Check combinations: number_of_decimals
         if number_of_decimals > 0:
-            if payloadformat != Payloadformat.REGISTER:
+            if payloadformat != _Payloadformat.REGISTER:
                 raise ValueError(
                     'The "number_of_decimals" parameter can not be used for this payload format. '
                     + "Given format: {0!r}.".format(payloadformat)
@@ -1052,20 +1052,20 @@ class Instrument:
 
         # Check combinations: byteorder
         if byteorder:
-            if payloadformat not in [Payloadformat.FLOAT, Payloadformat.LONG]:
+            if payloadformat not in [_Payloadformat.FLOAT, _Payloadformat.LONG]:
                 raise ValueError(
                     'The "byteorder" parameter can not be used for this payload format. '
                     + "Given format: {0!r}.".format(payloadformat)
                 )
 
         # Check combinations: number of bits
-        if payloadformat == Payloadformat.BIT:
+        if payloadformat == _Payloadformat.BIT:
             if number_of_bits != 1:
                 raise ValueError(
                     "For BIT payload format the number of bits should be 1. "
                     + "Given: {0!r}.".format(number_of_bits)
                 )
-        elif payloadformat == Payloadformat.BITS:
+        elif payloadformat == _Payloadformat.BITS:
             if number_of_bits < 1:
                 raise ValueError(
                     "For BITS payload format the number of bits should be at least 1. "
@@ -1097,7 +1097,7 @@ class Instrument:
             )
         if (
             functioncode == 16
-            and payloadformat == Payloadformat.REGISTER
+            and payloadformat == _Payloadformat.REGISTER
             and number_of_registers != 1
         ):
             raise ValueError(
@@ -1124,16 +1124,16 @@ class Instrument:
             functioncode == 16
             and payloadformat
             in [
-                Payloadformat.REGISTER,
-                Payloadformat.FLOAT,
-                Payloadformat.LONG,
+                _Payloadformat.REGISTER,
+                _Payloadformat.FLOAT,
+                _Payloadformat.LONG,
             ]
-        ) or (functioncode == 6 and payloadformat == Payloadformat.REGISTER):
+        ) or (functioncode == 6 and payloadformat == _Payloadformat.REGISTER):
             if not isinstance(value, (int, float)):
                 raise TypeError(f"The input value must be numerical. Given: {value!r}")
 
         # Check combinations: Value for string
-        if functioncode == 16 and payloadformat == Payloadformat.STRING:
+        if functioncode == 16 and payloadformat == _Payloadformat.STRING:
             if not isinstance(value, str):
                 raise TypeError(f"The input should be a string. Given: {value!r}")
             _check_string(
@@ -1143,7 +1143,7 @@ class Instrument:
             # than number_of_register_bytes.
 
         # Check combinations: Value for registers
-        if functioncode == 16 and payloadformat == Payloadformat.REGISTERS:
+        if functioncode == 16 and payloadformat == _Payloadformat.REGISTERS:
             if not isinstance(value, list):
                 raise TypeError(
                     "The value parameter for payloadformat REGISTERS must be a list. "
@@ -1159,7 +1159,7 @@ class Instrument:
                 )
 
         # Check combinations: Value for bit
-        if functioncode in [5, 15] and payloadformat == Payloadformat.BIT:
+        if functioncode in [5, 15] and payloadformat == _Payloadformat.BIT:
             if not isinstance(value, int):
                 raise TypeError(f"The input should be an integer. Given: {value!r}")
             _check_int(
@@ -1170,7 +1170,7 @@ class Instrument:
             )
 
         # Check combinations: Value for bits
-        if functioncode == 15 and payloadformat == Payloadformat.BITS:
+        if functioncode == 15 and payloadformat == _Payloadformat.BITS:
             if not isinstance(value, list):
                 raise TypeError(
                     "The value parameter for payloadformat BITS must be a list. "
@@ -1510,7 +1510,7 @@ def _create_payload(
     number_of_bits: int,
     signed: bool,
     byteorder: int,
-    payloadformat: Payloadformat,
+    payloadformat: _Payloadformat,
 ) -> str:
     """Create the payload.
 
@@ -1536,9 +1536,9 @@ def _create_payload(
             value, number_of_decimals, signed=signed
         )
     if functioncode == 15:
-        if payloadformat == Payloadformat.BIT and isinstance(value, int):
+        if payloadformat == _Payloadformat.BIT and isinstance(value, int):
             bitlist = [value]
-        elif payloadformat == Payloadformat.BITS and isinstance(value, list):
+        elif payloadformat == _Payloadformat.BITS and isinstance(value, list):
             bitlist = value
         else:
             raise ValueError(
@@ -1554,23 +1554,23 @@ def _create_payload(
             + _bits_to_bytestring(bitlist)
         )
     if functioncode == 16:
-        if payloadformat == Payloadformat.REGISTER:
+        if payloadformat == _Payloadformat.REGISTER:
             assert isinstance(value, (int, float))
             registerdata = _num_to_twobyte_string(
                 value, number_of_decimals, signed=signed
             )
-        elif payloadformat == Payloadformat.STRING:
+        elif payloadformat == _Payloadformat.STRING:
             assert isinstance(value, str)
             registerdata = _textstring_to_bytestring(value, number_of_registers)
-        elif payloadformat == Payloadformat.LONG:
+        elif payloadformat == _Payloadformat.LONG:
             assert isinstance(value, int)
             registerdata = _long_to_bytestring(
                 value, signed, number_of_registers, byteorder
             )
-        elif payloadformat == Payloadformat.FLOAT:
+        elif payloadformat == _Payloadformat.FLOAT:
             assert isinstance(value, float)
             registerdata = _float_to_bytestring(value, number_of_registers, byteorder)
-        elif payloadformat == Payloadformat.REGISTERS:
+        elif payloadformat == _Payloadformat.REGISTERS:
             assert isinstance(value, list)
             registerdata = _valuelist_to_bytestring(value, number_of_registers)
 
@@ -1595,7 +1595,7 @@ def _parse_payload(
     number_of_bits: int,
     signed: bool,
     byteorder: int,
-    payloadformat: Payloadformat,
+    payloadformat: _Payloadformat,
 ) -> Union[None, str, int, float, List[int], List[float]]:
     _check_response_payload(
         payload,
@@ -1612,28 +1612,28 @@ def _parse_payload(
 
     if functioncode in [1, 2]:
         registerdata = payload[_NUMBER_OF_BYTES_BEFORE_REGISTERDATA:]
-        if payloadformat == Payloadformat.BIT:
+        if payloadformat == _Payloadformat.BIT:
             return _bytestring_to_bits(registerdata, number_of_bits)[0]
-        elif payloadformat == Payloadformat.BITS:
+        elif payloadformat == _Payloadformat.BITS:
             return _bytestring_to_bits(registerdata, number_of_bits)
 
     if functioncode in [3, 4]:
         registerdata = payload[_NUMBER_OF_BYTES_BEFORE_REGISTERDATA:]
-        if payloadformat == Payloadformat.STRING:
+        if payloadformat == _Payloadformat.STRING:
             return _bytestring_to_textstring(registerdata, number_of_registers)
 
-        elif payloadformat == Payloadformat.LONG:
+        elif payloadformat == _Payloadformat.LONG:
             return _bytestring_to_long(
                 registerdata, signed, number_of_registers, byteorder
             )
 
-        elif payloadformat == Payloadformat.FLOAT:
+        elif payloadformat == _Payloadformat.FLOAT:
             return _bytestring_to_float(registerdata, number_of_registers, byteorder)
 
-        elif payloadformat == Payloadformat.REGISTERS:
+        elif payloadformat == _Payloadformat.REGISTERS:
             return _bytestring_to_valuelist(registerdata, number_of_registers)
 
-        elif payloadformat == Payloadformat.REGISTER:
+        elif payloadformat == _Payloadformat.REGISTER:
             return _twobyte_string_to_num(
                 registerdata, number_of_decimals, signed=signed
             )
@@ -3391,7 +3391,7 @@ def _check_response_payload(
     number_of_bits: int,
     signed: bool,
     byteorder: int,  # Not used. For keeping same signature as _parse_payload()
-    payloadformat: Payloadformat,  # Not used. For keeping same signature as _parse_payload()
+    payloadformat: _Payloadformat,  # Not used. For keeping same signature as _parse_payload()
 ) -> None:
     if functioncode in [1, 2, 3, 4]:
         _check_response_bytecount(payload)
@@ -4060,7 +4060,6 @@ def _get_diagnostic_string() -> str:
     """
     text = "\n## Diagnostic output from minimalmodbus ## \n\n"
     text += "Minimalmodbus version: " + __version__ + "\n"
-    text += "Minimalmodbus status: " + __status__ + "\n"
     text += "File name (with relative path): " + __file__ + "\n"
     text += "Full file path: " + os.path.abspath(__file__) + "\n\n"
     text += "pySerial version: " + serial.VERSION + "\n"

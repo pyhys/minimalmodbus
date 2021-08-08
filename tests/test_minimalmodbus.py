@@ -73,7 +73,7 @@ from minimalmodbus import NoResponseError
 from minimalmodbus import SlaveDeviceBusyError
 from minimalmodbus import SlaveReportedException
 
-from minimalmodbus import Payloadformat
+from minimalmodbus import _Payloadformat
 from minimalmodbus import BYTEORDER_BIG
 from minimalmodbus import BYTEORDER_LITTLE
 from minimalmodbus import BYTEORDER_BIG_SWAP
@@ -242,7 +242,7 @@ class TestCreatePayload(ExtendedTestCase):
         # read_bit(61, functioncode=2)
         self.assertEqual(
             minimalmodbus._create_payload(
-                2, 61, None, 0, 0, 1, False, False, Payloadformat.BIT
+                2, 61, None, 0, 0, 1, False, False, _Payloadformat.BIT
             ),
             "\x00\x3D\x00\x01",
         )
@@ -250,7 +250,7 @@ class TestCreatePayload(ExtendedTestCase):
         # read_bit(62, functioncode=1)
         self.assertEqual(
             minimalmodbus._create_payload(
-                1, 62, None, 0, 0, 1, False, False, Payloadformat.BIT
+                1, 62, None, 0, 0, 1, False, False, _Payloadformat.BIT
             ),
             "\x00\x3E\x00\x01",
         )
@@ -258,7 +258,7 @@ class TestCreatePayload(ExtendedTestCase):
         # write_bit(71, 1, functioncode=5)
         self.assertEqual(
             minimalmodbus._create_payload(
-                5, 71, 1, 0, 0, 1, False, False, Payloadformat.BIT
+                5, 71, 1, 0, 0, 1, False, False, _Payloadformat.BIT
             ),
             "\x00\x47\xFF\x00",
         )
@@ -267,7 +267,7 @@ class TestCreatePayload(ExtendedTestCase):
         # Example from MODBUS APPLICATION PROTOCOL SPECIFICATION V1.1b
         self.assertEqual(
             minimalmodbus._create_payload(
-                2, 196, None, 0, 0, 22, False, False, Payloadformat.BITS
+                2, 196, None, 0, 0, 22, False, False, _Payloadformat.BITS
             ),
             "\x00\xC4\x00\x16",
         )
@@ -276,7 +276,7 @@ class TestCreatePayload(ExtendedTestCase):
         # Example from MODBUS APPLICATION PROTOCOL SPECIFICATION V1.1b
         self.assertEqual(
             minimalmodbus._create_payload(
-                1, 19, None, 0, 0, 19, False, False, Payloadformat.BITS
+                1, 19, None, 0, 0, 19, False, False, _Payloadformat.BITS
             ),
             "\x00\x13\x00\x13",
         )
@@ -293,7 +293,7 @@ class TestCreatePayload(ExtendedTestCase):
                 10,
                 False,
                 False,
-                Payloadformat.BITS,
+                _Payloadformat.BITS,
             ),
             "\x00\x13\x00\x0A\x02\xCD\x01",
         )
@@ -301,7 +301,7 @@ class TestCreatePayload(ExtendedTestCase):
         # read_register(289, 0, functioncode=3)
         self.assertEqual(
             minimalmodbus._create_payload(
-                3, 289, None, 0, 1, 0, False, False, Payloadformat.REGISTER
+                3, 289, None, 0, 1, 0, False, False, _Payloadformat.REGISTER
             ),
             "\x01\x21\x00\x01",
         )
@@ -309,7 +309,7 @@ class TestCreatePayload(ExtendedTestCase):
         # read_register(14, 0, functioncode=4)
         self.assertEqual(
             minimalmodbus._create_payload(
-                4, 14, None, 0, 1, 0, False, False, Payloadformat.REGISTER
+                4, 14, None, 0, 1, 0, False, False, _Payloadformat.REGISTER
             ),
             "\x00\x0E\x00\x01",
         )
@@ -317,7 +317,7 @@ class TestCreatePayload(ExtendedTestCase):
         # write_register(35, 20, functioncode = 16)
         self.assertEqual(
             minimalmodbus._create_payload(
-                16, 35, 20, 0, 1, 0, False, False, Payloadformat.REGISTER
+                16, 35, 20, 0, 1, 0, False, False, _Payloadformat.REGISTER
             ),
             "\x00\x23\x00\x01\x02\x00\x14",
         )
@@ -325,7 +325,7 @@ class TestCreatePayload(ExtendedTestCase):
         # write_register(45, 88, functioncode = 6)
         self.assertEqual(
             minimalmodbus._create_payload(
-                6, 45, 88, 0, 1, 0, False, False, Payloadformat.REGISTER
+                6, 45, 88, 0, 1, 0, False, False, _Payloadformat.REGISTER
             ),
             "\x00\x2D\x00\x58",
         )
@@ -333,7 +333,7 @@ class TestCreatePayload(ExtendedTestCase):
         # write_register(101, -5, signed=True)
         self.assertEqual(
             minimalmodbus._create_payload(
-                16, 101, -5, 0, 1, 0, True, False, Payloadformat.REGISTER
+                16, 101, -5, 0, 1, 0, True, False, _Payloadformat.REGISTER
             ),
             "\x00\x65\x00\x01\x02\xFF\xFB",
         )
@@ -341,7 +341,7 @@ class TestCreatePayload(ExtendedTestCase):
         # write_register(101, -5, 1, signed=True)
         self.assertEqual(
             minimalmodbus._create_payload(
-                16, 101, -5, 1, 1, 0, True, False, Payloadformat.REGISTER
+                16, 101, -5, 1, 1, 0, True, False, _Payloadformat.REGISTER
             ),
             "\x00\x65\x00\x01\x02\xFF\xCE",
         )
@@ -349,7 +349,7 @@ class TestCreatePayload(ExtendedTestCase):
         # read_long(102)
         self.assertEqual(
             minimalmodbus._create_payload(
-                3, 102, None, 0, 2, 0, False, False, Payloadformat.LONG
+                3, 102, None, 0, 2, 0, False, False, _Payloadformat.LONG
             ),
             "\x00\x66\x00\x02",
         )
@@ -357,7 +357,7 @@ class TestCreatePayload(ExtendedTestCase):
         # read_long(102, functioncode=4)
         self.assertEqual(
             minimalmodbus._create_payload(
-                4, 102, None, 0, 2, 0, False, False, Payloadformat.LONG
+                4, 102, None, 0, 2, 0, False, False, _Payloadformat.LONG
             ),
             "\x00\x66\x00\x02",
         )
@@ -365,7 +365,7 @@ class TestCreatePayload(ExtendedTestCase):
         # read_long(256)
         self.assertEqual(
             minimalmodbus._create_payload(
-                3, 256, None, 0, 2, 0, False, False, Payloadformat.LONG
+                3, 256, None, 0, 2, 0, False, False, _Payloadformat.LONG
             ),
             "\x01\x00\x00\x02",
         )
@@ -373,7 +373,7 @@ class TestCreatePayload(ExtendedTestCase):
         # write_long(102, 5)
         self.assertEqual(
             minimalmodbus._create_payload(
-                16, 102, 5, 0, 2, 0, False, False, Payloadformat.LONG
+                16, 102, 5, 0, 2, 0, False, False, _Payloadformat.LONG
             ),
             "\x00\x66\x00\x02\x04\x00\x00\x00\x05",
         )
@@ -381,7 +381,7 @@ class TestCreatePayload(ExtendedTestCase):
         # write_long(102, 5,  signed=True)
         self.assertEqual(
             minimalmodbus._create_payload(
-                16, 102, 5, 0, 2, 0, True, False, Payloadformat.LONG
+                16, 102, 5, 0, 2, 0, True, False, _Payloadformat.LONG
             ),
             "\x00\x66\x00\x02\x04\x00\x00\x00\x05",
         )
@@ -389,7 +389,7 @@ class TestCreatePayload(ExtendedTestCase):
         # write_long(102, -5, signed=True)
         self.assertEqual(
             minimalmodbus._create_payload(
-                16, 102, -5, 0, 2, 0, True, False, Payloadformat.LONG
+                16, 102, -5, 0, 2, 0, True, False, _Payloadformat.LONG
             ),
             "\x00\x66\x00\x02\x04\xFF\xFF\xFF\xFB",
         )
@@ -397,7 +397,7 @@ class TestCreatePayload(ExtendedTestCase):
         # read_float(103, functioncode=3, number_of_registers=2)
         self.assertEqual(
             minimalmodbus._create_payload(
-                3, 103, None, 0, 2, 0, False, False, Payloadformat.FLOAT
+                3, 103, None, 0, 2, 0, False, False, _Payloadformat.FLOAT
             ),
             "\x00\x67\x00\x02",
         )
@@ -405,7 +405,7 @@ class TestCreatePayload(ExtendedTestCase):
         # read_float(103, functioncode=3, number_of_registers=4)
         self.assertEqual(
             minimalmodbus._create_payload(
-                3, 103, None, 0, 4, 0, False, False, Payloadformat.FLOAT
+                3, 103, None, 0, 4, 0, False, False, _Payloadformat.FLOAT
             ),
             "\x00\x67\x00\x04",
         )
@@ -413,7 +413,7 @@ class TestCreatePayload(ExtendedTestCase):
         # read_float(103, functioncode=4, number_of_registers=2)
         self.assertEqual(
             minimalmodbus._create_payload(
-                4, 103, None, 0, 2, 0, False, False, Payloadformat.FLOAT
+                4, 103, None, 0, 2, 0, False, False, _Payloadformat.FLOAT
             ),
             "\x00\x67\x00\x02",
         )
@@ -421,7 +421,7 @@ class TestCreatePayload(ExtendedTestCase):
         # write_float(103, 1.1, number_of_registers=2)   OK compare to recorded data
         self.assertEqual(
             minimalmodbus._create_payload(
-                16, 103, 1.1, 0, 2, 0, False, False, Payloadformat.FLOAT
+                16, 103, 1.1, 0, 2, 0, False, False, _Payloadformat.FLOAT
             ),
             "\x00\x67\x00\x02\x04\x3F\x8C\xCC\xCD",
         )
@@ -429,7 +429,7 @@ class TestCreatePayload(ExtendedTestCase):
         # write_float(103, 1.1, number_of_registers=4)   OK compare to recorded data
         self.assertEqual(
             minimalmodbus._create_payload(
-                16, 103, 1.1, 0, 4, 0, False, False, Payloadformat.FLOAT
+                16, 103, 1.1, 0, 4, 0, False, False, _Payloadformat.FLOAT
             ),
             "\x00\x67\x00\x04\x08\x3F\xF1\x99\x99\x99\x99\x99\x9A",
         )
@@ -437,7 +437,7 @@ class TestCreatePayload(ExtendedTestCase):
         # read_string(104, 1)
         self.assertEqual(
             minimalmodbus._create_payload(
-                3, 104, None, 0, 1, 0, False, False, Payloadformat.STRING
+                3, 104, None, 0, 1, 0, False, False, _Payloadformat.STRING
             ),
             "\x00\x68\x00\x01",
         )
@@ -445,7 +445,7 @@ class TestCreatePayload(ExtendedTestCase):
         # read_string(104, 4)
         self.assertEqual(
             minimalmodbus._create_payload(
-                3, 104, None, 0, 4, 0, False, False, Payloadformat.STRING
+                3, 104, None, 0, 4, 0, False, False, _Payloadformat.STRING
             ),
             "\x00\x68\x00\x04",
         )
@@ -453,7 +453,7 @@ class TestCreatePayload(ExtendedTestCase):
         # read_string(104, 4, functioncode=4)
         self.assertEqual(
             minimalmodbus._create_payload(
-                4, 104, None, 0, 4, 0, False, False, Payloadformat.STRING
+                4, 104, None, 0, 4, 0, False, False, _Payloadformat.STRING
             ),
             "\x00\x68\x00\x04",
         )
@@ -461,7 +461,7 @@ class TestCreatePayload(ExtendedTestCase):
         # write_string(104, 'A', 1)
         self.assertEqual(
             minimalmodbus._create_payload(
-                16, 104, "A", 0, 1, 0, False, False, Payloadformat.STRING
+                16, 104, "A", 0, 1, 0, False, False, _Payloadformat.STRING
             ),
             "\x00\x68\x00\x01\x02A ",
         )
@@ -469,7 +469,7 @@ class TestCreatePayload(ExtendedTestCase):
         # write_string(104, 'A', 4)
         self.assertEqual(
             minimalmodbus._create_payload(
-                16, 104, "A", 0, 4, 0, False, False, Payloadformat.STRING
+                16, 104, "A", 0, 4, 0, False, False, _Payloadformat.STRING
             ),
             "\x00\x68\x00\x04\x08A       ",
         )
@@ -477,7 +477,7 @@ class TestCreatePayload(ExtendedTestCase):
         # write_string(104, 'ABCDEFGH', 4)
         self.assertEqual(
             minimalmodbus._create_payload(
-                16, 104, "ABCDEFGH", 0, 4, 0, False, False, Payloadformat.STRING
+                16, 104, "ABCDEFGH", 0, 4, 0, False, False, _Payloadformat.STRING
             ),
             "\x00\x68\x00\x04\x08ABCDEFGH",
         )
@@ -485,7 +485,7 @@ class TestCreatePayload(ExtendedTestCase):
         # read_registers(105, 1)
         self.assertEqual(
             minimalmodbus._create_payload(
-                3, 105, None, 0, 1, 0, False, False, Payloadformat.REGISTERS
+                3, 105, None, 0, 1, 0, False, False, _Payloadformat.REGISTERS
             ),
             "\x00\x69\x00\x01",
         )
@@ -493,7 +493,7 @@ class TestCreatePayload(ExtendedTestCase):
         # read_registers(105, 3)
         self.assertEqual(
             minimalmodbus._create_payload(
-                3, 105, None, 0, 3, 0, False, False, Payloadformat.REGISTERS
+                3, 105, None, 0, 3, 0, False, False, _Payloadformat.REGISTERS
             ),
             "\x00\x69\x00\x03",
         )
@@ -501,7 +501,7 @@ class TestCreatePayload(ExtendedTestCase):
         # read_registers(105, 7, functioncode=4)
         self.assertEqual(
             minimalmodbus._create_payload(
-                4, 105, None, 0, 7, 0, False, False, Payloadformat.REGISTERS
+                4, 105, None, 0, 7, 0, False, False, _Payloadformat.REGISTERS
             ),
             "\x00\x69\x00\x07",
         )
@@ -509,7 +509,7 @@ class TestCreatePayload(ExtendedTestCase):
         # write_registers(105, [2])
         self.assertEqual(
             minimalmodbus._create_payload(
-                16, 105, [2], 0, 1, 0, False, False, Payloadformat.REGISTERS
+                16, 105, [2], 0, 1, 0, False, False, _Payloadformat.REGISTERS
             ),
             "\x00\x69\x00\x01\x02\x00\x02",
         )
@@ -517,7 +517,7 @@ class TestCreatePayload(ExtendedTestCase):
         # write_registers(105, [2, 4, 8])
         self.assertEqual(
             minimalmodbus._create_payload(
-                16, 105, [2, 4, 8], 0, 3, 0, False, False, Payloadformat.REGISTERS
+                16, 105, [2, 4, 8], 0, 3, 0, False, False, _Payloadformat.REGISTERS
             ),
             "\x00\x69\x00\x03\x06\x00\x02\x00\x04\x00\x08",
         )
@@ -535,7 +535,7 @@ class TestCreatePayload(ExtendedTestCase):
             0,
             False,
             False,
-            Payloadformat.STRING,
+            _Payloadformat.STRING,
         )
 
 
@@ -545,7 +545,7 @@ class TestParsePayload(ExtendedTestCase):
         # read_bit(61, functioncode=2)
         self.assertEqual(
             minimalmodbus._parse_payload(
-                "\x01\x01", 2, 61, None, 0, 0, 1, False, False, Payloadformat.BIT
+                "\x01\x01", 2, 61, None, 0, 0, 1, False, False, _Payloadformat.BIT
             ),
             1,
         )
@@ -553,7 +553,7 @@ class TestParsePayload(ExtendedTestCase):
         # read_bit(62, functioncode=1)
         self.assertEqual(
             minimalmodbus._parse_payload(
-                "\x01\x00", 1, 62, None, 0, 0, 1, False, False, Payloadformat.BIT
+                "\x01\x00", 1, 62, None, 0, 0, 1, False, False, _Payloadformat.BIT
             ),
             0,
         )
@@ -561,7 +561,7 @@ class TestParsePayload(ExtendedTestCase):
         # write_bit(71, 1, functioncode=5)
         self.assertEqual(
             minimalmodbus._parse_payload(
-                "\x00\x47\xff\x00", 5, 71, 1, 0, 0, 1, False, False, Payloadformat.BIT
+                "\x00\x47\xff\x00", 5, 71, 1, 0, 0, 1, False, False, _Payloadformat.BIT
             ),
             None,
         )
@@ -569,7 +569,7 @@ class TestParsePayload(ExtendedTestCase):
         # write_bit(72, 1, functioncode=15)
         self.assertEqual(
             minimalmodbus._parse_payload(
-                "\x00\x48\x00\x01", 15, 72, 1, 0, 0, 1, False, False, Payloadformat.BIT
+                "\x00\x48\x00\x01", 15, 72, 1, 0, 0, 1, False, False, _Payloadformat.BIT
             ),
             None,
         )
@@ -587,7 +587,7 @@ class TestParsePayload(ExtendedTestCase):
                 22,
                 False,
                 False,
-                Payloadformat.BITS,
+                _Payloadformat.BITS,
             ),
             [0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1],
         )
@@ -605,7 +605,7 @@ class TestParsePayload(ExtendedTestCase):
                 19,
                 False,
                 False,
-                Payloadformat.BITS,
+                _Payloadformat.BITS,
             ),
             [1, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1],
         )
@@ -623,7 +623,7 @@ class TestParsePayload(ExtendedTestCase):
                 10,
                 False,
                 False,
-                Payloadformat.BITS,
+                _Payloadformat.BITS,
             ),
             None,
         )
@@ -640,7 +640,7 @@ class TestParsePayload(ExtendedTestCase):
                 0,
                 False,
                 False,
-                Payloadformat.REGISTER,
+                _Payloadformat.REGISTER,
             ),
             770,
         )
@@ -657,7 +657,7 @@ class TestParsePayload(ExtendedTestCase):
                 0,
                 False,
                 False,
-                Payloadformat.REGISTER,
+                _Payloadformat.REGISTER,
             ),
             880,
         )
@@ -674,7 +674,7 @@ class TestParsePayload(ExtendedTestCase):
                 0,
                 False,
                 False,
-                Payloadformat.REGISTER,
+                _Payloadformat.REGISTER,
             ),
             None,
         )
@@ -691,7 +691,7 @@ class TestParsePayload(ExtendedTestCase):
                 0,
                 False,
                 False,
-                Payloadformat.REGISTER,
+                _Payloadformat.REGISTER,
             ),
             None,
         )
@@ -708,7 +708,7 @@ class TestParsePayload(ExtendedTestCase):
                 0,
                 True,
                 False,
-                Payloadformat.REGISTER,
+                _Payloadformat.REGISTER,
             ),
             None,
         )
@@ -725,7 +725,7 @@ class TestParsePayload(ExtendedTestCase):
                 0,
                 False,
                 False,
-                Payloadformat.LONG,
+                _Payloadformat.LONG,
             ),
             4294967295,
         )
@@ -742,7 +742,7 @@ class TestParsePayload(ExtendedTestCase):
                 0,
                 True,
                 False,
-                Payloadformat.LONG,
+                _Payloadformat.LONG,
             ),
             -1,
         )
@@ -750,7 +750,7 @@ class TestParsePayload(ExtendedTestCase):
         # write_long(102, 5)
         self.assertEqual(
             minimalmodbus._parse_payload(
-                "\x00f\x00\x02", 16, 102, 5, 0, 2, 0, False, False, Payloadformat.LONG
+                "\x00f\x00\x02", 16, 102, 5, 0, 2, 0, False, False, _Payloadformat.LONG
             ),
             None,
         )
@@ -758,7 +758,7 @@ class TestParsePayload(ExtendedTestCase):
         # write_long(102, -5, signed=True)
         self.assertEqual(
             minimalmodbus._parse_payload(
-                "\x00f\x00\x02", 16, 102, -5, 0, 2, 0, True, False, Payloadformat.LONG
+                "\x00f\x00\x02", 16, 102, -5, 0, 2, 0, True, False, _Payloadformat.LONG
             ),
             None,
         )
@@ -774,7 +774,7 @@ class TestParsePayload(ExtendedTestCase):
             0,
             False,
             False,
-            Payloadformat.FLOAT,
+            _Payloadformat.FLOAT,
         )
         assert isinstance(parsed_value, float)
         self.assertAlmostEqual(
@@ -793,7 +793,7 @@ class TestParsePayload(ExtendedTestCase):
             0,
             False,
             False,
-            Payloadformat.FLOAT,
+            _Payloadformat.FLOAT,
         )
         assert isinstance(parsed_value, float)
         self.assertAlmostEqual(
@@ -812,7 +812,7 @@ class TestParsePayload(ExtendedTestCase):
             0,
             False,
             False,
-            Payloadformat.FLOAT,
+            _Payloadformat.FLOAT,
         )
         assert isinstance(parsed_value, float)
         self.assertAlmostEqualRatio(
@@ -832,7 +832,7 @@ class TestParsePayload(ExtendedTestCase):
                 0,
                 False,
                 False,
-                Payloadformat.FLOAT,
+                _Payloadformat.FLOAT,
             ),
             None,
         )
@@ -849,7 +849,7 @@ class TestParsePayload(ExtendedTestCase):
                 0,
                 False,
                 False,
-                Payloadformat.FLOAT,
+                _Payloadformat.FLOAT,
             ),
             None,
         )
@@ -857,7 +857,7 @@ class TestParsePayload(ExtendedTestCase):
         # read_string(104, 1)
         self.assertEqual(
             minimalmodbus._parse_payload(
-                "\x02AB", 3, 104, None, 0, 1, 0, False, False, Payloadformat.STRING
+                "\x02AB", 3, 104, None, 0, 1, 0, False, False, _Payloadformat.STRING
             ),
             "AB",
         )
@@ -874,7 +874,7 @@ class TestParsePayload(ExtendedTestCase):
                 0,
                 False,
                 False,
-                Payloadformat.STRING,
+                _Payloadformat.STRING,
             ),
             "ABCDEFGH",
         )
@@ -891,7 +891,7 @@ class TestParsePayload(ExtendedTestCase):
                 0,
                 False,
                 False,
-                Payloadformat.STRING,
+                _Payloadformat.STRING,
             ),
             None,
         )
@@ -908,7 +908,7 @@ class TestParsePayload(ExtendedTestCase):
                 0,
                 False,
                 False,
-                Payloadformat.STRING,
+                _Payloadformat.STRING,
             ),
             None,
         )
@@ -925,7 +925,7 @@ class TestParsePayload(ExtendedTestCase):
                 0,
                 False,
                 False,
-                Payloadformat.STRING,
+                _Payloadformat.STRING,
             ),
             None,
         )
@@ -942,7 +942,7 @@ class TestParsePayload(ExtendedTestCase):
                 0,
                 False,
                 False,
-                Payloadformat.REGISTERS,
+                _Payloadformat.REGISTERS,
             ),
             [16],
         )
@@ -959,7 +959,7 @@ class TestParsePayload(ExtendedTestCase):
                 0,
                 False,
                 False,
-                Payloadformat.REGISTERS,
+                _Payloadformat.REGISTERS,
             ),
             [16, 32, 64],
         )
@@ -976,7 +976,7 @@ class TestParsePayload(ExtendedTestCase):
                 0,
                 False,
                 False,
-                Payloadformat.REGISTERS,
+                _Payloadformat.REGISTERS,
             ),
             None,
         )
@@ -993,7 +993,7 @@ class TestParsePayload(ExtendedTestCase):
                 0,
                 False,
                 False,
-                Payloadformat.REGISTERS,
+                _Payloadformat.REGISTERS,
             ),
             None,
         )
@@ -1013,7 +1013,7 @@ class TestParsePayload(ExtendedTestCase):
             1,
             False,
             False,
-            Payloadformat.BIT,
+            _Payloadformat.BIT,
         )
 
         # write_bit(73, 1, functioncode=15)  # Slave gives wrong number of registers
@@ -1029,7 +1029,7 @@ class TestParsePayload(ExtendedTestCase):
             1,
             False,
             False,
-            Payloadformat.BIT,
+            _Payloadformat.BIT,
         )
 
         # write_bit(74, 1, functioncode=5)  # Slave gives wrong write data
@@ -1045,7 +1045,7 @@ class TestParsePayload(ExtendedTestCase):
             1,
             False,
             False,
-            Payloadformat.BIT,
+            _Payloadformat.BIT,
         )
 
         # write_bit(73, 1, functioncode=15)  # Slave gives wrong number of registers
@@ -1061,7 +1061,7 @@ class TestParsePayload(ExtendedTestCase):
             1,
             False,
             False,
-            Payloadformat.BIT,
+            _Payloadformat.BIT,
         )
 
         # write_bit(74, 1, functioncode=5)  # Slave gives wrong write data (address)
@@ -1077,7 +1077,7 @@ class TestParsePayload(ExtendedTestCase):
             1,
             False,
             False,
-            Payloadformat.BIT,
+            _Payloadformat.BIT,
         )
 
         # read_bits(196, 22, functioncode=2)  # Wrong number of bits
@@ -1093,7 +1093,7 @@ class TestParsePayload(ExtendedTestCase):
             7,
             False,
             False,
-            Payloadformat.REGISTER,
+            _Payloadformat.REGISTER,
         )
 
         # read_register(202, 0, functioncode=3)  # Slave gives too long response
@@ -1109,7 +1109,7 @@ class TestParsePayload(ExtendedTestCase):
             0,
             False,
             False,
-            Payloadformat.REGISTER,
+            _Payloadformat.REGISTER,
         )
 
         # read_register(203, 0, functioncode=3)  # Slave gives too short response
@@ -1125,7 +1125,7 @@ class TestParsePayload(ExtendedTestCase):
             0,
             False,
             False,
-            Payloadformat.REGISTER,
+            _Payloadformat.REGISTER,
         )
 
         # write_register(52, 99, functioncode = 16)  # Slave gives wrong number of registers
@@ -1141,7 +1141,7 @@ class TestParsePayload(ExtendedTestCase):
             0,
             False,
             False,
-            Payloadformat.REGISTER,
+            _Payloadformat.REGISTER,
         )
 
         # write_register(53, 99, functioncode = 16)  # Slave gives wrong register address
@@ -1157,7 +1157,7 @@ class TestParsePayload(ExtendedTestCase):
             0,
             False,
             False,
-            Payloadformat.REGISTER,
+            _Payloadformat.REGISTER,
         )
 
         # write_register(55, 99, functioncode = 6)  # Slave gives wrong write data
@@ -1173,7 +1173,7 @@ class TestParsePayload(ExtendedTestCase):
             0,
             False,
             False,
-            Payloadformat.REGISTER,
+            _Payloadformat.REGISTER,
         )
 
         # read_registers(105, 3)  # wrong number of registers
@@ -1189,7 +1189,7 @@ class TestParsePayload(ExtendedTestCase):
             0,
             False,
             False,
-            Payloadformat.REGISTERS,
+            _Payloadformat.REGISTERS,
         )
 
 
@@ -4144,20 +4144,20 @@ class TestDummyCommunication(ExtendedTestCase):
         # read_bit(61)
         self.assertEqual(
             self.instrument._generic_command(
-                2, 61, number_of_bits=1, payloadformat=Payloadformat.BIT
+                2, 61, number_of_bits=1, payloadformat=_Payloadformat.BIT
             ),
             1,
         )
 
         # write_bit(71, 1)
         self.instrument._generic_command(
-            5, 71, 1, number_of_bits=1, payloadformat=Payloadformat.BIT
+            5, 71, 1, number_of_bits=1, payloadformat=_Payloadformat.BIT
         )
 
         # read_bits(196, 22, functioncode=2)
         self.assertEqual(
             self.instrument._generic_command(
-                2, 196, number_of_bits=22, payloadformat=Payloadformat.BITS
+                2, 196, number_of_bits=22, payloadformat=_Payloadformat.BITS
             ),
             [0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1],
         )
@@ -4165,7 +4165,7 @@ class TestDummyCommunication(ExtendedTestCase):
         # read_bits(19, 19, functioncode=1)
         self.assertEqual(
             self.instrument._generic_command(
-                1, 19, number_of_bits=19, payloadformat=Payloadformat.BITS
+                1, 19, number_of_bits=19, payloadformat=_Payloadformat.BITS
             ),
             [1, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1],
         )
@@ -4176,13 +4176,13 @@ class TestDummyCommunication(ExtendedTestCase):
             19,
             [1, 0, 1, 1, 0, 0, 1, 1, 1, 0],
             number_of_bits=10,
-            payloadformat=Payloadformat.BITS,
+            payloadformat=_Payloadformat.BITS,
         )
 
         # read_register(289)
         self.assertEqual(
             self.instrument._generic_command(
-                3, 289, number_of_registers=1, payloadformat=Payloadformat.REGISTER
+                3, 289, number_of_registers=1, payloadformat=_Payloadformat.REGISTER
             ),
             770,
         )
@@ -4194,7 +4194,7 @@ class TestDummyCommunication(ExtendedTestCase):
                 101,
                 number_of_registers=1,
                 signed=True,
-                payloadformat=Payloadformat.REGISTER,
+                payloadformat=_Payloadformat.REGISTER,
             ),
             -5,
         )
@@ -4206,64 +4206,64 @@ class TestDummyCommunication(ExtendedTestCase):
                 289,
                 number_of_decimals=1,
                 number_of_registers=1,
-                payloadformat=Payloadformat.REGISTER,
+                payloadformat=_Payloadformat.REGISTER,
             ),
             77.0,
         )
 
         # write_register(35, 20)
         self.instrument._generic_command(
-            16, 35, 20, number_of_registers=1, payloadformat=Payloadformat.REGISTER
+            16, 35, 20, number_of_registers=1, payloadformat=_Payloadformat.REGISTER
         )
 
         # write_register(45, 88)
         self.instrument._generic_command(
-            6, 45, 88, number_of_registers=1, payloadformat=Payloadformat.REGISTER
+            6, 45, 88, number_of_registers=1, payloadformat=_Payloadformat.REGISTER
         )
 
         # read_long(102)
         self.assertEqual(
             self.instrument._generic_command(
-                3, 102, number_of_registers=2, payloadformat=Payloadformat.LONG
+                3, 102, number_of_registers=2, payloadformat=_Payloadformat.LONG
             ),
             4294967295,
         )
 
         # write_long(102, 5)
         self.instrument._generic_command(
-            16, 102, 5, number_of_registers=2, payloadformat=Payloadformat.LONG
+            16, 102, 5, number_of_registers=2, payloadformat=_Payloadformat.LONG
         )
 
         # read_float(103)
         self.assertAlmostEqual(
             self.instrument._generic_command(
-                3, 103, number_of_registers=2, payloadformat=Payloadformat.FLOAT
+                3, 103, number_of_registers=2, payloadformat=_Payloadformat.FLOAT
             ),
             1.0,
         )
 
         # write_float(103, 1.1)
         self.instrument._generic_command(
-            16, 103, 1.1, number_of_registers=2, payloadformat=Payloadformat.FLOAT
+            16, 103, 1.1, number_of_registers=2, payloadformat=_Payloadformat.FLOAT
         )
 
         # read_string(104, 1)
         self.assertEqual(
             self.instrument._generic_command(
-                3, 104, number_of_registers=1, payloadformat=Payloadformat.STRING
+                3, 104, number_of_registers=1, payloadformat=_Payloadformat.STRING
             ),
             "AB",
         )
 
         # write_string(104, 'A', 1)
         self.instrument._generic_command(
-            16, 104, "A", number_of_registers=1, payloadformat=Payloadformat.STRING
+            16, 104, "A", number_of_registers=1, payloadformat=_Payloadformat.STRING
         )
 
         # read_registers(105, 3)
         self.assertEqual(
             self.instrument._generic_command(
-                3, 105, number_of_registers=3, payloadformat=Payloadformat.REGISTERS
+                3, 105, number_of_registers=3, payloadformat=_Payloadformat.REGISTERS
             ),
             [16, 32, 64],
         )
@@ -4274,7 +4274,7 @@ class TestDummyCommunication(ExtendedTestCase):
             105,
             [2, 4, 8],
             number_of_registers=3,
-            payloadformat=Payloadformat.REGISTERS,
+            payloadformat=_Payloadformat.REGISTERS,
         )
 
     def testGenericCommandWrongValue(
@@ -4288,7 +4288,7 @@ class TestDummyCommunication(ExtendedTestCase):
                 functioncode,
                 1,
                 number_of_registers=1,
-                payloadformat=Payloadformat.REGISTER,
+                payloadformat=_Payloadformat.REGISTER,
             )
         for registeraddress in [-1, 65536]:
             self.assertRaises(
@@ -4376,7 +4376,7 @@ class TestDummyCommunication(ExtendedTestCase):
             71,
             1,
             number_of_bits=2,
-            payloadformat=Payloadformat.BIT,
+            payloadformat=_Payloadformat.BIT,
         )
         self.assertRaises(
             ValueError,
@@ -4385,7 +4385,7 @@ class TestDummyCommunication(ExtendedTestCase):
             71,
             1,
             number_of_bits=1,
-            payloadformat=Payloadformat.REGISTER,
+            payloadformat=_Payloadformat.REGISTER,
         )
         self.assertRaises(
             ValueError,
@@ -4395,7 +4395,7 @@ class TestDummyCommunication(ExtendedTestCase):
             1,
             number_of_bits=1,
             number_of_decimals=1,
-            payloadformat=Payloadformat.BIT,
+            payloadformat=_Payloadformat.BIT,
         )
         self.assertRaises(
             ValueError,
@@ -4405,7 +4405,7 @@ class TestDummyCommunication(ExtendedTestCase):
             1,
             number_of_bits=1,
             number_of_registers=1,
-            payloadformat=Payloadformat.BIT,
+            payloadformat=_Payloadformat.BIT,
         )
         self.assertRaises(
             ValueError,
@@ -4415,7 +4415,7 @@ class TestDummyCommunication(ExtendedTestCase):
             1,
             number_of_bits=1,
             signed=True,
-            payloadformat=Payloadformat.BIT,
+            payloadformat=_Payloadformat.BIT,
         )
         self.assertRaises(
             ValueError,
@@ -4425,7 +4425,7 @@ class TestDummyCommunication(ExtendedTestCase):
             1,
             number_of_bits=1,
             byteorder=BYTEORDER_LITTLE,
-            payloadformat=Payloadformat.BIT,
+            payloadformat=_Payloadformat.BIT,
         )
         self.assertRaises(
             ValueError,
@@ -4434,7 +4434,7 @@ class TestDummyCommunication(ExtendedTestCase):
             71,
             2,
             number_of_bits=1,
-            payloadformat=Payloadformat.BIT,
+            payloadformat=_Payloadformat.BIT,
         )
 
         # Bits
@@ -4444,7 +4444,7 @@ class TestDummyCommunication(ExtendedTestCase):
             2,
             71,
             number_of_bits=-1,
-            payloadformat=Payloadformat.BITS,
+            payloadformat=_Payloadformat.BITS,
         )
         self.assertRaises(
             ValueError,
@@ -4452,7 +4452,7 @@ class TestDummyCommunication(ExtendedTestCase):
             2,
             71,
             number_of_bits=0,
-            payloadformat=Payloadformat.BITS,
+            payloadformat=_Payloadformat.BITS,
         )
         self.assertRaises(
             TypeError,
@@ -4461,7 +4461,7 @@ class TestDummyCommunication(ExtendedTestCase):
             71,
             1,
             number_of_bits=1,
-            payloadformat=Payloadformat.BITS,
+            payloadformat=_Payloadformat.BITS,
         )
         self.assertRaises(
             ValueError,
@@ -4470,7 +4470,7 @@ class TestDummyCommunication(ExtendedTestCase):
             71,
             [1, 2],
             number_of_bits=1,
-            payloadformat=Payloadformat.BITS,
+            payloadformat=_Payloadformat.BITS,
         )
 
         # Register
@@ -4481,7 +4481,7 @@ class TestDummyCommunication(ExtendedTestCase):
             289,
             number_of_registers=1,
             number_of_bits=1,
-            payloadformat=Payloadformat.REGISTER,
+            payloadformat=_Payloadformat.REGISTER,
         )
 
         self.assertRaises(
@@ -4490,7 +4490,7 @@ class TestDummyCommunication(ExtendedTestCase):
             3,
             289,
             number_of_registers=0,
-            payloadformat=Payloadformat.REGISTER,
+            payloadformat=_Payloadformat.REGISTER,
         )
 
         self.assertRaises(
@@ -4499,7 +4499,7 @@ class TestDummyCommunication(ExtendedTestCase):
             16,
             289,
             number_of_registers=5,
-            payloadformat=Payloadformat.REGISTER,
+            payloadformat=_Payloadformat.REGISTER,
         )
 
         self.assertRaises(
@@ -4508,7 +4508,7 @@ class TestDummyCommunication(ExtendedTestCase):
             16,
             289,
             number_of_registers=1,
-            payloadformat=Payloadformat.REGISTER,
+            payloadformat=_Payloadformat.REGISTER,
         )
 
         self.assertRaises(
@@ -4518,7 +4518,7 @@ class TestDummyCommunication(ExtendedTestCase):
             45,
             88,
             number_of_registers=7,
-            payloadformat=Payloadformat.REGISTER,
+            payloadformat=_Payloadformat.REGISTER,
         )
 
         self.assertRaises(
@@ -4528,7 +4528,7 @@ class TestDummyCommunication(ExtendedTestCase):
             289,
             88,
             number_of_registers=1,
-            payloadformat=Payloadformat.REGISTER,
+            payloadformat=_Payloadformat.REGISTER,
         )
 
         # Registers
@@ -4538,7 +4538,7 @@ class TestDummyCommunication(ExtendedTestCase):
             1,
             105,
             number_of_registers=3,
-            payloadformat=Payloadformat.REGISTERS,
+            payloadformat=_Payloadformat.REGISTERS,
         )
 
         self.assertRaises(
@@ -4548,7 +4548,7 @@ class TestDummyCommunication(ExtendedTestCase):
             105,
             2,
             number_of_registers=3,
-            payloadformat=Payloadformat.REGISTERS,
+            payloadformat=_Payloadformat.REGISTERS,
         )
 
         self.assertRaises(
@@ -4558,7 +4558,7 @@ class TestDummyCommunication(ExtendedTestCase):
             105,
             [2, 4],
             number_of_registers=3,
-            payloadformat=Payloadformat.REGISTERS,
+            payloadformat=_Payloadformat.REGISTERS,
         )
 
     ## Perform command ##
