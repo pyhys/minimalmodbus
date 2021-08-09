@@ -101,6 +101,7 @@ Run these commands::
 
 """
 import os
+import statistics
 import sys
 import time
 from typing import Any, Dict, List, Optional, Tuple, Type, Union
@@ -301,6 +302,7 @@ def measure_roundtrip_time(instr: minimalmodbus.Instrument) -> None:
     START_VALUE = 200
     STOP_VALUE = 500
     STEPSIZE = 5
+    instrument_roundtrip_measurements: List[float] = []
 
     print("Measure request-response round trip time")
     if instr.serial is None:
@@ -320,11 +322,21 @@ def measure_roundtrip_time(instr: minimalmodbus.Instrument) -> None:
             step = -step
         value += step
         instr.write_register(ADDR_SETPOINT, value, functioncode=6)
+        assert isinstance(instr.roundtrip_time, float)
+        instrument_roundtrip_measurements.append(instr.roundtrip_time)
 
     time_per_value = (
         (time.time() - start_time) * float(SECONDS_TO_MILLISECONDS) / NUMBER_OF_VALUES
     )
-    print("Time per value: {:0.1f} ms.\n".format(time_per_value))
+    print("Time per loop: {:0.1f} ms.".format(time_per_value))
+    print(
+        "Instrument-reported round trip time: {:0.1f} ms. Min {:0.1f} ms Max {:0.1f} ms\n".format(
+            statistics.mean(instrument_roundtrip_measurements)
+            * SECONDS_TO_MILLISECONDS,
+            min(instrument_roundtrip_measurements) * SECONDS_TO_MILLISECONDS,
+            max(instrument_roundtrip_measurements) * SECONDS_TO_MILLISECONDS,
+        )
+    )
 
 
 def parse_commandline(argv: List[str]) -> Tuple[str, str, int]:

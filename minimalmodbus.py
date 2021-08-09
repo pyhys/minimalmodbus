@@ -46,6 +46,7 @@ _MAX_NUMBER_OF_BITS_TO_READ = 2000  # 0x7D0
 _MAX_NUMBER_OF_DECIMALS = 10  # Some instrument might store 0.00000154 Ampere as 154 etc
 _MAX_BYTEORDER_VALUE = 3
 _SECONDS_TO_MILLISECONDS = 1000
+_BROADCAST_DELAY: float = 0.2  # seconds
 _BITS_PER_BYTE = 8
 _ASCII_HEADER = ":"
 _ASCII_FOOTER = "\r\n"
@@ -123,7 +124,15 @@ class Instrument:
         """Initialize instrument and open corresponding serial port."""
         self.address = slaveaddress
         """Slave address (int). Most often set by the constructor
-        (see the class documentation). """
+        (see the class documentation).
+
+        Slave address 0 is for broadcasting to all slaves (no responses are sent).
+        It is only possible to write infomation (not read) via broadcast. A long
+        delay is added after each transmission to allow the slowest slaves
+        to digest the information.
+
+        New in version 2.0: Support for broadcast
+        """
 
         self.mode = mode
         """Slave mode (str), can be :data:`.MODE_RTU` or :data:`.MODE_ASCII`.
@@ -227,6 +236,8 @@ class Instrument:
             self._print_debug("Closing serial port {}".format(port))
             self.serial.close()
 
+        self._latest_roundtrip_time: Optional[float] = None
+
     def __repr__(self) -> str:
         """Give string representation of the :class:`.Instrument` object."""
         template = (
@@ -247,6 +258,24 @@ class Instrument:
             self.debug,
             self.serial,
         )
+
+    @property
+    def roundtrip_time(self) -> Optional[float]:
+        """Latest measured round-trip time, in seconds. Read only.
+
+        Note that the value is ``None`` if no data is available.
+
+        The round-trip time is the time from minimalmodbus sends request data,
+        to the time it receives response data from the instrument.
+        It is basically the time spent waiting on external communication.
+
+        Note that mimimalmodbus also sleeps (not included in the round trip time),
+        for example to fulfill the inter-message time interval or to give
+        slaves time to process broadcasted information.
+
+        New in version 2.0
+        """
+        return self._latest_roundtrip_time
 
     def _print_debug(self, text: str) -> None:
         if self.debug:
@@ -1288,7 +1317,9 @@ class Instrument:
                     )
 
         # Communicate
-        response = self._communicate(request, number_of_bytes_to_read)
+        request_bytes = bytes(request, encoding="latin1")
+        response_bytes = self._communicate(request_bytes, number_of_bytes_to_read)
+        response = str(response_bytes, encoding="latin1")
 
         if number_of_bytes_to_read == 0:
             return ""
@@ -1299,7 +1330,7 @@ class Instrument:
         )
         return payload_from_slave
 
-    def _communicate(self, request: str, number_of_bytes_to_read: int) -> str:
+    def _communicate(self, request: bytes, number_of_bytes_to_read: int) -> bytes:
         """Talk to the slave via a serial port.
 
         Args:
@@ -1313,11 +1344,11 @@ class Instrument:
             TypeError, ValueError, ModbusException,
             serial.SerialException (inherited from IOError)
 
-        Note that the answer might have strange ASCII control signs, which
-        makes it difficult to print it in the promt (messes up a bit).
-        Use repr() to make the string printable (shows ASCII values for control signs.)
+        Sleeps if the previous message arrived less than the "silent period" ago.
 
         Will block until reaching *number_of_bytes_to_read* or timeout.
+
+        Additional delay will be used after broadcast transmissions (slave address 0).
 
         If the attribute :attr:`Instrument.debug` is :const:`True`, the communication
         details are printed.
@@ -1341,16 +1372,13 @@ class Instrument:
         It is about 16 ms on Windows according to
         https://stackoverflow.com/questions/157359/accurate-timestamping-in-python-logging
 
-        For Python3, the information sent to and from pySerial should be of the type bytes.
-        This is taken care of automatically by MinimalModbus.
-
         """
-        _check_string(request, minlength=1, description="request")
+        _check_bytes(request, minlength=1, description="request")
         _check_int(number_of_bytes_to_read)
 
         self._print_debug(
-            "Will write to instrument (expecting {} bytes back): {!r} ({})".format(
-                number_of_bytes_to_read, request, _hexlify(request)
+            "Will write to instrument (expecting {} bytes back): {}".format(
+                number_of_bytes_to_read, _describe_bytes(request)
             )
         )
 
@@ -1369,8 +1397,6 @@ class Instrument:
             self._print_debug("Clearing serial buffers for port {}".format(portname))
             self.serial.reset_input_buffer()
             self.serial.reset_output_buffer()
-
-        request_bytes = bytes(request, encoding="latin1")
 
         # Sleep to make sure 3.5 character times have passed
         minimum_silent_period = _calculate_minimum_silent_period(self.serial.baudrate)
@@ -1405,62 +1431,55 @@ class Instrument:
             self._print_debug(text)
 
         # Write request
-        latest_write_time = time.monotonic()
-        self.serial.write(request_bytes)
+        write_time = time.monotonic()
+        self.serial.write(request)
 
         # Read and discard local echo
         if self.handle_local_echo:
-            local_echo_to_discard = self.serial.read(len(request_bytes))
+            local_echo_to_discard = self.serial.read(len(request))
             if self.debug:
-                template = "Discarding this local echo: {!r} ({} bytes)."
-                text = template.format(
-                    local_echo_to_discard, len(local_echo_to_discard)
+                text = "Discarding this local echo: {}".format(
+                    _describe_bytes(local_echo_to_discard),
                 )
                 self._print_debug(text)
-            if local_echo_to_discard != request_bytes:
+            if local_echo_to_discard != request:
                 template = (
                     "Local echo handling is enabled, but the local echo does "
                     + "not match the sent request. "
-                    + "Request: {!r} ({} bytes), local echo: {!r} ({} bytes)."
+                    + "Request: {}, local echo: {}."
                 )
                 text = template.format(
-                    request_bytes,
-                    len(request_bytes),
-                    local_echo_to_discard,
-                    len(local_echo_to_discard),
+                    _describe_bytes(request),
+                    _describe_bytes(local_echo_to_discard),
                 )
                 raise LocalEchoError(text)
 
         # Read response
         if number_of_bytes_to_read > 0:
-            answer_bytes = self.serial.read(number_of_bytes_to_read)
+            answer = self.serial.read(number_of_bytes_to_read)
         else:
-            answer_bytes = b""
+            answer = b""
             self.serial.flush()
-        _latest_read_times[portname] = time.monotonic()
+
+        read_time = time.monotonic()
+        _latest_read_times[portname] = read_time
+        roundtrip_time = read_time - write_time
+        self._latest_roundtrip_time = roundtrip_time
 
         if self.close_port_after_each_call:
             self._print_debug("Closing port {}".format(portname))
             self.serial.close()
 
-        answer = str(answer_bytes, encoding="latin1")
-
         if self.debug:
-            template = (
-                "Response from instrument: {!r} ({}) ({} bytes), "
-                + "roundtrip time: {:.1f} ms. Timeout for reading: {:.1f} ms.\n"
-            )
-            roundtrip_time = (
-                _latest_read_times.get(portname, 0) - latest_write_time
-            ) * _SECONDS_TO_MILLISECONDS
             if isinstance(self.serial.timeout, float):
                 timeout_time = self.serial.timeout * _SECONDS_TO_MILLISECONDS
             else:
                 timeout_time = 0
-            text = template.format(
-                answer,
-                _hexlify(answer),
-                len(answer),
+            text = (
+                "Response from instrument: {}, roundtrip time: {:.1f} ms."
+                " Timeout for reading: {:.1f} ms.\n"
+            ).format(
+                _describe_bytes(answer),
                 roundtrip_time,
                 timeout_time,
             )
@@ -1469,10 +1488,13 @@ class Instrument:
         if not answer and number_of_bytes_to_read > 0:
             raise NoResponseError("No communication with the instrument (no answer)")
 
-        return answer
+        if number_of_bytes_to_read == 0:
+            self._print_debug(
+                "Broadcast delay: Sleeping for {} s".format(_BROADCAST_DELAY)
+            )
+            time.sleep(_BROADCAST_DELAY)
 
-    # For backward compatibility
-    _performCommand = _perform_command
+        return answer
 
 
 # ########## #
@@ -2689,19 +2711,8 @@ def _hexdecode(hexstring: str) -> str:
         raise TypeError(new_error_message)
 
 
-def _hexlify(bytestring: str) -> str:
-    """Convert a byte string to a hex encoded string, with spaces for easier reading.
-
-    This is just a facade for _hexencode() with insert_spaces = True.
-
-    See _hexencode() for details.
-
-    """
-    return _hexencode(bytestring, insert_spaces=True)
-
-
 def _describe_bytes(inputbytes: bytes) -> str:
-    """Describe bytes in a human friendly way
+    r"""Describe bytes in a human friendly way.
 
     Args:
         * inputbytes: Bytes to describe
@@ -3668,6 +3679,60 @@ def _check_response_writedata(payload: str, writedata: str) -> None:
                 received_writedata, writedata, payload
             )
         )
+
+
+def _check_bytes(
+    inputbytes: bytes,
+    description: str,
+    minlength: int = 0,
+    maxlength: Optional[int] = None,
+) -> None:
+    """Check that the bytes are valid."""
+    # Type checking
+    if not isinstance(description, str):
+        raise TypeError(
+            "The description should be a string. Given: {0!r}".format(description)
+        )
+
+    if not isinstance(inputbytes, bytes):
+        raise TypeError(
+            "The {0} should be bytes. Given: {1!r}".format(description, inputbytes)
+        )
+
+    if not isinstance(maxlength, (int, type(None))):
+        raise TypeError(
+            "The maxlength must be an integer or None. Given: {0!r}".format(maxlength)
+        )
+
+    # Check values
+    _check_int(minlength, minvalue=0, maxvalue=None, description="minlength")
+
+    if len(inputbytes) < minlength:
+        raise ValueError(
+            "The {0} is too short: {1}, but minimum value is {2}. Given: {3!r}".format(
+                description, len(inputbytes), minlength, inputbytes
+            )
+        )
+
+    if maxlength is not None:
+        if maxlength < 0:
+            raise ValueError(
+                "The maxlength must be positive. Given: {0}".format(maxlength)
+            )
+
+        if maxlength < minlength:
+            raise ValueError(
+                "The maxlength must not be smaller than minlength. Given: {0} and {1}".format(
+                    maxlength, minlength
+                )
+            )
+
+        if len(inputbytes) > maxlength:
+            raise ValueError(
+                "The {0} is too long: {1}, but maximum value is {2}. Given: {3!r}".format(
+                    description, len(inputbytes), maxlength, inputbytes
+                )
+            )
 
 
 def _check_string(

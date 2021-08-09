@@ -783,10 +783,9 @@ TODO
 See also GitHub issues: https://github.com/pyhys/minimalmodbus/issues
 
 * Use Github actions instead of Travis
-* Change internal representation to bytearray:
+* Change internal representation to bytes:
 
-  * Start with ``_communicate()``
-  * CRC and LRC generation
+  * Continue with CRC and LRC generation
   * ``_communicate()``
   * Better printout of the bytearray in error messages
   * ``_extract_payload()`` and ``_embed_payload()``

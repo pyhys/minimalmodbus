@@ -26,21 +26,23 @@ __license__ = "Apache License, Version 2.0"
 import time
 from typing import Dict, Optional, Union
 
-DEFAULT_TIMEOUT = 0.01
+DEFAULT_TIMEOUT: float = 0.01
 """The default timeot value in seconds. Used if not set by the constructor."""
 
+SLEEPTIME_READ: float = 0.001
+"""Simulated read time, in seconds. """
 
-DEFAULT_BAUDRATE = 19200
+SLEEPTIME_WRITE: float = 0.001
+"""Simulated write time, in seconds. """
+
+DEFAULT_BAUDRATE: int = 19200
 """The default baud rate. Used if not set by the constructor."""
 
-
-VERBOSE = False
+VERBOSE: bool = False
 """Set this to :const:`True` for printing the communication, and also details on the port initialization.
 
 Might be monkey-patched in the calling test module.
-
 """
-
 
 RESPONSES: Dict[bytes, bytes] = {}
 """A dictionary of respones from the dummy serial port.
@@ -209,6 +211,8 @@ class Serial:
         self._last_written_data = inputdata
         self._waiting_data = response
 
+        time.sleep(SLEEPTIME_WRITE)
+
         return len(inputdata)
 
     def read(self, size: int) -> bytes:
@@ -269,6 +273,8 @@ class Serial:
             self._waiting_data = NO_DATA_PRESENT
 
         # TODO Adapt the behavior to better mimic the Windows behavior
+
+        time.sleep(SLEEPTIME_READ)
 
         if VERBOSE:
             print(

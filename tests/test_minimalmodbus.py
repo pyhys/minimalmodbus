@@ -172,21 +172,33 @@ _NOT_INTERGERS_OR_NONE = [
     0.0,
     1.0,
     "1",
+    b"1",
     ["1"],
+    [b"1"],
     [1],
     ["\x00\x2d\x00\x58"],
     ["A", "B", "C"],
 ]
 _NOT_INTERGERS = _NOT_INTERGERS_OR_NONE + [None]
 
-_NOT_NUMERICALS_OR_NONE = ["1", ["1"], [1], ["\x00\x2d\x00\x58"], ["A", "B", "C"]]
+_NOT_NUMERICALS_OR_NONE = [
+    "1",
+    b"1",
+    ["1"],
+    [b"1"],
+    [1],
+    ["\x00\x2d\x00\x58"],
+    ["A", "B", "C"],
+]
 _NOT_NUMERICALS = _NOT_NUMERICALS_OR_NONE + [None]
 
 _NOT_STRINGS_OR_NONE = [
     1,
     0.0,
     1.0,
+    b"1",
     ["1"],
+    [b"1"],
     [1],
     ["\x00\x2d\x00\x58"],
     ["A", "B", "C"],
@@ -195,9 +207,26 @@ _NOT_STRINGS_OR_NONE = [
 ]
 _NOT_STRINGS = _NOT_STRINGS_OR_NONE + [None]
 
+_NOT_BYTES_OR_NONE = [
+    1,
+    0.0,
+    1.0,
+    "1",
+    ["1"],
+    [1],
+    "ABC",
+    ["\x00\x2d\x00\x58"],
+    ["A", "B", "C"],
+    True,
+    False,
+]
+_NOT_BYTES = _NOT_BYTES_OR_NONE + [None]
+
 _NOT_BOOLEANS = [
     "True",
     "False",
+    b"1",
+    [b"1"],
     -1,
     1,
     2,
@@ -224,6 +253,8 @@ _NOT_INTLISTS = [
     1.0,
     "1",
     ["1"],
+    b"1",
+    [b"1"],
     None,
     ["\x00\x2d\x00\x58"],
     ["A", "B", "C"],
@@ -3425,6 +3456,109 @@ class TestCheckString(ExtendedTestCase):
             )
 
 
+class TestCheckBytes(ExtendedTestCase):
+    def testKnownValues(self) -> None:
+        minimalmodbus._check_bytes(b"DEF", minlength=3, maxlength=3, description="ABC")
+        minimalmodbus._check_bytes(
+            b"DEF", minlength=0, maxlength=100, description="ABC"
+        )
+
+    def testTooShort(self) -> None:
+        self.assertRaises(
+            ValueError,
+            minimalmodbus._check_bytes,
+            b"DE",
+            minlength=3,
+            maxlength=3,
+            description="ABC",
+        )
+        self.assertRaises(
+            ValueError,
+            minimalmodbus._check_bytes,
+            b"DEF",
+            minlength=10,
+            maxlength=3,
+            description="ABC",
+        )
+
+    def testTooLong(self) -> None:
+        self.assertRaises(
+            ValueError,
+            minimalmodbus._check_bytes,
+            b"DEFG",
+            minlength=1,
+            maxlength=3,
+            description="ABC",
+        )
+
+    def testInconsistentLengthlimits(self) -> None:
+        self.assertRaises(
+            ValueError,
+            minimalmodbus._check_bytes,
+            b"DEFG",
+            minlength=4,
+            maxlength=3,
+            description="ABC",
+        )
+        self.assertRaises(
+            ValueError,
+            minimalmodbus._check_bytes,
+            b"DEF",
+            minlength=-3,
+            maxlength=3,
+            description="ABC",
+        )
+        self.assertRaises(
+            ValueError,
+            minimalmodbus._check_bytes,
+            b"DEF",
+            minlength=3,
+            maxlength=-3,
+            description="ABC",
+        )
+
+    def testInputNotBytes(self) -> None:
+        for value in _NOT_BYTES:
+            self.assertRaises(
+                TypeError,
+                minimalmodbus._check_bytes,
+                value,
+                minlength=3,
+                maxlength=3,
+                description="ABC",
+            )
+
+    def testNotIntegerInput(self) -> None:
+        for value in _NOT_INTERGERS_OR_NONE:
+            self.assertRaises(
+                TypeError,
+                minimalmodbus._check_bytes,
+                b"DEF",
+                minlength=value,
+                maxlength=3,
+                description="ABC",
+            )
+            self.assertRaises(
+                TypeError,
+                minimalmodbus._check_bytes,
+                b"DEF",
+                minlength=3,
+                maxlength=value,
+                description="ABC",
+            )
+
+    def testDescriptionNotString(self) -> None:
+        for value in _NOT_STRINGS:
+            self.assertRaises(
+                TypeError,
+                minimalmodbus._check_bytes,
+                b"DEF",
+                minlength=3,
+                maxlength=3,
+                description=value,
+            )
+
+
 class TestCheckInt(ExtendedTestCase):
     def testKnownValues(self) -> None:
         minimalmodbus._check_int(47, minvalue=None, maxvalue=None, description="ABC")
@@ -4652,34 +4786,34 @@ class TestDummyCommunication(ExtendedTestCase):
 
     def testCommunicateKnownResponse(self) -> None:
         self.assertEqual(
-            self.instrument._communicate("TESTMESSAGE", _LARGE_NUMBER_OF_BYTES),
-            "TESTRESPONSE",
+            self.instrument._communicate(b"TESTMESSAGE", _LARGE_NUMBER_OF_BYTES),
+            b"TESTRESPONSE",
         )
 
     def testCommunicateWrongType(self) -> None:
-        for value in _NOT_STRINGS:
+        for value in _NOT_BYTES:
             self.assertRaises(
                 TypeError, self.instrument._communicate, value, _LARGE_NUMBER_OF_BYTES
             )
 
     def testCommunicateNoMessage(self) -> None:
         self.assertRaises(
-            ValueError, self.instrument._communicate, "", _LARGE_NUMBER_OF_BYTES
-        )  # TODO is this correct?
+            ValueError, self.instrument._communicate, b"", _LARGE_NUMBER_OF_BYTES
+        )
 
     def testCommunicateNoResponse(self) -> None:
         self.assertRaises(
             NoResponseError,
             self.instrument._communicate,
-            "MessageForEmptyResponse",
+            b"MessageForEmptyResponse",
             _LARGE_NUMBER_OF_BYTES,
         )
 
     def testCommunicateLocalEcho(self) -> None:
         self.instrument.handle_local_echo = True
         self.assertEqual(
-            self.instrument._communicate("TESTMESSAGE2", _LARGE_NUMBER_OF_BYTES),
-            "TESTRESPONSE2",
+            self.instrument._communicate(b"TESTMESSAGE2", _LARGE_NUMBER_OF_BYTES),
+            b"TESTRESPONSE2",
         )
 
     def testCommunicateWrongLocalEcho(self) -> None:
@@ -4687,7 +4821,7 @@ class TestDummyCommunication(ExtendedTestCase):
         self.assertRaises(
             IOError,
             self.instrument._communicate,
-            "TESTMESSAGE3",
+            b"TESTMESSAGE3",
             _LARGE_NUMBER_OF_BYTES,
         )  # TODO is this correct?
 
@@ -4695,6 +4829,14 @@ class TestDummyCommunication(ExtendedTestCase):
         assert self.instrument.serial is not None
         self.instrument.serial.close()
         self.instrument.write_bit(71, 1)
+
+    def testMeasureRoundtriptime(self) -> None:
+        self.instrument.debug = True
+        self.assertIsNone(self.instrument.roundtrip_time)
+        self.instrument.write_bit(71, 1)
+        self.assertIsNotNone(self.instrument.roundtrip_time)
+        # Measured round trip time in seconds, see dummy_serial
+        self.assertGreater(self.instrument.roundtrip_time, 0.001)
 
     ## __repr__ ##
 
@@ -4997,16 +5139,19 @@ class TestDummyCommunicationBroadcast(ExtendedTestCase):
         minimalmodbus.serial.Serial = dummy_serial.Serial  # type: ignore
 
         # Use broadcast (slave address 0)
-        self.instrument = minimalmodbus.Instrument("DUMMYPORTNAME", 0)
+        self.instrument = minimalmodbus.Instrument("DUMMYPORTNAME", 0, debug=True)
 
     def testWriteRegister(self) -> None:
         assert self.instrument.serial is not None
         self.instrument.serial._clean_mock_data()
+        start_time = time.time()
         self.instrument.write_register(24, 50)
+        total_time = time.time() - start_time
         self.assertEqual(
             self.instrument.serial._last_written_data,
             b"\x00\x10\x00\x18\x00\x01\x02\x002)\xcd",
         )
+        self.assertGreater(total_time, 0.1)  # seconds for broadcast delay
 
     def testReadingNotAllowed(self) -> None:
         self.assertRaises(ValueError, self.instrument.read_register, 289)

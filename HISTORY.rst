@@ -9,6 +9,7 @@ New features:
 
 * Type hints available
 * Support for broadcast (slave address 0), by Jan Breuer.
+* Measurement of round-trip time
 
 Breaking changes:
 
