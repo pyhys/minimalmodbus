@@ -957,7 +957,7 @@ class Instrument:
               Only for a single register.
             * number_of_registers: The number of registers to read/write.
               Only certain values allowed, depends on payloadformat.
-            * number_of_bits:T he number of registers to read/write.
+            * number_of_bits: The number of bits to read/write.
             * signed: Whether the data should be interpreted as unsigned or signed.
               Only for a single register or for payloadformat='long'.
             * byteorder: How multi-register data should be interpreted.
@@ -2702,6 +2702,7 @@ def _hexlify(bytestring: str) -> str:
 
 def _describe_bytes(inputbytes: bytes) -> str:
     """Describe bytes in a human friendly way
+
     Args:
         * inputbytes: Bytes to describe
 

@@ -4335,12 +4335,10 @@ class TestDummyCommunication(ExtendedTestCase):
         # Detected without looking at parameter combinations
         # Note: The parameter 'value' type is dependent on the other parameters. See tests above.
         for value in _NOT_INTERGERS:
-            self.assertRaises(
-                TypeError, self.instrument._generic_command, value, 289
-            )  # Function code
-            self.assertRaises(
-                TypeError, self.instrument._generic_command, 3, value
-            )  # Register address
+            # Function code
+            self.assertRaises(TypeError, self.instrument._generic_command, value, 289)
+            # Register address
+            self.assertRaises(TypeError, self.instrument._generic_command, 3, value)
             self.assertRaises(
                 TypeError,
                 self.instrument._generic_command,
@@ -4443,6 +4441,15 @@ class TestDummyCommunication(ExtendedTestCase):
             number_of_bits=1,
             payloadformat=_Payloadformat.BIT,
         )
+        self.assertRaises(
+            TypeError,
+            self.instrument._generic_command,
+            5,
+            71,
+            "abc",
+            number_of_bits=1,
+            payloadformat=_Payloadformat.BIT,
+        )
 
         # Bits
         self.assertRaises(
@@ -4538,6 +4545,16 @@ class TestDummyCommunication(ExtendedTestCase):
             payloadformat=_Payloadformat.REGISTER,
         )
 
+        self.assertRaises(
+            TypeError,
+            self.instrument._generic_command,
+            6,
+            123,
+            "abc",
+            number_of_registers=1,
+            payloadformat=_Payloadformat.REGISTER,
+        )
+
         # Registers
         self.assertRaises(
             ValueError,
@@ -4566,6 +4583,17 @@ class TestDummyCommunication(ExtendedTestCase):
             [2, 4],
             number_of_registers=3,
             payloadformat=_Payloadformat.REGISTERS,
+        )
+
+        # String
+        self.assertRaises(
+            TypeError,
+            self.instrument._generic_command,
+            16,
+            123,
+            1.0,
+            number_of_registers=1,
+            payloadformat=_Payloadformat.STRING,
         )
 
     ## Perform command ##

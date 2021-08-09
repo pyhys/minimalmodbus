@@ -8,11 +8,17 @@ Release 2.0.0 (2021-08-??)
 New features:
 
 * Type hints available
+* Support for broadcast (slave address 0), by Jan Breuer.
 
 Breaking changes:
 
 * Dropping support for Python 2
 
+Other fixes:
+
+* Starting to convert internal data representation as bytes (it had to be strings
+  when supporting Python 2)
+* Converted from setup.py to setup.cfg
 
 Release 1.0.2 (2019-08-11)
 --------------------------
