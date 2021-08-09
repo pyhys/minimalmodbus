@@ -95,8 +95,7 @@ Use a setting of 19200 bps, RTU mode and slave addess 1 for the DTB4824.
 Run these commands::
 
     import minimalmodbus
-    instrument = minimalmodbus.Instrument('/dev/ttyUSB0', 1)  # Adjust if necessary.
-    instrument.debug = True
+    instrument = minimalmodbus.Instrument('/dev/ttyUSB0', 1, debug=True)  # Adjust if necessary.
     instrument.read_register(4143)  # Read firmware version (address in hex is 0x102F)
 
 
@@ -106,7 +105,7 @@ import sys
 import time
 from typing import Any, Dict, List, Optional, Tuple, Type, Union
 
-sys.path.insert(0,'..')
+sys.path.insert(0, "..")
 import minimalmodbus
 
 SLAVE_ADDRESS = 1
@@ -116,7 +115,7 @@ DEFAULT_BAUDRATE = 38400  # baud (pretty much bits/s). Use 2400 or 38400 bits/s.
 
 
 def _box(description: Optional[str] = None, value: Any = None) -> None:
-    """"Print a single line in a box"""
+    """ "Print a single line in a box"""
     MAX_WIDTH = 85
     DESCR_WIDTH = 30
     if description is None:
@@ -245,7 +244,7 @@ def verify_bits(instr: minimalmodbus.Instrument) -> None:
 
 def verify_readonly_register(instr: minimalmodbus.Instrument) -> None:
     """Verify that we detect the slave reported error when we
-       write to an read-only register.
+    write to an read-only register.
 
     """
     ADDRESS_FIRMWARE_VERSION = 0x102F

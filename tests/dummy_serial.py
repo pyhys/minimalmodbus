@@ -66,6 +66,12 @@ Might be monkey-patched in the calling test module.
 NO_DATA_PRESENT = b""
 
 
+def _describe_bytes(inputbytes: bytes) -> str:
+    return " ".join([f"{x:02X}" for x in inputbytes]) + " ({} bytes)".format(
+        len(inputbytes)
+    )
+
+
 class Serial:
     """Dummy (mock) serial port for testing purposes.
 
@@ -84,6 +90,7 @@ class Serial:
     timeout: float
     baudrate: int
     _initial_port_name: Optional[str]  # Initial name given to the serial port
+    _last_written_data: bytes
     _waiting_data: bytes
     _isOpen: bool
 
@@ -102,6 +109,7 @@ class Serial:
         inter_byte_timeout: Optional[float] = None,
     ) -> None:
         self._waiting_data = NO_DATA_PRESENT
+        self._last_written_data = NO_DATA_PRESENT
         self._isOpen = True
         self.port = port  # Serial port name.
         self._initial_port_name = self.port  # Initial name given to the serial port
@@ -127,6 +135,10 @@ class Serial:
             self._waiting_data,
         )
 
+    def _clean_mock_data(self) -> None:
+        self._last_written_data = NO_DATA_PRESENT
+        self._waiting_data = NO_DATA_PRESENT
+
     @property
     def is_open(self) -> bool:
         return self._isOpen
@@ -135,6 +147,9 @@ class Serial:
         pass
 
     def reset_output_buffer(self) -> None:
+        pass
+
+    def flush(self) -> None:
         pass
 
     def open(self) -> None:
@@ -171,7 +186,11 @@ class Serial:
 
         """
         if VERBOSE:
-            print("\nDummy_serial: Writing to port. Given:" + repr(inputdata) + "\n")
+            print(
+                "\nDummy_serial: Writing to port. Given: "
+                + _describe_bytes(inputdata)
+                + "\n"
+            )
 
         if not type(inputdata) == bytes:
             raise TypeError("The input must be type bytes. Given:" + repr(inputdata))
@@ -187,6 +206,7 @@ class Serial:
             response = RESPONSES[inputdata]
         except:
             response = DEFAULT_RESPONSE
+        self._last_written_data = inputdata
         self._waiting_data = response
 
         return len(inputdata)
@@ -230,8 +250,8 @@ class Serial:
             if VERBOSE:
                 print(
                     "Dummy_serial: The size to read is smaller than the available data. "
-                    + "Some bytes will be kept for later. Available data: {!r} (length = {}), size: {}".format(
-                        self._waiting_data, len(self._waiting_data), size
+                    + "Some bytes will be kept for later. Available data: {}, size: {}".format(
+                        _describe_bytes(self._waiting_data), size
                     )
                 )
             returnbytes = self._waiting_data[:size]
@@ -240,8 +260,8 @@ class Serial:
             if VERBOSE:
                 print(
                     "Dummy_serial: The size to read is larger than the available data. "
-                    + "Will sleep until timeout. Available  data: {!r} (length = {}), size: {}".format(
-                        self._waiting_data, len(self._waiting_data), size
+                    + "Will sleep until timeout. Available  data: {}, size: {}".format(
+                        _describe_bytes(self._waiting_data), size
                     )
                 )
             time.sleep(self.timeout)
@@ -252,9 +272,7 @@ class Serial:
 
         if VERBOSE:
             print(
-                "Dummy_serial read return data: {!r} (has length {})\n".format(
-                    returnbytes, len(returnbytes)
-                )
+                "Dummy_serial read return data: " + _describe_bytes(returnbytes) + "\n"
             )
 
         return returnbytes

@@ -54,6 +54,7 @@ _BYTEPOSITION_FOR_SLAVEADDRESS = 0  # Relative to (stripped) response
 _BYTEPOSITION_FOR_FUNCTIONCODE = 1  # Relative to (stripped) response
 _BYTEPOSITION_FOR_SLAVE_ERROR_CODE = 2  # Relative to (stripped) response
 _BITNUMBER_FUNCTIONCODE_ERRORINDICATION = 7
+_SLAVEADDRESS_BROADCAST = 0
 
 # Several instrument instances can share the same serialport
 _serialports: Dict[str, serial.Serial] = {}  # Key: port name, value: port instance
@@ -63,18 +64,18 @@ _latest_read_times: Dict[str, float] = {}  # Key: port name, value: timestamp
 # Named constants #
 # ############### #
 
-MODE_RTU = "rtu"
+MODE_RTU: str = "rtu"
 """Use Modbus RTU communication"""
-MODE_ASCII = "ascii"
+MODE_ASCII: str = "ascii"
 """Use Modbus ASCII communication"""
 
-BYTEORDER_BIG = 0
+BYTEORDER_BIG: int = 0
 """Use big endian byteorder"""
-BYTEORDER_LITTLE = 1
+BYTEORDER_LITTLE: int = 1
 """Use little endian byteorder"""
-BYTEORDER_BIG_SWAP = 2
+BYTEORDER_BIG_SWAP: int = 2
 """Use big endian byteorder, with swap"""
-BYTEORDER_LITTLE_SWAP = 3
+BYTEORDER_LITTLE_SWAP: int = 3
 """Use litte endian byteorder, with swap"""
 
 
@@ -102,7 +103,7 @@ class Instrument:
     Args:
         * port: The serial port name, for example ``/dev/ttyUSB0`` (Linux),
           ``/dev/tty.usbserial`` (OS X) or ``COM4`` (Windows).
-        * slaveaddress: Slave address in the range 1 to 247 (use decimal numbers,
+        * slaveaddress: Slave address in the range 0 to 247 (use decimal numbers,
           not hex). Address 0 is for broadcast, and 248-255 are reserved.
         * mode: Mode selection. Can be :data:`.MODE_RTU` or :data:`.MODE_ASCII`.
         * close_port_after_each_call: If the serial port should be closed after
@@ -217,6 +218,7 @@ class Instrument:
         else:
             self._print_debug("Serial port {} already exists".format(port))
             self.serial = _serialports[port]
+            # TODO add test
             if (self.serial.port is None) or (not self.serial.is_open):
                 self._print_debug("Serial port {} is closed. Opening.".format(port))
                 self.serial.open()
@@ -971,12 +973,15 @@ class Instrument:
             The register data in numerical value (int or float), or the bit value 0 or
             1 (int), or a list of int, or ``None``.
 
+            Returns ``None`` for all write function codes.
+
         Raises:
             TypeError, ValueError, ModbusException,
             serial.SerialException (inherited from IOError)
 
         """
         ALL_ALLOWED_FUNCTIONCODES = [1, 2, 3, 4, 5, 6, 15, 16]
+        ALLOWED_FUNCTIONCODES_BROADCAST = [5, 6, 15, 16]
         ALLOWED_FUNCTIONCODES = {}
         ALLOWED_FUNCTIONCODES[_Payloadformat.BIT] = [1, 2, 5, 15]
         ALLOWED_FUNCTIONCODES[_Payloadformat.BITS] = [1, 2, 15]
@@ -1031,6 +1036,15 @@ class Instrument:
             raise ValueError(
                 "Wrong functioncode for payloadformat "
                 + "{!r}. Given: {!r}.".format(payloadformat, functioncode)
+            )
+
+        # Check combinations: Broadcast and functioncode
+        if (
+            self.address == _SLAVEADDRESS_BROADCAST
+            and functioncode not in ALLOWED_FUNCTIONCODES_BROADCAST
+        ):
+            raise ValueError(
+                f"Wrong functioncode for broadcast. Given: {functioncode!r}"
             )
 
         # Check combinations: signed
@@ -1200,6 +1214,10 @@ class Instrument:
         # Communicate with instrument
         payload_from_slave = self._perform_command(functioncode, payload_to_slave)
 
+        # There is no response for broadcasts
+        if self.address == _SLAVEADDRESS_BROADCAST:
+            return None
+
         # Parse response payload
         return _parse_payload(
             payload_from_slave,
@@ -1252,7 +1270,9 @@ class Instrument:
 
         # Calculate number of bytes to read
         number_of_bytes_to_read = DEFAULT_NUMBER_OF_BYTES_TO_READ
-        if self.precalculate_read_size:
+        if self.address == _SLAVEADDRESS_BROADCAST:
+            number_of_bytes_to_read = 0
+        elif self.precalculate_read_size:
             try:
                 number_of_bytes_to_read = _predict_response_size(
                     self.mode, functioncode, payload_to_slave
@@ -1269,6 +1289,9 @@ class Instrument:
 
         # Communicate
         response = self._communicate(request, number_of_bytes_to_read)
+
+        if number_of_bytes_to_read == 0:
+            return ""
 
         # Extract payload
         payload_from_slave = _extract_payload(
@@ -1409,7 +1432,11 @@ class Instrument:
                 raise LocalEchoError(text)
 
         # Read response
-        answer_bytes = self.serial.read(number_of_bytes_to_read)
+        if number_of_bytes_to_read > 0:
+            answer_bytes = self.serial.read(number_of_bytes_to_read)
+        else:
+            answer_bytes = b""
+            self.serial.flush()
         _latest_read_times[portname] = time.monotonic()
 
         if self.close_port_after_each_call:
@@ -1439,7 +1466,7 @@ class Instrument:
             )
             self._print_debug(text)
 
-        if not answer:
+        if not answer and number_of_bytes_to_read > 0:
             raise NoResponseError("No communication with the instrument (no answer)")
 
         return answer
@@ -2671,6 +2698,19 @@ def _hexlify(bytestring: str) -> str:
 
     """
     return _hexencode(bytestring, insert_spaces=True)
+
+
+def _describe_bytes(inputbytes: bytes) -> str:
+    """Describe bytes in a human friendly way
+    Args:
+        * inputbytes: Bytes to describe
+
+    Returns a space separated descriptive string.
+    For example b'\x01\x02\x03' gives: 01 02 03 (3 bytes)
+    """
+    return " ".join([f"{x:02X}" for x in inputbytes]) + " ({} bytes)".format(
+        len(inputbytes)
+    )
 
 
 def _calculate_number_of_bytes_for_bits(number_of_bits: int) -> int:

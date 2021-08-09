@@ -13,7 +13,6 @@ help:
 	@echo "linkcheck - check documentation html links"
 	@echo " "
 	@echo "install - install the package to the active Python's site-packages"
-	@echo "installdev - install the package for as symlink, for development"
 	@echo "uninstall - uninstall the package"
 	@echo "list - list installed packages package"
 	@echo "show - show details on this package"
@@ -83,7 +82,7 @@ black:
 	python3 -m black .
 
 mypy:
-	python3 -m mypy minimalmodbus.py dummy_serial.py tests/ --strict 
+	python3 -m mypy minimalmodbus.py tests/ --strict
 
 test:
 	python3 tests/test_minimalmodbus.py
@@ -94,7 +93,7 @@ test-all:
 
 coverage:
 	rm -fr htmlcov/
-	coverage3 run setup.py test
+	coverage3 run tests/test_minimalmodbus.py
 	coverage3 report -m
 	coverage3 html
 	@echo "    "

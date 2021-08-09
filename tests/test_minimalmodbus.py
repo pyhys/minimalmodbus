@@ -61,7 +61,7 @@ import unittest
 
 sys.path.append(".")
 
-import dummy_serial
+import tests.dummy_serial as dummy_serial
 import minimalmodbus
 from minimalmodbus import IllegalRequestError
 from minimalmodbus import InvalidResponseError
@@ -2677,6 +2677,13 @@ class TestSanityHexencodeHexdecode(ExtendedTestCase):
                     self.assertEqual(resultstring, bytestring)
 
 
+class TestDescribeBytes(ExtendedTestCase):
+    def testKnownValues(self) -> None:
+        self.assertEqual(
+            minimalmodbus._describe_bytes(b"\x01\x02\x03"), "01 02 03 (3 bytes)"
+        )
+
+
 ############################
 # Test number manipulation #
 ############################
@@ -4955,6 +4962,36 @@ class TestVerboseDummyCommunicationWithPortClosure(ExtendedTestCase):
         del self.instrument
 
 
+class TestDummyCommunicationBroadcast(ExtendedTestCase):
+    def setUp(self) -> None:
+        dummy_serial.VERBOSE = False
+        dummy_serial.RESPONSES = RTU_RESPONSES
+        minimalmodbus.serial.Serial = dummy_serial.Serial  # type: ignore
+
+        # Use broadcast (slave address 0)
+        self.instrument = minimalmodbus.Instrument("DUMMYPORTNAME", 0)
+
+    def testWriteRegister(self) -> None:
+        assert self.instrument.serial is not None
+        self.instrument.serial._clean_mock_data()
+        self.instrument.write_register(24, 50)
+        self.assertEqual(
+            self.instrument.serial._last_written_data,
+            b"\x00\x10\x00\x18\x00\x01\x02\x002)\xcd",
+        )
+
+    def testReadingNotAllowed(self) -> None:
+        self.assertRaises(ValueError, self.instrument.read_register, 289)
+
+    def tearDown(self) -> None:
+        if self.instrument.serial is not None:
+            try:
+                self.instrument.serial.close()
+            except:
+                pass
+        del self.instrument
+
+
 class TestDummyCommunicationThreeInstrumentsPortClosure(ExtendedTestCase):
     def setUp(self) -> None:
         dummy_serial.VERBOSE = False
@@ -5340,7 +5377,6 @@ WRONG_RTU_RESPONSES[
 WRONG_RTU_RESPONSES[b"\x01\x06" + b"\x00\x37\x00\x63" + b"x-"] = (
     b"\x01\x06" + b"\x00\x37\x00\x62" + b"\xb9\xed"
 )
-
 
 #                ##  READ LONG ##
 
@@ -6026,7 +6062,7 @@ if __name__ == "__main__":
     # suite = unittest.TestLoader().loadTestsFromTestCase(TestDummyCommunicationHandleLocalEcho)
     # suite = unittest.TestLoader().loadTestsFromTestCase(TestCalculateCrcString)
     # suite = unittest.TestLoader().loadTestsFromTestCase(TestHexdecode)
-    # suite = unittest.TestLoader().loadTestsFromTestCase(TestFloatToBytestring)
+    # suite = unittest.TestLoader().loadTestsFromTestCase(TestDummyCommunicationBroadcast)
     # unittest.TextTestRunner(verbosity=2).run(suite)
 
     ## Run a single test ##
