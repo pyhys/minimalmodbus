@@ -515,9 +515,12 @@ example parsing problems with the ReST text (allows no Sphinx-specific construct
 
 Force documentation rebuild on readthedocs
 ``````````````````````````````````````````
-Log in to https://readthedocs.org and force rebuild on the master branch.
+Log in to https://readthedocs.org (using Github credentials) and force rebuild on
+the master branch.
 
-Enable the "master" and "stable" documentation versions.
+Enable the "master" and "stable" documentation versions. In the advanced settings
+select Python3, and enter the name of the dependency file (a
+``requirements.txt`` file must be available in the repo).
 
 
 Test the installers
