@@ -6,7 +6,6 @@ help:
 	@echo "black - modify code style using the black tool"
 	@echo " "
 	@echo "test - run tests quickly with the default Python"
-	@echo "test-all - run tests on every Python version with tox"
 	@echo "coverage - check code coverage quickly with the default Python"
 	@echo " "
 	@echo "docs - generate Sphinx HTML documentation"
@@ -85,10 +84,6 @@ mypy:
 
 test:
 	python3 tests/test_minimalmodbus.py
-
-test-all:
-	rm -fr .tox/
-	tox
 
 coverage:
 	rm -fr htmlcov/

@@ -1,13 +1,12 @@
 include .gitignore
-include .travis.yml
 include AUTHORS.rst
+include CITATION.cff
 include CONTRIBUTING.rst
 include HISTORY.rst
 include LICENSE
 include Makefile
 include README.rst
 include requirements.txt
-include tox.ini
 
 recursive-include tests *
 recursive-include stubs *
