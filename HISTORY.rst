@@ -3,7 +3,7 @@
 History
 =======
 
-Release 2.0.0 (2021-08-??)
+Release 2.0.0 (2021-08-10)
 --------------------------
 New features:
 
@@ -20,6 +20,8 @@ Other fixes:
 * Starting to convert internal data representation as bytes (it had to be strings
   when supporting Python 2)
 * Converted from setup.py to setup.cfg
+* Use Github Actions instead of Travis CI
+
 
 Release 1.0.2 (2019-08-11)
 --------------------------

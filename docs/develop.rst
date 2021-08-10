@@ -488,7 +488,9 @@ Also make sure that these are functional (see sections below):
 
 Git
 ``````````````````````
-Make a tag in the git repository. See below.
+Merge to the master branch locally. Make a tag in the git repository.
+Push the master branch (including tags) to Github.
+See below for details.
 
 
 GitHub
