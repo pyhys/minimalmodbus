@@ -1,10 +1,6 @@
 name: Run tests for MinimalModbus
 
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+on: [push, pull_request]
 
 jobs:
   build:
@@ -30,3 +26,4 @@ jobs:
     - name: Measure test coverage
       run: |
         coverage run tests/test_minimalmodbus.py
+
