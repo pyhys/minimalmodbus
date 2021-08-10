@@ -19,7 +19,7 @@
 __author__ = "Jonas Berg"
 __license__ = "Apache License, Version 2.0"
 __url__ = "https://github.com/pyhys/minimalmodbus"
-__version__ = "2.0.0a1"
+__version__ = "2.0.0"
 
 import sys
 
