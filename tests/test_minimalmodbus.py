@@ -79,9 +79,6 @@ from minimalmodbus import BYTEORDER_LITTLE
 from minimalmodbus import BYTEORDER_BIG_SWAP
 from minimalmodbus import BYTEORDER_LITTLE_SWAP
 
-ALSO_TIME_CONSUMING_TESTS = True
-"""Set this to :const:`False` to skip the most time consuming tests"""
-
 VERBOSITY = 0
 """Verbosity level for the unit testing. Use value 0 or 2. Note that it only has an effect for Python 2.7 and above."""
 
@@ -1951,12 +1948,11 @@ class TestSanityTwoByteString(ExtendedTestCase):
                 )
                 self.assertEqual(resultvalue, value)
 
-        if ALSO_TIME_CONSUMING_TESTS:
-            for value in range(0x10000):
-                resultvalue = minimalmodbus._twobyte_string_to_num(
-                    minimalmodbus._num_to_twobyte_string(value)
-                )
-                self.assertEqual(resultvalue, value)
+        for value in range(0x10000):
+            resultvalue = minimalmodbus._twobyte_string_to_num(
+                minimalmodbus._num_to_twobyte_string(value)
+            )
+            self.assertEqual(resultvalue, value)
 
 
 class TestBytestringToBits(ExtendedTestCase):
@@ -2697,15 +2693,14 @@ class TestSanityHexencodeHexdecode(ExtendedTestCase):
 
     def testKnownValuesLoop(self) -> None:
         """Loop through all bytestrings of length two."""
-        if ALSO_TIME_CONSUMING_TESTS:
-            RANGE_VALUE = 256
-            for i in range(RANGE_VALUE):
-                for j in range(RANGE_VALUE):
-                    bytestring = chr(i) + chr(j)
-                    resultstring = minimalmodbus._hexdecode(
-                        minimalmodbus._hexencode(bytestring)
-                    )
-                    self.assertEqual(resultstring, bytestring)
+        RANGE_VALUE = 256
+        for i in range(RANGE_VALUE):
+            for j in range(RANGE_VALUE):
+                bytestring = chr(i) + chr(j)
+                resultstring = minimalmodbus._hexdecode(
+                    minimalmodbus._hexencode(bytestring)
+                )
+                self.assertEqual(resultstring, bytestring)
 
 
 class TestDescribeBytes(ExtendedTestCase):
@@ -2793,14 +2788,12 @@ class TestSanityTwosComplement(ExtendedTestCase):
     knownValues = [1, 2, 4, 8, 12, 16]
 
     def testSanity(self) -> None:
-
-        if ALSO_TIME_CONSUMING_TESTS:
-            for bits in self.knownValues:
-                for x in range(2 ** bits):
-                    resultvalue = minimalmodbus._twos_complement(
-                        minimalmodbus._from_twos_complement(x, bits), bits
-                    )
-                    self.assertEqual(resultvalue, x)
+        for bits in self.knownValues:
+            for x in range(2 ** bits):
+                resultvalue = minimalmodbus._twos_complement(
+                    minimalmodbus._from_twos_complement(x, bits), bits
+                )
+                self.assertEqual(resultvalue, x)
 
 
 #########################

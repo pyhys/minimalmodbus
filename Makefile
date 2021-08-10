@@ -65,7 +65,6 @@ devdeps:
 		setuptools \
 		sphinx_rtd_theme \
 		sphinx \
-		tox \
 		twine \
 		wheel
 
@@ -76,7 +75,7 @@ lint:
 	pydocstyle minimalmodbus.py || true
 	@echo " "
 	@echo " "
-	pylint minimalmodbus.py -d C0103 -d C0330 -d R0913 || true
+	pylint minimalmodbus.py -d C0103 -d C0302 -d C0330 -d C0413 -d R0902 -d R0911 -d R0912 -d R0913 -d R0914 -d R0915 -d W0613 -d W0703 -d W0707 || true
 
 black:
 	python3 -m black .

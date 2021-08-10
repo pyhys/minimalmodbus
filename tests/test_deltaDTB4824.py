@@ -116,7 +116,7 @@ DEFAULT_BAUDRATE = 38400  # baud (pretty much bits/s). Use 2400 or 38400 bits/s.
 
 
 def _box(description: Optional[str] = None, value: Any = None) -> None:
-    """ "Print a single line in a box"""
+    """Print a single line in a box"""
     MAX_WIDTH = 85
     DESCR_WIDTH = 30
     if description is None:

@@ -106,7 +106,8 @@ class Instrument:
           ``/dev/tty.usbserial`` (OS X) or ``COM4`` (Windows).
         * slaveaddress: Slave address in the range 0 to 247 (use decimal numbers,
           not hex). Address 0 is for broadcast, and 248-255 are reserved.
-        * mode: Mode selection. Can be :data:`.MODE_RTU` or :data:`.MODE_ASCII`.
+        * mode: Mode selection. Can be :data:`minimalmodbus.MODE_RTU` or
+          :data:`minimalmodbus.MODE_ASCII`.
         * close_port_after_each_call: If the serial port should be closed after
           each call to the instrument.
         * debug: Set this to :const:`True` to print the communication details
@@ -135,8 +136,9 @@ class Instrument:
         """
 
         self.mode = mode
-        """Slave mode (str), can be :data:`.MODE_RTU` or :data:`.MODE_ASCII`.
-        Most often set by the constructor (see the class documentation).
+        """Slave mode (str), can be :data:`minimalmodbus.MODE_RTU` or
+        :data:`minimalmodbus.MODE_ASCII`.
+        Most often set by the constructor (see the class documentation). Defaults to RTU.
 
         Changing this will not affect how other instruments use the same serial port.
 
@@ -227,7 +229,6 @@ class Instrument:
         else:
             self._print_debug("Serial port {} already exists".format(port))
             self.serial = _serialports[port]
-            # TODO add test
             if (self.serial.port is None) or (not self.serial.is_open):
                 self._print_debug("Serial port {} is closed. Opening.".format(port))
                 self.serial.open()
@@ -574,7 +575,7 @@ class Instrument:
             * functioncode: Modbus function code. Can be 3 or 4.
             * signed: Whether the data should be interpreted as unsigned or signed.
             * byteorder: How multi-register data should be interpreted.
-              Use the BYTEORDER_xxx constants. Defaults to :data:`.BYTEORDER_BIG`.
+              Use the BYTEORDER_xxx constants. Defaults to :data:`minimalmodbus.BYTEORDER_BIG`.
 
 
         ============== ================== ================ ==========================
@@ -628,7 +629,7 @@ class Instrument:
             * value: The value to store in the slave.
             * signed: Whether the data should be interpreted as unsigned or signed.
             * byteorder: How multi-register data should be interpreted.
-              Use the BYTEORDER_xxx constants. Defaults to :data:`.BYTEORDER_BIG`.
+              Use the BYTEORDER_xxx constants. Defaults to :data:`minimalmodbus.BYTEORDER_BIG`.
 
         Raises:
             TypeError, ValueError, ModbusException,
@@ -680,7 +681,7 @@ class Instrument:
             * number_of_registers: The number of registers allocated for the float.
               Can be 2 or 4.
             * byteorder: How multi-register data should be interpreted.
-              Use the BYTEORDER_xxx constants. Defaults to :data:`.BYTEORDER_BIG`.
+              Use the BYTEORDER_xxx constants. Defaults to :data:`minimalmodbus.BYTEORDER_BIG`.
 
         .. note:: The parameter number_of_registers was named numberOfRegisters
                   before MinimalModbus 1.0
@@ -740,7 +741,7 @@ class Instrument:
             * number_of_registers: The number of registers allocated for the float.
               Can be 2 or 4.
             * byteorder: How multi-register data should be interpreted.
-              Use the BYTEORDER_xxx constants. Defaults to :data:`.BYTEORDER_BIG`.
+              Use the BYTEORDER_xxx constants. Defaults to :data:`minimalmodbus.BYTEORDER_BIG`.
 
         .. note:: The parameter number_of_registers was named numberOfRegisters
                   before MinimalModbus 1.0

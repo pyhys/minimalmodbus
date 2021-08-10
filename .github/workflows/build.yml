@@ -1,0 +1,32 @@
+name: Python package
+
+on:
+  push:
+    branches: [ $default-branch ]
+  pull_request:
+    branches: [ $default-branch ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8, 3.9, 3.10.0-rc.1]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install coverage coverage[toml] pyserial
+    - name: Test with unittest
+      run: |
+        python tests/test_minimalmodbus.py
+    - name: Measure test coverage
+      run: |
+        coverage run tests/test_minimalmodbus.py

@@ -2,10 +2,6 @@
 MinimalModbus
 ===============================
 
-.. image:: https://img.shields.io/travis/pyhys/minimalmodbus.svg
-        :target: https://travis-ci.org/pyhys/minimalmodbus
-        :alt: Build Status
-
 .. image:: https://readthedocs.org/projects/minimalmodbus/badge/?version=master
         :target: https://readthedocs.org/projects/minimalmodbus/?badge=master
         :alt: Documentation Status
@@ -31,11 +27,11 @@ Web resources
 Other web pages:
 
 * Readthedocs project page: https://readthedocs.org/projects/minimalmodbus/
-* Travis CI build status page: https://travis-ci.org/pyhys/minimalmodbus
 * codecov.io project page: https://codecov.io/github/pyhys/minimalmodbus
 
 Obsolete web pages:
 
+* Old Travis CI build status page: https://travis-ci.org/pyhys/minimalmodbus
 * Old Sourceforge documentation page: http://minimalmodbus.sourceforge.net/
 * Old Sourceforge project page: https://sourceforge.net/projects/minimalmodbus
 * Old Sourceforge repository: https://sourceforge.net/p/minimalmodbus/code/HEAD/tree/
