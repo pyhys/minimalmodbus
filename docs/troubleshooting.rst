@@ -81,7 +81,7 @@ serial adaptor, to verify that the proper kernel driver is loaded.
 Known issues
 --------------
 
-See GitHub page.
+See GitHub page. https://github.com/pyhys/minimalmodbus/issues
 
 
 Issues when running under Windows

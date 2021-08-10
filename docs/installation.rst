@@ -29,48 +29,9 @@ https://pypi.org/project/minimalmodbus/.
 In that case you first need to manually install pySerial from https://pypi.org/project/pyserial.
 
 There are compressed source files for Unix/Linux (.tar.gz) and Windows (.zip).
-To install a manually downloaded file, uncompress it and run (from within the directory)::
+To install a manually downloaded file use the pip tool::
 
-   python3 setup.py install
-
-or possibly::
-
-   sudo python3 setup.py install
-
-To make sure it is installed properly, print the :func:`._get_diagnostic_string` message.
-See the :ref:`support` section for instructions.
-
-You can also download the source directly from Linux command line::
-
-    wget https://pypi.python.org/packages/source/M/MinimalModbus/MinimalModbus-0.7.tar.gz
-    TODO
-
-Change version number to the appropriate value.
-
-Downloading from GitHub::
-
-    wget https://github.com/pyhys/minimalmodbus/archive/master.zip
-    unzip master.zip
-
-This will create a directory 'minimalmodbus-master'.
-
-
-Alternate installation on Windows
--------------------------------------
-Install from GitHub, using pip::
-
-    C:\Python34\Scripts>pip3.4 install https://github.com/pyhys/minimalmodbus/archive/master.zip
-    TODO
-
-It will be installed in::
-
-    C:\Python34\Lib\site-packages
-    TODO
-
-In order to run Python from command line, you might need::
-
-    set PATH=%PATH%;C:\Python34
-    TODO
+    python3 -m pip install filename.tar.gz
 
 
 If everything else fails

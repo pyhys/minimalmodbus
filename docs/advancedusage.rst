@@ -228,12 +228,6 @@ Add this to :func:`._extract_payload` function, after the argument validity test
 
 Install or uninstalling a distribution
 --------------------------------------------------------------------------
-To install a python (downloaded) package, uncompress it and use::
-
-    sudo python3 setup.py install
-
-On a development machine, go to the package top directory before running the command.
-
 
 Uninstall
 ``````````

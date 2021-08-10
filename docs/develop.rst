@@ -49,7 +49,7 @@ Function                    Description
 :meth:`.read_register`      One of the facades for :meth:`._generic_command`.
 :meth:`._generic_command`   Generates payload, then calls :meth:`._perform_command`.
 :meth:`._perform_command`   Embeds payload into error-checking codes etc, then calls :meth:`._communicate`.
-:meth:`._communicate`       Handles raw strings for communication via pySerial.
+:meth:`._communicate`       Handles raw bytes for communication via pySerial.
 =========================== ================================================================================
 
 Most of the logic is located in separate (easy to test) functions on module level.
@@ -58,6 +58,10 @@ For a description of them, see :ref:`internalminimalmodbus`.
 
 Number conversion to and from bytestrings
 -----------------------------------------------
+For compability with Python 2, the data is stored internally as strings.
+As this module has dropped support for Python 2, it will be converted gradually to
+use bytes in all internal data storage instead.
+
 The Python module :mod:`struct` is used for conversion. See https://docs.python.org/3/library/struct.html
 
 Several wrapper functions are defined for easy use of the conversion.
@@ -66,7 +70,7 @@ These functions also do argument validity checking.
 =========================== =================================== ================================
 Data type                   To bytestring                       From bytestring
 =========================== =================================== ================================
-(internal usage)            :meth:`._num_to_onebyte_string`
+(internal usage)            :meth:`._num_to_onebyte_string`     ``ord()``
 Bit                         :meth:`._bit_to_bytestring`         Same as for bits
 Several bits                :meth:`._bits_to_bytestring`        :meth:`._bytestring_to_bits`
 Integer (char, short)       :meth:`._num_to_twobyte_string`     :meth:`._twobyte_string_to_num`
@@ -96,13 +100,6 @@ test purposes. See :ref:`apidummyserial`.
 
 The test coverage analysis is found
 at https://codecov.io/github/pyhys/minimalmodbus?branch=master.
-
-To automatically run the tests for the different Python versions::
-
-    make test_all
-
-It will use the tox tool to run the tests, and the settings are done in
-the :file:`tox.ini` file. Note that Travis CI does not use tox (it has its own config file).
 
 Hardware tests are performed using a Delta DTB4824 process controller together
 with a USB-to-RS485 converter. See :ref:`testdtb4824` for more information.
@@ -395,10 +392,9 @@ Use the top-level Make to generate HTML documentation::
 
     make docs
 
-Do linkchecking and measureme test coverage::
+Do linkchecking::
 
     make linkcheck
-    make coverage
 
 
 Webpage
@@ -406,16 +402,6 @@ Webpage
 The HTML theme used is the Sphinx 'sphinx_rtd_theme' theme.
 
 Note that Sphinx version 1.3 or later is required to build the documentation.
-
-
-Travis CI
-------------------------------------------------------------------------------
-Each commit to GitHub is tested on the Travis CI server.
-Log in to https://travis-ci.org/ using your GitHub account.
-
-The settings are done in the :file:`.travis.yml` file. Note that Travis CI does not use tox.
-
-Enable the webhook from GitHub to Travis CI.
 
 
 Codecov.io
@@ -433,13 +419,6 @@ Installing the module from local files
 In the top directory::
 
     make install
-
-or during development (so you do not need to constantly re-install)::
-
-    make installdev
-
-It will add the current path to the file:
-:file:`/usr/local/lib/python2.7/dist-packages/easy-install.pth`.
 
 To uninstall it::
 
@@ -460,9 +439,10 @@ Change version number etc
 `````````````````````````
 * Manually change the ``__version__`` field in the :file:`minimalmodbus.py` source file.
 * Manually change the release date in :file:`HISTORY.rst`
+* Manually change the date and version in the :file:`CITATION.cff`
 
 (Note that the version number in the Sphinx configuration file :file:`doc/conf.py`
-and in the file :file:`setup.py` are changed automatically.
+and in the file :file:`setup.cfg` are changed automatically.
 Also the copyright year in :file:`doc/conf.py` is changed automatically).
 
 How to number releases are described in :pep:`440`.
@@ -478,12 +458,21 @@ Check the code::
 
     make lint
 
+Check typing::
+
+    make mypy
+
 
 Unittesting
 ```````````
-Run unit tests for all supported Python versions::
+Run unit tests::
 
-    make test-all
+    make test
+
+Show test coverage report::
+
+    make coverage
+
 
 Also make tests using Delta DTB4824 hardware. See :ref:`testdtb4824`.
 
@@ -707,16 +696,16 @@ Method (full)       ``:meth:`minimalmodbus.Instrument.read_bit```   :meth:`minim
 Note that only the functions and methods that are listed in the index will show as links.
 
 Headings
-  * Top level heading underlining symbol: = (equals)
-  * Next lower level: - (minus)
-  * A third level if necessary (avoid this): ` (backquote)
+  * Top level heading underlining symbol: ``=`` (equals)
+  * Next lower level: ``-`` (minus)
+  * A third level if necessary (avoid this): ````` (backquote)
 
 Internal links
   * Add an internal marker ``.. _my-reference-label:`` before a heading.
   * Then make an internal link to it using ``:ref:`my-reference-label```.
 
 Strings with backslash
-  * In Python docstrings, use raw strings (a r before the tripplequote),
+  * In Python docstrings, use raw strings (a ``r`` before the tripplequote),
     to have the backslashes reach Sphinx.
 
 Informative boxes
@@ -753,36 +742,11 @@ To build the documentation, in the top project directory run::
 That should generate HTML files to the directory :file:`docs/_build/html`.
 
 
-Unittest coverage measurement using coverage.py
------------------------------------------------------------------------------
-Install the script :file:`coverage.py`::
-
-    sudo pip install coverage
-
-Collect test data::
-
-    make coverage
-
-
-Using the flake8 style checker tool
---------------------------------------------
-This tool checks the coding style, using pep8 and flake. Install it::
-
-    sudo apt-get install python-flake8
-
-Run it::
-
-    flake8 minimalmodbus.py
-
-Configurations are made in a [flake8] section of the :file:`tox.ini` file.
-
-
 TODO
 ----
 
 See also GitHub issues: https://github.com/pyhys/minimalmodbus/issues
 
-* Use Github actions instead of Travis
 * Change internal representation to bytes:
 
   * Continue with CRC and LRC generation
@@ -792,8 +756,10 @@ See also GitHub issues: https://github.com/pyhys/minimalmodbus/issues
   * ``_create_payload()``, ``_parse_payload()`` and all related functions
 
 * Logging instead of _print_out()
-* Improve installation troubleshooting
+* Use flake8, pylint coverage etc on Github Actions
 * Possibly use pytest instead
+* Reduce number of linter deviations (see Makefile)
+* Improve installation troubleshooting
 * Test virtual serial port on Windows using com0com
 * Unittests for measuring the sleep time in ``_communicate()``.
 * Tool for interpretation of Modbus messages

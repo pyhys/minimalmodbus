@@ -28,7 +28,8 @@ The data is stored internally in this driver as byte strings (representing byte 
 For example a byte with value 18 (dec) = 12 (hex) = 00010010 (bin) is stored in a string of length one.
 This can be created using the function ``chr(18)``, or by simply typing the
 string ``'\x12'`` (which is a string of length 1). See
-https://docs.python.org/2/reference/lexical_analysis.html#string-literals for details on escape sequences.
+https://docs.python.org/3/reference/lexical_analysis.html#string-and-bytes-literals
+for details on escape sequences.
 
 For more information about hexadecimal numbers, see https://en.wikipedia.org/wiki/Hexadecimal.
 

@@ -126,6 +126,10 @@ or alternatively (to avoid import of ``serial``)::
 
 .. warning:: The module level constants minimalmodbus.BAUDRATE etc were removed in version 1.0
 
+If you manually need to close the serial port::
+
+    instrument.serial.close()
+
 
 Confusing Modbus register addresses
 -----------------------------------
@@ -193,12 +197,10 @@ Use::
 
 Different types of errors should be handled separately.
 
-Errors related to wrong argument to functions raises TypeError or ValueError.
-When there is communication problems etc the exceptions raised are ModbusException
-(with subclasses) and serial.serialutil.SerialException, which both are inheriting
-from IOError.
-
-Note that in Python3 the IOError is an alias for OSError.
+Errors related to wrong argument to functions raises ``TypeError`` or ``ValueError``.
+When there is communication problems etc the exceptions raised are ``ModbusException``
+(with subclasses) and ``serial.serialutil.SerialException``, which both are inheriting
+from ``IOError`` (an alias for OSError).
 
 
 Byte order for floating point values and long integers
