@@ -23,6 +23,9 @@ jobs:
     - name: Test with unittest
       run: |
         python tests/test_minimalmodbus.py
+    - name: Run pydocstyle
+      run: |
+        pydocstyle minimalmodbus.py
     - name: Run flake8
       run: |
         flake8 minimalmodbus.py
