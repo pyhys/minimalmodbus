@@ -490,6 +490,9 @@ Git
 ``````````````````````
 Merge to the master branch locally. Make a tag in the git repository.
 Push the master branch (including tags) to Github.
+
+If you push to another branch, a pull request will be generated.
+
 See below for details.
 
 

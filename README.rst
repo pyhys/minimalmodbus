@@ -2,6 +2,14 @@
 MinimalModbus
 ===============================
 
+.. image:: https://github.com/pyhys/minimalmodbus/actions/workflows/build.yml/badge.svg
+        :target: https://github.com/pyhys/minimalmodbus/actions
+        :alt: Build Status
+
+.. image:: https://codecov.io/gh/pyhys/minimalmodbus/branch/master/graph/badge.svg?token=6TcwYCQJHF
+        :target: https://codecov.io/gh/pyhys/minimalmodbus
+        :alt: Test coverage report
+
 .. image:: https://readthedocs.org/projects/minimalmodbus/badge/?version=master
         :target: https://readthedocs.org/projects/minimalmodbus/?badge=master
         :alt: Documentation Status
@@ -9,10 +17,6 @@ MinimalModbus
 .. image:: https://img.shields.io/pypi/v/minimalmodbus.svg
         :target: https://pypi.org/project/minimalmodbus/
         :alt: PyPI page link
-
-.. image:: https://codecov.io/gh/pyhys/minimalmodbus/branch/master/graphs/badge.svg?branch=master
-        :target: https://codecov.io/github/pyhys/minimalmodbus?branch=master
-        :alt: Test coverage report
 
 
 Easy-to-use Modbus RTU and Modbus ASCII implementation for Python.
