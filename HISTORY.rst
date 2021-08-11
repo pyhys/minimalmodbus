@@ -3,6 +3,12 @@
 History
 =======
 
+Release 2.0.1 (2021-08-11)
+--------------------------
+* Improved documentation
+* Finetuned Github Actions workflow
+
+
 Release 2.0.0 (2021-08-10)
 --------------------------
 New features:
