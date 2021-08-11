@@ -1,6 +1,6 @@
 name: Run tests for MinimalModbus
 
-on: [push]
+on: [push, pull_request]
 
 jobs:
   build:
