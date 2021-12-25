@@ -121,6 +121,7 @@ class Instrument:
         mode: str = MODE_RTU,
         close_port_after_each_call: bool = False,
         debug: bool = False,
+        allow_broadcast_address: bool = False,
     ) -> None:
         """Initialize instrument and open corresponding serial port."""
         self.address = slaveaddress
@@ -161,6 +162,11 @@ class Instrument:
         Most often set by the constructor (see the class documentation).
 
         Changing this will not affect how other instruments use the same serial port.
+        """
+        
+        self.allow_broadcast_address = allow_broadcast_address
+        """Set this to :const:`True` to allow coomunicating with an instrument
+        with address 0.
         """
 
         self.clear_buffers_before_each_transaction = True
@@ -1069,13 +1075,14 @@ class Instrument:
             )
 
         # Check combinations: Broadcast and functioncode
-        # ~ if (
-            # ~ self.address == _SLAVEADDRESS_BROADCAST
-            # ~ and functioncode not in ALLOWED_FUNCTIONCODES_BROADCAST
-        # ~ ):
-            # ~ raise ValueError(
-                # ~ f"Wrong functioncode for broadcast. Given: {functioncode!r}"
-            # ~ )
+        if (
+			self.allow_broadcast_address == False
+            and self.address == _SLAVEADDRESS_BROADCAST
+            and functioncode not in ALLOWED_FUNCTIONCODES_BROADCAST
+        ):
+            raise ValueError(
+                f"Wrong functioncode for broadcast. Given: {functioncode!r}"
+            )
 
         # Check combinations: signed
         if signed:
@@ -1245,8 +1252,8 @@ class Instrument:
         payload_from_slave = self._perform_command(functioncode, payload_to_slave)
 
         # There is no response for broadcasts
-        # ~ if self.address == _SLAVEADDRESS_BROADCAST:
-            # ~ return None
+        if self.allow_broadcast_address == False and self.address == _SLAVEADDRESS_BROADCAST:
+            return None
 
         # Parse response payload
         return _parse_payload(
@@ -1300,8 +1307,8 @@ class Instrument:
 
         # Calculate number of bytes to read
         number_of_bytes_to_read = DEFAULT_NUMBER_OF_BYTES_TO_READ
-        # ~ if self.address == _SLAVEADDRESS_BROADCAST:
-            # ~ number_of_bytes_to_read = 0
+        if self.allow_broadcast_address == False and self.address == _SLAVEADDRESS_BROADCAST:
+            number_of_bytes_to_read = 0
         if self.precalculate_read_size:
             try:
                 number_of_bytes_to_read = _predict_response_size(
