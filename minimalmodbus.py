@@ -561,29 +561,38 @@ class Instrument:
         self,
         registeraddress: int,
         functioncode: int = 3,
+        number_of_registers: int = 2,
         signed: bool = False,
         byteorder: int = BYTEORDER_BIG,
     ) -> int:
-        """Read a long integer (32 bits) from the slave.
+        """Read a long or long long integer (32 bits or 64 bits) from the slave.
 
         Long integers (32 bits = 4 bytes) are stored in two consecutive 16-bit
+        registers in the slave.
+
+        Long long integers (64 bits = 8 bytes) are stored in four consecutive 16-bit
         registers in the slave.
 
         Args:
             * registeraddress: The slave register start address (use decimal numbers,
               not hex).
             * functioncode: Modbus function code. Can be 3 or 4.
+            * number_of_registers: The number of registers allocated for the long.
+              Can be 2 or 4.
             * signed: Whether the data should be interpreted as unsigned or signed.
             * byteorder: How multi-register data should be interpreted.
               Use the BYTEORDER_xxx constants. Defaults to :data:`minimalmodbus.BYTEORDER_BIG`.
 
 
-        ============== ================== ================ ==========================
-        ``signed``     Data type in slave Alternative name Range
-        ============== ================== ================ ==========================
-        :const:`False` Unsigned INT32     Unsigned long    0 to 4294967295
-        :const:`True`  INT32              Long             -2147483648 to 2147483647
-        ============== ================== ================ ==========================
+        ============== ================== ================== ==========================
+        ``signed``     Data type in slave Alternative name   Range
+        ============== ================== ================== ==========================
+        :const:`False` Unsigned INT32     Unsigned long      0 to 4294967295
+        :const:`True`  INT32              Long               -2147483648 to 2147483647
+        :const:`False` Unsigned INT64     Unsigned long long 0 to 18446744073709551615
+        :const:`True`  INT64              Long long          -9223372036854775808 to
+                                                             9223372036854775807
+        ============== ================== ================== ==========================
 
         Returns:
             The numerical value.
@@ -594,12 +603,18 @@ class Instrument:
 
         """
         _check_functioncode(functioncode, [3, 4])
+        _check_int(
+            number_of_registers,
+            minvalue=2,
+            maxvalue=4,
+            description="number of registers",
+        )
         _check_bool(signed, description="signed")
         return int(
             self._generic_command(
                 functioncode,
                 registeraddress,
-                number_of_registers=2,
+                number_of_registers=number_of_registers,
                 signed=signed,
                 byteorder=byteorder,
                 payloadformat=_Payloadformat.LONG,
@@ -2241,23 +2256,45 @@ def _bytestring_to_long(
         ValueError, TypeError
 
     """
-    _check_string(bytestring, "byte string", minlength=4, maxlength=4)
+    _check_string(bytestring, "byte string", minlength=4, maxlength=8)
     _check_bool(signed, description="signed parameter")
     _check_int(
-        number_of_registers, minvalue=2, maxvalue=2, description="number of registers"
+        number_of_registers, minvalue=2, maxvalue=4, description="number of registers"
     )
     _check_int(
         byteorder, minvalue=0, maxvalue=_MAX_BYTEORDER_VALUE, description="byteorder"
     )
+    number_of_bytes = _NUMBER_OF_BYTES_PER_REGISTER * number_of_registers
 
     if byteorder in [BYTEORDER_BIG, BYTEORDER_BIG_SWAP]:
         formatcode = ">"
     else:
         formatcode = "<"
-    if signed:
-        formatcode += "l"  # (Signed) long (4 bytes)
+
+    if number_of_registers == 2:
+        if signed:
+            formatcode += "l"  # (Signed) long (4 bytes)
+        else:
+            formatcode += "L"  # Unsigned long (4 bytes)
+    elif number_of_registers == 4:
+        if signed:
+            formatcode += "q"  # (Signed) long long (8 bytes)
+        else:
+            formatcode += "Q"  # Unsigned long long (8 bytes)
     else:
-        formatcode += "L"  # Unsigned long (4 bytes)
+        raise ValueError(
+            "Wrong number of registers! Given value is {0!r}".format(
+                number_of_registers
+            )
+        )
+
+    if len(bytestring) != number_of_bytes:
+        raise ValueError(
+            "Wrong length of the byte string! Given value is "
+            + "{0!r}, and number_of_registers is {1!r}.".format(
+                bytestring, number_of_registers
+            )
+        )
 
     if byteorder in [BYTEORDER_BIG_SWAP, BYTEORDER_LITTLE_SWAP]:
         bytestring = _swap(bytestring)
