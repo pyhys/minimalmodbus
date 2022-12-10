@@ -398,6 +398,30 @@ class TestCreatePayload(ExtendedTestCase):
             "\x01\x00\x00\x02",
         )
 
+        # read_long(102, number_of_registers=4)
+        self.assertEqual(
+            minimalmodbus._create_payload(
+                3, 102, None, 0, 4, 0, False, False, _Payloadformat.LONG
+            ),
+            "\x00\x66\x00\x04",
+        )
+
+        # read_long(102, functioncode=4, number_of_registers=4)
+        self.assertEqual(
+            minimalmodbus._create_payload(
+                4, 102, None, 0, 4, 0, False, False, _Payloadformat.LONG
+            ),
+            "\x00\x66\x00\x04",
+        )
+
+        # read_long(256, number_of_registers=4)
+        self.assertEqual(
+            minimalmodbus._create_payload(
+                3, 256, None, 0, 4, 0, False, False, _Payloadformat.LONG
+            ),
+            "\x01\x00\x00\x04",
+        )
+
         # write_long(102, 5)
         self.assertEqual(
             minimalmodbus._create_payload(
@@ -767,6 +791,40 @@ class TestParsePayload(ExtendedTestCase):
                 None,
                 0,
                 2,
+                0,
+                True,
+                False,
+                _Payloadformat.LONG,
+            ),
+            -1,
+        )
+
+        # read_long(102, number_of_registers=4)
+        self.assertEqual(
+            minimalmodbus._parse_payload(
+                "\x08\xff\xff\xff\xff\xff\xff\xff\xff",
+                3,
+                102,
+                None,
+                0,
+                4,
+                0,
+                False,
+                False,
+                _Payloadformat.LONG,
+            ),
+            18446744073709551615,
+        )
+
+        # read_long(102, number_of_registers=4, signed=True)
+        self.assertEqual(
+            minimalmodbus._parse_payload(
+                "\x08\xff\xff\xff\xff\xff\xff\xff\xff",
+                3,
+                102,
+                None,
+                0,
+                4,
                 0,
                 True,
                 False,
@@ -4062,6 +4120,7 @@ class TestDummyCommunication(ExtendedTestCase):
         for value in _NOT_INTERGERS:
             self.assertRaises(TypeError, self.instrument.read_long, value)
             self.assertRaises(TypeError, self.instrument.read_long, 102, value)
+            self.assertRaises(TypeError, self.instrument.read_long, 102, 3, value)
         for value in _NOT_BOOLEANS:
             self.assertRaises(TypeError, self.instrument.read_long, 102, signed=value)
 
