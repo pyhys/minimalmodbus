@@ -54,6 +54,6 @@ This software supports the 'Modbus RTU' and 'Modbus ASCII' serial communication
 versions of the protocol, and is intended for use on Linux, OS X and Windows platforms.
 It is open source, and has the Apache License, Version 2.0.
 
-For Python 3.6 and later. Tested with Python 3.6, 3.7, 3.8, 3.9 and 3.10.
+For Python 3.8 and later. Tested with Python 3.8, 3.9, 3.10, 3.11 and 3.12.
 
 This package uses semantic versioning.
