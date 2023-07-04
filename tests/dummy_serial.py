@@ -27,19 +27,26 @@ import time
 from typing import Dict, Optional, Union
 
 DEFAULT_TIMEOUT: float = 0.01
-"""The default timeot value in seconds. Used if not set by the constructor."""
+"""The default timeot value in seconds.
+
+Used if not set by the constructor.
+"""
 
 SLEEPTIME_READ: float = 0.001
-"""Simulated read time, in seconds. """
+"""Simulated read time, in seconds."""
 
 SLEEPTIME_WRITE: float = 0.001
-"""Simulated write time, in seconds. """
+"""Simulated write time, in seconds."""
 
 DEFAULT_BAUDRATE: int = 19200
-"""The default baud rate. Used if not set by the constructor."""
+"""The default baud rate.
+
+Used if not set by the constructor.
+"""
 
 VERBOSE: bool = False
-"""Set this to :const:`True` for printing the communication, and also details on the port initialization.
+"""Set this to :const:`True` for printing the communication, and also details on the
+port initialization.
 
 Might be monkey-patched in the calling test module.
 """
@@ -47,11 +54,10 @@ Might be monkey-patched in the calling test module.
 RESPONSES: Dict[bytes, bytes] = {}
 """A dictionary of respones from the dummy serial port.
 
-The key is the message (bytes) sent to the dummy serial port, and the item is the response (bytes)
-from the dummy serial port.
+The key is the message (bytes) sent to the dummy serial port, and the item is the
+response (bytes) from the dummy serial port.
 
 Intended to be monkey-patched in the calling test module.
-
 """
 RESPONSES[b"EXAMPLEREQUEST"] = b"EXAMPLERESPONSE"
 
@@ -62,7 +68,6 @@ DEFAULT_RESPONSE = b"NotFoundInResponseDictionary"
 Should not be an empty string, as that is interpreted as "no data available on port".
 
 Might be monkey-patched in the calling test module.
-
 """
 
 NO_DATA_PRESENT = b""
@@ -77,15 +82,16 @@ def _describe_bytes(inputbytes: bytes) -> str:
 class Serial:
     """Dummy (mock) serial port for testing purposes.
 
-    Mimics the behavior of a serial port as defined by the `pySerial <https://github.com/pyserial/pyserial>`_ module.
+    Mimics the behavior of a serial port as defined by
+    the `pySerial <https://github.com/pyserial/pyserial>`_ module.
 
     Args:
         * port:
         * timeout:
 
     Note:
-    As the portname argument not is used properly, only one port on :mod:`dummy_serial` can be used simultaneously.
-
+    As the portname argument not is used properly, only one port
+    on :mod:`dummy_serial` can be used simultaneously.
     """
 
     port: Optional[str]  # Serial port name.
@@ -122,12 +128,17 @@ class Serial:
         if VERBOSE:
             print("\nDummy_serial: Initializing")
             print(
-                f"dummy_serial initialization. Port: {self.port} Baud rate: {self.baudrate} Timeout {self.timeout}"
+                f"dummy_serial initialization. Port: {self.port} "
+                + f"Baud rate: {self.baudrate} Timeout {self.timeout}"
             )
 
     def __repr__(self) -> str:
-        """String representation of the dummy_serial object"""
-        return "{0}.{1}<id=0x{2:x}, open={3}>(port={4!r}, timeout={5!r}, waiting_data={6!r})".format(
+        """String representation of the dummy_serial object."""
+        template = (
+            "{0}.{1}<id=0x{2:x}, open={3}>(port={4!r}, "
+            + "timeout={5!r}, waiting_data={6!r})"
+        )
+        return template.format(
             self.__module__,
             self.__class__.__name__,
             id(self),
@@ -180,12 +191,11 @@ class Serial:
         """Write to a port on dummy_serial.
 
         Args:
-            inputdata: data for sending to the port on dummy_serial. Will affect the response
-            for subsequent read operations.
+            inputdata: data for sending to the port on dummy_serial. Will affect
+            the response for subsequent read operations.
 
         Returns:
             Number of bytes written
-
         """
         if VERBOSE:
             print(
@@ -206,7 +216,7 @@ class Serial:
         # Look up which data that should be waiting for subsequent read commands
         try:
             response = RESPONSES[inputdata]
-        except:
+        except KeyError:
             response = DEFAULT_RESPONSE
         self._last_written_data = inputdata
         self._waiting_data = response
@@ -226,7 +236,6 @@ class Serial:
 
         If the response is shorter than size, it will sleep for timeout.
         If the response is longer than size, it will return only size bytes.
-
         """
         if VERBOSE:
             print(
@@ -235,15 +244,14 @@ class Serial:
 
         if size < 0:
             raise IOError(
-                "Dummy_serial: The size to read must not be negative. Given: {!r}".format(
-                    size
-                )
+                "Dummy_serial: The size to read must "
+                + "not be negative. Given: {!r}".format(size)
             )
 
         if not self._isOpen:
             raise IOError("Dummy_serial: Trying to read, but the port is not open.")
 
-        # Do the actual reading from the waiting data, and simulate the influence of size
+        # Do actual reading from the waiting data, and simulate the influence of size
 
         if self._waiting_data == DEFAULT_RESPONSE:
             returnbytes = self._waiting_data
@@ -253,8 +261,9 @@ class Serial:
         elif size < len(self._waiting_data):
             if VERBOSE:
                 print(
-                    "Dummy_serial: The size to read is smaller than the available data. "
-                    + "Some bytes will be kept for later. Available data: {}, size: {}".format(
+                    "Dummy_serial: The size to read is smaller than the "
+                    + "available data. Some bytes will be kept for later. "
+                    + "Available data: {}, size: {}".format(
                         _describe_bytes(self._waiting_data), size
                     )
                 )

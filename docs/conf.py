@@ -59,7 +59,7 @@ source_suffix = ".rst"
 master_doc = "index"
 
 # General information about the project.
-project = u"MinimalModbus"
+project = "MinimalModbus"
 copyright = time.strftime("%Y") + ", Jonas Berg"
 
 # The version info for the project you're documenting, acts as replacement
@@ -218,8 +218,8 @@ latex_documents = [
     (
         "index",
         "minimalmodbus.tex",
-        u"MinimalModbus Documentation",
-        u"Jonas Berg",
+        "MinimalModbus Documentation",
+        "Jonas Berg",
         "manual",
     ),
 ]
@@ -250,7 +250,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ("index", "minimalmodbus", u"MinimalModbus Documentation", [u"Jonas Berg"], 1)
+    ("index", "minimalmodbus", "MinimalModbus Documentation", ["Jonas Berg"], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -266,8 +266,8 @@ texinfo_documents = [
     (
         "index",
         "minimalmodbus",
-        u"MinimalModbus Documentation",
-        u"Jonas Berg",
+        "MinimalModbus Documentation",
+        "Jonas Berg",
         "minimalmodbus",
         "One line description of project.",
         "Miscellaneous",

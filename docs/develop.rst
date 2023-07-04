@@ -442,7 +442,7 @@ Change version number etc
 * Manually change the date and version in the :file:`CITATION.cff`
 
 (Note that the version number in the Sphinx configuration file :file:`doc/conf.py`
-and in the file :file:`setup.cfg` are changed automatically.
+and in the file :file:`pyproject.toml` are changed automatically.
 Also the copyright year in :file:`doc/conf.py` is changed automatically).
 
 How to number releases are described in :pep:`440`.
@@ -551,17 +551,6 @@ Begin a new development version
 ```````````````````````````````
 Check in a new version on GitHub master branch.
 If the previous release was ``X.Y.Z``, then use ``X.Y.(Z+1)a1``.
-
-
-Backup
-``````
-Burn a CD/DVD with these items:
-
-* Source tree
-* Source distributions
-* Windows installer
-* Generated HTML files
-
 
 
 
@@ -764,7 +753,6 @@ See also GitHub issues: https://github.com/pyhys/minimalmodbus/issues
   * ``_create_payload()``, ``_parse_payload()`` and all related functions
 
 * Logging instead of _print_out()
-* Use flake8, pylint coverage etc on Github Actions
 * Possibly use pytest instead
 * Reduce number of linter deviations (see Makefile)
 * Improve installation troubleshooting

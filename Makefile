@@ -2,7 +2,9 @@
 
 help:
 	@echo "devdeps - install dependencies required for development"
-	@echo "lint - check style with flake8"
+	@echo "pylint - check style with pylint"
+	@echo "flake8 - check style with flake8"
+	@echo "pydocstyle - check documentation with pydocstyle"
 	@echo "black - modify code style using the black tool"
 	@echo " "
 	@echo "test - run tests quickly with the default Python"
@@ -67,17 +69,17 @@ devdeps:
 		twine \
 		wheel
 
-lint:
-	flake8 minimalmodbus.py || true  # Includes pycodestyle
-	@echo " "
-	@echo " "
-	pydocstyle minimalmodbus.py || true
-	@echo " "
-	@echo " "
+pylint:
 	pylint minimalmodbus.py -d C0103 -d C0302 -d C0330 -d C0413 -d R0902 -d R0911 -d R0912 -d R0913 -d R0914 -d R0915 -d W0613 -d W0703 -d W0707 || true
+
+flake8:
+	flake8 minimalmodbus.py tests/dummy_serial.py tests/test_deltaDTB4824.py tests/test_minimalmodbus.py
 
 black:
 	python3 -m black .
+
+pydocstyle:
+	pydocstyle minimalmodbus.py
 
 mypy:
 	python3 -m mypy minimalmodbus.py tests/ --strict

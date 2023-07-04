@@ -1,5 +1,4 @@
-"""
-Hardware testing of MinimalModbus using the Delta DTB temperature controller.
+"""Hardware testing of MinimalModbus using the Delta DTB temperature controller.
 
 For use with Delta DTB4824VR.
 
@@ -95,19 +94,19 @@ Use a setting of 19200 bps, RTU mode and slave addess 1 for the DTB4824.
 Run these commands::
 
     import minimalmodbus
-    instrument = minimalmodbus.Instrument('/dev/ttyUSB0', 1, debug=True)  # Adjust if necessary.
+
+    # Adjust if necessary.
+    instrument = minimalmodbus.Instrument('/dev/ttyUSB0', 1, debug=True)
     instrument.read_register(4143)  # Read firmware version (address in hex is 0x102F)
-
-
 """
 import os
 import statistics
 import sys
 import time
-from typing import Any, Dict, List, Optional, Tuple, Type, Union
+from typing import Any, List, Optional, Tuple
 
 sys.path.insert(0, "..")
-import minimalmodbus
+import minimalmodbus  # noqa: E402
 
 SLAVE_ADDRESS = 1
 TIMEOUT = 0.3  # seconds. At least 0.3 seconds required for 2400 bits/s ASCII mode.
@@ -116,7 +115,7 @@ DEFAULT_BAUDRATE = 38400  # baud (pretty much bits/s). Use 2400 or 38400 bits/s.
 
 
 def _box(description: Optional[str] = None, value: Any = None) -> None:
-    """Print a single line in a box"""
+    """Print a single line in a box."""
     MAX_WIDTH = 85
     DESCR_WIDTH = 30
     if description is None:
@@ -153,7 +152,7 @@ def show_test_settings(mode: str, baudrate: int, portname: str) -> None:
 
 
 def show_current_values(instr: minimalmodbus.Instrument) -> None:
-    """Read current values via Modbus"""
+    """Read current values via Modbus."""
     _box()
     _box("Current values")
     _box(" ")
@@ -244,10 +243,8 @@ def verify_bits(instr: minimalmodbus.Instrument) -> None:
 
 
 def verify_readonly_register(instr: minimalmodbus.Instrument) -> None:
-    """Verify that we detect the slave reported error when we
-    write to an read-only register.
-
-    """
+    """Verify that we detect the slave reported error when we write to an read-only
+    register."""
     ADDRESS_FIRMWARE_VERSION = 0x102F
     NEW_FIRMWARE_VERSION = 300
 
@@ -330,7 +327,8 @@ def measure_roundtrip_time(instr: minimalmodbus.Instrument) -> None:
     )
     print("Time per loop: {:0.1f} ms.".format(time_per_value))
     print(
-        "Instrument-reported round trip time: {:0.1f} ms. Min {:0.1f} ms Max {:0.1f} ms\n".format(
+        "Instrument-reported round trip "
+        + "time: {:0.1f} ms. Min {:0.1f} ms Max {:0.1f} ms\n".format(
             statistics.mean(instrument_roundtrip_measurements)
             * SECONDS_TO_MILLISECONDS,
             min(instrument_roundtrip_measurements) * SECONDS_TO_MILLISECONDS,
