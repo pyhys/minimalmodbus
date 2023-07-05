@@ -1595,7 +1595,7 @@ def _create_payload(
                 value, signed, number_of_registers, byteorder
             )
         elif payloadformat == _Payloadformat.FLOAT:
-            assert isinstance(value, float)
+            assert isinstance(value, float) or isinstance(value, int)
             registerdata = _float_to_bytestring(value, number_of_registers, byteorder)
         elif payloadformat == _Payloadformat.REGISTERS:
             assert isinstance(value, list)

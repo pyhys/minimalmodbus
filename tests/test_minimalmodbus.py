@@ -4113,6 +4113,8 @@ class TestDummyCommunication(ExtendedTestCase):
     # Write Float #
 
     def testWriteFloat(self) -> None:
+        self.instrument.write_float(107, 1)
+        self.instrument.write_float(107, 1.0)
         self.instrument.write_float(103, 1.1)
         self.instrument.write_float(103, 1.1, 4)
         self.instrument.write_float(240, -4.3959787e-11)  # BYTEORDER_BIG
@@ -5762,6 +5764,15 @@ GOOD_RTU_RESPONSES[b"\x01\x03" + b"\x00\xF4\x00\x02" + b"\x85\xF9"] = (
 
 #                ##  WRITE FLOAT ##
 
+# Write float 1.0 to address 107 (2 registers) on slave 1 using function code 16 #
+# -------------------------------------------------------------------------------#
+# Message:  Slave address 1, function code 16. Register address 107, 2 registers,
+#           4 bytes, value=1.1 . CRC.
+# Response: Slave address 1, function code 16. Register address 107, 2 registers. CRC.
+GOOD_RTU_RESPONSES[
+    b"\x01\x10" + b"\x00\x6b\x00\x02\x04\x3F\x80\x00\x00" + b"\xb9\xc8"
+] = (b"\x01\x10" + b"\x00\x6b\x00\x02" + b"0\x14")
+
 # Write float 1.1 to address 103 (2 registers) on slave 1 using function code 16 #
 # -------------------------------------------------------------------------------#
 # Message:  Slave address 1, function code 16. Register address 103, 2 registers,
@@ -5789,7 +5800,7 @@ GOOD_RTU_RESPONSES[
     b"\x01\x10" + b"\x00g\x00\x04\x08?\xf1\x99\x99\x99\x99\x99\x9a" + b"u\xf7"
 ] = (b"\x01\x10" + b"\x00g\x00\x04" + b"p\x15")
 
-# Write float -4.3959787e-11 to address 240 (42 registers) on slave 1 using
+# Write float -4.3959787e-11 to address 240 (2 registers) on slave 1 using
 # function code 16 #
 # Example from https://www.simplymodbus.ca/FAQ.htm (truncated float on page)
 # BYTEORDER_BIG
@@ -5801,7 +5812,7 @@ GOOD_RTU_RESPONSES[b"\x01\x10" + b"\x00\xF0\x00\x02\x04\xAEAVR" + b"2J"] = (
     b"\x01\x10" + b"\x00\xF0\x00\x02" + b"A\xFB"
 )
 
-# Write float -4.3959787e-11 to address 240 (42 registers) on slave 1 using
+# Write float -4.3959787e-11 to address 240 (2 registers) on slave 1 using
 # function code 16 #
 # Example from https://www.simplymodbus.ca/FAQ.htm (truncated float on page,
 # manually reshuffled)
@@ -5814,7 +5825,7 @@ GOOD_RTU_RESPONSES[b"\x01\x10" + b"\x00\xF0\x00\x02\x04RVA\xAE" + b"\xBD\xAF"] =
     b"\x01\x10" + b"\x00\xF0\x00\x02" + b"A\xFB"
 )
 
-# Write float -4.3959787e-11 to address 240 (42 registers) on slave 1 using
+# Write float -4.3959787e-11 to address 240 (2 registers) on slave 1 using
 # function code 16 #
 # Example from https://www.simplymodbus.ca/FAQ.htm (truncated float on page,
 # manually reshuffled)
@@ -5827,7 +5838,7 @@ GOOD_RTU_RESPONSES[b"\x01\x10" + b"\x00\xF0\x00\x02\x04VR\xAEA" + b"\xF0\xE2"] =
     b"\x01\x10" + b"\x00\xF0\x00\x02" + b"A\xFB"
 )
 
-# Write float -4.3959787e-11 to address 240 (42 registers) on slave 1 using
+# Write float -4.3959787e-11 to address 240 (2 registers) on slave 1 using
 # function code 16 #
 # Example from https://www.simplymodbus.ca/FAQ.htm (truncated float on page,
 # manually reshuffled)
