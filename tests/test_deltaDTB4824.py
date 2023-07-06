@@ -2,21 +2,6 @@
 
 For use with Delta DTB4824VR.
 
-Usage
--------------
-
-::
-
-    python3 scriptname [-rtu] [-ascii] [-b38400] [-D/dev/ttyUSB0]
-
-Arguments:
- * -b : baud rate
- * -D : port name
-
-NOTE: There should be no space between the option switch and its argument.
-
-Defaults to RTU mode.
-
 
 Recommended test sequence
 ---------------------------
@@ -99,6 +84,7 @@ Run these commands::
     instrument = minimalmodbus.Instrument('/dev/ttyUSB0', 1, debug=True)
     instrument.read_register(4143)  # Read firmware version (address in hex is 0x102F)
 """
+import argparse
 import os
 import statistics
 import sys
@@ -111,12 +97,12 @@ import minimalmodbus  # noqa: E402
 SLAVE_ADDRESS = 1
 TIMEOUT = 0.3  # seconds. At least 0.3 seconds required for 2400 bits/s ASCII mode.
 DEFAULT_PORT_NAME = "/dev/ttyUSB0"
-DEFAULT_BAUDRATE = 38400  # baud (pretty much bits/s). Use 2400 or 38400 bits/s.
+DEFAULT_BAUDRATE = 38400  # baud (pretty much bit/s). Use 2400 or 38400 bit/s.
 
 
 def _box(description: Optional[str] = None, value: Any = None) -> None:
     """Print a single line in a box."""
-    MAX_WIDTH = 85
+    MAX_WIDTH = 100
     DESCR_WIDTH = 30
     if description is None:
         print("#" * MAX_WIDTH)
@@ -145,7 +131,7 @@ def show_test_settings(mode: str, baudrate: int, portname: str) -> None:
     _box("Baudrate (-b)", baudrate)
     _box("Port name (-D)", portname)
     _box("Slave address", SLAVE_ADDRESS)
-    _box("Timeout", TIMEOUT)
+    _box("Timeout (s)", TIMEOUT)
     _box("Full file path", os.path.abspath(__file__))
     _box()
     print("")
@@ -193,11 +179,13 @@ def verify_value_for_register(instr: minimalmodbus.Instrument, value: int) -> No
     """
     START_READ_ADDR = 0x1000
     ADDRESS_SETPOINT = 0x1001
+    NUMBER_OF_REGISTERS = 8
+    assert NUMBER_OF_REGISTERS > ADDRESS_SETPOINT - START_READ_ADDR
 
     instr.write_register(ADDRESS_SETPOINT, value)
     assert value == instr.read_register(ADDRESS_SETPOINT)
 
-    registers = instr.read_registers(START_READ_ADDR, 8)
+    registers = instr.read_registers(START_READ_ADDR, NUMBER_OF_REGISTERS)
     print(registers)
     assert value == registers[ADDRESS_SETPOINT - START_READ_ADDR]
 
@@ -212,13 +200,18 @@ def verify_state_for_bits(instr: minimalmodbus.Instrument, state: int) -> None:
         state: Value to be written (0 or 1)
     """
     START_READ_ADDR = 0x800
+    NUMBER_OF_BITS = 24
     ADDR_UNITSELECTOR = 0x811
     ADDR_LED_F = 0x804
     ADDR_LED_C = 0x805
+    assert (
+        NUMBER_OF_BITS
+        > max(ADDR_UNITSELECTOR, ADDR_LED_F, ADDR_LED_C) - START_READ_ADDR
+    )
 
     # Write and read selector for Celsius or Farenheit
     instr.write_bit(ADDR_UNITSELECTOR, state)  # 1=deg C, 0=deg F
-    bits = instr.read_bits(START_READ_ADDR, 24)
+    bits = instr.read_bits(START_READ_ADDR, NUMBER_OF_BITS)
     print(repr(bits))
     assert bits[ADDR_UNITSELECTOR - START_READ_ADDR] == state
     assert instr.read_bit(ADDR_UNITSELECTOR) == state
@@ -236,6 +229,7 @@ def verify_bits(instr: minimalmodbus.Instrument) -> None:
     NUMBER_OF_LOOPS = 5
 
     print("Verifying writing and reading bits")
+    print("Contents of 24 bit registers (18th column is temperature unit setting):")
     states = [0, 1] * NUMBER_OF_LOOPS
     for state in states:
         verify_state_for_bits(instr, state)
@@ -262,6 +256,7 @@ def verify_readonly_register(instr: minimalmodbus.Instrument) -> None:
 
 def verify_register(instr: minimalmodbus.Instrument) -> None:
     print("Verify writing and reading a register (and reading several registers)")
+    print("Contents of 8 registers (second column is setpoint register):")
     for value in range(250, 400, 10):  # Setpoint 25 to 40 deg C
         verify_value_for_register(instr, value)
     print("Passed test for writing and reading a register\n")
@@ -275,8 +270,7 @@ def verify_two_instrument_instances(
     print("Verify using two instrument instances")
     instr2 = minimalmodbus.Instrument(portname, SLAVE_ADDRESS, mode=mode)
     if instr2.serial is None:
-        print("Failed to instanciate instr2")
-        return
+        raise ValueError("Failed to instanciate instr2")
     instr2.serial.timeout = TIMEOUT
 
     instr.read_register(ADDRESS_SETPOINT)
@@ -303,8 +297,7 @@ def measure_roundtrip_time(instr: minimalmodbus.Instrument) -> None:
 
     print("Measure request-response round trip time")
     if instr.serial is None:
-        print("Instrument.serial is None")
-        return
+        raise ValueError("Instrument.serial is None")
     print(
         "Setting the setpoint value {} times. Baudrate {} bits/s.".format(
             NUMBER_OF_VALUES, instr.serial.baudrate
@@ -325,10 +318,10 @@ def measure_roundtrip_time(instr: minimalmodbus.Instrument) -> None:
     time_per_value = (
         (time.time() - start_time) * float(SECONDS_TO_MILLISECONDS) / NUMBER_OF_VALUES
     )
-    print("Time per loop: {:0.1f} ms.".format(time_per_value))
+    print("Average measured time per loop: {:0.1f} ms.".format(time_per_value))
     print(
         "Instrument-reported round trip "
-        + "time: {:0.1f} ms. Min {:0.1f} ms Max {:0.1f} ms\n".format(
+        + "time: Mean {:0.1f} ms  Min {:0.1f} ms  Max {:0.1f} ms\n".format(
             statistics.mean(instrument_roundtrip_measurements)
             * SECONDS_TO_MILLISECONDS,
             min(instrument_roundtrip_measurements) * SECONDS_TO_MILLISECONDS,
@@ -338,32 +331,34 @@ def measure_roundtrip_time(instr: minimalmodbus.Instrument) -> None:
 
 
 def parse_commandline(argv: List[str]) -> Tuple[str, str, int]:
-    # TODO Use standard parsing of command line (now that we have dropped Python 2.6)
+    parser = argparse.ArgumentParser(
+        description="Run tests with a Delta DTB4824 instrument"
+    )
+    parser.add_argument("-a", action="store_true", help="Use ASCII mode")
+    parser.add_argument(
+        "-r", action="store_true", help="Use RTU mode (default). Overrides -a flag."
+    )
+    parser.add_argument(
+        "-b",
+        help="Baud rate. Defaults to %(default)s bit/s",
+        default=DEFAULT_BAUDRATE,
+        metavar="BAUD",
+        type=int,
+    )
+    parser.add_argument(
+        "-d",
+        help='Device name. Defaults to "%(default)s"',
+        default=DEFAULT_PORT_NAME,
+        metavar="DEVICE",
+        type=str,
+    )
+    arguments = parser.parse_args(args=argv[1:])
 
     mode = minimalmodbus.MODE_RTU
-    baudrate = DEFAULT_BAUDRATE
-    portname = DEFAULT_PORT_NAME
+    if arguments.a and not arguments.r:
+        mode = minimalmodbus.MODE_ASCII
 
-    for arg in argv:
-        if arg.startswith("-ascii"):
-            mode = minimalmodbus.MODE_ASCII
-
-        elif arg.startswith("-rtu"):
-            mode = minimalmodbus.MODE_RTU
-
-        elif arg.startswith("-b"):
-            if len(arg) < 3:
-                print("Wrong usage of the -b option. Use -b9600")
-                sys.exit()
-            baudrate = int(arg[2:])
-
-        elif arg.startswith("-D"):
-            if len(arg) < 3:
-                print("Wrong usage of the -D option. Use -D/dev/ttyUSB0 or -DCOM4")
-                sys.exit()
-            portname = arg[2:]
-
-    return portname, mode, baudrate
+    return arguments.d, mode, arguments.b
 
 
 def main() -> None:
@@ -372,8 +367,8 @@ def main() -> None:
 
     inst = minimalmodbus.Instrument(portname, SLAVE_ADDRESS, mode=mode)
     if inst.serial is None:
-        print("Instrument.serial is None")
-        return
+        raise ValueError("Instrument.serial is None")
+
     inst.serial.timeout = TIMEOUT
     inst.serial.baudrate = baudrate
 
