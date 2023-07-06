@@ -104,6 +104,8 @@ class Instrument:
     Args:
         * port: The serial port name, for example ``/dev/ttyUSB0`` (Linux),
           ``/dev/tty.usbserial`` (OS X) or ``COM4`` (Windows).
+          It is also possible to pass in an already opened ``serial.Serial``
+          object (new in version 2.1).
         * slaveaddress: Slave address in the range 0 to 247.
           Address 0 is for broadcast, and 248-255 are reserved.
         * mode: Mode selection. Can be :data:`minimalmodbus.MODE_RTU` or
@@ -115,7 +117,7 @@ class Instrument:
 
     def __init__(
         self,
-        port: str,
+        port: Union[str, serial.Serial],
         slaveaddress: int,
         mode: str = MODE_RTU,
         close_port_after_each_call: bool = False,
@@ -194,7 +196,7 @@ class Instrument:
         New in version 0.7.
         """
 
-        self.serial = None
+        self.serial: Optional[serial.Serial] = None
         """The serial port object as defined by the pySerial module. Created by the
         constructor.
 
@@ -216,7 +218,11 @@ class Instrument:
                 - Defaults to 2.0 s.
         """
 
-        if port not in _serialports or not _serialports[port]:
+        if _is_serial_object(port):
+            self.serial = port  # type: ignore
+        elif isinstance(port, str) and (
+            port not in _serialports or not _serialports[port]
+        ):
             self._print_debug("Create serial port {}".format(port))
             self.serial = _serialports[port] = serial.Serial(
                 port=port,
@@ -227,12 +233,15 @@ class Instrument:
                 timeout=0.05,
                 write_timeout=2.0,
             )
-        else:
+        elif isinstance(port, str):
             self._print_debug("Serial port {} already exists".format(port))
             self.serial = _serialports[port]
             if (self.serial.port is None) or (not self.serial.is_open):
                 self._print_debug("Serial port {} is closed. Opening.".format(port))
                 self.serial.open()
+
+        if not isinstance(self.serial, serial.Serial):
+            raise MasterReportedException("Failed to initialise serial port")
 
         if self.close_port_after_each_call:
             self._print_debug("Closing serial port {}".format(port))
@@ -3221,6 +3230,19 @@ Built with this code::
         output += "{:5.0f}, ".format(m)
     print output
 """
+
+
+def _is_serial_object(obj: Any) -> bool:
+    """Check if an object is serialport-like."""
+    KNOWN_METHODS = ["open", "close", "read", "write"]
+
+    for methodname in KNOWN_METHODS:
+        try:
+            getattr(obj, methodname)
+        except AttributeError:
+            return False
+
+    return True
 
 
 def _calculate_crc_string(inputstring: str) -> str:
