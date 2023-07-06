@@ -6,6 +6,7 @@ help:
 	@echo "flake8 - check style with flake8"
 	@echo "pydocstyle - check documentation with pydocstyle"
 	@echo "black - modify code style using the black tool"
+	@echo "mypy - type checking"
 	@echo " "
 	@echo "test - run tests quickly with the default Python"
 	@echo "coverage - check code coverage quickly with the default Python"
@@ -64,8 +65,9 @@ devdeps:
 		pydocstyle \
 		pylint \
 		setuptools \
-		sphinx_rtd_theme \
 		sphinx \
+		sphinx_rtd_theme \
+		sphinxcontrib-programoutput \
 		twine \
 		wheel
 
@@ -82,7 +84,7 @@ pydocstyle:
 	pydocstyle minimalmodbus.py
 
 mypy:
-	python3 -m mypy minimalmodbus.py tests/ --strict
+	python3 -m mypy minimalmodbus.py tests/ --strict --no-warn-unused-ignores
 
 test:
 	python3 tests/test_minimalmodbus.py
