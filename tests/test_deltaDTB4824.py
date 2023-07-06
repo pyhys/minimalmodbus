@@ -91,10 +91,13 @@ import sys
 import time
 from typing import Any, List, Optional, Tuple
 
+import serial
+
 sys.path.insert(0, "..")
 import minimalmodbus  # noqa: E402
 
 SLAVE_ADDRESS = 1
+ADDRESS_SETPOINT = 0x1001
 TIMEOUT = 0.3  # seconds. At least 0.3 seconds required for 2400 bits/s ASCII mode.
 DEFAULT_PORT_NAME = "/dev/ttyUSB0"
 DEFAULT_BAUDRATE = 38400  # baud (pretty much bit/s). Use 2400 or 38400 bit/s.
@@ -178,7 +181,6 @@ def verify_value_for_register(instr: minimalmodbus.Instrument, value: int) -> No
         value: Value to be written
     """
     START_READ_ADDR = 0x1000
-    ADDRESS_SETPOINT = 0x1001
     NUMBER_OF_REGISTERS = 8
     assert NUMBER_OF_REGISTERS > ADDRESS_SETPOINT - START_READ_ADDR
 
@@ -265,8 +267,6 @@ def verify_register(instr: minimalmodbus.Instrument) -> None:
 def verify_two_instrument_instances(
     instr: minimalmodbus.Instrument, portname: str, mode: str, baudrate: int
 ) -> None:
-    ADDRESS_SETPOINT = 0x1001
-
     print("Verify using two instrument instances")
     instr2 = minimalmodbus.Instrument(portname, SLAVE_ADDRESS, mode=mode)
     if instr2.serial is None:
@@ -283,7 +283,26 @@ def verify_two_instrument_instances(
     instr2.read_register(ADDRESS_SETPOINT)
     instr.read_register(ADDRESS_SETPOINT)
     instr2.read_register(ADDRESS_SETPOINT)
-    print("Passing test for using two instrument instances")
+    print("Passing test for using two instrument instances\n")
+
+
+def verify_external_instrument_instance(
+    portname: str, mode: str, baudrate: int
+) -> None:
+    print("Verify using external serial port instance")
+    extserial = serial.Serial(
+        port=portname,
+        baudrate=baudrate,
+        parity=serial.PARITY_NONE,
+        bytesize=8,
+        stopbits=1,
+        timeout=0.05,
+        write_timeout=2.0,
+    )
+
+    instr3 = minimalmodbus.Instrument(extserial, SLAVE_ADDRESS, mode=mode)
+    print("Setpoint", instr3.read_register(ADDRESS_SETPOINT))
+    print("Passing test for using external serial port instance\n")
 
 
 def measure_roundtrip_time(instr: minimalmodbus.Instrument) -> None:
@@ -380,6 +399,8 @@ def main() -> None:
     verify_readonly_register(inst)
     verify_bits(inst)
     verify_two_instrument_instances(inst, portname, mode, baudrate)
+    verify_external_instrument_instance(portname, mode, baudrate)
+    verify_readonly_register(inst)
     print(" ")
     print("All tests did pass")
 

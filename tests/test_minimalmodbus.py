@@ -5208,6 +5208,36 @@ class TestDummyCommunicationHandleLocalEcho(ExtendedTestCase):
         del self.instrument
 
 
+class TestDummyCommunicationExternalSerialPort(ExtendedTestCase):
+    def setUp(self) -> None:
+        dummy_serial.VERBOSE = True
+        dummy_serial.RESPONSES = RTU_RESPONSES
+        extserial = dummy_serial.Serial("DUMMYPORTNAME")
+        self.instrument = minimalmodbus.Instrument(extserial, 1)  # type: ignore
+
+    def testReadRegister(self) -> None:
+        self.assertEqual(self.instrument.read_register(289), 770)
+
+    def tearDown(self) -> None:
+        if self.instrument.serial is not None:
+            try:
+                self.instrument.serial.close()
+            except Exception:
+                pass
+        del self.instrument
+
+
+class TestDummyCommunicationExternalSerialPortWrongType(ExtendedTestCase):
+    def testInitialise(self) -> None:
+        extserial = 123
+        self.assertRaises(
+            minimalmodbus.MasterReportedException,
+            minimalmodbus.Instrument,
+            extserial,
+            1,
+        )
+
+
 RTU_RESPONSES: Dict[bytes, bytes] = {}
 GOOD_RTU_RESPONSES: Dict[bytes, bytes] = {}
 WRONG_RTU_RESPONSES: Dict[bytes, bytes] = {}
