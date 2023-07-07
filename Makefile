@@ -80,6 +80,9 @@ flake8:
 black:
 	python3 -m black .
 
+docformatter:
+	docformatter -i --black minimalmodbus.py
+
 pydocstyle:
 	pydocstyle minimalmodbus.py
 
