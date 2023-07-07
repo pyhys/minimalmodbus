@@ -48,8 +48,8 @@ _MAX_BYTEORDER_VALUE = 3
 _SECONDS_TO_MILLISECONDS = 1000
 _BROADCAST_DELAY: float = 0.2  # seconds
 _BITS_PER_BYTE = 8
-_ASCII_HEADER = ":"
-_ASCII_FOOTER = "\r\n"
+_ASCII_HEADER = b":"
+_ASCII_FOOTER = b"\r\n"
 _BYTEPOSITION_FOR_ASCII_HEADER = 0  # Relative to plain response
 _BYTEPOSITION_FOR_SLAVEADDRESS = 0  # Relative to (stripped) response
 _BYTEPOSITION_FOR_FUNCTIONCODE = 1  # Relative to (stripped) response
@@ -1254,7 +1254,7 @@ class Instrument:
     # Communication implementation details #
     # #################################### #
 
-    def _perform_command(self, functioncode: int, payload_to_slave: str) -> str:
+    def _perform_command(self, functioncode: int, payload_to_slave: bytes) -> bytes:
         """Perform the command having the *functioncode*.
 
         Args:
@@ -1278,10 +1278,10 @@ class Instrument:
         DEFAULT_NUMBER_OF_BYTES_TO_READ = 1000
 
         _check_functioncode(functioncode, None)
-        _check_string(payload_to_slave, description="payload")
+        _check_bytes(payload_to_slave, description="payload")
 
         # Build request
-        request = _embed_payload(
+        request_bytes = _embed_payload(
             self.address, self.mode, functioncode, payload_to_slave
         )
 
@@ -1301,20 +1301,20 @@ class Instrument:
                         + "Will read {} bytes. Request: {!r}"
                     )
                     self._print_debug(
-                        template.format(self.mode, number_of_bytes_to_read, request)
+                        template.format(
+                            self.mode, number_of_bytes_to_read, request_bytes
+                        )
                     )
 
         # Communicate
-        request_bytes = bytes(request, encoding="latin1")
         response_bytes = self._communicate(request_bytes, number_of_bytes_to_read)
-        response = str(response_bytes, encoding="latin1")
 
         if number_of_bytes_to_read == 0:
-            return ""
+            return b""
 
         # Extract payload
         payload_from_slave = _extract_payload(
-            response, self.address, self.mode, functioncode
+            response_bytes, self.address, self.mode, functioncode
         )
         return payload_from_slave
 
@@ -1547,7 +1547,7 @@ def _create_payload(
     signed: bool,
     byteorder: int,
     payloadformat: _Payloadformat,
-) -> str:
+) -> bytes:
     """Create the payload.
 
     Error checking should have been done before calling this function.
@@ -1555,19 +1555,17 @@ def _create_payload(
     For argument descriptions, see the _generic_command() method.
     """
     if functioncode in [1, 2]:
-        return _num_to_twobyte_string(registeraddress) + _num_to_twobyte_string(
-            number_of_bits
-        )
+        return _num_to_two_bytes(registeraddress) + _num_to_two_bytes(number_of_bits)
     if functioncode in [3, 4]:
-        return _num_to_twobyte_string(registeraddress) + _num_to_twobyte_string(
+        return _num_to_two_bytes(registeraddress) + _num_to_two_bytes(
             number_of_registers
         )
     if functioncode == 5:
         assert isinstance(value, int)
-        return _num_to_twobyte_string(registeraddress) + _bit_to_bytestring(value)
+        return _num_to_two_bytes(registeraddress) + _bit_to_bytes(value)
     if functioncode == 6:
         assert isinstance(value, (int, float))
-        return _num_to_twobyte_string(registeraddress) + _num_to_twobyte_string(
+        return _num_to_two_bytes(registeraddress) + _num_to_two_bytes(
             value, number_of_decimals, signed=signed
         )
     if functioncode == 15:
@@ -1580,49 +1578,44 @@ def _create_payload(
                 f"Wrong payloadformat {payloadformat} or type "
                 + "for the value for function code 15"
             )
-
+        number_of_bytes_for_bits = _calculate_number_of_bytes_for_bits(number_of_bits)
         return (
-            _num_to_twobyte_string(registeraddress)
-            + _num_to_twobyte_string(number_of_bits)
-            + _num_to_onebyte_string(
-                _calculate_number_of_bytes_for_bits(number_of_bits)
-            )
-            + _bits_to_bytestring(bitlist)
+            _num_to_two_bytes(registeraddress)
+            + _num_to_two_bytes(number_of_bits)
+            + number_of_bytes_for_bits.to_bytes(1, "big")
+            + _bits_to_bytes(bitlist)
         )
     if functioncode == 16:
         if payloadformat == _Payloadformat.REGISTER:
             assert isinstance(value, (int, float))
-            registerdata = _num_to_twobyte_string(
-                value, number_of_decimals, signed=signed
-            )
+            registerdata = _num_to_two_bytes(value, number_of_decimals, signed=signed)
         elif payloadformat == _Payloadformat.STRING:
             assert isinstance(value, str)
-            registerdata = _textstring_to_bytestring(value, number_of_registers)
+            registerdata = _textstring_to_bytes(value, number_of_registers)
         elif payloadformat == _Payloadformat.LONG:
             assert isinstance(value, int)
-            registerdata = _long_to_bytestring(
-                value, signed, number_of_registers, byteorder
-            )
+            registerdata = _long_to_bytes(value, signed, number_of_registers, byteorder)
         elif payloadformat == _Payloadformat.FLOAT:
             assert isinstance(value, float) or isinstance(value, int)
-            registerdata = _float_to_bytestring(value, number_of_registers, byteorder)
+            registerdata = _float_to_bytes(value, number_of_registers, byteorder)
         elif payloadformat == _Payloadformat.REGISTERS:
             assert isinstance(value, list)
-            registerdata = _valuelist_to_bytestring(value, number_of_registers)
+            registerdata = _valuelist_to_bytes(value, number_of_registers)
 
         assert len(registerdata) == number_of_registers * _NUMBER_OF_BYTES_PER_REGISTER
 
+        registerdata_bytecount = len(registerdata)
         return (
-            _num_to_twobyte_string(registeraddress)
-            + _num_to_twobyte_string(number_of_registers)
-            + _num_to_onebyte_string(len(registerdata))
+            _num_to_two_bytes(registeraddress)
+            + _num_to_two_bytes(number_of_registers)
+            + registerdata_bytecount.to_bytes(1, "big")
             + registerdata
         )
     raise ValueError("Wrong function code: " + str(functioncode))
 
 
 def _parse_payload(
-    payload: str,
+    payload: bytes,
     functioncode: int,
     registeraddress: int,
     value: Any,
@@ -1633,6 +1626,23 @@ def _parse_payload(
     byteorder: int,
     payloadformat: _Payloadformat,
 ) -> Union[None, str, int, float, List[int], List[float]]:
+    """Extract the payload data from a response.
+
+    Args:
+        * payload:              Payload to be parsed
+        * functioncode:         Function code
+        * registeraddress:      Register address for error checking
+        * value:                Value in request, for error checking
+        * number_of_decimals:   Number of decimals
+        * number_of_registers:  Number of registers
+        * number_of_bits:       Number of bits
+        * signed:               Signed
+        * byteorder:            Byte order
+        * payloadformat:        Payload format
+
+    Returns:
+        The parsed payload.
+    """
     _check_response_payload(
         payload,
         functioncode,
@@ -1649,30 +1659,26 @@ def _parse_payload(
     if functioncode in [1, 2]:
         registerdata = payload[_NUMBER_OF_BYTES_BEFORE_REGISTERDATA:]
         if payloadformat == _Payloadformat.BIT:
-            return _bytestring_to_bits(registerdata, number_of_bits)[0]
+            return _bytes_to_bits(registerdata, number_of_bits)[0]
         if payloadformat == _Payloadformat.BITS:
-            return _bytestring_to_bits(registerdata, number_of_bits)
+            return _bytes_to_bits(registerdata, number_of_bits)
 
     if functioncode in [3, 4]:
         registerdata = payload[_NUMBER_OF_BYTES_BEFORE_REGISTERDATA:]
         if payloadformat == _Payloadformat.STRING:
-            return _bytestring_to_textstring(registerdata, number_of_registers)
+            return _bytes_to_textstring(registerdata, number_of_registers)
 
         if payloadformat == _Payloadformat.LONG:
-            return _bytestring_to_long(
-                registerdata, signed, number_of_registers, byteorder
-            )
+            return _bytes_to_long(registerdata, signed, number_of_registers, byteorder)
 
         if payloadformat == _Payloadformat.FLOAT:
-            return _bytestring_to_float(registerdata, number_of_registers, byteorder)
+            return _bytes_to_float(registerdata, number_of_registers, byteorder)
 
         if payloadformat == _Payloadformat.REGISTERS:
-            return _bytestring_to_valuelist(registerdata, number_of_registers)
+            return _bytes_to_valuelist(registerdata, number_of_registers)
 
         if payloadformat == _Payloadformat.REGISTER:
-            return _twobyte_string_to_num(
-                registerdata, number_of_decimals, signed=signed
-            )
+            return _two_bytes_to_num(registerdata, number_of_decimals, signed=signed)
 
     if functioncode in [5, 6, 15, 16]:
         # Response to write
@@ -1685,8 +1691,8 @@ def _parse_payload(
 
 
 def _embed_payload(
-    slaveaddress: int, mode: str, functioncode: int, payloaddata: str
-) -> str:
+    slaveaddress: int, mode: str, functioncode: int, payloaddata: bytes
+) -> bytes:
     """Build a request from the slaveaddress, the function code and the payload data.
 
     Args:
@@ -1694,7 +1700,7 @@ def _embed_payload(
         * mode: The modbus protcol mode (MODE_RTU or MODE_ASCII)
         * functioncode: The function code for the command to be performed.
           Can for example be 16 (Write register).
-        * payloaddata: The byte string to be sent to the slave.
+        * payloaddata: The bytes to be sent to the slave.
 
     Returns:
         The built (raw) request for sending to the slave (including CRC etc).
@@ -1707,41 +1713,39 @@ def _embed_payload(
      * ASCII Mode: header (:) + slaveaddress (2 characters) + functioncode
        (2 characters) + payloaddata + LRC (which is two characters) + footer (CRLF)
 
-    The LRC or CRC is calculated from the byte string made up of slaveaddress +
+    The LRC or CRC is calculated from the bytes made up of slaveaddress +
     functioncode + payloaddata.
     The header, LRC/CRC, and footer are excluded from the calculation.
     """
     _check_slaveaddress(slaveaddress)
     _check_mode(mode)
     _check_functioncode(functioncode, None)
-    _check_string(payloaddata, description="payload")
+    _check_bytes(payloaddata, description="payload")
 
     first_part = (
-        _num_to_onebyte_string(slaveaddress)
-        + _num_to_onebyte_string(functioncode)
-        + payloaddata
+        _num_to_one_byte(slaveaddress) + _num_to_one_byte(functioncode) + payloaddata
     )
 
     if mode == MODE_ASCII:
         request = (
             _ASCII_HEADER
             + _hexencode(first_part)
-            + _hexencode(_calculate_lrc_string(first_part))
+            + _hexencode(_calculate_lrc(first_part))
             + _ASCII_FOOTER
         )
     else:
-        request = first_part + _calculate_crc_string(first_part)
+        request = first_part + _calculate_crc(first_part)
 
     return request
 
 
 def _extract_payload(
-    response: str, slaveaddress: int, mode: str, functioncode: int
-) -> str:
+    response: bytes, slaveaddress: int, mode: str, functioncode: int
+) -> bytes:
     """Extract the payload data part from the slave's response.
 
     Args:
-        * response: The raw response byte string from the slave.
+        * response: The raw response bytes from the slave.
           This is different for RTU and ASCII.
         * slaveaddress: The adress of the slave. Used here for error checking only.
         * mode: The modbus protocol mode (MODE_RTU or MODE_ASCII)
@@ -1775,7 +1779,7 @@ def _extract_payload(
     MINIMAL_RESPONSE_LENGTH_ASCII = 9
 
     # Argument validity testing (ValueError/TypeError at lib programming error)
-    _check_string(response, description="response")
+    _check_bytes(response, description="response")
     _check_slaveaddress(slaveaddress)
     _check_mode(mode)
     _check_functioncode(functioncode, None)
@@ -1801,7 +1805,7 @@ def _extract_payload(
 
     if mode == MODE_ASCII:
         # Validate the ASCII header and footer.
-        if response[_BYTEPOSITION_FOR_ASCII_HEADER] != _ASCII_HEADER:
+        if response[_BYTEPOSITION_FOR_ASCII_HEADER].to_bytes(1, "big") != _ASCII_HEADER:
             raise InvalidResponseError(
                 "Did not find header ({!r}) as start ".format(_ASCII_HEADER)
                 + "of ASCII response. The plain response is: {!r}".format(response)
@@ -1832,10 +1836,10 @@ def _extract_payload(
 
     # Validate response checksum
     if mode == MODE_ASCII:
-        calculate_checksum = _calculate_lrc_string
+        calculate_checksum = _calculate_lrc
         number_of_checksum_bytes = NUMBER_OF_LRC_BYTES
     else:
-        calculate_checksum = _calculate_crc_string
+        calculate_checksum = _calculate_crc
         number_of_checksum_bytes = NUMBER_OF_CRC_BYTES
 
     received_checksum = response[-number_of_checksum_bytes:]
@@ -1853,7 +1857,7 @@ def _extract_payload(
         raise InvalidResponseError(text)
 
     # Check slave address
-    responseaddress = ord(response[_BYTEPOSITION_FOR_SLAVEADDRESS])
+    responseaddress = response[_BYTEPOSITION_FOR_SLAVEADDRESS]
 
     if responseaddress != slaveaddress:
         raise InvalidResponseError(
@@ -1867,7 +1871,7 @@ def _extract_payload(
     _check_response_slaveerrorcode(response)
 
     # Check function code
-    received_functioncode = ord(response[_BYTEPOSITION_FOR_FUNCTIONCODE])
+    received_functioncode = response[_BYTEPOSITION_FOR_FUNCTIONCODE]
     if received_functioncode != functioncode:
         raise InvalidResponseError(
             "Wrong functioncode: {} instead of {}. The response is: {!r}".format(
@@ -1892,14 +1896,16 @@ def _extract_payload(
 # ###################################### #
 
 
-def _predict_response_size(mode: str, functioncode: int, payload_to_slave: str) -> int:
+def _predict_response_size(
+    mode: str, functioncode: int, payload_to_slave: bytes
+) -> int:
     """Calculate the number of bytes that should be received from the slave.
 
     Args:
      * mode: The modbus protcol mode (MODE_RTU or MODE_ASCII)
      * functioncode: Modbus function code.
      * payload_to_slave: The raw request that is to be sent to the slave
-       (not hex encoded string)
+       (not hex encoded)
 
     Returns:
         The predicted number of bytes in the response.
@@ -1923,16 +1929,14 @@ def _predict_response_size(mode: str, functioncode: int, payload_to_slave: str) 
     # Argument validity testing
     _check_mode(mode)
     _check_functioncode(functioncode, None)
-    _check_string(payload_to_slave, description="payload", minlength=MIN_PAYLOAD_LENGTH)
+    _check_bytes(payload_to_slave, description="payload", minlength=MIN_PAYLOAD_LENGTH)
 
     # Calculate payload size
     if functioncode in [5, 6, 15, 16]:
         response_payload_size = NUMBER_OF_PAYLOAD_BYTES_IN_WRITE_CONFIRMATION
 
     elif functioncode in [1, 2, 3, 4]:
-        given_size = int(
-            _twobyte_string_to_num(payload_to_slave[BYTERANGE_FOR_GIVEN_SIZE])
-        )
+        given_size = int(_two_bytes_to_num(payload_to_slave[BYTERANGE_FOR_GIVEN_SIZE]))
         if functioncode in [1, 2]:
             # Algorithm from MODBUS APPLICATION PROTOCOL SPECIFICATION V1.1b
             number_of_inputs = given_size
@@ -2003,30 +2007,30 @@ def _calculate_minimum_silent_period(baudrate: Union[int, float]) -> float:
 # ########################## #
 
 
-def _num_to_onebyte_string(inputvalue: int) -> str:
-    """Convert a numerical value to a one-byte string.
+def _num_to_one_byte(inputvalue: int) -> bytes:
+    """Convert a numerical value to one byte.
 
     Args:
         inputvalue: The value to be converted. Should be >=0 and <=255.
 
     Returns:
-        A one-byte string created by chr(inputvalue).
+        One byte representing the inputvalue.
 
     Raises:
         TypeError, ValueError
     """
     _check_int(inputvalue, minvalue=0, maxvalue=0xFF)
 
-    return chr(inputvalue)
+    return inputvalue.to_bytes(1, "big")
 
 
-def _num_to_twobyte_string(
+def _num_to_two_bytes(
     value: Union[int, float],
     number_of_decimals: int = 0,
     lsb_first: bool = False,
     signed: bool = False,
-) -> str:
-    r"""Convert a numerical value to a two-byte string, possibly scaling it.
+) -> bytes:
+    r"""Convert a numerical value to two byte string, possibly scaling it.
 
     Args:
         * value: The numerical value to be converted.
@@ -2036,11 +2040,10 @@ def _num_to_twobyte_string(
         * signed: Whether negative values should be accepted.
 
     Returns:
-        A two-byte string.
+        Two bytes representing the inputvalue.
 
     Raises:
-        TypeError, ValueError. Gives DeprecationWarning instead of ValueError
-        for some values in Python 2.6.
+        TypeError, ValueError.
 
     Use ``number_of_decimals=1`` to multiply ``value`` by 10 before sending it to
     the slave register. Similarly ``number_of_decimals=2`` will multiply ``value``
@@ -2063,8 +2066,8 @@ def _num_to_twobyte_string(
         To store for example value=77.0, use ``number_of_decimals = 1`` if the
         register will hold it as 770 internally. The value 770 (dec) is 0302 (hex),
         where the most significant byte is 03 (hex) and the least significant byte
-        is 02 (hex). With ``lsb_first = False``, the most significant byte is given
-        first why the resulting string is ``\x03\x02``, which has the length 2.
+        is 02 (hex). With ``lsb_first = False``, the most significant byte is
+        given first why the resulting bytes are ``\x03\x02``, which has the length 2.
     """
     _check_numerical(value, description="inputvalue")
     _check_int(
@@ -2088,29 +2091,29 @@ def _num_to_twobyte_string(
     else:
         formatcode += "H"  # Unsigned short (2 bytes)
 
-    outstring = _pack(formatcode, integer)
-    assert len(outstring) == 2
-    return outstring
+    outbytes = _pack_bytes(formatcode, integer)
+    assert len(outbytes) == 2
+    return outbytes
 
 
-def _twobyte_string_to_num(
-    bytestring: str, number_of_decimals: int = 0, signed: bool = False
+def _two_bytes_to_num(
+    inputbytes: bytes, number_of_decimals: int = 0, signed: bool = False
 ) -> Union[int, float]:
-    r"""Convert a two-byte string to a numerical value, possibly scaling it.
+    r"""Convert two bytes to a numerical value, possibly scaling it.
 
     Args:
-        * bytestring: A string of length 2.
+        * inputbytes: Bytes of length 2.
         * number_of_decimals: The number of decimals. Defaults to 0.
         * signed: Whether large positive values should be interpreted as
           negative values.
 
     Returns:
-        The numerical value (int or float) calculated from the ``bytestring``.
+        The numerical value (int or float) calculated from the ``inputbytes``.
 
     Raises:
         TypeError, ValueError
 
-    Use the parameter ``signed=True`` if converting a bytestring that can hold
+    Use the parameter ``signed=True`` if converting bytes that can hold
     negative values. Then upper range data will be automatically converted into
     negative return values (two's complement).
 
@@ -2121,11 +2124,11 @@ def _twobyte_string_to_num(
     The byte order is big-endian, meaning that the most significant byte is sent first.
 
     For example:
-        A string ``\x03\x02`` (which has the length 2) corresponds to 0302 (hex) =
+        The bytes ``\x03\x02`` (which has the length 2) corresponds to 0302 (hex) =
         770 (dec). If ``number_of_decimals = 1``, then this is converted
         to 77.0 (float).
     """
-    _check_string(bytestring, minlength=2, maxlength=2, description="bytestring")
+    _check_bytes(inputbytes, minlength=2, maxlength=2, description="inputbytes")
     _check_int(
         number_of_decimals,
         minvalue=0,
@@ -2140,7 +2143,7 @@ def _twobyte_string_to_num(
     else:
         formatcode += "H"  # Unsigned short (2 bytes)
 
-    fullregister: int = _unpack(formatcode, bytestring)
+    fullregister: int = _unpack_bytes(formatcode, inputbytes)
 
     if number_of_decimals == 0:
         return fullregister
@@ -2148,13 +2151,13 @@ def _twobyte_string_to_num(
     return fullregister / float(divisor)
 
 
-def _long_to_bytestring(
+def _long_to_bytes(
     value: int,
     signed: bool = False,
     number_of_registers: int = 2,
     byteorder: int = BYTEORDER_BIG,
-) -> str:
-    """Convert a long integer to a bytestring.
+) -> bytes:
+    """Convert a long integer to bytes.
 
     Long integers (32 bits = 4 bytes) are stored in two consecutive 16-bit registers
     in the slave.
@@ -2167,7 +2170,7 @@ def _long_to_bytestring(
         * byteorder: How multi-register data should be interpreted.
 
     Returns:
-        A bytestring (4 bytes).
+        Four bytes.
 
     Raises:
         TypeError, ValueError
@@ -2190,27 +2193,27 @@ def _long_to_bytestring(
     else:
         formatcode += "L"  # Unsigned long (4 bytes)
 
-    outstring = _pack(formatcode, value)
+    outputbytes = _pack_bytes(formatcode, value)
     if byteorder in [BYTEORDER_BIG_SWAP, BYTEORDER_LITTLE_SWAP]:
-        outstring = _swap(outstring)
+        outputbytes = _swap(outputbytes)
 
-    assert len(outstring) == 4
-    return outstring
+    assert len(outputbytes) == 4
+    return outputbytes
 
 
-def _bytestring_to_long(
-    bytestring: str,
+def _bytes_to_long(
+    inputbytes: bytes,
     signed: bool = False,
     number_of_registers: int = 2,
     byteorder: int = BYTEORDER_BIG,
 ) -> int:
-    """Convert a bytestring to a long integer.
+    """Convert bytes to a long integer.
 
     Long integers (32 bits = 4 bytes) are stored in two consecutive 16-bit registers
     in the slave.
 
     Args:
-        * bytestring: A string of length 4.
+        * inputbytes: A string of length 4.
         * signed: Whether large positive values should be interpreted as
           negative values.
         * number_of_registers: Should be 2. For error checking only.
@@ -2222,7 +2225,7 @@ def _bytestring_to_long(
     Raises:
         ValueError, TypeError
     """
-    _check_string(bytestring, "byte string", minlength=4, maxlength=4)
+    _check_bytes(inputbytes, "byte string", minlength=4, maxlength=4)
     _check_bool(signed, description="signed parameter")
     _check_int(
         number_of_registers, minvalue=2, maxvalue=2, description="number of registers"
@@ -2241,17 +2244,17 @@ def _bytestring_to_long(
         formatcode += "L"  # Unsigned long (4 bytes)
 
     if byteorder in [BYTEORDER_BIG_SWAP, BYTEORDER_LITTLE_SWAP]:
-        bytestring = _swap(bytestring)
+        inputbytes = _swap(inputbytes)
 
-    return int(_unpack(formatcode, bytestring))
+    return int(_unpack_bytes(formatcode, inputbytes))
 
 
-def _float_to_bytestring(
+def _float_to_bytes(
     value: Union[int, float],
     number_of_registers: int = 2,
     byteorder: int = BYTEORDER_BIG,
-) -> str:
-    r"""Convert a numerical value to a bytestring.
+) -> bytes:
+    r"""Convert a numerical value to bytes.
 
     Floats are stored in two or more consecutive 16-bit registers in the slave. The
     encoding is according to the standard IEEE 754.
@@ -2264,7 +2267,7 @@ def _float_to_bytestring(
     =============================== ================= =========== =================
 
     A floating  point value of 1.0 is encoded (in single precision) as 3f800000 (hex).
-    This will give a byte string ``'\x3f\x80\x00\x00'`` (big endian).
+    This will give the bytes ``'\x3f\x80\x00\x00'`` (big endian).
 
     Args:
         * value (float or int): The numerical value to be converted.
@@ -2272,7 +2275,7 @@ def _float_to_bytestring(
         * byteorder: How multi-register data should be interpreted.
 
     Returns:
-        A bytestring (4 or 8 bytes).
+        4 or 8 bytes.
 
     Raises:
         TypeError, ValueError
@@ -2302,25 +2305,25 @@ def _float_to_bytestring(
             )
         )
 
-    outstring = _pack(formatcode, value)
+    outputbytes = _pack_bytes(formatcode, value)
     if byteorder in [BYTEORDER_BIG_SWAP, BYTEORDER_LITTLE_SWAP]:
-        outstring = _swap(outstring)
-    assert len(outstring) == lengthtarget
-    return outstring
+        outputbytes = _swap(outputbytes)
+    assert len(outputbytes) == lengthtarget
+    return outputbytes
 
 
-def _bytestring_to_float(
-    bytestring: str, number_of_registers: int = 2, byteorder: int = BYTEORDER_BIG
+def _bytes_to_float(
+    inputbytes: bytes, number_of_registers: int = 2, byteorder: int = BYTEORDER_BIG
 ) -> float:
-    """Convert a four-byte string to a float.
+    """Convert four bytes to a float.
 
     Floats are stored in two or more consecutive 16-bit registers in the slave.
 
     For discussion on precision, number of bits, number of registers, the range,
-    byte order and on alternative names, see :func:`minimalmodbus._float_to_bytestring`.
+    byte order and on alternative names, see :func:`minimalmodbus._float_to_bytes`.
 
     Args:
-        * bytestring: A string of length 4 or 8.
+        * inputbytes: Four or eight bytes
         * number_of_registers: Can be 2 or 4.
         * byteorder: How multi-register data should be interpreted.
 
@@ -2330,7 +2333,7 @@ def _bytestring_to_float(
     Raises:
         TypeError, ValueError
     """
-    _check_string(bytestring, minlength=4, maxlength=8, description="bytestring")
+    _check_bytes(inputbytes, minlength=4, maxlength=8, description="input bytes")
     _check_int(
         number_of_registers, minvalue=2, maxvalue=4, description="number of registers"
     )
@@ -2354,21 +2357,21 @@ def _bytestring_to_float(
             )
         )
 
-    if len(bytestring) != number_of_bytes:
+    if len(inputbytes) != number_of_bytes:
         raise ValueError(
             "Wrong length of the byte string! Given value is "
             + "{0!r}, and number_of_registers is {1!r}.".format(
-                bytestring, number_of_registers
+                inputbytes, number_of_registers
             )
         )
 
     if byteorder in [BYTEORDER_BIG_SWAP, BYTEORDER_LITTLE_SWAP]:
-        bytestring = _swap(bytestring)
-    return float(_unpack(formatcode, bytestring))
+        inputbytes = _swap(inputbytes)
+    return float(_unpack_bytes(formatcode, inputbytes))
 
 
-def _textstring_to_bytestring(inputstring: str, number_of_registers: int = 16) -> str:
-    """Convert a text string to a bytestring.
+def _textstring_to_bytes(inputstring: str, number_of_registers: int = 16) -> bytes:
+    """Convert a text string to bytes.
 
     Each 16-bit register in the slave are interpreted as two characters (1 byte =
     8 bits). For example 16 consecutive registers can hold 32 characters (32 bytes).
@@ -2383,7 +2386,7 @@ def _textstring_to_bytestring(inputstring: str, number_of_registers: int = 16) -
         * number_of_registers: The number of registers allocated for the string.
 
     Returns:
-        A bytestring (str).
+        Bytes.
 
     Raises:
         TypeError, ValueError
@@ -2397,13 +2400,14 @@ def _textstring_to_bytestring(inputstring: str, number_of_registers: int = 16) -
     max_characters = _NUMBER_OF_BYTES_PER_REGISTER * number_of_registers
     _check_string(inputstring, "input string", minlength=1, maxlength=max_characters)
 
-    bytestring = inputstring.ljust(max_characters)  # Pad with space
-    assert len(bytestring) == max_characters
-    return bytestring
+    padded = inputstring.ljust(max_characters)  # Pad with space
+    outputbytes = bytes(padded, encoding="ascii")
+    assert len(outputbytes) == max_characters
+    return outputbytes
 
 
-def _bytestring_to_textstring(bytestring: str, number_of_registers: int = 16) -> str:
-    """Convert a bytestring to a text string.
+def _bytes_to_textstring(inputbytes: bytes, number_of_registers: int = 16) -> str:
+    """Convert bytes to a text string.
 
     Each 16-bit register in the slave are interpreted as two characters (1 byte =
     8 bits). For example 16 consecutive registers can hold 32 characters (32 bytes).
@@ -2411,11 +2415,12 @@ def _bytestring_to_textstring(bytestring: str, number_of_registers: int = 16) ->
     Not much of conversion is done, mostly error checking.
 
     Args:
-        * bytestring (str): The string from the slave. Length = 2*number_of_registers
+        * inputbytes: The bytes from the slave. Length = 2*number_of_registers
         * number_of_registers (int): The number of registers allocated for the string.
+                                     Should be >0.
 
     Returns:
-        A the text string (str).
+        A the text string.
 
     Raises:
         TypeError, ValueError
@@ -2427,16 +2432,15 @@ def _bytestring_to_textstring(bytestring: str, number_of_registers: int = 16) ->
         description="number of registers",
     )
     max_characters = _NUMBER_OF_BYTES_PER_REGISTER * number_of_registers
-    _check_string(
-        bytestring, "byte string", minlength=max_characters, maxlength=max_characters
+    _check_bytes(
+        inputbytes, "input bytes", minlength=max_characters, maxlength=max_characters
     )
 
-    textstring = bytestring
-    return textstring
+    return inputbytes.decode(encoding="ascii")
 
 
-def _valuelist_to_bytestring(valuelist: List[int], number_of_registers: int) -> str:
-    """Convert a list of numerical values to a bytestring.
+def _valuelist_to_bytes(valuelist: List[int], number_of_registers: int) -> bytes:
+    """Convert a list of numerical values to bytes.
 
     Each element is 'unsigned INT16'.
 
@@ -2447,7 +2451,7 @@ def _valuelist_to_bytestring(valuelist: List[int], number_of_registers: int) -> 
           Should equal the number of elements in valuelist.
 
     Returns:
-        A bytestring. Length = 2*number_of_registers
+        Bytes Length = 2*number_of_registers
 
     Raises:
         TypeError, ValueError
@@ -2479,21 +2483,21 @@ def _valuelist_to_bytestring(valuelist: List[int], number_of_registers: int) -> 
 
     number_of_bytes = _NUMBER_OF_BYTES_PER_REGISTER * number_of_registers
 
-    bytestring = ""
+    outputbytes = b""
     for value in valuelist:
-        bytestring += _num_to_twobyte_string(value, signed=False)
+        outputbytes += _num_to_two_bytes(value, signed=False)
 
-    assert len(bytestring) == number_of_bytes
-    return bytestring
+    assert len(outputbytes) == number_of_bytes
+    return outputbytes
 
 
-def _bytestring_to_valuelist(bytestring: str, number_of_registers: int) -> List[int]:
-    """Convert a bytestring to a list of numerical values.
+def _bytes_to_valuelist(inputbytes: bytes, number_of_registers: int) -> List[int]:
+    """Convert bytes to a list of numerical values.
 
-    The bytestring is interpreted as 'unsigned INT16'.
+    The bytes are interpreted as 'unsigned INT16'.
 
     Args:
-        * bytestring: The string from the slave. Length = 2*number_of_registers
+        * inputbytes: The bytes from the slave. Length = 2*number_of_registers
         * number_of_registers: The number of registers. For error checking.
 
     Returns:
@@ -2504,21 +2508,21 @@ def _bytestring_to_valuelist(bytestring: str, number_of_registers: int) -> List[
     """
     _check_int(number_of_registers, minvalue=1, description="number of registers")
     number_of_bytes = _NUMBER_OF_BYTES_PER_REGISTER * number_of_registers
-    _check_string(
-        bytestring, "byte string", minlength=number_of_bytes, maxlength=number_of_bytes
+    _check_bytes(
+        inputbytes, "byte string", minlength=number_of_bytes, maxlength=number_of_bytes
     )
 
     values = []
     for i in range(number_of_registers):
         offset = _NUMBER_OF_BYTES_PER_REGISTER * i
-        substring = bytestring[offset : (offset + _NUMBER_OF_BYTES_PER_REGISTER)]
-        values.append(int(_twobyte_string_to_num(substring)))
+        sub_bytes = inputbytes[offset : (offset + _NUMBER_OF_BYTES_PER_REGISTER)]
+        values.append(int(_two_bytes_to_num(sub_bytes)))
 
     return values
 
 
-def _pack(formatstring: str, value: Any) -> str:
-    """Pack a value into a bytestring.
+def _pack_bytes(formatstring: str, value: Any) -> bytes:
+    """Pack a value into bytes.
 
     Uses the built-in :mod:`struct` Python module.
 
@@ -2528,156 +2532,136 @@ def _pack(formatstring: str, value: Any) -> str:
         * value (depends on formatstring): The value to be packed
 
     Returns:
-        A bytestring (str).
+        The packed bytes
 
     Raises:
         ValueError
-
-    Note that the :mod:`struct` module produces byte buffers for Python3,
-    but bytestrings for Python2. This is compensated for automatically.
     """
     _check_string(formatstring, description="formatstring", minlength=1)
 
     try:
         result = struct.pack(formatstring, value)
     except Exception:
-        errortext = (
-            "The value to send is probably out of range, as the num-to-bytestring "
-        )
+        errortext = "The value to send is probably out of range, as the num-to-bytes "
         errortext += "conversion failed. Value: {0!r} Struct format code is: {1}"
         raise ValueError(errortext.format(value, formatstring))
 
-    return str(result, encoding="latin1")
+    return result
 
 
-def _unpack(formatstring: str, packed: str) -> Any:
-    """Unpack a bytestring into a value.
+def _unpack_bytes(formatstring: str, packed_bytes: bytes) -> Any:
+    """Unpack bytes into a value.
 
     Uses the built-in :mod:`struct` Python module.
 
     Args:
         * formatstring: String for the packing. See the :mod:`struct` module
           for details.
-        * packed: The bytestring to be unpacked.
+        * packed_bytes: The bytes to be unpacked.
 
     Returns:
         A value. The type depends on the formatstring.
 
     Raises:
         ValueError
-
-    Note that the :mod:`struct` module wants byte buffers for Python3,
-    but bytestrings for Python2. This is compensated for automatically.
     """
     _check_string(formatstring, description="formatstring", minlength=1)
-    _check_string(packed, description="packed string", minlength=1)
-
-    packed_bytes = bytes(packed, encoding="latin1")
+    _check_bytes(packed_bytes, description="packed bytes", minlength=1)
 
     try:
         value = struct.unpack(formatstring, packed_bytes)[0]
     except Exception:
-        errortext = (
-            "The received bytestring is probably wrong, as the bytestring-to-num "
-        )
-        errortext += "conversion failed. Bytestring: {0!r} Struct format code is: {1}"
-        raise InvalidResponseError(errortext.format(packed, formatstring))
+        errortext = "The received bytes is probably wrong, as the bytes-to-num "
+        errortext += "conversion failed. Bytes: {0!r} Struct format code is: {1}"
+        raise InvalidResponseError(errortext.format(packed_bytes, formatstring))
 
     return value
 
 
-def _swap(bytestring: str) -> str:
-    """Swap characters pairwise in a string.
+def _swap(inputbytes: bytes) -> bytes:
+    """Swap bytes pairwise.
 
     This corresponds to a "byte swap".
 
     Args:
-        * bytestring (str): input. The length should be an even number.
+        * inputbytes: input. The length should be an even number.
 
-    Return the string with characters swapped.
+    Return the bytes swapped.
     """
-    length = len(bytestring)
+    length = len(inputbytes)
     if length % 2:
         raise ValueError(
-            "The length of the bytestring should be even. Given {!r}.".format(
-                bytestring
+            "The length of the inputbytes should be even. Given {!r}.".format(
+                inputbytes
             )
         )
-    templist = list(bytestring)
+    templist = list(inputbytes)
     templist[1:length:2], templist[:length:2] = (
         templist[:length:2],
         templist[1:length:2],
     )
-    return "".join(templist)
+    return bytes(templist)
 
 
-def _hexencode(bytestring: str, insert_spaces: bool = False) -> str:
-    r"""Convert a byte string to a hex encoded string.
+def _hexencode(inputbytes: bytes, insert_spaces: bool = False) -> bytes:
+    r"""Convert bytes to a hex encoded bytes.
 
     For example 'J' will return '4A', and ``'\x04'`` will return '04'.
 
     Args:
-        * bytestring (str): Can be for example ``'A\x01B\x45'``.
+        * inputbytes (str): Can be for example ``'A\x01B\x45'``.
         * insert_spaces (bool): Insert space characters between pair of characters
           to increase readability.
 
     Returns:
-        A string of twice the length, with characters in the range '0' to '9' and
+        Bytes of twice the length, with characters in the range '0' to '9' and
         'A' to 'F'. The string will be longer if spaces are inserted.
 
     Raises:
         TypeError, ValueError
     """
-    _check_string(bytestring, description="byte string")
+    _check_bytes(inputbytes, description="input bytes")
 
-    separator = "" if not insert_spaces else " "
-
-    # Use plain string formatting instead of binhex.hexlify,
-    # in order to have it Python 2.x and 3.x compatible
-
-    byte_representions = []
-    for char in bytestring:
-        byte_representions.append("{0:02X}".format(ord(char)))
-    return separator.join(byte_representions).strip()
+    if insert_spaces:
+        return binascii.hexlify(inputbytes, sep=" ").upper()
+    return binascii.hexlify(inputbytes).upper()
 
 
-def _hexdecode(hexstring: str) -> str:
-    r"""Convert a hex encoded string to a byte string.
+def _hexdecode(hexbytes: bytes) -> bytes:
+    r"""Convert hex encoded bytes to bytes.
 
-    For example '4A' will return 'J', and '04' will return ``'\x04'`` (which has
+    For example b'4A' will return b'J', and b'04' will return ``b'\x04'`` (which has
     length 1).
 
     Args:
-        * hexstring: Can be for example 'A3' or 'A3B4'. Must be of even length.
-        * Allowed characters are '0' to '9', 'a' to 'f' and 'A' to 'F' (not space).
+        * hexbytes: Can be for example b'A3' or b'A3B4'. Must be of even length.
+          Allowed bytes are b'0' to b'9', b'a' to b'f' and b'A' to b'F' (not space).
 
     Returns:
-        A string of half the length, with characters corresponding to all 0-255
-        values for each byte.
+        Bytes of half the length, with bytes corresponding to all 0-255vvalues.
 
     Raises:
         TypeError, ValueError
     """
-    # Note: For Python3 the appropriate would be:
+    # TODO Note: For Python3 the appropriate would be:
     #   raise TypeError(new_error_message) from err
     # but the Python2 interpreter will indicate SyntaxError.
     # Thus we need to live with this warning in Python3:
     # 'During handling of the above exception, another exception occurred'
 
-    _check_string(hexstring, description="hexstring")
+    _check_bytes(hexbytes, description="hex bytes")
 
-    if len(hexstring) % 2 != 0:
+    if len(hexbytes) % 2 != 0:
         raise ValueError(
-            "The input hexstring must be of even length. Given: {!r}".format(hexstring)
+            "The input hex bytes must be of even length. Given: {!r}".format(hexbytes)
         )
 
-    converted_bytes = bytes(hexstring, "latin1")
     try:
-        return str(binascii.unhexlify(converted_bytes), encoding="latin1")
+        return binascii.unhexlify(hexbytes)
     except binascii.Error as err:
         new_error_message = (
-            "Hexdecode reported an error: {!s}. Input hexstring: {}".format(
-                err.args[0], hexstring
+            "Hexdecode reported an error: {!s}. Input hexstring: {!r}".format(
+                err.args[0], hexbytes
             )
         )
         raise TypeError(new_error_message)
@@ -2690,7 +2674,7 @@ def _describe_bytes(inputbytes: bytes) -> str:
         * inputbytes: Bytes to describe
 
     Returns a space separated descriptive string.
-    For example b'\x01\x02\x03' gives: 01 02 03 (3 bytes)
+    For example b'\x01\x02\x03' gives: "01 02 03 (3 bytes)"
     """
     return " ".join([f"{x:02X}" for x in inputbytes]) + " ({} bytes)".format(
         len(inputbytes)
@@ -2705,6 +2689,8 @@ def _calculate_number_of_bytes_for_bits(number_of_bits: int) -> int:
 
     Error checking should have been done before.
 
+    For example 9 bits requires 2 bytes.
+
     Algorithm from MODBUS APPLICATION PROTOCOL SPECIFICATION V1.1b
     """
     result = number_of_bits // _BITS_PER_BYTE  # Integer division in Python2 and 3
@@ -2713,7 +2699,7 @@ def _calculate_number_of_bytes_for_bits(number_of_bits: int) -> int:
     return result
 
 
-def _bit_to_bytestring(value: int) -> str:
+def _bit_to_bytes(value: int) -> bytes:
     """Create the bit pattern that is used for writing single bits.
 
     Used for functioncode 5. The same value is sent back in the response
@@ -2725,7 +2711,7 @@ def _bit_to_bytestring(value: int) -> str:
         * value: Can be 0 or 1
 
     Returns:
-        The bit pattern (string).
+        The bit pattern.
 
     Raises:
         TypeError, ValueError
@@ -2733,19 +2719,19 @@ def _bit_to_bytestring(value: int) -> str:
     _check_int(value, minvalue=0, maxvalue=1, description="inputvalue")
 
     if value == 0:
-        return "\x00\x00"
-    return "\xff\x00"
+        return b"\x00\x00"
+    return b"\xff\x00"
 
 
-def _bits_to_bytestring(valuelist: List[int]) -> str:
-    """Build a bytestring from a list of bits.
+def _bits_to_bytes(valuelist: List[int]) -> bytes:
+    """Build bytes from a list of bits.
 
     This is used for functioncode 15.
 
     Args:
         * valuelist: List of int (0 or 1)
 
-    Returns a bytestring.
+    Returns bytes.
     """
     if not isinstance(valuelist, list):
         raise TypeError(
@@ -2758,21 +2744,21 @@ def _bits_to_bytestring(valuelist: List[int]) -> str:
             )
 
     list_position = 0
-    outputstring = ""
+    outputbytes = b""
     while list_position < len(valuelist):
         sublist = valuelist[list_position : (list_position + _BITS_PER_BYTE)]
 
         bytevalue = 0
         for bitposition, value in enumerate(sublist):
             bytevalue |= value << bitposition
-        outputstring += chr(bytevalue)
+        outputbytes += bytevalue.to_bytes(1, "big")
 
         list_position += _BITS_PER_BYTE
-    return outputstring
+    return outputbytes
 
 
-def _bytestring_to_bits(bytestring: str, number_of_bits: int) -> List[int]:
-    """Parse bits from a bytestring.
+def _bytes_to_bits(inputbytes: bytes, number_of_bits: int) -> List[int]:
+    """Parse bits from bytes.
 
     This is used for parsing the bits in response messages for functioncode 1 and 2.
 
@@ -2784,23 +2770,22 @@ def _bytestring_to_bits(bytestring: str, number_of_bits: int) -> List[int]:
     zeros toward MSB.
 
     Args:
-        * bytestring: Input string
+        * inputbytes: Input bytes
         * number_of_bits: Number of bits to extract
 
     Returns a list of values (0 or 1). The length of the list is equal to
     number_of_bits.
     """
     expected_length = _calculate_number_of_bytes_for_bits(number_of_bits)
-    if len(bytestring) != expected_length:
+    if len(inputbytes) != expected_length:
         raise ValueError(
-            "Wrong length of bytestring. Expected is "
+            "Wrong length of input bytes. Expected is "
             + "{} bytes (for {} bits), actual is {} bytes.".format(
-                expected_length, number_of_bits, len(bytestring)
+                expected_length, number_of_bits, len(inputbytes)
             )
         )
     total_list = []
-    for character in bytestring:
-        bytevalue = ord(character)
+    for bytevalue in inputbytes:  # Gives individual bytes as int
         for bitposition in range(_BITS_PER_BYTE):
             bitvalue = (bytevalue & (1 << bitposition)) > 0
             total_list.append(int(bitvalue))
@@ -3245,35 +3230,35 @@ def _is_serial_object(obj: Any) -> bool:
     return True
 
 
-def _calculate_crc_string(inputstring: str) -> str:
-    """Calculate CRC-16 for Modbus.
+def _calculate_crc(inputbytes: bytes) -> bytes:
+    """Calculate CRC-16 for Modbus RTU.
 
     Args:
         inputstring: An arbitrary-length message (without the CRC).
 
     Returns:
-        A two-byte CRC string, where the least significant byte is first.
+        A two-byte CRC, where the least significant byte is first.
     """
-    _check_string(inputstring, description="input CRC string")
+    _check_bytes(inputbytes, description="CRC input bytes")
 
     # Preload a 16-bit register with ones
     register = 0xFFFF
 
-    for char in inputstring:
-        register = (register >> 8) ^ _CRC16TABLE[(register ^ ord(char)) & 0xFF]
+    for current_byte in inputbytes:
+        register = (register >> 8) ^ _CRC16TABLE[(register ^ current_byte) & 0xFF]
 
-    return _num_to_twobyte_string(register, lsb_first=True)
+    return _num_to_two_bytes(register, lsb_first=True)
 
 
-def _calculate_lrc_string(inputstring: str) -> str:
-    """Calculate LRC for Modbus.
+def _calculate_lrc(inputbytes: bytes) -> bytes:
+    """Calculate LRC for Modbus ASCII.
 
     Args:
-        inputstring: An arbitrary-length message (without the beginning
+        inputbytes: An arbitrary-length message (without the beginning
         colon and terminating CRLF). It should already be decoded from hex-string.
 
     Returns:
-        A one-byte LRC bytestring (not encoded to hex-string)
+        A one-byte LRC (not encoded to hex-string)
 
     Algorithm from the document 'MODBUS over serial line specification and
     implementation guide V1.02'.
@@ -3281,21 +3266,21 @@ def _calculate_lrc_string(inputstring: str) -> str:
     The LRC is calculated as 8 bits (one byte).
 
     For example a LRC 0110 0001 (bin) = 61 (hex) = 97 (dec) = 'a'. This function will
-    then return 'a'.
+    then return b'a'.
 
     In Modbus ASCII mode, this should be transmitted using two characters. This
     example should be transmitted '61', which is a string of length two. This function
     does not handle that conversion for transmission.
     """
-    _check_string(inputstring, description="input LRC string")
+    _check_bytes(inputbytes, description="LRC input bytes")
 
     register = 0
-    for character in inputstring:
-        register += ord(character)
+    for bytevalue in inputbytes:
+        register += bytevalue
 
     lrc = ((register ^ 0xFF) + 1) & 0xFF
 
-    return _num_to_onebyte_string(lrc)
+    return _num_to_one_byte(lrc)
 
 
 def _check_mode(mode: str) -> None:
@@ -3403,7 +3388,7 @@ def _check_registeraddress(registeraddress: int) -> None:
 
 
 def _check_response_payload(
-    payload: str,
+    payload: bytes,
     functioncode: int,
     registeraddress: int,
     value: Any,
@@ -3414,6 +3399,23 @@ def _check_response_payload(
     byteorder: int,  # Not used. For same signature as _parse_payload()
     payloadformat: _Payloadformat,  # Not used. For same signature as _parse_payload()
 ) -> None:
+    """Check the response payload.
+
+    Args:
+        * payload:              Payload to be checked
+        * functioncode:         Function code
+        * registeraddress:      Register address
+        * value:                Value in request
+        * number_of_decimals:   Number of decimals
+        * number_of_registers:  Number of registers
+        * number_of_bits:       Number of bits
+        * signed:               Signed
+        * byteorder:            Byte order
+        * payloadformat:        Payload format
+
+    Raises:
+        ValueError, TypeError
+    """
     if functioncode in [1, 2, 3, 4]:
         _check_response_bytecount(payload)
 
@@ -3421,10 +3423,10 @@ def _check_response_payload(
         _check_response_registeraddress(payload, registeraddress)
 
     if functioncode == 5:
-        _check_response_writedata(payload, _bit_to_bytestring(value))
+        _check_response_writedata(payload, _bit_to_bytes(value))
     elif functioncode == 6:
         _check_response_writedata(
-            payload, _num_to_twobyte_string(value, number_of_decimals, signed=signed)
+            payload, _num_to_two_bytes(value, number_of_decimals, signed=signed)
         )
     elif functioncode == 15:
         # response number of bits
@@ -3458,7 +3460,7 @@ def _check_response_payload(
             )
 
 
-def _check_response_slaveerrorcode(response: str) -> None:
+def _check_response_slaveerrorcode(response: bytes) -> None:
     """Check if the slave indicates an error.
 
     Args:
@@ -3491,10 +3493,10 @@ def _check_response_slaveerrorcode(response: str) -> None:
     if len(response) < _BYTEPOSITION_FOR_SLAVE_ERROR_CODE + 1:
         return  # This check is also done before calling, do not raise exception here.
 
-    received_functioncode = ord(response[_BYTEPOSITION_FOR_FUNCTIONCODE])
+    received_functioncode = response[_BYTEPOSITION_FOR_FUNCTIONCODE]
 
     if _check_bit(received_functioncode, _BITNUMBER_FUNCTIONCODE_ERRORINDICATION):
-        slave_error_code = ord(response[_BYTEPOSITION_FOR_SLAVE_ERROR_CODE])
+        slave_error_code = response[_BYTEPOSITION_FOR_SLAVE_ERROR_CODE]
 
         if slave_error_code in NON_ERRORS:
             return
@@ -3508,7 +3510,7 @@ def _check_response_slaveerrorcode(response: str) -> None:
         raise error
 
 
-def _check_response_bytecount(payload: str) -> None:
+def _check_response_bytecount(payload: bytes) -> None:
     """Check that the number of bytes as given in the response is correct.
 
     The first byte in the payload indicates the length of the payload (first
@@ -3523,11 +3525,11 @@ def _check_response_bytecount(payload: str) -> None:
     POSITION_FOR_GIVEN_NUMBER = 0
     NUMBER_OF_BYTES_TO_SKIP = 1
 
-    _check_string(
+    _check_bytes(
         payload, minlength=1, description="payload", exception_type=InvalidResponseError
     )
 
-    given_number_of_databytes = ord(payload[POSITION_FOR_GIVEN_NUMBER])
+    given_number_of_databytes = payload[POSITION_FOR_GIVEN_NUMBER]
     counted_number_of_databytes = len(payload) - NUMBER_OF_BYTES_TO_SKIP
 
     if given_number_of_databytes != counted_number_of_databytes:
@@ -3545,7 +3547,7 @@ def _check_response_bytecount(payload: str) -> None:
         raise InvalidResponseError(errortext)
 
 
-def _check_response_registeraddress(payload: str, registeraddress: int) -> None:
+def _check_response_registeraddress(payload: bytes, registeraddress: int) -> None:
     """Check that the start adress as given in the response is correct.
 
     The first two bytes in the payload holds the address value.
@@ -3557,7 +3559,7 @@ def _check_response_registeraddress(payload: str, registeraddress: int) -> None:
     Raises:
         TypeError, ValueError, InvalidResponseError
     """
-    _check_string(
+    _check_bytes(
         payload, minlength=2, description="payload", exception_type=InvalidResponseError
     )
     _check_registeraddress(registeraddress)
@@ -3565,7 +3567,7 @@ def _check_response_registeraddress(payload: str, registeraddress: int) -> None:
     BYTERANGE_FOR_STARTADDRESS = slice(0, 2)
 
     bytes_for_startaddress = payload[BYTERANGE_FOR_STARTADDRESS]
-    received_startaddress = _twobyte_string_to_num(bytes_for_startaddress)
+    received_startaddress = _two_bytes_to_num(bytes_for_startaddress)
 
     if received_startaddress != registeraddress:
         raise InvalidResponseError(
@@ -3576,7 +3578,9 @@ def _check_response_registeraddress(payload: str, registeraddress: int) -> None:
         )
 
 
-def _check_response_number_of_registers(payload: str, number_of_registers: int) -> None:
+def _check_response_number_of_registers(
+    payload: bytes, number_of_registers: int
+) -> None:
     """Check that the number of written registers as given in the response is correct.
 
     The bytes 2 and 3 (zero based counting) in the payload holds the value.
@@ -3588,7 +3592,7 @@ def _check_response_number_of_registers(payload: str, number_of_registers: int) 
     Raises:
         TypeError, ValueError, InvalidResponseError
     """
-    _check_string(
+    _check_bytes(
         payload, minlength=4, description="payload", exception_type=InvalidResponseError
     )
     _check_int(
@@ -3603,7 +3607,7 @@ def _check_response_number_of_registers(payload: str, number_of_registers: int) 
     BYTERANGE_FOR_NUMBER_OF_REGISTERS = slice(2, 4)
 
     bytes_for_mumber_of_registers = payload[BYTERANGE_FOR_NUMBER_OF_REGISTERS]
-    received_number_of_written_registers = _twobyte_string_to_num(
+    received_number_of_written_registers = _two_bytes_to_num(
         bytes_for_mumber_of_registers
     )
 
@@ -3616,7 +3620,7 @@ def _check_response_number_of_registers(payload: str, number_of_registers: int) 
         )
 
 
-def _check_response_writedata(payload: str, writedata: str) -> None:
+def _check_response_writedata(payload: bytes, writedata: bytes) -> None:
     """Check that the write data as given in the response is correct.
 
     The bytes 2 and 3 (zero based counting) in the payload holds the write data.
@@ -3629,10 +3633,10 @@ def _check_response_writedata(payload: str, writedata: str) -> None:
     Raises:
         TypeError, ValueError, InvalidResponseError
     """
-    _check_string(
+    _check_bytes(
         payload, minlength=4, description="payload", exception_type=InvalidResponseError
     )
-    _check_string(writedata, minlength=2, maxlength=2, description="writedata")
+    _check_bytes(writedata, minlength=2, maxlength=2, description="writedata")
 
     BYTERANGE_FOR_WRITEDATA = slice(2, 4)
 
@@ -3652,8 +3656,17 @@ def _check_bytes(
     description: str,
     minlength: int = 0,
     maxlength: Optional[int] = None,
+    exception_type: Type[Exception] = ValueError,
 ) -> None:
-    """Check that the bytes are valid."""
+    """Check that the bytes are valid.
+
+    Args:
+    * inputbytes: The bytes to be checked
+    * description: Used in error messages for the checked inputbytes
+    * minlength: Minimum length of the inputbytes
+    * maxlength: Maximum length of the inputbytes
+    * exception_type: The type of exception to raise for length errors
+    """
     # Type checking
     if not isinstance(description, str):
         raise TypeError(
@@ -3674,7 +3687,7 @@ def _check_bytes(
     _check_int(minlength, minvalue=0, maxvalue=None, description="minlength")
 
     if len(inputbytes) < minlength:
-        raise ValueError(
+        raise exception_type(
             "The {0} is too short: {1}, but minimum value is {2}. Given: {3!r}".format(
                 description, len(inputbytes), minlength, inputbytes
             )
@@ -3693,7 +3706,7 @@ def _check_bytes(
             )
 
         if len(inputbytes) > maxlength:
-            raise ValueError(
+            raise exception_type(
                 "The "
                 + "{0} is too long: {1}, but maximum value is {2}. Given: {3!r}".format(
                     description, len(inputbytes), maxlength, inputbytes
@@ -3718,9 +3731,6 @@ def _check_string(
         * maxlength: Maximum length of the string
         * force_ascii: Enforce that the string is ASCII
         * exception_type: The type of exception to raise for length errors
-
-    The force_ascii argument is valid only for Python3, as all strings are ASCII
-    in Python2.
 
     Raises:
         TypeError, ValueError or the one given by exception_type
@@ -3942,186 +3952,6 @@ def _print_out(inputstring: str) -> None:
 
     sys.stdout.write(inputstring + "\n")
     sys.stdout.flush()
-
-
-# def _interpretRawMessage(inputstr):
-#     r"""Generate a human readable description of a Modbus bytestring.
-
-#     Args:
-#         inputstr (str): The bytestring that should be interpreted.
-
-#     Returns:
-#         A descriptive string.
-
-#     For example, the string ``'\n\x03\x10\x01\x00\x01\xd0q'`` should give
-# something like::
-
-#         T ODO: update
-
-#         Modbus bytestring decoder
-#         Input string (length 8 characters): '\n\x03\x10\x01\x00\x01\xd0q'
-#         Probably modbus RTU mode.
-#         Slave address: 10 (dec). Function code: 3 (dec).
-#         Valid message. Extracted payload: '\x10\x01\x00\x01'
-
-#         Pos   Character Hex  Dec  Probable interpretation
-#         -------------------------------------------------
-#           0:  '\n'      0A    10  Slave address
-#           1:  '\x03'    03     3  Function code
-#           2:  '\x10'    10    16  Payload
-#           3:  '\x01'    01     1  Payload
-#           4:  '\x00'    00     0  Payload
-#           5:  '\x01'    01     1  Payload
-#           6:  '\xd0'    D0   208  Checksum, CRC LSB
-#           7:  'q'       71   113  Checksum, CRC MSB
-
-#     """
-#     raise NotImplementedError()
-#     output = ""
-#     output += "Modbus bytestring decoder\n"
-#     output += "Input string (length {} characters): {!r} \n".format(
-#         len(inputstr), inputstr
-#     )
-
-#     # Detect modbus type
-#     if inputstr.startswith(_ASCII_HEADER) and inputstr.endswith(_ASCII_FOOTER):
-#         mode = MODE_ASCII
-#     else:
-#         mode = MODE_RTU
-#     output += "Probably Modbus {} mode.\n".format(mode.upper())
-
-#     # Extract slave address and function code
-#     try:
-#         if mode == MODE_ASCII:
-#             slaveaddress = int(inputstr[1:3])
-#             functioncode = int(inputstr[3:5])
-#         else:
-#             slaveaddress = ord(inputstr[0])
-#             functioncode = ord(inputstr[1])
-#         output += "Slave address: {} (dec). Function code: {} (dec).\n".format(
-#             slaveaddress, functioncode
-#         )
-#     except Exception:
-#         output += "\nCould not extract slave address and function code. \n\n"
-
-#     # Check message validity
-#     try:
-#         extractedpayload = _extract_payload(inputstr, slaveaddress, mode,
-# functioncode)
-#         output += "Valid message. Extracted payload: {!r}\n".format(extractedpayload)
-#     except (ValueError, TypeError) as err:
-#         output += "\nThe message does not seem to be valid Modbus {}. ".format(
-# mode.upper())
-#         output += "Error message: \n{}. \n\n".format(err.messages)
-#     except NameError as err:
-#         output += (
-#             "\nNo message validity checking. \n\n"
-#         )  # Slave address or function code not available
-
-#     # Generate table describing the message
-#     if mode == MODE_RTU:
-#         output += "\nPos   Character Hex  Dec  Probable interpretation \n"
-#         output += "------------------------------------------------- \n"
-#         for i, character in enumerate(inputstr):
-#             if i == 0:
-#                 description = "Slave address"
-#             elif i == 1:
-#                 description = "Function code"
-#             elif i == len(inputstr) - 2:
-#                 description = "Checksum, CRC LSB"
-#             elif i == len(inputstr) - 1:
-#                 description = "Checksum, CRC MSB"
-#             else:
-#                 description = "Payload"
-#             output += "{0:3.0f}:  {1!r:<8}  {2:02X}  {2: 4.0f}  {3:<10} \n".format(
-#                 i, character, ord(character), description
-#             )
-
-#     elif mode == MODE_ASCII:
-#         output += "\nPos   Character(s) Converted  Hex  Dec  Probable
-# interpretation \n"
-#         output += "--------------------------------------------------------------- \n"
-
-#         i = 0
-#         while i < len(inputstr):
-
-#             if inputstr[i] in [":", "\r", "\n"]:
-#                 if inputstr[i] == ":":
-#                     description = "Start character"
-#                 else:
-#                     description = "Stop character"
-
-#                 output += "{0:3.0f}:  {1!r:<8}                      {2} \n".format(
-#                     i, inputstr[i], description
-#                 )
-#                 i += 1
-
-#             else:
-#                 if i == 1:
-#                     description = "Slave address"
-#                 elif i == 3:
-#                     description = "Function code"
-#                 elif i == len(inputstr) - 4:
-#                     description = "Checksum (LRC)"
-#                 else:
-#                     description = "Payload"
-
-#                 try:
-#                     hexvalue = _hexdecode(inputstr[i:(i + 2)])
-#                     output += "{0:3.0f}:  {1!r:<8}     {2!r}
-# {3:02X}  {3: 4.0f}  {4} \n".
-#                               format(
-#                         i, inputstr[i:(i + 2)], hexvalue, ord(hexvalue), description
-#                     )
-#                 except Exception:
-#                     output += "{0:3.0f}:  {1!r:<8}     ?           ?
-# ?  {2} \n".format(
-#                         i, inputstr[i:(i + 2)], description
-#                     )
-#                 i += 2
-
-#     # Generate description for the payload
-#     output += "\n\n"
-#     try:
-#         output += _interpretPayload(functioncode, extractedpayload)
-#     except Exception:
-#         output += (
-#             "\nCould not interpret the payload. \n\n"
-#         )  # Payload or function code not available
-
-#     return output
-
-
-# def _interpretPayload(functioncode, payload):
-#     r"""Generate a human readable description of a Modbus payload.
-
-#     Args:
-#       * functioncode (int): Function code
-#       * payload (str): The payload that should be interpreted. It should be a
-#         byte string.
-
-#     Returns:
-#         A descriptive string.
-
-#     For example, the payload ``'\x10\x01\x00\x01'`` for functioncode 3 should give
-#         something like::
-
-#             T ODO: Update
-
-#     """
-#     raise NotImplementedError()
-#     output = ""
-#     output += "Modbus payload decoder\n"
-#     output += "Input payload (length {} characters): {!r} \n".format(
-#         len(payload), payload
-#     )
-#     output += "Function code: {} (dec).\n".format(functioncode)
-
-#     if len(payload) == 4:
-#         FourbyteMessageFirstHalfValue = _twobyte_string_to_num(payload[0:2])
-#         FourbyteMessageSecondHalfValue = _twobyte_string_to_num(payload[2:4])
-
-#     return output
 
 
 def _get_diagnostic_string() -> str:

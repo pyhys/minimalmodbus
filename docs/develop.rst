@@ -68,16 +68,16 @@ Several wrapper functions are defined for easy use of the conversion.
 These functions also do argument validity checking.
 
 =========================== =================================== ================================
-Data type                   To bytestring                       From bytestring
+Data type                   To bytes                            From bytes
 =========================== =================================== ================================
-(internal usage)            :meth:`._num_to_onebyte_string`     ``ord()``
-Bit                         :meth:`._bit_to_bytestring`         Same as for bits
-Several bits                :meth:`._bits_to_bytestring`        :meth:`._bytestring_to_bits`
-Integer (char, short)       :meth:`._num_to_twobyte_string`     :meth:`._twobyte_string_to_num`
-Several registers           :meth:`._valuelist_to_bytestring`   :meth:`._bytestring_to_valuelist`
-Long integer                :meth:`._long_to_bytestring`        :meth:`._bytestring_to_long`
-Floating point number       :meth:`._float_to_bytestring`       :meth:`._bytestring_to_float`
-String                      :meth:`._textstring_to_bytestring`  :meth:`._bytestring_to_textstring`
+(internal usage)            :meth:`._num_to_two_bytes`
+Bit                         :meth:`._bit_to_bytes     `         Same as for bits
+Several bits                :meth:`._bits_to_bytes`             :meth:`._bytes_to_bits`
+Integer (char, short)       :meth:`._num_to_two_bytes`          :meth:`._two_bytes_to_num`
+Several registers           :meth:`._valuelist_to_bytes`        :meth:`._bytes_to_valuelist`
+Long integer                :meth:`._long_to_bytes`             :meth:`._bytes_to_long`
+Floating point number       :meth:`._float_to_bytes`            :meth:`._bytes_to_float`
+String                      :meth:`._textstring_to_bytes`       :meth:`._bytes_to_textstring`
 =========================== =================================== ================================
 
 Note that the :mod:`struct` module produces byte buffers for Python3, but bytestrings for Python2.
@@ -365,7 +365,7 @@ own Modbus instrument hardware.
 
 For example::
 
-    >>> minimalmodbus._calculate_crc_string('\x01\x03\x00\x05\x00\x01')
+    >>> minimalmodbus._calculate_crc('\x01\x03\x00\x05\x00\x01')
     '\x94\x0b'
 
 And to embed the payload ``'\x10\x11\x12'`` to slave address 1, with functioncode 16::
