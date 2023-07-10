@@ -138,9 +138,8 @@ class Instrument:
 
         self.mode = mode
         """Slave mode (str), can be :data:`minimalmodbus.MODE_RTU` or
-        :data:`minimalmodbus.MODE_ASCII`.
-        Most often set by the constructor (see the class documentation).
-        Defaults to RTU.
+        :data:`minimalmodbus.MODE_ASCII`. Most often set by the constructor (see the
+        class documentation). Defaults to RTU.
 
         Changing this will not affect how other instruments use the same serial port.
 
@@ -148,8 +147,8 @@ class Instrument:
         """
 
         self.precalculate_read_size = True
-        """If this is :const:`False`, the serial port reads until timeout
-        instead of just reading a specific number of bytes. Defaults to :const:`True`.
+        """If this is :const:`False`, the serial port reads until timeout instead of
+        just reading a specific number of bytes. Defaults to :const:`True`.
 
         Changing this will not affect how other instruments use the same serial port.
 
@@ -157,8 +156,8 @@ class Instrument:
         """
 
         self.debug = debug
-        """Set this to :const:`True` to print the communication details.
-        Defaults to :const:`False`.
+        """Set this to :const:`True` to print the communication details. Defaults to
+        :const:`False`.
 
         Most often set by the constructor (see the class documentation).
 
@@ -166,9 +165,9 @@ class Instrument:
         """
 
         self.clear_buffers_before_each_transaction = True
-        """If this is :const:`True`, the serial port read and write buffers are
-        cleared before each request to the instrument, to avoid cumulative byte
-        sync errors across multiple messages. Defaults to :const:`True`.
+        """If this is :const:`True`, the serial port read and write buffers are cleared
+        before each request to the instrument, to avoid cumulative byte sync errors
+        across multiple messages. Defaults to :const:`True`.
 
         Changing this will not affect how other instruments use the same serial port.
 
@@ -176,8 +175,8 @@ class Instrument:
         """
 
         self.close_port_after_each_call = close_port_after_each_call
-        """If this is :const:`True`, the serial port will be closed after each
-        call. Defaults to :const:`False`.
+        """If this is :const:`True`, the serial port will be closed after each call.
+        Defaults to :const:`False`.
 
         Changing this will not affect how other instruments use the same serial port.
 
@@ -185,11 +184,10 @@ class Instrument:
         """
 
         self.handle_local_echo = False
-        """Set to to :const:`True` if your RS-485 adaptor has local echo enabled.
-        Then the transmitted message will immeadiately appear at the receive
-        line of the RS-485 adaptor. MinimalModbus will then read and discard
-        this data, before reading the data from the slave.
-        Defaults to :const:`False`.
+        """Set to to :const:`True` if your RS-485 adaptor has local echo enabled. Then
+        the transmitted message will immeadiately appear at the receive line of the
+        RS-485 adaptor. MinimalModbus will then read and discard this data, before
+        reading the data from the slave. Defaults to :const:`False`.
 
         Changing this will not affect how other instruments use the same serial port.
 
@@ -240,8 +238,11 @@ class Instrument:
                 self._print_debug("Serial port {} is closed. Opening.".format(port))
                 self.serial.open()
 
-        if not isinstance(self.serial, serial.Serial):
+        if self.serial is None or not _is_serial_object(self.serial):
             raise MasterReportedException("Failed to initialise serial port")
+
+        if not self.serial.is_open:
+            raise MasterReportedException("Failed to open serial port")
 
         if self.close_port_after_each_call:
             self._print_debug("Closing serial port {}".format(port))
@@ -564,11 +565,12 @@ class Instrument:
         functioncode: int = 3,
         signed: bool = False,
         byteorder: int = BYTEORDER_BIG,
+        number_of_registers: int = 2,
     ) -> int:
-        """Read a long integer (32 bits) from the slave.
+        """Read a long integer (32 or 64 bits) from the slave.
 
-        Long integers (32 bits = 4 bytes) are stored in two consecutive 16-bit
-        registers in the slave.
+        Long integers (32 bits = 4 bytes or 64 bits = 8 bytes) are stored in
+        two or four consecutive 16-bit registers in the slave respectively.
 
         Args:
             * registeraddress: The slave register start address.
@@ -577,14 +579,18 @@ class Instrument:
             * byteorder: How multi-register data should be interpreted.
               Use the BYTEORDER_xxx constants. Defaults to
               :data:`minimalmodbus.BYTEORDER_BIG`.
+            * number_of_registers: The number of registers allocated for the long.
+              Can be 2 or 4.
 
 
-        ============== ================== ================ ==========================
-        ``signed``     Data type in slave Alternative name Range
-        ============== ================== ================ ==========================
-        :const:`False` Unsigned INT32     Unsigned long    0 to 4294967295
-        :const:`True`  INT32              Long             -2147483648 to 2147483647
-        ============== ================== ================ ==========================
+        ======================= ============== =============== =====================
+        ``number_of_registers`` ``signed``     Slave data type Range
+        ======================= ============== =============== =====================
+        2                       :const:`False` Unsigned INT32  0 to 4294967295
+        2                       :const:`True`  INT32           -2147483648 to 2147483647
+        4                       :const:`False` Unsigned INT64  0 to approx 1.8E19
+        4                       :const:`True`  INT64           Approx -9.2E18 to 9.2E18
+        ======================= ============== =============== =====================
 
         Returns:
             The numerical value.
@@ -595,11 +601,17 @@ class Instrument:
         """
         _check_functioncode(functioncode, [3, 4])
         _check_bool(signed, description="signed")
+        _check_int(
+            number_of_registers,
+            minvalue=2,
+            maxvalue=4,
+            description="number of registers",
+        )
         return int(
             self._generic_command(
                 functioncode,
                 registeraddress,
-                number_of_registers=2,
+                number_of_registers=number_of_registers,
                 signed=signed,
                 byteorder=byteorder,
                 payloadformat=_Payloadformat.LONG,
@@ -612,16 +624,17 @@ class Instrument:
         value: int,
         signed: bool = False,
         byteorder: int = BYTEORDER_BIG,
+        number_of_registers: int = 2,
     ) -> None:
-        """Write a long integer (32 bits) to the slave.
+        """Write a long integer (32 or 64 bits) to the slave.
 
-        Long integers (32 bits = 4 bytes) are stored in two consecutive 16-bit
-        registers in the slave.
+        Long integers (32 bits = 4 bytes or 64 bits = 8 bytes) are stored in
+        two or four consecutive 16-bit registers in the slave respectively.
 
         Uses Modbus function code 16.
 
-        For discussion on number of bits, number of registers, the range
-        and on alternative names, see :meth:`.read_long`.
+        For discussion on number of bits, number of registers and the range,
+        see :meth:`.read_long`.
 
         Args:
             * registeraddress: The slave register start address.
@@ -630,6 +643,8 @@ class Instrument:
             * byteorder: How multi-register data should be interpreted.
               Use the BYTEORDER_xxx constants. Defaults to
               :data:`minimalmodbus.BYTEORDER_BIG`.
+            * number_of_registers: The number of registers allocated for the long.
+              Can be 2 or 4.
 
         Raises:
             TypeError, ValueError, ModbusException,
@@ -637,19 +652,35 @@ class Instrument:
         """
         MAX_VALUE_LONG = 4294967295  # Unsigned INT32
         MIN_VALUE_LONG = -2147483648  # INT32
+        MAX_VALUE_LONG_LONG = 18446744073709551615  # Unsigned INT64
+        MIN_VALUE_LONG_LONG = -9223372036854775808  # INT64
 
         _check_int(
-            value,
-            minvalue=MIN_VALUE_LONG,
-            maxvalue=MAX_VALUE_LONG,
-            description="input value",
+            number_of_registers,
+            minvalue=2,
+            maxvalue=4,
+            description="number of registers",
         )
+        if number_of_registers == 2:
+            _check_int(
+                value,
+                minvalue=MIN_VALUE_LONG,
+                maxvalue=MAX_VALUE_LONG,
+                description="input value",
+            )
+        elif number_of_registers == 4:
+            _check_int(
+                value,
+                minvalue=MIN_VALUE_LONG_LONG,
+                maxvalue=MAX_VALUE_LONG_LONG,
+                description="input value",
+            )
         _check_bool(signed, description="signed")
         self._generic_command(
             16,
             registeraddress,
             value,
-            number_of_registers=2,
+            number_of_registers=number_of_registers,
             signed=signed,
             byteorder=byteorder,
             payloadformat=_Payloadformat.LONG,
@@ -1138,6 +1169,18 @@ class Instrument:
             # Note: For function code 16 there is checking also in the content
             # conversion functions.
 
+        # Number of registers for float and long
+        if payloadformat == _Payloadformat.FLOAT and number_of_registers not in [2, 4]:
+            raise ValueError(
+                "The number of registers for float must be 2 or 4. "
+                + "Given {0!r}".format(number_of_registers)
+            )
+        if payloadformat == _Payloadformat.LONG and number_of_registers not in [2, 4]:
+            raise ValueError(
+                "The number of registers for long must be 2 or 4. "
+                + "Given {0!r}".format(number_of_registers)
+            )
+
         # Check combinations: Value
         if functioncode in [5, 6, 15, 16] and value is None:
             raise ValueError(
@@ -1601,7 +1644,10 @@ def _create_payload(
         elif payloadformat == _Payloadformat.REGISTERS:
             assert isinstance(value, list)
             registerdata = _valuelist_to_bytes(value, number_of_registers)
-
+        else:
+            raise ValueError(
+                f"Wrong payloadformat '{payloadformat}' for function code 16"
+            )
         assert len(registerdata) == number_of_registers * _NUMBER_OF_BYTES_PER_REGISTER
 
         registerdata_bytecount = len(registerdata)
@@ -1946,7 +1992,7 @@ def _predict_response_size(
                 + (1 if number_of_inputs % 8 else 0)
             )
 
-        elif functioncode in [3, 4]:
+        else:
             number_of_registers = given_size
             response_payload_size = (
                 NUMBER_OF_PAYLOAD_BYTES_FOR_BYTECOUNTFIELD
@@ -2030,7 +2076,7 @@ def _num_to_two_bytes(
     lsb_first: bool = False,
     signed: bool = False,
 ) -> bytes:
-    r"""Convert a numerical value to two byte string, possibly scaling it.
+    r"""Convert a numerical value to two bytes, possibly scaling it.
 
     Args:
         * value: The numerical value to be converted.
@@ -2159,18 +2205,18 @@ def _long_to_bytes(
 ) -> bytes:
     """Convert a long integer to bytes.
 
-    Long integers (32 bits = 4 bytes) are stored in two consecutive 16-bit registers
-    in the slave.
+    Long integers (32 bits = 4 bytes or 64 bite = 8 bytes) are stored in two
+    or four consecutive 16-bit registers in the slave respectively.
 
     Args:
         * value: The numerical value to be converted.
         * signed: Whether large positive values should be interpreted as
           negative values.
-        * number_of_registers: Should be 2. For error checking only.
+        * number_of_registers: Should be 2 or 4.
         * byteorder: How multi-register data should be interpreted.
 
     Returns:
-        Four bytes.
+        Four or eight bytes.
 
     Raises:
         TypeError, ValueError
@@ -2178,7 +2224,7 @@ def _long_to_bytes(
     _check_int(value, description="inputvalue")
     _check_bool(signed, description="signed parameter")
     _check_int(
-        number_of_registers, minvalue=2, maxvalue=2, description="number of registers"
+        number_of_registers, minvalue=2, maxvalue=4, description="number of registers"
     )
     _check_int(
         byteorder, minvalue=0, maxvalue=_MAX_BYTEORDER_VALUE, description="byteorder"
@@ -2188,16 +2234,29 @@ def _long_to_bytes(
         formatcode = ">"
     else:
         formatcode = "<"
-    if signed:
+    if number_of_registers == 2 and signed:
         formatcode += "l"  # (Signed) long (4 bytes)
-    else:
+        lengthtarget = 4
+    elif number_of_registers == 2:
         formatcode += "L"  # Unsigned long (4 bytes)
-
+        lengthtarget = 4
+    elif number_of_registers == 4 and signed:
+        formatcode += "q"  # (Signed) long long (8 bytes)
+        lengthtarget = 8
+    elif number_of_registers == 4:
+        formatcode += "Q"  # Unsigned long long (8 bytes)
+        lengthtarget = 8
+    else:
+        raise ValueError(
+            "Wrong number of registers! Given value is {0!r}".format(
+                number_of_registers
+            )
+        )
     outputbytes = _pack_bytes(formatcode, value)
     if byteorder in [BYTEORDER_BIG_SWAP, BYTEORDER_LITTLE_SWAP]:
         outputbytes = _swap(outputbytes)
 
-    assert len(outputbytes) == 4
+    assert len(outputbytes) == lengthtarget
     return outputbytes
 
 
@@ -2209,14 +2268,14 @@ def _bytes_to_long(
 ) -> int:
     """Convert bytes to a long integer.
 
-    Long integers (32 bits = 4 bytes) are stored in two consecutive 16-bit registers
-    in the slave.
+    Long integers (32 bits = 4 bytes or 64 bite = 8 bytes) are stored in two
+    or four consecutive 16-bit registers in the slave respectively.
 
     Args:
-        * inputbytes: A string of length 4.
+        * inputbytes: Length 4 or 8 bytes.
         * signed: Whether large positive values should be interpreted as
           negative values.
-        * number_of_registers: Should be 2. For error checking only.
+        * number_of_registers: Should be 2 or 4.
         * byteorder: How multi-register data should be interpreted.
 
     Returns:
@@ -2225,10 +2284,9 @@ def _bytes_to_long(
     Raises:
         ValueError, TypeError
     """
-    _check_bytes(inputbytes, "byte string", minlength=4, maxlength=4)
     _check_bool(signed, description="signed parameter")
     _check_int(
-        number_of_registers, minvalue=2, maxvalue=2, description="number of registers"
+        number_of_registers, minvalue=2, maxvalue=4, description="number of registers"
     )
     _check_int(
         byteorder, minvalue=0, maxvalue=_MAX_BYTEORDER_VALUE, description="byteorder"
@@ -2238,10 +2296,27 @@ def _bytes_to_long(
         formatcode = ">"
     else:
         formatcode = "<"
-    if signed:
+    if number_of_registers == 2 and signed:
         formatcode += "l"  # (Signed) long (4 bytes)
-    else:
+        lengthtarget = 4
+    elif number_of_registers == 2:
         formatcode += "L"  # Unsigned long (4 bytes)
+        lengthtarget = 4
+    elif number_of_registers == 4 and signed:
+        formatcode += "q"  # (Signed) long long (8 bytes)
+        lengthtarget = 8
+    elif number_of_registers == 4:
+        formatcode += "Q"  # Unsigned long long (8 bytes)
+        lengthtarget = 8
+    else:
+        raise ValueError(
+            "Wrong number of registers! Given value is {0!r}".format(
+                number_of_registers
+            )
+        )
+    _check_bytes(
+        inputbytes, "input bytes", minlength=lengthtarget, maxlength=lengthtarget
+    )
 
     if byteorder in [BYTEORDER_BIG_SWAP, BYTEORDER_LITTLE_SWAP]:
         inputbytes = _swap(inputbytes)
@@ -2359,7 +2434,7 @@ def _bytes_to_float(
 
     if len(inputbytes) != number_of_bytes:
         raise ValueError(
-            "Wrong length of the byte string! Given value is "
+            "Wrong length of the input bytes! Given value is "
             + "{0!r}, and number_of_registers is {1!r}.".format(
                 inputbytes, number_of_registers
             )
@@ -2509,7 +2584,7 @@ def _bytes_to_valuelist(inputbytes: bytes, number_of_registers: int) -> List[int
     _check_int(number_of_registers, minvalue=1, description="number of registers")
     number_of_bytes = _NUMBER_OF_BYTES_PER_REGISTER * number_of_registers
     _check_bytes(
-        inputbytes, "byte string", minlength=number_of_bytes, maxlength=number_of_bytes
+        inputbytes, "input bytes", minlength=number_of_bytes, maxlength=number_of_bytes
     )
 
     values = []
@@ -2541,10 +2616,10 @@ def _pack_bytes(formatstring: str, value: Any) -> bytes:
 
     try:
         result = struct.pack(formatstring, value)
-    except Exception:
+    except Exception as exc:
         errortext = "The value to send is probably out of range, as the num-to-bytes "
         errortext += "conversion failed. Value: {0!r} Struct format code is: {1}"
-        raise ValueError(errortext.format(value, formatstring))
+        raise ValueError(errortext.format(value, formatstring)) from exc
 
     return result
 
@@ -3219,14 +3294,11 @@ Built with this code::
 
 def _is_serial_object(obj: Any) -> bool:
     """Check if an object is serialport-like."""
-    KNOWN_METHODS = ["open", "close", "read", "write"]
+    KNOWN_ATTRIBUTES = ["open", "close", "read", "write", "is_open"]
 
-    for methodname in KNOWN_METHODS:
-        try:
-            getattr(obj, methodname)
-        except AttributeError:
+    for attribute_name in KNOWN_ATTRIBUTES:
+        if not hasattr(obj, attribute_name):
             return False
-
     return True
 
 
