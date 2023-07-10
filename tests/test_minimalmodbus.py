@@ -277,7 +277,7 @@ class TestCreatePayload(ExtendedTestCase):
         # read_bit(61, functioncode=2)
         self.assertEqual(
             minimalmodbus._create_payload(
-                2, 61, None, 0, 0, 1, False, False, _Payloadformat.BIT
+                2, 61, None, 0, 0, 1, False, BYTEORDER_BIG, _Payloadformat.BIT
             ),
             b"\x00\x3D\x00\x01",
         )
@@ -285,7 +285,7 @@ class TestCreatePayload(ExtendedTestCase):
         # read_bit(62, functioncode=1)
         self.assertEqual(
             minimalmodbus._create_payload(
-                1, 62, None, 0, 0, 1, False, False, _Payloadformat.BIT
+                1, 62, None, 0, 0, 1, False, BYTEORDER_BIG, _Payloadformat.BIT
             ),
             b"\x00\x3E\x00\x01",
         )
@@ -293,7 +293,7 @@ class TestCreatePayload(ExtendedTestCase):
         # write_bit(71, 1, functioncode=5)
         self.assertEqual(
             minimalmodbus._create_payload(
-                5, 71, 1, 0, 0, 1, False, False, _Payloadformat.BIT
+                5, 71, 1, 0, 0, 1, False, BYTEORDER_BIG, _Payloadformat.BIT
             ),
             b"\x00\x47\xFF\x00",
         )
@@ -302,7 +302,7 @@ class TestCreatePayload(ExtendedTestCase):
         # Example from MODBUS APPLICATION PROTOCOL SPECIFICATION V1.1b
         self.assertEqual(
             minimalmodbus._create_payload(
-                2, 196, None, 0, 0, 22, False, False, _Payloadformat.BITS
+                2, 196, None, 0, 0, 22, False, BYTEORDER_BIG, _Payloadformat.BITS
             ),
             b"\x00\xC4\x00\x16",
         )
@@ -311,7 +311,7 @@ class TestCreatePayload(ExtendedTestCase):
         # Example from MODBUS APPLICATION PROTOCOL SPECIFICATION V1.1b
         self.assertEqual(
             minimalmodbus._create_payload(
-                1, 19, None, 0, 0, 19, False, False, _Payloadformat.BITS
+                1, 19, None, 0, 0, 19, False, BYTEORDER_BIG, _Payloadformat.BITS
             ),
             b"\x00\x13\x00\x13",
         )
@@ -327,7 +327,7 @@ class TestCreatePayload(ExtendedTestCase):
                 0,
                 10,
                 False,
-                False,
+                BYTEORDER_BIG,
                 _Payloadformat.BITS,
             ),
             b"\x00\x13\x00\x0A\x02\xCD\x01",
@@ -336,7 +336,7 @@ class TestCreatePayload(ExtendedTestCase):
         # read_register(289, 0, functioncode=3)
         self.assertEqual(
             minimalmodbus._create_payload(
-                3, 289, None, 0, 1, 0, False, False, _Payloadformat.REGISTER
+                3, 289, None, 0, 1, 0, False, BYTEORDER_BIG, _Payloadformat.REGISTER
             ),
             b"\x01\x21\x00\x01",
         )
@@ -344,7 +344,7 @@ class TestCreatePayload(ExtendedTestCase):
         # read_register(14, 0, functioncode=4)
         self.assertEqual(
             minimalmodbus._create_payload(
-                4, 14, None, 0, 1, 0, False, False, _Payloadformat.REGISTER
+                4, 14, None, 0, 1, 0, False, BYTEORDER_BIG, _Payloadformat.REGISTER
             ),
             b"\x00\x0E\x00\x01",
         )
@@ -352,7 +352,7 @@ class TestCreatePayload(ExtendedTestCase):
         # write_register(35, 20, functioncode = 16)
         self.assertEqual(
             minimalmodbus._create_payload(
-                16, 35, 20, 0, 1, 0, False, False, _Payloadformat.REGISTER
+                16, 35, 20, 0, 1, 0, False, BYTEORDER_BIG, _Payloadformat.REGISTER
             ),
             b"\x00\x23\x00\x01\x02\x00\x14",
         )
@@ -360,7 +360,7 @@ class TestCreatePayload(ExtendedTestCase):
         # write_register(45, 88, functioncode = 6)
         self.assertEqual(
             minimalmodbus._create_payload(
-                6, 45, 88, 0, 1, 0, False, False, _Payloadformat.REGISTER
+                6, 45, 88, 0, 1, 0, False, BYTEORDER_BIG, _Payloadformat.REGISTER
             ),
             b"\x00\x2D\x00\x58",
         )
@@ -368,7 +368,7 @@ class TestCreatePayload(ExtendedTestCase):
         # write_register(101, -5, signed=True)
         self.assertEqual(
             minimalmodbus._create_payload(
-                16, 101, -5, 0, 1, 0, True, False, _Payloadformat.REGISTER
+                16, 101, -5, 0, 1, 0, True, BYTEORDER_BIG, _Payloadformat.REGISTER
             ),
             b"\x00\x65\x00\x01\x02\xFF\xFB",
         )
@@ -376,7 +376,7 @@ class TestCreatePayload(ExtendedTestCase):
         # write_register(101, -5, 1, signed=True)
         self.assertEqual(
             minimalmodbus._create_payload(
-                16, 101, -5, 1, 1, 0, True, False, _Payloadformat.REGISTER
+                16, 101, -5, 1, 1, 0, True, BYTEORDER_BIG, _Payloadformat.REGISTER
             ),
             b"\x00\x65\x00\x01\x02\xFF\xCE",
         )
@@ -384,7 +384,7 @@ class TestCreatePayload(ExtendedTestCase):
         # read_long(102)
         self.assertEqual(
             minimalmodbus._create_payload(
-                3, 102, None, 0, 2, 0, False, False, _Payloadformat.LONG
+                3, 102, None, 0, 2, 0, False, BYTEORDER_BIG, _Payloadformat.LONG
             ),
             b"\x00\x66\x00\x02",
         )
@@ -392,7 +392,7 @@ class TestCreatePayload(ExtendedTestCase):
         # read_long(102, functioncode=4)
         self.assertEqual(
             minimalmodbus._create_payload(
-                4, 102, None, 0, 2, 0, False, False, _Payloadformat.LONG
+                4, 102, None, 0, 2, 0, False, BYTEORDER_BIG, _Payloadformat.LONG
             ),
             b"\x00\x66\x00\x02",
         )
@@ -400,15 +400,22 @@ class TestCreatePayload(ExtendedTestCase):
         # read_long(256)
         self.assertEqual(
             minimalmodbus._create_payload(
-                3, 256, None, 0, 2, 0, False, False, _Payloadformat.LONG
+                3, 256, None, 0, 2, 0, False, BYTEORDER_BIG, _Payloadformat.LONG
             ),
             b"\x01\x00\x00\x02",
+        )
+        # read_long(256, number_of_registers=4)
+        self.assertEqual(
+            minimalmodbus._create_payload(
+                3, 256, None, 0, 4, 0, False, BYTEORDER_BIG, _Payloadformat.LONG
+            ),
+            b"\x01\x00\x00\x04",
         )
 
         # write_long(102, 5)
         self.assertEqual(
             minimalmodbus._create_payload(
-                16, 102, 5, 0, 2, 0, False, False, _Payloadformat.LONG
+                16, 102, 5, 0, 2, 0, False, BYTEORDER_BIG, _Payloadformat.LONG
             ),
             b"\x00\x66\x00\x02\x04\x00\x00\x00\x05",
         )
@@ -416,7 +423,7 @@ class TestCreatePayload(ExtendedTestCase):
         # write_long(102, 5,  signed=True)
         self.assertEqual(
             minimalmodbus._create_payload(
-                16, 102, 5, 0, 2, 0, True, False, _Payloadformat.LONG
+                16, 102, 5, 0, 2, 0, True, BYTEORDER_BIG, _Payloadformat.LONG
             ),
             b"\x00\x66\x00\x02\x04\x00\x00\x00\x05",
         )
@@ -424,15 +431,23 @@ class TestCreatePayload(ExtendedTestCase):
         # write_long(102, -5, signed=True)
         self.assertEqual(
             minimalmodbus._create_payload(
-                16, 102, -5, 0, 2, 0, True, False, _Payloadformat.LONG
+                16, 102, -5, 0, 2, 0, True, BYTEORDER_BIG, _Payloadformat.LONG
             ),
             b"\x00\x66\x00\x02\x04\xFF\xFF\xFF\xFB",
+        )
+
+        # write_long(102, -5, signed=True, number_of_registers=4)
+        self.assertEqual(
+            minimalmodbus._create_payload(
+                16, 102, -5, 0, 4, 0, True, BYTEORDER_BIG, _Payloadformat.LONG
+            ),
+            b"\x00\x66\x00\x04\x08\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFB",
         )
 
         # read_float(103, functioncode=3, number_of_registers=2)
         self.assertEqual(
             minimalmodbus._create_payload(
-                3, 103, None, 0, 2, 0, False, False, _Payloadformat.FLOAT
+                3, 103, None, 0, 2, 0, False, BYTEORDER_BIG, _Payloadformat.FLOAT
             ),
             b"\x00\x67\x00\x02",
         )
@@ -440,7 +455,7 @@ class TestCreatePayload(ExtendedTestCase):
         # read_float(103, functioncode=3, number_of_registers=4)
         self.assertEqual(
             minimalmodbus._create_payload(
-                3, 103, None, 0, 4, 0, False, False, _Payloadformat.FLOAT
+                3, 103, None, 0, 4, 0, False, BYTEORDER_BIG, _Payloadformat.FLOAT
             ),
             b"\x00\x67\x00\x04",
         )
@@ -448,7 +463,7 @@ class TestCreatePayload(ExtendedTestCase):
         # read_float(103, functioncode=4, number_of_registers=2)
         self.assertEqual(
             minimalmodbus._create_payload(
-                4, 103, None, 0, 2, 0, False, False, _Payloadformat.FLOAT
+                4, 103, None, 0, 2, 0, False, BYTEORDER_BIG, _Payloadformat.FLOAT
             ),
             b"\x00\x67\x00\x02",
         )
@@ -456,7 +471,7 @@ class TestCreatePayload(ExtendedTestCase):
         # write_float(103, 1.1, number_of_registers=2)   OK compare to recorded data
         self.assertEqual(
             minimalmodbus._create_payload(
-                16, 103, 1.1, 0, 2, 0, False, False, _Payloadformat.FLOAT
+                16, 103, 1.1, 0, 2, 0, False, BYTEORDER_BIG, _Payloadformat.FLOAT
             ),
             b"\x00\x67\x00\x02\x04\x3F\x8C\xCC\xCD",
         )
@@ -464,7 +479,7 @@ class TestCreatePayload(ExtendedTestCase):
         # write_float(103, 1.1, number_of_registers=4)   OK compare to recorded data
         self.assertEqual(
             minimalmodbus._create_payload(
-                16, 103, 1.1, 0, 4, 0, False, False, _Payloadformat.FLOAT
+                16, 103, 1.1, 0, 4, 0, False, BYTEORDER_BIG, _Payloadformat.FLOAT
             ),
             b"\x00\x67\x00\x04\x08\x3F\xF1\x99\x99\x99\x99\x99\x9A",
         )
@@ -472,7 +487,7 @@ class TestCreatePayload(ExtendedTestCase):
         # read_string(104, 1)
         self.assertEqual(
             minimalmodbus._create_payload(
-                3, 104, None, 0, 1, 0, False, False, _Payloadformat.STRING
+                3, 104, None, 0, 1, 0, False, BYTEORDER_BIG, _Payloadformat.STRING
             ),
             b"\x00\x68\x00\x01",
         )
@@ -480,7 +495,7 @@ class TestCreatePayload(ExtendedTestCase):
         # read_string(104, 4)
         self.assertEqual(
             minimalmodbus._create_payload(
-                3, 104, None, 0, 4, 0, False, False, _Payloadformat.STRING
+                3, 104, None, 0, 4, 0, False, BYTEORDER_BIG, _Payloadformat.STRING
             ),
             b"\x00\x68\x00\x04",
         )
@@ -488,7 +503,7 @@ class TestCreatePayload(ExtendedTestCase):
         # read_string(104, 4, functioncode=4)
         self.assertEqual(
             minimalmodbus._create_payload(
-                4, 104, None, 0, 4, 0, False, False, _Payloadformat.STRING
+                4, 104, None, 0, 4, 0, False, BYTEORDER_BIG, _Payloadformat.STRING
             ),
             b"\x00\x68\x00\x04",
         )
@@ -496,7 +511,7 @@ class TestCreatePayload(ExtendedTestCase):
         # write_string(104, 'A', 1)
         self.assertEqual(
             minimalmodbus._create_payload(
-                16, 104, "A", 0, 1, 0, False, False, _Payloadformat.STRING
+                16, 104, "A", 0, 1, 0, False, BYTEORDER_BIG, _Payloadformat.STRING
             ),
             b"\x00\x68\x00\x01\x02A ",
         )
@@ -504,7 +519,7 @@ class TestCreatePayload(ExtendedTestCase):
         # write_string(104, 'A', 4)
         self.assertEqual(
             minimalmodbus._create_payload(
-                16, 104, "A", 0, 4, 0, False, False, _Payloadformat.STRING
+                16, 104, "A", 0, 4, 0, False, BYTEORDER_BIG, _Payloadformat.STRING
             ),
             b"\x00\x68\x00\x04\x08A       ",
         )
@@ -512,7 +527,15 @@ class TestCreatePayload(ExtendedTestCase):
         # write_string(104, 'ABCDEFGH', 4)
         self.assertEqual(
             minimalmodbus._create_payload(
-                16, 104, "ABCDEFGH", 0, 4, 0, False, False, _Payloadformat.STRING
+                16,
+                104,
+                "ABCDEFGH",
+                0,
+                4,
+                0,
+                False,
+                BYTEORDER_BIG,
+                _Payloadformat.STRING,
             ),
             b"\x00\x68\x00\x04\x08ABCDEFGH",
         )
@@ -520,7 +543,7 @@ class TestCreatePayload(ExtendedTestCase):
         # read_registers(105, 1)
         self.assertEqual(
             minimalmodbus._create_payload(
-                3, 105, None, 0, 1, 0, False, False, _Payloadformat.REGISTERS
+                3, 105, None, 0, 1, 0, False, BYTEORDER_BIG, _Payloadformat.REGISTERS
             ),
             b"\x00\x69\x00\x01",
         )
@@ -528,7 +551,7 @@ class TestCreatePayload(ExtendedTestCase):
         # read_registers(105, 3)
         self.assertEqual(
             minimalmodbus._create_payload(
-                3, 105, None, 0, 3, 0, False, False, _Payloadformat.REGISTERS
+                3, 105, None, 0, 3, 0, False, BYTEORDER_BIG, _Payloadformat.REGISTERS
             ),
             b"\x00\x69\x00\x03",
         )
@@ -536,7 +559,7 @@ class TestCreatePayload(ExtendedTestCase):
         # read_registers(105, 7, functioncode=4)
         self.assertEqual(
             minimalmodbus._create_payload(
-                4, 105, None, 0, 7, 0, False, False, _Payloadformat.REGISTERS
+                4, 105, None, 0, 7, 0, False, BYTEORDER_BIG, _Payloadformat.REGISTERS
             ),
             b"\x00\x69\x00\x07",
         )
@@ -544,7 +567,7 @@ class TestCreatePayload(ExtendedTestCase):
         # write_registers(105, [2])
         self.assertEqual(
             minimalmodbus._create_payload(
-                16, 105, [2], 0, 1, 0, False, False, _Payloadformat.REGISTERS
+                16, 105, [2], 0, 1, 0, False, BYTEORDER_BIG, _Payloadformat.REGISTERS
             ),
             b"\x00\x69\x00\x01\x02\x00\x02",
         )
@@ -552,7 +575,15 @@ class TestCreatePayload(ExtendedTestCase):
         # write_registers(105, [2, 4, 8])
         self.assertEqual(
             minimalmodbus._create_payload(
-                16, 105, [2, 4, 8], 0, 3, 0, False, False, _Payloadformat.REGISTERS
+                16,
+                105,
+                [2, 4, 8],
+                0,
+                3,
+                0,
+                False,
+                BYTEORDER_BIG,
+                _Payloadformat.REGISTERS,
             ),
             b"\x00\x69\x00\x03\x06\x00\x02\x00\x04\x00\x08",
         )
@@ -569,8 +600,36 @@ class TestCreatePayload(ExtendedTestCase):
             4,
             0,
             False,
-            False,
+            BYTEORDER_BIG,
             _Payloadformat.STRING,
+        )
+
+        self.assertRaises(
+            ValueError,
+            minimalmodbus._create_payload,
+            15,
+            104,
+            "ABC",  # Wrong on purpose
+            0,
+            4,
+            0,
+            False,
+            BYTEORDER_BIG,
+            _Payloadformat.BITS,
+        )
+
+        self.assertRaises(
+            ValueError,
+            minimalmodbus._create_payload,
+            16,
+            104,
+            [1, 0, 1],  # Wrong on purpose
+            0,
+            1,
+            0,
+            False,
+            BYTEORDER_BIG,
+            _Payloadformat.BITS,  # Wrong on purpose
         )
 
 
@@ -579,7 +638,16 @@ class TestParsePayload(ExtendedTestCase):
         # read_bit(61, functioncode=2)
         self.assertEqual(
             minimalmodbus._parse_payload(
-                b"\x01\x01", 2, 61, None, 0, 0, 1, False, False, _Payloadformat.BIT
+                b"\x01\x01",
+                2,
+                61,
+                None,
+                0,
+                0,
+                1,
+                False,
+                BYTEORDER_BIG,
+                _Payloadformat.BIT,
             ),
             1,
         )
@@ -587,7 +655,16 @@ class TestParsePayload(ExtendedTestCase):
         # read_bit(62, functioncode=1)
         self.assertEqual(
             minimalmodbus._parse_payload(
-                b"\x01\x00", 1, 62, None, 0, 0, 1, False, False, _Payloadformat.BIT
+                b"\x01\x00",
+                1,
+                62,
+                None,
+                0,
+                0,
+                1,
+                False,
+                BYTEORDER_BIG,
+                _Payloadformat.BIT,
             ),
             0,
         )
@@ -595,7 +672,16 @@ class TestParsePayload(ExtendedTestCase):
         # write_bit(71, 1, functioncode=5)
         self.assertEqual(
             minimalmodbus._parse_payload(
-                b"\x00\x47\xff\x00", 5, 71, 1, 0, 0, 1, False, False, _Payloadformat.BIT
+                b"\x00\x47\xff\x00",
+                5,
+                71,
+                1,
+                0,
+                0,
+                1,
+                False,
+                BYTEORDER_BIG,
+                _Payloadformat.BIT,
             ),
             None,
         )
@@ -611,7 +697,7 @@ class TestParsePayload(ExtendedTestCase):
                 0,
                 1,
                 False,
-                False,
+                BYTEORDER_BIG,
                 _Payloadformat.BIT,
             ),
             None,
@@ -629,7 +715,7 @@ class TestParsePayload(ExtendedTestCase):
                 0,
                 22,
                 False,
-                False,
+                BYTEORDER_BIG,
                 _Payloadformat.BITS,
             ),
             [0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1],
@@ -647,7 +733,7 @@ class TestParsePayload(ExtendedTestCase):
                 0,
                 19,
                 False,
-                False,
+                BYTEORDER_BIG,
                 _Payloadformat.BITS,
             ),
             [1, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1],
@@ -665,7 +751,7 @@ class TestParsePayload(ExtendedTestCase):
                 0,
                 10,
                 False,
-                False,
+                BYTEORDER_BIG,
                 _Payloadformat.BITS,
             ),
             None,
@@ -682,7 +768,7 @@ class TestParsePayload(ExtendedTestCase):
                 1,
                 0,
                 False,
-                False,
+                BYTEORDER_BIG,
                 _Payloadformat.REGISTER,
             ),
             770,
@@ -699,7 +785,7 @@ class TestParsePayload(ExtendedTestCase):
                 1,
                 0,
                 False,
-                False,
+                BYTEORDER_BIG,
                 _Payloadformat.REGISTER,
             ),
             880,
@@ -716,7 +802,7 @@ class TestParsePayload(ExtendedTestCase):
                 1,
                 0,
                 False,
-                False,
+                BYTEORDER_BIG,
                 _Payloadformat.REGISTER,
             ),
             None,
@@ -733,7 +819,7 @@ class TestParsePayload(ExtendedTestCase):
                 1,
                 0,
                 False,
-                False,
+                BYTEORDER_BIG,
                 _Payloadformat.REGISTER,
             ),
             None,
@@ -750,7 +836,7 @@ class TestParsePayload(ExtendedTestCase):
                 1,
                 0,
                 True,
-                False,
+                BYTEORDER_BIG,
                 _Payloadformat.REGISTER,
             ),
             None,
@@ -767,7 +853,7 @@ class TestParsePayload(ExtendedTestCase):
                 2,
                 0,
                 False,
-                False,
+                BYTEORDER_BIG,
                 _Payloadformat.LONG,
             ),
             4294967295,
@@ -784,7 +870,7 @@ class TestParsePayload(ExtendedTestCase):
                 2,
                 0,
                 True,
-                False,
+                BYTEORDER_BIG,
                 _Payloadformat.LONG,
             ),
             -1,
@@ -793,7 +879,16 @@ class TestParsePayload(ExtendedTestCase):
         # write_long(102, 5)
         self.assertEqual(
             minimalmodbus._parse_payload(
-                b"\x00f\x00\x02", 16, 102, 5, 0, 2, 0, False, False, _Payloadformat.LONG
+                b"\x00f\x00\x02",
+                16,
+                102,
+                5,
+                0,
+                2,
+                0,
+                False,
+                BYTEORDER_BIG,
+                _Payloadformat.LONG,
             ),
             None,
         )
@@ -801,7 +896,16 @@ class TestParsePayload(ExtendedTestCase):
         # write_long(102, -5, signed=True)
         self.assertEqual(
             minimalmodbus._parse_payload(
-                b"\x00f\x00\x02", 16, 102, -5, 0, 2, 0, True, False, _Payloadformat.LONG
+                b"\x00f\x00\x02",
+                16,
+                102,
+                -5,
+                0,
+                2,
+                0,
+                True,
+                BYTEORDER_BIG,
+                _Payloadformat.LONG,
             ),
             None,
         )
@@ -816,7 +920,7 @@ class TestParsePayload(ExtendedTestCase):
             2,
             0,
             False,
-            False,
+            BYTEORDER_BIG,
             _Payloadformat.FLOAT,
         )
         assert isinstance(parsed_value, float)
@@ -835,7 +939,7 @@ class TestParsePayload(ExtendedTestCase):
             4,
             0,
             False,
-            False,
+            BYTEORDER_BIG,
             _Payloadformat.FLOAT,
         )
         assert isinstance(parsed_value, float)
@@ -854,7 +958,7 @@ class TestParsePayload(ExtendedTestCase):
             2,
             0,
             False,
-            False,
+            BYTEORDER_BIG,
             _Payloadformat.FLOAT,
         )
         assert isinstance(parsed_value, float)
@@ -874,7 +978,7 @@ class TestParsePayload(ExtendedTestCase):
                 2,
                 0,
                 False,
-                False,
+                BYTEORDER_BIG,
                 _Payloadformat.FLOAT,
             ),
             None,
@@ -891,7 +995,7 @@ class TestParsePayload(ExtendedTestCase):
                 4,
                 0,
                 False,
-                False,
+                BYTEORDER_BIG,
                 _Payloadformat.FLOAT,
             ),
             None,
@@ -900,7 +1004,16 @@ class TestParsePayload(ExtendedTestCase):
         # read_string(104, 1)
         self.assertEqual(
             minimalmodbus._parse_payload(
-                b"\x02AB", 3, 104, None, 0, 1, 0, False, False, _Payloadformat.STRING
+                b"\x02AB",
+                3,
+                104,
+                None,
+                0,
+                1,
+                0,
+                False,
+                BYTEORDER_BIG,
+                _Payloadformat.STRING,
             ),
             "AB",
         )
@@ -916,7 +1029,7 @@ class TestParsePayload(ExtendedTestCase):
                 4,
                 0,
                 False,
-                False,
+                BYTEORDER_BIG,
                 _Payloadformat.STRING,
             ),
             "ABCDEFGH",
@@ -933,7 +1046,7 @@ class TestParsePayload(ExtendedTestCase):
                 1,
                 0,
                 False,
-                False,
+                BYTEORDER_BIG,
                 _Payloadformat.STRING,
             ),
             None,
@@ -950,7 +1063,7 @@ class TestParsePayload(ExtendedTestCase):
                 4,
                 0,
                 False,
-                False,
+                BYTEORDER_BIG,
                 _Payloadformat.STRING,
             ),
             None,
@@ -967,7 +1080,7 @@ class TestParsePayload(ExtendedTestCase):
                 4,
                 0,
                 False,
-                False,
+                BYTEORDER_BIG,
                 _Payloadformat.STRING,
             ),
             None,
@@ -984,7 +1097,7 @@ class TestParsePayload(ExtendedTestCase):
                 1,
                 0,
                 False,
-                False,
+                BYTEORDER_BIG,
                 _Payloadformat.REGISTERS,
             ),
             [16],
@@ -1001,7 +1114,7 @@ class TestParsePayload(ExtendedTestCase):
                 3,
                 0,
                 False,
-                False,
+                BYTEORDER_BIG,
                 _Payloadformat.REGISTERS,
             ),
             [16, 32, 64],
@@ -1018,7 +1131,7 @@ class TestParsePayload(ExtendedTestCase):
                 1,
                 0,
                 False,
-                False,
+                BYTEORDER_BIG,
                 _Payloadformat.REGISTERS,
             ),
             None,
@@ -1035,7 +1148,7 @@ class TestParsePayload(ExtendedTestCase):
                 3,
                 0,
                 False,
-                False,
+                BYTEORDER_BIG,
                 _Payloadformat.REGISTERS,
             ),
             None,
@@ -1054,7 +1167,7 @@ class TestParsePayload(ExtendedTestCase):
             0,
             1,
             False,
-            False,
+            BYTEORDER_BIG,
             _Payloadformat.BIT,
         )
 
@@ -1070,7 +1183,7 @@ class TestParsePayload(ExtendedTestCase):
             0,
             1,
             False,
-            False,
+            BYTEORDER_BIG,
             _Payloadformat.BIT,
         )
 
@@ -1086,7 +1199,7 @@ class TestParsePayload(ExtendedTestCase):
             0,
             1,
             False,
-            False,
+            BYTEORDER_BIG,
             _Payloadformat.BIT,
         )
 
@@ -1102,7 +1215,7 @@ class TestParsePayload(ExtendedTestCase):
             0,
             1,
             False,
-            False,
+            BYTEORDER_BIG,
             _Payloadformat.BIT,
         )
 
@@ -1118,7 +1231,7 @@ class TestParsePayload(ExtendedTestCase):
             0,
             1,
             False,
-            False,
+            BYTEORDER_BIG,
             _Payloadformat.BIT,
         )
 
@@ -1134,7 +1247,7 @@ class TestParsePayload(ExtendedTestCase):
             0,
             7,
             False,
-            False,
+            BYTEORDER_BIG,
             _Payloadformat.REGISTER,
         )
 
@@ -1150,7 +1263,7 @@ class TestParsePayload(ExtendedTestCase):
             1,
             0,
             False,
-            False,
+            BYTEORDER_BIG,
             _Payloadformat.REGISTER,
         )
 
@@ -1166,7 +1279,7 @@ class TestParsePayload(ExtendedTestCase):
             1,
             0,
             False,
-            False,
+            BYTEORDER_BIG,
             _Payloadformat.REGISTER,
         )
 
@@ -1183,7 +1296,7 @@ class TestParsePayload(ExtendedTestCase):
             1,
             0,
             False,
-            False,
+            BYTEORDER_BIG,
             _Payloadformat.REGISTER,
         )
 
@@ -1200,7 +1313,7 @@ class TestParsePayload(ExtendedTestCase):
             1,
             0,
             False,
-            False,
+            BYTEORDER_BIG,
             _Payloadformat.REGISTER,
         )
 
@@ -1216,7 +1329,7 @@ class TestParsePayload(ExtendedTestCase):
             1,
             0,
             False,
-            False,
+            BYTEORDER_BIG,
             _Payloadformat.REGISTER,
         )
 
@@ -1232,8 +1345,54 @@ class TestParsePayload(ExtendedTestCase):
             4,
             0,
             False,
-            False,
+            BYTEORDER_BIG,
             _Payloadformat.REGISTERS,
+        )
+
+        # wrong functioncode
+        self.assertRaises(
+            ValueError,
+            minimalmodbus._parse_payload,
+            b"ABC",
+            10,
+            105,
+            None,
+            0,
+            4,
+            0,
+            False,
+            BYTEORDER_BIG,
+            _Payloadformat.REGISTERS,
+        )
+
+        # wrong functioncode and payload combination
+        self.assertRaises(
+            ValueError,
+            minimalmodbus._parse_payload,
+            b"\x01\x01",
+            1,
+            105,
+            None,
+            0,
+            1,
+            1,
+            False,
+            BYTEORDER_BIG,
+            _Payloadformat.REGISTER,  # Wrong on purpose
+        )
+        self.assertRaises(
+            ValueError,
+            minimalmodbus._parse_payload,
+            b"\x02\x00\x01",
+            3,
+            105,
+            None,
+            0,
+            1,
+            0,
+            False,
+            BYTEORDER_BIG,
+            _Payloadformat.BITS,  # Wrong on purpose
         )
 
 
@@ -2091,37 +2250,44 @@ class TestCalculateNumberOfBytesForBits(ExtendedTestCase):
 
 class TestLongToBytes(ExtendedTestCase):
     known_values = [
-        (0, True, BYTEORDER_BIG, b"\x00\x00\x00\x00"),
-        (1, False, BYTEORDER_BIG, b"\x00\x00\x00\x01"),
-        (1, True, BYTEORDER_BIG, b"\x00\x00\x00\x01"),
-        (2, False, BYTEORDER_BIG, b"\x00\x00\x00\x02"),
-        (2, True, BYTEORDER_BIG, b"\x00\x00\x00\x02"),
-        (75000, False, BYTEORDER_BIG, b"\x00\x01\x24\xf8"),
-        (75000, True, BYTEORDER_BIG, b"\x00\x01\x24\xf8"),
-        (1000000, False, BYTEORDER_BIG, b"\x00\x0f\x42\x40"),
-        (1000000, True, BYTEORDER_BIG, b"\x00\x0f\x42\x40"),
-        (2147483647, False, BYTEORDER_BIG, b"\x7f\xff\xff\xff"),
-        (2147483647, True, BYTEORDER_BIG, b"\x7f\xff\xff\xff"),
-        (2147483648, False, BYTEORDER_BIG, b"\x80\x00\x00\x00"),
-        (4294967295, False, BYTEORDER_BIG, b"\xff\xff\xff\xff"),
-        (-1, True, BYTEORDER_BIG, b"\xff\xff\xff\xff"),
-        (-2147483648, True, BYTEORDER_BIG, b"\x80\x00\x00\x00"),
-        (-200000000, True, BYTEORDER_BIG, b"\xf4\x14\x3e\x00"),
+        (0, 2, True, BYTEORDER_BIG, b"\x00\x00\x00\x00"),
+        (1, 2, False, BYTEORDER_BIG, b"\x00\x00\x00\x01"),
+        (1, 2, True, BYTEORDER_BIG, b"\x00\x00\x00\x01"),
+        (2, 2, False, BYTEORDER_BIG, b"\x00\x00\x00\x02"),
+        (2, 2, True, BYTEORDER_BIG, b"\x00\x00\x00\x02"),
+        (75000, 2, False, BYTEORDER_BIG, b"\x00\x01\x24\xf8"),
+        (75000, 2, True, BYTEORDER_BIG, b"\x00\x01\x24\xf8"),
+        (1000000, 2, False, BYTEORDER_BIG, b"\x00\x0f\x42\x40"),
+        (1000000, 2, True, BYTEORDER_BIG, b"\x00\x0f\x42\x40"),
+        (2147483647, 2, False, BYTEORDER_BIG, b"\x7f\xff\xff\xff"),
+        (2147483647, 2, True, BYTEORDER_BIG, b"\x7f\xff\xff\xff"),
+        (2147483648, 2, False, BYTEORDER_BIG, b"\x80\x00\x00\x00"),
+        (4294967295, 2, False, BYTEORDER_BIG, b"\xff\xff\xff\xff"),
+        (-1, 2, True, BYTEORDER_BIG, b"\xff\xff\xff\xff"),
+        (-2147483648, 2, True, BYTEORDER_BIG, b"\x80\x00\x00\x00"),
+        (-200000000, 2, True, BYTEORDER_BIG, b"\xf4\x14\x3e\x00"),
         # Example from https://www.simplymodbus.ca/FAQ.htm
-        (2923517522, False, BYTEORDER_BIG, b"\xAE\x41\x56\x52"),
+        (2923517522, 2, False, BYTEORDER_BIG, b"\xAE\x41\x56\x52"),
         # Example from https://www.simplymodbus.ca/FAQ.htm
-        (-1371449774, True, BYTEORDER_BIG, b"\xAE\x41\x56\x52"),
+        (-1371449774, 2, True, BYTEORDER_BIG, b"\xAE\x41\x56\x52"),
         # Example from https://www.simplymodbus.ca/FAQ.htm
-        (2923517522, False, BYTEORDER_LITTLE, b"\x52\x56\x41\xAE"),
+        (2923517522, 2, False, BYTEORDER_LITTLE, b"\x52\x56\x41\xAE"),
         # Example from https://www.simplymodbus.ca/FAQ.htm (the byteorder is not named)
-        (2923517522, False, BYTEORDER_LITTLE_SWAP, b"\x56\x52\xAE\x41"),
+        (2923517522, 2, False, BYTEORDER_LITTLE_SWAP, b"\x56\x52\xAE\x41"),
         # Example from https://www.simplymodbus.ca/FAQ.htm (the byteorder is not named)
-        (2923517522, False, BYTEORDER_BIG_SWAP, b"\x41\xAE\x52\x56"),
+        (2923517522, 2, False, BYTEORDER_BIG_SWAP, b"\x41\xAE\x52\x56"),
+        (0, 4, True, BYTEORDER_BIG, b"\x00\x00\x00\x00\x00\x00\x00\x00"),
+        (0, 4, False, BYTEORDER_BIG, b"\x00\x00\x00\x00\x00\x00\x00\x00"),
+        (1, 4, True, BYTEORDER_BIG, b"\x00\x00\x00\x00\x00\x00\x00\x01"),
+        (1, 4, False, BYTEORDER_BIG, b"\x00\x00\x00\x00\x00\x00\x00\x01"),
+        (-1, 4, True, BYTEORDER_BIG, b"\xff\xff\xff\xff\xff\xff\xff\xff"),
     ]
 
     def testKnownValues(self) -> None:
-        for value, signed, byteorder, known_bytes in self.known_values:
-            resultbytes = minimalmodbus._long_to_bytes(value, signed, 2, byteorder)
+        for value, num_registers, signed, byteorder, known_bytes in self.known_values:
+            resultbytes = minimalmodbus._long_to_bytes(
+                value, signed, num_registers, byteorder
+            )
             self.assertEqual(resultbytes, known_bytes)
 
     def testWrongInputValue(self) -> None:
@@ -2139,7 +2305,7 @@ class TestLongToBytes(ExtendedTestCase):
             ValueError, minimalmodbus._long_to_bytes, 222222222222222, True, 2
         )
 
-        for number_of_registers in [0, 1, 3, 4, 5, 6, 7, 8, 16]:
+        for number_of_registers in [0, 1, 3, 5, 6, 7, 8, 9, 16]:
             self.assertRaises(
                 ValueError,
                 minimalmodbus._long_to_bytes,
@@ -2160,14 +2326,36 @@ class TestBytesToLong(ExtendedTestCase):
     known_values = TestLongToBytes.known_values
 
     def testKnownValues(self) -> None:
-        for known_value, signed, byteorder, inputbytes in self.known_values:
-            resultvalue = minimalmodbus._bytes_to_long(inputbytes, signed, 2, byteorder)
+        for (
+            known_value,
+            num_registers,
+            signed,
+            byteorder,
+            inputbytes,
+        ) in self.known_values:
+            resultvalue = minimalmodbus._bytes_to_long(
+                inputbytes, signed, num_registers, byteorder
+            )
             self.assertEqual(resultvalue, known_value)
 
     def testWrongInputValue(self) -> None:
         for inputbytes in [b"", b"A", b"AA", b"AAA", b"AAAAA"]:
             self.assertRaises(
                 ValueError, minimalmodbus._bytes_to_long, inputbytes, True, 2
+            )
+        for inputbytes in [
+            b"",
+            b"A",
+            b"AA",
+            b"AAA",
+            b"AAAA",
+            b"AAAAA",
+            b"AAAAA",
+            b"AAAAAAA",
+            b"AAAAAAAAA",
+        ]:
+            self.assertRaises(
+                ValueError, minimalmodbus._bytes_to_long, inputbytes, True, 4
             )
         for number_of_registers in [0, 1, 3, 4, 5, 6, 7, 8, 16]:
             self.assertRaises(
@@ -2195,11 +2383,11 @@ class TestSanityLong(ExtendedTestCase):
     known_values = TestLongToBytes.known_values
 
     def testSanity(self) -> None:
-        for value, signed, byteorder, _ in self.known_values:
+        for value, num_registers, signed, byteorder, _ in self.known_values:
             resultvalue = minimalmodbus._bytes_to_long(
-                minimalmodbus._long_to_bytes(value, signed, 2, byteorder),
+                minimalmodbus._long_to_bytes(value, signed, num_registers, byteorder),
                 signed,
-                2,
+                num_registers,
                 byteorder,
             )
             self.assertEqual(resultvalue, value)
@@ -4031,6 +4219,13 @@ class TestDummyCommunication(ExtendedTestCase):
         self.assertEqual(
             self.instrument.read_long(226, byteorder=BYTEORDER_LITTLE), 2923517522
         )
+        self.assertEqual(
+            self.instrument.read_long(108, signed=True, number_of_registers=4), -2
+        )
+        self.assertEqual(
+            self.instrument.read_long(108, signed=False, number_of_registers=4),
+            18446744073709551614,
+        )
 
     def testReadLongWrongValue(self) -> None:
         # Wrong register address
@@ -4040,13 +4235,29 @@ class TestDummyCommunication(ExtendedTestCase):
         self.assertRaises(ValueError, self.instrument.read_long, 102, 1)
         self.assertRaises(ValueError, self.instrument.read_long, 102, -1)
         self.assertRaises(ValueError, self.instrument.read_long, 102, 256)
+        # Wrong number of registers
+        self.assertRaises(
+            ValueError, self.instrument.read_long, 102, 3, False, BYTEORDER_BIG, 3
+        )
 
     def testReadLongWrongType(self) -> None:
         for value in _NOT_INTERGERS:
             self.assertRaises(TypeError, self.instrument.read_long, value)
             self.assertRaises(TypeError, self.instrument.read_long, 102, value)
+            self.assertRaises(
+                TypeError, self.instrument.read_long, 102, 3, False, value
+            )
+            self.assertRaises(
+                TypeError,
+                self.instrument.read_long,
+                102,
+                3,
+                False,
+                BYTEORDER_BIG,
+                value,
+            )
         for value in _NOT_BOOLEANS:
-            self.assertRaises(TypeError, self.instrument.read_long, 102, signed=value)
+            self.assertRaises(TypeError, self.instrument.read_long, 102, 3, value)
 
     # Write Long #
 
@@ -4060,6 +4271,7 @@ class TestDummyCommunication(ExtendedTestCase):
         self.instrument.write_long(222, 2923517522, byteorder=BYTEORDER_BIG_SWAP)
         self.instrument.write_long(222, 2923517522, byteorder=BYTEORDER_LITTLE_SWAP)
         self.instrument.write_long(222, 2923517522, byteorder=BYTEORDER_LITTLE)
+        self.instrument.write_long(109, -4, signed=True, number_of_registers=4)
 
     def testWriteLongWrongValue(self) -> None:
         # Wrong register address
@@ -4070,12 +4282,68 @@ class TestDummyCommunication(ExtendedTestCase):
             ValueError, self.instrument.write_long, 102, 888888888888888888888
         )
         # Wrong value to write to slave
-        self.assertRaises(ValueError, self.instrument.write_long, 102, -5, signed=False)
+        self.assertRaises(ValueError, self.instrument.write_long, 102, -1, False)
+        self.assertRaises(
+            ValueError, self.instrument.write_long, 102, 4294967296, False
+        )
+        self.assertRaises(ValueError, self.instrument.write_long, 102, 2147483648, True)
+        self.assertRaises(
+            ValueError, self.instrument.write_long, 102, -2147483649, True
+        )
+        self.assertRaises(
+            ValueError,
+            self.instrument.write_long,
+            102,
+            18446744073709551616,
+            False,
+            BYTEORDER_BIG,
+            4,
+        )
+        self.assertRaises(
+            ValueError,
+            self.instrument.write_long,
+            102,
+            -1,
+            False,
+            BYTEORDER_BIG,
+            4,
+        )
+        self.assertRaises(
+            ValueError,
+            self.instrument.write_long,
+            102,
+            9223372036854775808,
+            True,
+            BYTEORDER_BIG,
+            4,
+        )
+        self.assertRaises(
+            ValueError,
+            self.instrument.write_long,
+            102,
+            -9223372036854775809,
+            True,
+            BYTEORDER_BIG,
+            4,
+        )
+        # Wrong number of registers
+        self.assertRaises(
+            ValueError, self.instrument.write_long, 102, 5, False, BYTEORDER_BIG, 3
+        )
 
     def testWriteLongWrongType(self) -> None:
         for value in _NOT_INTERGERS:
             self.assertRaises(TypeError, self.instrument.write_long, value, 5)
             self.assertRaises(TypeError, self.instrument.write_long, 102, value)
+            self.assertRaises(
+                TypeError,
+                self.instrument.write_long,
+                102,
+                5,
+                False,
+                BYTEORDER_BIG,
+                value,
+            )
         for value in _NOT_BOOLEANS:
             self.assertRaises(
                 TypeError, self.instrument.write_long, 102, 5, signed=value
@@ -4117,7 +4385,7 @@ class TestDummyCommunication(ExtendedTestCase):
         # Wrong number of registers
         for value in [-1, 0, 1, 5, 6, 7, 8, 16]:
             self.assertRaises(ValueError, self.instrument.read_float, 103, 3, value)
-        self.assertRaises(InvalidResponseError, self.instrument.read_float, 103, 3, 3)
+        self.assertRaises(ValueError, self.instrument.read_float, 103, 3, 3)
 
     def testReadFloatWrongType(self) -> None:
         for value in _NOT_INTERGERS:
@@ -4710,7 +4978,7 @@ class TestDummyCommunication(ExtendedTestCase):
         )
 
     # Perform command #
-    # TODO
+
     def testPerformcommandKnownResponse(self) -> None:
         # Total response length should be 8 bytes
         self.assertEqual(self.instrument._perform_command(16, b"TESTCOMMAND"), b"TRsp")
@@ -4779,6 +5047,15 @@ class TestDummyCommunication(ExtendedTestCase):
     def testCommunicateNoMessage(self) -> None:
         self.assertRaises(
             ValueError, self.instrument._communicate, b"", _LARGE_NUMBER_OF_BYTES
+        )
+
+    def testCommunicateNoSerialPort(self) -> None:
+        self.instrument.serial = None
+        self.assertRaises(
+            minimalmodbus.ModbusException,
+            self.instrument._communicate,
+            b"TESTMESSAGE",
+            _LARGE_NUMBER_OF_BYTES,
         )
 
     def testCommunicateNoResponse(self) -> None:
@@ -5115,6 +5392,46 @@ class TestVerboseDummyCommunicationWithPortClosure(ExtendedTestCase):
         del self.instrument
 
 
+class TestVerboseDummyCommunicationNoBufferClearing(ExtendedTestCase):
+    def setUp(self) -> None:
+        dummy_serial.VERBOSE = True
+        dummy_serial.RESPONSES = RTU_RESPONSES
+        minimalmodbus.serial.Serial = dummy_serial.Serial  # type: ignore
+        self.instrument = minimalmodbus.Instrument("DUMMYPORTNAME", 1, debug=True)
+        self.instrument.clear_buffers_before_each_transaction = False
+
+    def testReadRegister(self) -> None:
+        self.assertEqual(self.instrument.read_register(289), 770)
+
+    def tearDown(self) -> None:
+        if self.instrument.serial is not None:
+            try:
+                self.instrument.serial.close()
+            except Exception:
+                pass
+        del self.instrument
+
+
+class TestVerboseDummyCommunicationNoCalculateReadSize(ExtendedTestCase):
+    def setUp(self) -> None:
+        dummy_serial.VERBOSE = True
+        dummy_serial.RESPONSES = RTU_RESPONSES
+        minimalmodbus.serial.Serial = dummy_serial.Serial  # type: ignore
+        self.instrument = minimalmodbus.Instrument("DUMMYPORTNAME", 1, debug=True)
+        self.instrument.precalculate_read_size = False
+
+    def testReadRegister(self) -> None:
+        self.assertEqual(self.instrument.read_register(289), 770)
+
+    def tearDown(self) -> None:
+        if self.instrument.serial is not None:
+            try:
+                self.instrument.serial.close()
+            except Exception:
+                pass
+        del self.instrument
+
+
 class TestDummyCommunicationBroadcast(ExtendedTestCase):
     def setUp(self) -> None:
         dummy_serial.VERBOSE = False
@@ -5243,9 +5560,29 @@ class TestDummyCommunicationExternalSerialPort(ExtendedTestCase):
         del self.instrument
 
 
-class TestDummyCommunicationExternalSerialPortWrongType(ExtendedTestCase):
+class TestDummyCommunicationExternalSerialPortFailsToOpen(ExtendedTestCase):
     def testInitialise(self) -> None:
+        extserial = dummy_serial.Serial("DUMMYPORTNAME", fail_to_open=True)
+        self.assertRaises(
+            minimalmodbus.MasterReportedException,
+            minimalmodbus.Instrument,
+            extserial,
+            1,
+        )
+
+
+class TestDummyCommunicationExternalSerialPortWrongType(ExtendedTestCase):
+    def testInitialiseSerialPortInteger(self) -> None:
         extserial = 123
+        self.assertRaises(
+            minimalmodbus.MasterReportedException,
+            minimalmodbus.Instrument,
+            extserial,
+            1,
+        )
+
+    def testInitialiseSerialPortNone(self) -> None:
+        extserial = None
         self.assertRaises(
             minimalmodbus.MasterReportedException,
             minimalmodbus.Instrument,
@@ -5599,7 +5936,7 @@ WRONG_RTU_RESPONSES[b"\x01\x06" + b"\x00\x37\x00\x63" + b"x-"] = (
 
 # Read long (2 registers, starting at 102) on slave 1 using function code 3 #
 # --------------------------------------------------------------------------#
-# Message:  Slave address 1, function code 3. Register address 289, 2 registers. CRC.
+# Message:  Slave address 1, function code 3. Register address 102, 2 registers. CRC.
 # Response: Slave address 1, function code 3. 4 bytes, value=-1 or 4294967295
 #           (depending on interpretation). CRC
 GOOD_RTU_RESPONSES[b"\x01\x03" + b"\x00f\x00\x02" + b"$\x14"] = (
@@ -5644,6 +5981,15 @@ GOOD_RTU_RESPONSES[b"\x01\x03" + b"\x00\xE1\x00\x02" + b"\x94="] = (
 # Response: Slave address 1, function code 3. 4 bytes, Value 2923517522. CRC
 GOOD_RTU_RESPONSES[b"\x01\x03" + b"\x00\xE2\x00\x02" + b"\x64\x3D"] = (
     b"\x01\x03" + b"\x04RVA\xAE" + b"\xBBw"
+)
+
+# Read long (4 registers, starting at 108) on slave 1 using function code 3 #
+# --------------------------------------------------------------------------#
+# Message:  Slave address 1, function code 3. Register address 108, 4 registers. CRC.
+# Response: Slave address 1, function code 3. 4 bytes, value=-2 or 18446744073709551614
+#           (depending on interpretation). CRC
+GOOD_RTU_RESPONSES[b"\x01\x03" + b"\x00\x6c\x00\x04" + b"\x84\x14"] = (
+    b"\x01\x03" + b"\x08\xff\xff\xff\xff\xff\xff\xff\xfe" + b"\x15\x93"
 )
 
 
@@ -5736,6 +6082,16 @@ GOOD_RTU_RESPONSES[b"\x01\x10" + b"\x00\xDE\x00\x02\x04A\xAERV" + b"\xB7\xFC"] =
 GOOD_RTU_RESPONSES[b"\x01\x10" + b"\x00\xDE\x00\x02\x04VR\xAEA" + b"sv"] = (
     b"\x01\x10" + b"\x00\xDE\x00\x02" + b"\x21\xF2"
 )
+
+# Write long (4 registers, starting at 109) on slave 1 using function code 16, with
+# value -4.
+# ------------------------------------------------------------------------------------#
+# Message: Slave address 1, function code 16. Register address 109, 4 registers,
+#          8 bytes, value=-4. CRC.
+# Response: Slave address 1, function code 16. Register address 109, 4 registers. CRC
+GOOD_RTU_RESPONSES[
+    b"\x01\x10" + b"\x00m\x00\x04\x08\xff\xff\xff\xff\xff\xff\xff\xfc" + b"\xda\xac"
+] = (b"\x01\x10" + b"\x00m\x00\x04" + b"P\x17")
 
 
 #                ##  READ FLOAT ##
@@ -6338,16 +6694,22 @@ if __name__ == "__main__":
     # loadTestsFromTestCase(TestDummyCommunicationBroadcast)
     # unittest.TextTestRunner(verbosity=2).run(suite)
 
-# Run a single test #
+    # Run a single test #
 
-# suite = unittest.TestSuite()
-# suite.addTest(("testGenericCommand"))
-# suite.addTest(TestDummyCommunication("testWriteBits"))
-# suite.addTest(TestDummyCommunication("testReadBits"))
-# suite.addTest(TestDummyCommunication("testWriteBit"))
-# suite.addTest(TestDummyCommunication("testWriteFloat"))
-# unittest.TextTestRunner(verbosity=2).run(suite)
+    # suite = unittest.TestSuite()
+    # suite.addTest(("testGenericCommand"))
+    # suite.addTest(TestDummyCommunication("testWriteBits"))
+    # suite.addTest(TestDummyCommunication("testReadLongWrongValue"))
+    # suite.addTest(TestDummyCommunication("testWriteBit"))
+    # suite.addTest(TestDummyCommunication("testWriteFloat"))
+    # unittest.TextTestRunner(verbosity=2).run(suite)
 
-# Run individual commands #
+    # Run individual commands #
 
-# print(repr(minimalmodbus._calculate_crc('\x01\x05' + '\x00\x47\x00\x00')))
+    # print(
+    #     repr(
+    #         minimalmodbus._calculate_crc(
+    #             b"\x01\x10" + b"\x00m\x00\x04\x08\xff\xff\xff\xff\xff\xff\xff\xfc"
+    #         )
+    #     )
+    # )

@@ -61,6 +61,7 @@ max-line-length = "88"
 [tool.coverage.run]
 branch = true
 include = ["*", "tests/*"]
+omit = ["*/.local/*", "*opt*", "*site-packages*", "*eggs*"]
 
 [tool.coverage.report]
 show_missing = true

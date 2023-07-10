@@ -115,10 +115,12 @@ class Serial:
         write_timeout: Optional[float] = None,
         dsrdtr: bool = False,
         inter_byte_timeout: Optional[float] = None,
+        fail_to_open: bool = False,
     ) -> None:
         self._waiting_data = NO_DATA_PRESENT
         self._last_written_data = NO_DATA_PRESENT
-        self._isOpen = True
+        self._fail_to_open = fail_to_open
+        self._isOpen = True if not self._fail_to_open else False
         self.port = port  # Serial port name.
         self._initial_port_name = self.port  # Initial name given to the serial port
 
@@ -173,7 +175,8 @@ class Serial:
         if self._isOpen:
             raise IOError("Dummy_serial: The port is already open")
 
-        self._isOpen = True
+        if not self._fail_to_open:
+            self._isOpen = True
         self.port = self._initial_port_name
 
     def close(self) -> None:
