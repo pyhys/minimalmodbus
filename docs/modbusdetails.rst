@@ -72,6 +72,14 @@ Some extensions not covered by the official standard
     then called 'INT32' which has the range -2147483648 to 2147483647. Unfortunately
     the byte order might differ between manufacturers of Modbus instruments.
 
+**Long long integers ('Unsigned INT64' or 'INT64')**
+    These require 64 bits, and are implemented as four consecutive 16-bit registers.
+    The range is 0 to 18446744073709551615, which is called 'unsigned INT64'.
+    Alternatively negative values can be stored if the instrument is defined that way,
+    and is then called 'INT64' which has the range -9223372036854775808
+    to 9223372036854775807. Unfortunately the byte order might differ between
+    manufacturers of Modbus instruments.
+
 **Floats (single or double precision)**
     Single precision floating point values (binary32) are defined by 32 bits (4 bytes),
     and are implemented as two consecutive 16-bit registers.
@@ -117,30 +125,32 @@ These are the functions to use for reading and writing registers and bits of you
 documentation of your instrument to find which Modbus function code to use. The function codes (F code) are
 given in decimal in this table.
 
-+---------------------------------------+-------------------------+---------------+--------------------------+---------------+
-| Data type in slave                    | Read                    | F code        | Write                    | F code        |
-+=======================================+=========================+===============+==========================+===============+
-| | **Bit**                             | :meth:`.read_bit`       | 2 [or 1]      | :meth:`.write_bit`       | 5 [or 15]     |
-+---------------------------------------+-------------------------+---------------+--------------------------+---------------+
-| | **Bits**                            | :meth:`.read_bits`      | 2 [or 1]      | :meth:`.write_bits`      | 15            |
-| | Simultaneous reading                |                         |               |                          |               |
-+---------------------------------------+-------------------------+---------------+--------------------------+---------------+
-| | **Register**                        | :meth:`.read_register`  | 3 [or 4]      | :meth:`.write_register`  | 16 [or 6]     |
-| | Integer, possibly scaled            |                         |               |                          |               |
-+---------------------------------------+-------------------------+---------------+--------------------------+---------------+
-| | **Long integer**                    | :meth:`.read_long`      | 3 [or 4]      | :meth:`.write_long`      | 16            |
-| | (32 bits = 2 registers)             |                         |               |                          |               |
-+---------------------------------------+-------------------------+---------------+--------------------------+---------------+
-| | **Float**                           | :meth:`.read_float`     | 3 [or 4]      | :meth:`.write_float`     | 16            |
-| | (32 or 64 bits =                    |                         |               |                          |               |
-| | 2 or 4 registers)                   |                         |               |                          |               |
-+---------------------------------------+-------------------------+---------------+--------------------------+---------------+
-| | **String**                          | :meth:`.read_string`    | 3 [or 4]      | :meth:`.write_string`    | 16            |
-| | 2 characters per register           |                         |               |                          |               |
-+---------------------------------------+-------------------------+---------------+--------------------------+---------------+
-| | **Registers**                       | :meth:`.read_registers` | 3 [or 4]      | :meth:`.write_registers` | 16            |
-| | Integers                            |                         |               |                          |               |
-+---------------------------------------+-------------------------+---------------+--------------------------+---------------+
+
++-------------------------------------+--------------------------+-----------+---------------------------+------------+
+| Data type in slave                  | Read                     | F code    | Write                     | F code     |
++=====================================+==========================+===========+===========================+============+
+| **Bit**                             | :meth:`.read_bit`        | 2 [or 1]  | :meth:`.write_bit`        | 5 [or 15]  |
++-------------------------------------+--------------------------+-----------+---------------------------+------------+
+|| **Bits**                           || :meth:`.read_bits`      || 2 [or 1] || :meth:`.write_bits`      || 15        |
+|| Simultaneous reading               ||                         ||          ||                          ||           |
++-------------------------------------+--------------------------+-----------+---------------------------+------------+
+|| **Register**                       || :meth:`.read_register`  || 3 [or 4] || :meth:`.write_register`  || 16 [or 6] |
+|| Integer, possibly scaled           ||                         ||          ||                          ||           |
++-------------------------------------+--------------------------+-----------+---------------------------+------------+
+|| **Long integer**                   || :meth:`.read_long`      || 3 [or 4] || :meth:`.write_long`      || 16        |
+|| (32 or 64 bits =                   ||                         ||          ||                          ||           |
+|| 2 or 4 registers)                  ||                         ||          ||                          ||           |
++-------------------------------------+--------------------------+-----------+---------------------------+------------+
+|| **Float**                          || :meth:`.read_float`     || 3 [or 4] || :meth:`.write_float`     || 16        |
+|| (32 or 64 bits =                   ||                         ||          ||                          ||           |
+|| 2 or 4 registers)                  ||                         ||          ||                          ||           |
++-------------------------------------+--------------------------+-----------+---------------------------+------------+
+|| **String**                         || :meth:`.read_string`    || 3 [or 4] || :meth:`.write_string`    || 16        |
+|| 2 characters per register          ||                         ||          ||                          ||           |
++-------------------------------------+--------------------------+-----------+---------------------------+------------+
+|| **Registers**                      || :meth:`.read_registers` || 3 [or 4] || :meth:`.write_registers` || 16        |
+|| Integers                           ||                         ||          ||                          ||           |
++-------------------------------------+--------------------------+-----------+---------------------------+------------+
 
 See the API for MinimalModbus: :ref:`apiminimalmodbus`.
 

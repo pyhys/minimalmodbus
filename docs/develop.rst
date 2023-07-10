@@ -71,7 +71,7 @@ These functions also do argument validity checking.
 Data type                   To bytes                            From bytes
 =========================== =================================== ================================
 (internal usage)            :meth:`._num_to_two_bytes`
-Bit                         :meth:`._bit_to_bytes     `         Same as for bits
+Bit                         :meth:`._bit_to_bytes`              Same as for bits
 Several bits                :meth:`._bits_to_bytes`             :meth:`._bytes_to_bits`
 Integer (char, short)       :meth:`._num_to_two_bytes`          :meth:`._two_bytes_to_num`
 Several registers           :meth:`._valuelist_to_bytes`        :meth:`._bytes_to_valuelist`
