@@ -4,6 +4,7 @@ help:
 	@echo "devdeps - install dependencies required for development"
 	@echo "pylint - check style with pylint"
 	@echo "flake8 - check style with flake8"
+	@echo "ruff - check style with ruff"
 	@echo "pydocstyle - check documentation with pydocstyle"
 	@echo "black - modify code style using the black tool"
 	@echo "mypy - type checking"
@@ -64,6 +65,7 @@ devdeps:
 		pycodestyle \
 		pydocstyle \
 		pylint \
+		ruff \
 		setuptools \
 		sphinx \
 		sphinx_rtd_theme \
@@ -79,6 +81,9 @@ flake8:
 
 black:
 	python3 -m black .
+
+ruff:
+	ruff check .
 
 docformatter:
 	docformatter -i --black minimalmodbus.py

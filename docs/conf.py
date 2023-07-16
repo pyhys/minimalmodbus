@@ -26,7 +26,7 @@ sys.path.insert(0, project_root)
 tests_directory = os.path.join(project_root, "tests")
 sys.path.insert(0, tests_directory)
 
-import minimalmodbus
+import minimalmodbus  # noqa
 
 # -- General configuration ---------------------------------------------
 
