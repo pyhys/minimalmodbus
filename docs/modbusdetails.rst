@@ -132,7 +132,7 @@ given in decimal in this table.
 | **Bit**                             | :meth:`.read_bit`        | 2 [or 1]  | :meth:`.write_bit`        | 5 [or 15]  |
 +-------------------------------------+--------------------------+-----------+---------------------------+------------+
 || **Bits**                           || :meth:`.read_bits`      || 2 [or 1] || :meth:`.write_bits`      || 15        |
-|| Simultaneous reading               ||                         ||          ||                          ||           |
+|| Simultaneous access                ||                         ||          ||                          ||           |
 +-------------------------------------+--------------------------+-----------+---------------------------+------------+
 || **Register**                       || :meth:`.read_register`  || 3 [or 4] || :meth:`.write_register`  || 16 [or 6] |
 || Integer, possibly scaled           ||                         ||          ||                          ||           |
@@ -279,14 +279,15 @@ mode be sent as two characters corresponding to the hex value of that byte.
 
 For example a value of 76 (dec) = 4C (hex) is sent as the byte 0x4C in Modbus
 RTU mode. This byte happens to correspond to the character 'L' in the ASCII encoding.
-Thus for Modbus RTU this is sent: ``'\x4C'``, which is a string of length 1 and will print as 'L'.
+Thus for Modbus RTU this byte is sent: ``b'\x4C'``, which could be interpreted as a
+string of length 1 and would print as 'L'.
 
 The same value will in Modbus ASCII be sent as the string '4C', which has a length of 2.
 
 The frame format is slightly different for Modbus ASCII. The request message
 is sent from the master in this format:
 
- * Start [1 character]. It is the colon (:).
+ * Start [1 character]. It is the colon ``:``.
  * Slave Address [2 characters]
  * Function code [2 characters]
  * Payload data [0 to 2*252 characters]

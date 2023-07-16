@@ -7,7 +7,7 @@ Recommended test sequence
 ---------------------------
 Make sure that RUN_VERIFY_EXAMPLES and similar flags are all 'True'.
 
- * Run the tests under Linux and Windows
+ * Run the tests under Linux, Windows and Mac OS
  * Use 2400 bps and 38400 bps
  * Use Modbus ASCII and Modbus RTU
 
@@ -177,8 +177,8 @@ def verify_value_for_register(instr: minimalmodbus.Instrument, value: int) -> No
     Also read back several registers.
 
     Args:
-        instr: Instrument instance
-        value: Value to be written
+        * instr: Instrument instance
+        * value: Value to be written
     """
     START_READ_ADDR = 0x1000
     NUMBER_OF_REGISTERS = 8
@@ -198,8 +198,8 @@ def verify_state_for_bits(instr: minimalmodbus.Instrument, state: int) -> None:
     Also read back several bits.
 
     Args:
-        instr: Instrument instance
-        state: Value to be written (0 or 1)
+        * instr: Instrument instance
+        * state: Value to be written (0 or 1)
     """
     START_READ_ADDR = 0x800
     NUMBER_OF_BITS = 24

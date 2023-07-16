@@ -65,7 +65,8 @@ RESPONSES[b"EXAMPLEREQUEST"] = b"EXAMPLERESPONSE"
 DEFAULT_RESPONSE = b"NotFoundInResponseDictionary"
 """Response when no matching message (key) is found in the look-up dictionary.
 
-Should not be an empty string, as that is interpreted as "no data available on port".
+Should not be an empty bytes object, as that is interpreted as
+"no data available on port".
 
 Might be monkey-patched in the calling test module.
 """
@@ -168,7 +169,7 @@ class Serial:
         pass
 
     def open(self) -> None:
-        """Open a (previously initialized) port on dummy_serial."""
+        """Open a (previously initialized) port on :py:mod:`dummy_serial`."""
         if VERBOSE:
             print("\nDummy_serial: Opening port\n")
 
@@ -180,7 +181,7 @@ class Serial:
         self.port = self._initial_port_name
 
     def close(self) -> None:
-        """Close a port on dummy_serial."""
+        """Close a port on :py:mod:`dummy_serial`."""
         if VERBOSE:
             print("\nDummy_serial: Closing port\n")
 
@@ -194,8 +195,8 @@ class Serial:
         """Write to a port on dummy_serial.
 
         Args:
-            inputdata: data for sending to the port on dummy_serial. Will affect
-            the response for subsequent read operations.
+            inputdata: data for sending to the port on :py:mod:`dummy_serial`. Will
+            affect the response for subsequent read operations.
 
         Returns:
             Number of bytes written
@@ -229,16 +230,16 @@ class Serial:
         return len(inputdata)
 
     def read(self, size: int) -> bytes:
-        """Read from a port on dummy_serial.
+        """Read from a port on :py:mod:`dummy_serial`.
 
-        The response is dependent on what was written last to the port on dummy_serial,
-        and what is defined in the :data:`RESPONSES` dictionary.
+        The response is dependent on what was written last to the port on
+        :py:mod:`dummy_serial`, and what is defined in the :data:`RESPONSES` dictionary.
 
         Args:
             size (int): For compability with the real function.
 
-        If the response is shorter than size, it will sleep for timeout.
-        If the response is longer than size, it will return only size bytes.
+        If the response is shorter than *size*, it will sleep for timeout.
+        If the response is longer than *size*, it will return only *size* bytes.
         """
         if VERBOSE:
             print(
