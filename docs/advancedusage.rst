@@ -310,39 +310,59 @@ Including MinimalModbus in a Yocto build
 It is easy to include MinimalModbus in a Yocto build, which is using Bitbake. Yocto is a
 collaboration with the Open Embedded initiative.
 
-In your layer, create the file
-:file:`recipes-connectivity/minimalmodbus/python-minimalmodbus_0.5.bb`.
-
-It's content should be::
+A Yocto recipe for MinimalModbus looks something like this::
 
     SUMMARY = "Easy-to-use Modbus RTU and Modbus ASCII implementation for Python"
-    SECTION = "devel/python"
+    HOMEPAGE = "https://github.com/pyhys/minimalmodbus"
+    AUTHOR = "Jonas Berg"
     LICENSE = "Apache-2.0"
-    LIC_FILES_CHKSUM = "file://LICENCE.txt;md5=27da4ba4e954f7f4ba8d1e08a2c756c4"
 
-    DEPENDS = "python"
-    RDEPENDS_${PN} = "python-pyserial"
+    PYPI_PACKAGE = "minimalmodbus"
+    LIC_FILES_CHKSUM = "file://LICENSE;md5=27da4ba4e954f7f4ba8d1e08a2c756c4"
+    SRC_URI[md5sum] = "3fe320f7be761b6a2c3373257c431c31"
+    SRC_URI[sha256sum] = "cf873a2530be3f4b86467c3e4d47b5f69fd345d47451baca4adbf59e2ac36d00"
 
-    PR = "r0"
+    RDEPENDS:${PN} += "python3-core python3-pyserial"
 
-    SRC_URI = "${SOURCEFORGE_MIRROR}/project/minimalmodbus/${PV}/MinimalModbus-${PV}.tar.gz"
+    inherit pypi setuptools3
+    # TODO Use python_flit_core instead of setuptools3 for newer Yocto releases
 
-    SRC_URI[md5sum] = "1b2ec44e9537e14dcb8a238ea3eda451"
-    SRC_URI[sha256sum] = "d9acf6457bc26d3c784caa5d7589303afe95e980ceff860ec2a4051038bc261e"
+    # Handle that there is no setup.py in the project
+    # TODO Remove this once we use python_flit_core
+    do_configure:prepend() {
+    cat > ${S}/setup.py <<-EOF
+    from setuptools import setup
 
-    S = "${WORKDIR}/MinimalModbus-${PV}"
+    setup(
+        name="${PYPI_PACKAGE}",
+        version="${PV}",
+        license="${LICENSE}",
+    )
+    EOF
+    }
 
-    inherit distutils
+Save your recipe to a file :file:`python3-minimalmodbus_2.0.1.bb`.
 
-You also need to add this to your :file:`local.conf` file::
+Put the recipe file in one of your Yocto layers.
 
-    IMAGE_INSTALL_append = " python-minimalmodbus"
+If you need to create a new layer, a brief introduction is given here.
+In the :file:`build` directory, run the *bitbake-layers* command to create a new layer.
+We use the layer name ``meta-minimalmodbustutorial`` in this tutorial::
+
+    bitbake-layers create-layer ../meta-minimalmodbustutorial
+
+Put the :file:`python3-minimalmodbus_VERSION.bb` recipe file in a subdirectory
+:file:`recipes-devtools/python` within the new layer directory.
+
+Add the layer name to the ``BBLAYERS`` variable in the :file:`build/conf/bblayers.conf`
+file. Note that also the ``meta-openembedded/meta-python`` layer must be present.
+
+You also need to add this to your :file:`build/conf/local.conf` file::
+
+    IMAGE_INSTALL:append = " python3-minimalmodbus"
 
 When using the recipe for another version of MinimalModbus, change the version
 number in the filename. Bitbake will complain that the md5sum and sha256sum not
 are correct, but Bitbake will print out the correct values so you can change
 the recipe accordingly.
-
-
-
 
