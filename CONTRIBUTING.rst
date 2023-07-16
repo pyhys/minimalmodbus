@@ -114,6 +114,6 @@ Before you submit a pull request, check that it meets these guidelines:
 
 1. The pull request should include tests.
 2. If the pull request adds functionality, the docs should be updated.
-3. The pull request should work for currently supported Pyhton versions. Check
+3. The pull request should work for currently supported Python versions. Check
    Github Actions to make sure that the tests pass for all supported Python versions.
 
