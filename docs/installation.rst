@@ -13,7 +13,7 @@ or possibly::
 
 Dependencies
 ------------
-Python versions 3.6 and higher are supported. This module is pure Python.
+Python versions 3.8 and higher are supported. This module is pure Python.
 
 This module relies on `pySerial <https://github.com/pyserial/pyserial>`_ (also pure Python)
 to do the heavy lifting, and it is the only dependency. It is BSD-3-Clause licensed.
@@ -36,5 +36,5 @@ To install a manually downloaded file use the pip tool::
 
 If everything else fails
 -------------------------
-You can download the raw minimalmodbus.py file from GitHub, and put it in the
+You can download the raw :file:`minimalmodbus.py` file from GitHub, and put it in the
 same directory as your other code. Note that you must have pySerial installed.

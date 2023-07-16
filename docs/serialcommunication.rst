@@ -36,8 +36,8 @@ Baud rate  Bit rate       Bit time   Character time  3.5 character times
 RS-485 introduction
 -------------------
 Several nodes (instruments) can be connected to one RS485 bus. The bus consists of two lines,
-A and B, carrying differential voltages. In both ends of the bus,
-a 120 Ohm termination resistor is connected between line A and B.
+A and B, carrying a differential voltage. In both ends of the bus is
+a 120 Ohm termination resistor connected between line A and B.
 Most often a common ground line is connected between the nodes as well.
 
 At idle, both line A and B rest at the same voltage (or almost the same voltage).

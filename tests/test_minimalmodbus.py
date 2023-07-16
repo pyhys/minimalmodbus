@@ -131,7 +131,7 @@ class ExtendedTestCase(unittest.TestCase):
                     self, _NonexistantError, callableObj, *args, **kwargs
                 )
             except Exception:
-                minimalmodbus._print_out("\n    " + repr(sys.exc_info()[1]))
+                print("\n    " + repr(sys.exc_info()[1]))
         else:
             unittest.TestCase.assertRaises(self, excClass, callableObj, *args, **kwargs)
 
@@ -2781,11 +2781,11 @@ class TestSanityPackUnpack(ExtendedTestCase):
     known_values = TestPack.known_values
 
     def testSanity(self) -> None:
-        for value, formatstring, bytestring in self.known_values:
+        for _, formatstring, known_bytes in self.known_values:
             resultbytes = minimalmodbus._pack_bytes(
-                formatstring, minimalmodbus._unpack_bytes(formatstring, bytestring)
+                formatstring, minimalmodbus._unpack_bytes(formatstring, known_bytes)
             )
-            self.assertEqual(resultbytes, bytestring)
+            self.assertEqual(resultbytes, known_bytes)
 
 
 class TestHexencode(ExtendedTestCase):
@@ -2857,7 +2857,7 @@ class TestSanityHexencodeHexdecode(ExtendedTestCase):
                 self.assertEqual(resultbytes, value)
 
     def testKnownValuesLoop(self) -> None:
-        """Loop through all bytestrings of length two."""
+        """Loop through all bytes objects of length two."""
         RANGE_VALUE = 256
         for i in range(RANGE_VALUE):
             for j in range(RANGE_VALUE):
@@ -3038,7 +3038,7 @@ class TestCalculateCrc(ExtendedTestCase):
 
     def testCalculationTime(self) -> None:
         all_byte_variants = [minimalmodbus._num_to_two_bytes(i) for i in range(2**16)]
-        minimalmodbus._print_out(
+        print(
             "\n\n   Measuring CRC calculation time. Running {} calculations ...".format(
                 len(all_byte_variants)
             )
@@ -3047,7 +3047,7 @@ class TestCalculateCrc(ExtendedTestCase):
         for byte_variants in all_byte_variants:
             minimalmodbus._calculate_crc(byte_variants)
         calculation_time = time.time() - start_time
-        minimalmodbus._print_out(
+        print(
             "CRC calculation time: "
             + "{} calculations took {:.3f} s ({} s per calculation)\n\n".format(
                 len(all_byte_variants),
@@ -3944,15 +3944,6 @@ class TestGetDiagnosticString(ExtendedTestCase):
         self.assertTrue(len(resultstring) > 100)  # For Python 2.6 compatibility
 
 
-class TestPrintOut(ExtendedTestCase):
-    def testKnownValues(self) -> None:
-        minimalmodbus._print_out("ABCDEFGHIJKL")
-
-    def testInputNotString(self) -> None:
-        for value in _NOT_STRINGS:
-            self.assertRaises(TypeError, minimalmodbus._print_out, value)
-
-
 ###########################################
 # Communication using a dummy serial port #
 ###########################################
@@ -4174,7 +4165,7 @@ class TestDummyCommunication(ExtendedTestCase):
         try:
             self.instrument.write_register(51, 99)  # Slave gives wrong CRC
         except InvalidResponseError:
-            minimalmodbus._print_out("Minimalmodbus: An error was suppressed.")
+            print("Minimalmodbus: An error was suppressed.")
 
     def testWriteRegisterWithWrongSlaveaddressResponse(self) -> None:
         # Slave gives wrong slaveaddress

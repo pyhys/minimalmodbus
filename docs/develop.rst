@@ -3,7 +3,7 @@ Developer documentation
 
 The details printed in debug mode (requests and responses) are very useful
 for using the included dummy_serial port for unit testing purposes.
-For examples, see the file test/test_minimalmodbus.py.
+For examples, see the file :file:`test/test_minimalmodbus.py`.
 
 
 Design considerations
@@ -56,12 +56,8 @@ Most of the logic is located in separate (easy to test) functions on module leve
 For a description of them, see :ref:`internalminimalmodbus`.
 
 
-Number conversion to and from bytestrings
------------------------------------------------
-For compability with Python 2, the data is stored internally as strings.
-As this module has dropped support for Python 2, it will be converted gradually to
-use bytes in all internal data storage instead.
-
+Number conversion to and from bytes
+------------------------------------
 The Python module :mod:`struct` is used for conversion. See https://docs.python.org/3/library/struct.html
 
 Several wrapper functions are defined for easy use of the conversion.
@@ -80,11 +76,9 @@ Floating point number       :meth:`._float_to_bytes`            :meth:`._bytes_t
 String                      :meth:`._textstring_to_bytes`       :meth:`._bytes_to_textstring`
 =========================== =================================== ================================
 
-Note that the :mod:`struct` module produces byte buffers for Python3, but bytestrings for Python2.
-This is compensated for automatically by using the wrapper functions
-:meth:`._pack` and :meth:`._unpack`.
-
-For a description of them, see :ref:`internalminimalmodbus`.
+For compability with both Python2 and Python3, earlier versions of this module
+did store data internally as bytestrings. Now that Python2 support has been dropped,
+the internal representation of data is using Python *bytes* objects.
 
 
 Unit testing
@@ -95,7 +89,7 @@ Unit tests are provided in the tests subfolder. To run them::
 
 The unittests uses previosly recorded communication data for the testing.
 
-A dummy/mock/stub for the serial port, dummy_serial, is provided for
+A dummy/mock/stub for the serial port, :mod:`dummy_serial`, is provided for
 test purposes. See :ref:`apidummyserial`.
 
 The test coverage analysis is found
@@ -108,11 +102,8 @@ Run it with::
 
    python3 tests/test_deltaDTB4824.py
 
-The baudrate, portname and mode can optionally be set from command line::
-
-    python3 tests/test_deltaDTB4824.py -b19200 -D/dev/ttyUSB0 -ascii
-
-For more details on testing with this hardware, see :ref:`testdtb4824`.
+The baudrate, portname and mode can optionally be set from command line. For
+more details on testing with this hardware, see :ref:`testdtb4824`.
 
 
 Making sure that error messages are informative for the user
@@ -176,7 +167,7 @@ If necessary::
 
 Recording communication data for unittesting
 -------------------------------------------------------------------------
-With the known data output from an instrument, we can finetune the inner details
+With the known data output from an instrument, we can fine tune the inner details
 of the driver (code refactoring) without worrying that we change the output from the code.
 This data will be the 'golden standard' to which we test the code.
 Use as many as possible of the commands, and paste all the output in a text document.
@@ -347,7 +338,7 @@ generates payload, which internally is sent to the instrument using :meth:`_perf
 It is possible to use :meth:`_perform_command` directly. You can use any Modbus function code (1-127),
 but you need to generate the payload yourself. Note that the same data is sent::
 
-    >>> instr._perform_command(3, '\x00\x05\x00\x01')
+    >>> instr._perform_command(3, b'\x00\x05\x00\x01')
     MinimalModbus debug mode. Writing to instrument: '\x01\x03\x00\x05\x00\x01\x94\x0b'
     MinimalModbus debug mode. Response from instrument: '\x01\x03\x02\x00º9÷'
     '\x02\x00º'
@@ -365,13 +356,13 @@ own Modbus instrument hardware.
 
 For example::
 
-    >>> minimalmodbus._calculate_crc('\x01\x03\x00\x05\x00\x01')
-    '\x94\x0b'
+    >>> minimalmodbus._calculate_crc(b'\x01\x03\x00\x05\x00\x01')
+    b'\x94\x0b'
 
-And to embed the payload ``'\x10\x11\x12'`` to slave address 1, with functioncode 16::
+And to embed the payload ``b'\x10\x11\x12'`` to slave address 1, with functioncode 16::
 
-    >>> minimalmodbus._embed_payload(1, MODE_RTU, 16, '\x10\x11\x12')
-    '\x01\x10\x10\x11\x12\x90\x98'
+    >>> minimalmodbus._embed_payload(1, MODE_RTU, 16, b'\x10\x11\x12')
+    b'\x01\x10\x10\x11\x12\x90\x98'
 
 Playing with two's complement::
 
@@ -400,8 +391,6 @@ Do linkchecking::
 Webpage
 ------------------------------------------------------------------------------
 The HTML theme used is the Sphinx 'sphinx_rtd_theme' theme.
-
-Note that Sphinx version 1.3 or later is required to build the documentation.
 
 
 Codecov.io
@@ -456,7 +445,8 @@ Automatically modify the formatting of the code::
 
 Check the code::
 
-    make lint
+    make pylint
+    make flake8
 
 Check typing::
 
@@ -522,8 +512,7 @@ Log in to https://readthedocs.org (using Github credentials) and force rebuild o
 the master branch.
 
 Enable the "master" and "stable" documentation versions. In the advanced settings
-select Python3, and enter the name of the dependency file (a
-``requirements.txt`` file must be available in the repo).
+select Python3.
 
 
 Test the installers
@@ -538,11 +527,12 @@ On windows you might need to use::
 
 Test on hardware
 ````````````````
-Test the package on hardware from Linux and Windows. Download the file ``test_deltaDTB4824.py``.
+Test the package on hardware slave via Linux, Windows and Mac OS.
+Download the file ``test_deltaDTB4824.py``.
 
 To run the hardware test on Windows::
 
-    C:\Python27>python.exe C:\Users\jonas\Documents\Pythonprogram\testmodbus\test_deltaDTB4824.py -DCOM7 -b2400 -ascii
+    C:\Python27>python.exe C:\Users\jonas\Documents\Pythonprogram\testmodbus\test_deltaDTB4824.py -d COM7 -b 2400 -a
 
 For python3 you might need to use the ``py`` command.
 
@@ -744,17 +734,7 @@ TODO
 
 See also GitHub issues: https://github.com/pyhys/minimalmodbus/issues
 
-* Change internal representation to bytes:
-
-  * Continue with CRC and LRC generation
-  * ``_communicate()``
-  * Better printout of the bytearray in error messages
-  * ``_extract_payload()`` and ``_embed_payload()``
-  * ``_create_payload()``, ``_parse_payload()`` and all related functions
-
-* Logging instead of _print_out()
 * Possibly use pytest instead
-* Reduce number of linter deviations (see Makefile)
 * Improve installation troubleshooting
 * Test virtual serial port on Windows using com0com
 * Unittests for measuring the sleep time in ``_communicate()``.

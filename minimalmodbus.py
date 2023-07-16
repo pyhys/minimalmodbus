@@ -291,7 +291,7 @@ class Instrument:
 
     def _print_debug(self, text: str) -> None:
         if self.debug:
-            _print_out("MinimalModbus debug mode. " + text)
+            print("MinimalModbus debug mode. " + text)
 
     # ################################# #
     #  Methods for talking to the slave #
@@ -580,7 +580,7 @@ class Instrument:
               Use the BYTEORDER_xxx constants. Defaults to
               :data:`minimalmodbus.BYTEORDER_BIG`.
             * number_of_registers: The number of registers allocated for the long.
-              Can be 2 or 4.
+              Can be 2 or 4. (New in version 2.1)
 
 
         ======================= ============== =============== =====================
@@ -644,7 +644,7 @@ class Instrument:
               Use the BYTEORDER_xxx constants. Defaults to
               :data:`minimalmodbus.BYTEORDER_BIG`.
             * number_of_registers: The number of registers allocated for the long.
-              Can be 2 or 4.
+              Can be 2 or 4. (New in version 2.1)
 
         Raises:
             TypeError, ValueError, ModbusException,
@@ -1365,8 +1365,8 @@ class Instrument:
         """Talk to the slave via a serial port.
 
         Args:
-            request: The raw request that is to be sent to the slave.
-            number_of_bytes_to_read: Number of bytes to read
+            * request: The raw request that is to be sent to the slave.
+            * number_of_bytes_to_read: Number of bytes to read
 
         Returns:
             The raw data returned from the slave.
@@ -1400,7 +1400,8 @@ class Instrument:
                      |     |
                   -->|-----|<----- Silent period
 
-        The resolution for Python's time.time() is lower on Windows than on Linux.
+        The resolution for Python's :py:func:`time.time()` is lower on Windows than
+        on Linux.
         It is about 16 ms on Windows according to
         stackoverflow.com/questions/157359/accurate-timestamping-in-python-logging
         """
@@ -1595,7 +1596,7 @@ def _create_payload(
 
     Error checking should have been done before calling this function.
 
-    For argument descriptions, see the _generic_command() method.
+    For argument descriptions, see the :py:meth:`_generic_command` method.
     """
     if functioncode in [1, 2]:
         return _num_to_two_bytes(registeraddress) + _num_to_two_bytes(number_of_bits)
@@ -1756,8 +1757,8 @@ def _embed_payload(
 
     The resulting request has the format:
      * RTU Mode: slaveaddress byte + functioncode byte + payloaddata + CRC (two bytes).
-     * ASCII Mode: header (:) + slaveaddress (2 characters) + functioncode
-       (2 characters) + payloaddata + LRC (which is two characters) + footer (CRLF)
+     * ASCII Mode: header (``:``) + slaveaddress (2 characters) + functioncode
+       (2 characters) + payloaddata + LRC (which is two characters) + footer (CR+LF)
 
     The LRC or CRC is calculated from the bytes made up of slaveaddress +
     functioncode + payloaddata.
@@ -1810,11 +1811,11 @@ def _extract_payload(
     The received response should have the format:
 
     * RTU Mode: slaveaddress byte + functioncode byte + payloaddata + CRC (two bytes)
-    * ASCII Mode: header (:) + slaveaddress byte + functioncode byte +
-      payloaddata + LRC (which is two characters) + footer (CRLF)
+    * ASCII Mode: header (``:``) + slaveaddress byte + functioncode byte +
+      payloaddata + LRC (which is two characters) + footer (CR+LF)
 
     For development purposes, this function can also be used to extract the payload
-    from the request sent TO the slave.
+    from the request sent **to** the slave.
     """
     # Number of bytes before the response payload (in stripped response)
     NUMBER_OF_RESPONSE_STARTBYTES = 2
@@ -2095,7 +2096,7 @@ def _num_to_two_bytes(
     the slave register. Similarly ``number_of_decimals=2`` will multiply ``value``
     by 100 before sending it to the slave register.
 
-    Use the parameter ``signed=True`` if making a bytestring that can hold
+    Use the parameter ``signed=True`` if making a bytes object that can hold
     negative values. Then negative input will be automatically converted into
     upper range data (two's complement).
 
@@ -2452,12 +2453,12 @@ def _textstring_to_bytes(inputstring: str, number_of_registers: int = 16) -> byt
     8 bits). For example 16 consecutive registers can hold 32 characters (32 bytes).
 
     Not much of conversion is done, mostly error checking and string padding.
-    If the inputstring is shorter that the allocated space, it is padded with
+    If the *inputstring* is shorter that the allocated space, it is padded with
     spaces in the end.
 
     Args:
         * inputstring: The string to be stored in the slave.
-          Max 2*number_of_registers characters.
+          Max 2 * *number_of_registers* characters.
         * number_of_registers: The number of registers allocated for the string.
 
     Returns:
@@ -2490,9 +2491,9 @@ def _bytes_to_textstring(inputbytes: bytes, number_of_registers: int = 16) -> st
     Not much of conversion is done, mostly error checking.
 
     Args:
-        * inputbytes: The bytes from the slave. Length = 2*number_of_registers
+        * inputbytes: The bytes from the slave. Length = 2 * *number_of_registers*
         * number_of_registers (int): The number of registers allocated for the string.
-                                     Should be >0.
+          Should be >0.
 
     Returns:
         A the text string.
@@ -2523,10 +2524,10 @@ def _valuelist_to_bytes(valuelist: List[int], number_of_registers: int) -> bytes
         * valuelist: The input list. The elements should be in the
           range 0 to 65535.
         * number_of_registers: The number of registers. For error checking.
-          Should equal the number of elements in valuelist.
+          Should equal the number of elements in *valuelist*.
 
     Returns:
-        Bytes Length = 2*number_of_registers
+        Bytes Length = 2 * *number_of_registers*
 
     Raises:
         TypeError, ValueError
@@ -2572,7 +2573,7 @@ def _bytes_to_valuelist(inputbytes: bytes, number_of_registers: int) -> List[int
     The bytes are interpreted as 'unsigned INT16'.
 
     Args:
-        * inputbytes: The bytes from the slave. Length = 2*number_of_registers
+        * inputbytes: The bytes from the slave. Length = 2 * *number_of_registers*
         * number_of_registers: The number of registers. For error checking.
 
     Returns:
@@ -2599,7 +2600,7 @@ def _bytes_to_valuelist(inputbytes: bytes, number_of_registers: int) -> List[int
 def _pack_bytes(formatstring: str, value: Any) -> bytes:
     """Pack a value into bytes.
 
-    Uses the built-in :mod:`struct` Python module.
+    Uses the built-in :mod:`struct` Python module, and adds relevant error messages.
 
     Args:
         * formatstring: String for the packing. See the :mod:`struct` module
@@ -2627,7 +2628,7 @@ def _pack_bytes(formatstring: str, value: Any) -> bytes:
 def _unpack_bytes(formatstring: str, packed_bytes: bytes) -> Any:
     """Unpack bytes into a value.
 
-    Uses the built-in :mod:`struct` Python module.
+    Uses the built-in :mod:`struct` Python module, and adds relevant error messages.
 
     Args:
         * formatstring: String for the packing. See the :mod:`struct` module
@@ -2681,16 +2682,16 @@ def _swap(inputbytes: bytes) -> bytes:
 def _hexencode(inputbytes: bytes, insert_spaces: bool = False) -> bytes:
     r"""Convert bytes to a hex encoded bytes.
 
-    For example 'J' will return '4A', and ``'\x04'`` will return '04'.
+    For example ``b'J'`` will return ``b'4A'``, and ``b'\x04'`` will return ``b'04'``.
 
     Args:
-        * inputbytes (str): Can be for example ``'A\x01B\x45'``.
-        * insert_spaces (bool): Insert space characters between pair of characters
+        * inputbytes: Can be for example ``b'A\x01B\x45'``.
+        * insert_spaces: Insert space characters between pair of characters
           to increase readability.
 
     Returns:
         Bytes of twice the length, with characters in the range '0' to '9' and
-        'A' to 'F'. The string will be longer if spaces are inserted.
+        'A' to 'F'. It will be longer if spaces are inserted.
 
     Raises:
         TypeError, ValueError
@@ -2705,15 +2706,16 @@ def _hexencode(inputbytes: bytes, insert_spaces: bool = False) -> bytes:
 def _hexdecode(hexbytes: bytes) -> bytes:
     r"""Convert hex encoded bytes to bytes.
 
-    For example b'4A' will return b'J', and b'04' will return ``b'\x04'`` (which has
-    length 1).
+    For example ``b'4A'`` will return ``b'J'``, and ``b'04'`` will
+    return ``b'\x04'`` (which has length 1).
 
     Args:
-        * hexbytes: Can be for example b'A3' or b'A3B4'. Must be of even length.
-          Allowed bytes are b'0' to b'9', b'a' to b'f' and b'A' to b'F' (not space).
+        * hexbytes: Can be for example ``b'A3'`` or ``b'A3B4'``. Must be of even length.
+          Allowed bytes are ``b'0'`` to ``b'9'``, ``b'a'`` to ``b'f'``
+          and ``b'A'`` to ``b'F'`` (not space).
 
     Returns:
-        Bytes of half the length, with bytes corresponding to all 0-255vvalues.
+        Bytes of half the length, with bytes corresponding to all 0-255 values.
 
     Raises:
         TypeError, ValueError
@@ -2749,7 +2751,7 @@ def _describe_bytes(inputbytes: bytes) -> str:
         * inputbytes: Bytes to describe
 
     Returns a space separated descriptive string.
-    For example b'\x01\x02\x03' gives: "01 02 03 (3 bytes)"
+    For example ``b'\x01\x02\x03'`` gives: ``01 02 03 (3 bytes)``
     """
     return " ".join([f"{x:02X}" for x in inputbytes]) + " ({} bytes)".format(
         len(inputbytes)
@@ -2837,11 +2839,11 @@ def _bytes_to_bits(inputbytes: bytes, number_of_bits: int) -> List[int]:
 
     This is used for parsing the bits in response messages for functioncode 1 and 2.
 
-    The first byte in the bytestring contains info on the addressed bit
+    The first byte in the *inputbytes* contains info on the addressed bit
     (in LSB in that byte). Second bit from right contains info on the bit
     on the next address.
 
-    Next byte in the bytestring contains data on next 8 bits. Might be padded with
+    Next byte in the *inputbytes* contains data on next 8 bits. Might be padded with
     zeros toward MSB.
 
     Args:
@@ -2849,7 +2851,7 @@ def _bytes_to_bits(inputbytes: bytes, number_of_bits: int) -> List[int]:
         * number_of_bits: Number of bits to extract
 
     Returns a list of values (0 or 1). The length of the list is equal to
-    number_of_bits.
+    *number_of_bits*.
     """
     expected_length = _calculate_number_of_bytes_for_bits(number_of_bits)
     if len(inputbytes) != expected_length:
@@ -2885,7 +2887,7 @@ def _twos_complement(x: int, bits: int = 16) -> int:
     Returns:
         The two's complement of the input.
 
-    Example for bits=8:
+    Example for *bits* = 8:
 
     ==== =======
     x    returns
@@ -2926,7 +2928,7 @@ def _from_twos_complement(x: int, bits: int = 16) -> int:
     Returns:
         The inverse(?) of two's complement of the input.
 
-    Example for bits=8:
+     Example for *bits* = 8:
 
     === =======
     x   returns
@@ -2965,7 +2967,7 @@ def _from_twos_complement(x: int, bits: int = 16) -> int:
 
 
 def _set_bit_on(x: int, bit_num: int) -> int:
-    """Set bit 'bit_num' to True.
+    """Set bit *bit_num* to True.
 
     Args:
         * x: The value before.
@@ -2985,7 +2987,7 @@ def _set_bit_on(x: int, bit_num: int) -> int:
 
 
 def _check_bit(x: int, bit_num: int) -> bool:
-    """Check if bit 'bit_num' is set the input integer.
+    """Check if bit *bit_num* is set the input integer.
 
     Args:
         * x: The input value.
@@ -3306,7 +3308,7 @@ def _calculate_crc(inputbytes: bytes) -> bytes:
     """Calculate CRC-16 for Modbus RTU.
 
     Args:
-        inputstring: An arbitrary-length message (without the CRC).
+        inputbytes: An arbitrary-length message (without the CRC).
 
     Returns:
         A two-byte CRC, where the least significant byte is first.
@@ -3337,12 +3339,12 @@ def _calculate_lrc(inputbytes: bytes) -> bytes:
 
     The LRC is calculated as 8 bits (one byte).
 
-    For example a LRC 0110 0001 (bin) = 61 (hex) = 97 (dec) = 'a'. This function will
-    then return b'a'.
+    For example a resulting LRC 0110 0001 (bin) = 61 (hex) = 97 (dec) = ``b'a'``.
+    This function will then return ``b'a'``.
 
     In Modbus ASCII mode, this should be transmitted using two characters. This
-    example should be transmitted '61', which is a string of length two. This function
-    does not handle that conversion for transmission.
+    example should be transmitted as ``b'61'``, which is a bytes object of length two.
+    This function does not handle that conversion for transmission.
     """
     _check_bytes(inputbytes, description="LRC input bytes")
 
@@ -3377,7 +3379,7 @@ def _check_mode(mode: str) -> None:
 def _check_functioncode(
     functioncode: int, list_of_allowed_values: Optional[List[int]] = None
 ) -> None:
-    """Check that the given functioncode is in the list_of_allowed_values.
+    """Check that the given functioncode is in the *list_of_allowed_values*.
 
     Also verifies that 1 <= function code <= 127.
 
@@ -3423,7 +3425,7 @@ def _check_functioncode(
 
 
 def _check_slaveaddress(slaveaddress: int) -> None:
-    """Check that the given slaveaddress is valid.
+    """Check that the given *slaveaddress* is valid.
 
     Args:
         slaveaddress: The slave address
@@ -3440,7 +3442,7 @@ def _check_slaveaddress(slaveaddress: int) -> None:
 
 
 def _check_registeraddress(registeraddress: int) -> None:
-    """Check that the given registeraddress is valid.
+    """Check that the given *registeraddress* is valid.
 
     Args:
         registeraddress: The register address
@@ -3733,11 +3735,11 @@ def _check_bytes(
     """Check that the bytes are valid.
 
     Args:
-    * inputbytes: The bytes to be checked
-    * description: Used in error messages for the checked inputbytes
-    * minlength: Minimum length of the inputbytes
-    * maxlength: Maximum length of the inputbytes
-    * exception_type: The type of exception to raise for length errors
+        * inputbytes: The bytes to be checked
+        * description: Used in error messages for the checked inputbytes
+        * minlength: Minimum length of the inputbytes
+        * maxlength: Maximum length of the inputbytes
+        * exception_type: The type of exception to raise for length errors
     """
     # Type checking
     if not isinstance(description, str):
@@ -3798,7 +3800,7 @@ def _check_string(
 
     Args:
         * inputstring: The string to be checked
-        * description: Used in error messages for the checked inputstring
+        * description: Used in error messages for the checked *inputstring*
         * minlength: Minimum length of the string
         * maxlength: Maximum length of the string
         * force_ascii: Enforce that the string is ASCII
@@ -3932,7 +3934,7 @@ def _check_numerical(
 
     Args:
         * inputvalue: The value to be checked.
-        * minvalue: Minimum value  Use None to skip this part of the test.
+        * minvalue: Minimum value. Use None to skip this part of the test.
         * maxvalue: Maximum value. Use None to skip this part of the test.
         * description: Used in error messages for the checked inputvalue
 
@@ -3990,7 +3992,7 @@ def _check_numerical(
 
 
 def _check_bool(inputvalue: bool, description: str = "inputvalue") -> None:
-    """Check that the given inputvalue is a boolean.
+    """Check that the given *inputvalue* is a boolean.
 
     Args:
         * inputvalue: The value to be checked.
@@ -4009,21 +4011,6 @@ def _check_bool(inputvalue: bool, description: str = "inputvalue") -> None:
 #####################
 # Development tools #
 #####################
-
-
-def _print_out(inputstring: str) -> None:
-    """Print the inputstring. To make it compatible with Python2 and Python3.
-
-    Args:
-        inputstring (str): The string that should be printed.
-
-    Raises:
-        TypeError
-    """
-    _check_string(inputstring, description="string to print")
-
-    sys.stdout.write(inputstring + "\n")
-    sys.stdout.flush()
 
 
 def _get_diagnostic_string() -> str:

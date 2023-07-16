@@ -17,6 +17,7 @@ Significant contributions by:
 * Angelo Compagnucci
 * Asier Abalos
 * Austin Stover
+* Benedikt Moneke (Github user: bmoneke)
 * Dino
 * Dominik Socha
 * Edgar Bonet
@@ -28,6 +29,7 @@ Significant contributions by:
 * Jan Breuer (Github user: j123b567)
 * Luca Di Gregorio
 * Matthias Bolte
+* Martijn de Gouw (Github user: martijndegouw)
 * Michael Penza
 * Peter
 * Russ Garrett

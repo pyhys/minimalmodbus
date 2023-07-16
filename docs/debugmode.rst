@@ -24,10 +24,10 @@ Similar in interactive mode::
     MinimalModbus debug mode. Response from instrument: '\n\x03\x02\x07\xd0\x1e)'
     200.0
 
-The data is stored internally in this driver as byte strings (representing byte values).
-For example a byte with value 18 (dec) = 12 (hex) = 00010010 (bin) is stored in a string of length one.
-This can be created using the function ``chr(18)``, or by simply typing the
-string ``'\x12'`` (which is a string of length 1). See
+The data is stored internally in this driver as Python ``bytes`` objects.
+For example a byte with value 18 (dec) = 12 (hex) = 00010010 (bin) is stored in a
+``bytes`` object of length one.
+This can be created by typing ``b'\x12'`` (which has the length 1). See
 https://docs.python.org/3/reference/lexical_analysis.html#string-and-bytes-literals
 for details on escape sequences.
 
@@ -37,9 +37,10 @@ Note that the letter A has the hexadecimal ASCII code 41, why the string ``'\x41
 The Latin-1 encoding is used (on most installations?), and the conversion table is found on
 https://en.wikipedia.org/wiki/Latin_1.
 
-The byte strings can look pretty strange when printed, as values 0 to 31 (dec) are
+The bytes objects can look pretty strange when printed, as values 0 to 31 (dec) are
 ASCII control signs (not corresponding to any letter). For example 'vertical tab'
-and 'line feed' are among those. To make the output easier to understand, print the representation, ``repr()``. Use::
+and 'line feed' are among those. To make the output easier to understand, print
+the representation, ``repr()``. Use::
 
     print(repr(bytestringname))
 
