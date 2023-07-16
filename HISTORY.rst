@@ -3,9 +3,23 @@
 History
 =======
 
-Release 2.1.0 (2023-08-??)
+Release 2.1.0 (2023-07-??)
 --------------------------
-* TODO
+New features:
+
+* Support for 64-bit integers in read_long() and write_long().
+* Allow an external serial port object to be used in the Instrument constructor.
+
+Other fixes:
+
+* Change internal data representation to Python bytes objects (from bytestrings).
+* Allow integers in write_float(). Fixes github #78.
+* Adapt style to linting tools.
+* Improve Github Action script.
+* Improve scripts for tests on the Delta DTB4824 instrument.
+* Moved the contents of setup.cfg to pyproject.toml.
+* Documentation updates, for example on building with Yocto.
+
 
 Release 2.0.1 (2021-08-11)
 --------------------------
