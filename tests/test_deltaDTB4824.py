@@ -5,7 +5,6 @@ For use with Delta DTB4824VR.
 
 Recommended test sequence
 ---------------------------
-Make sure that RUN_VERIFY_EXAMPLES and similar flags are all 'True'.
 
  * Run the tests under Linux, Windows and Mac OS
  * Use 2400 bps and 38400 bps
@@ -122,6 +121,7 @@ def show_test_settings(mode: str, baudrate: int, portname: str) -> None:
     _box()
     _box("Hardware test with Delta DTB4824")
     _box("Minimalmodbus version", minimalmodbus.__version__)
+    _box("Minimalmodbus path", os.path.abspath(minimalmodbus.__file__))
     _box(" ")
     _box("Platform", sys.platform)
     _box(
@@ -296,7 +296,7 @@ def verify_external_instrument_instance(
         parity=serial.PARITY_NONE,
         bytesize=8,
         stopbits=1,
-        timeout=0.05,
+        timeout=TIMEOUT,
         write_timeout=2.0,
     )
 
