@@ -14,5 +14,5 @@ license: "Apache License 2.0"
 message: "If you use this software, please cite it using these metadata."
 repository-code: "https://github.com/pyhys/minimalmodbus"
 title: MinimalModbus
-version: "2.1.0"
+version: "2.1.1"
 ...
