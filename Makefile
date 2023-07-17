@@ -134,10 +134,10 @@ show:
 dist: clean
 	@echo "    "
 	@echo "    "
-	python3 -m build
+	flit build
 	@echo "    "
 	@echo "    "
 	ls -l dist
 
 upload:
-	python3 -m twine upload dist/*
+	flit publish

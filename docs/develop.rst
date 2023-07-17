@@ -466,7 +466,7 @@ Show test coverage report::
 
 Also make tests using Delta DTB4824 hardware. See :ref:`testdtb4824`.
 
-Test the source distribution generation (look in the :file:`PKG-INFO` file)::
+Test the source distribution generation (look in the resulting :file:`PKG-INFO` file)::
 
     make dist
 
