@@ -3,6 +3,10 @@
 History
 =======
 
+Release 2.1.1 (2023-07-17)
+--------------------------
+* Added a .readthedocs.yaml configuration file.
+
 Release 2.1.0 (2023-07-17)
 --------------------------
 New features:
