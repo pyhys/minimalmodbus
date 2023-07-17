@@ -17,5 +17,4 @@ sphinx:
 
 python:
   install:
-    - method: pip
-      path: pyserial
+    - requirements: docs/requirements.txt
