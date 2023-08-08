@@ -1512,7 +1512,7 @@ class Instrument:
                 " Timeout for reading: {:.1f} ms.\n"
             ).format(
                 _describe_bytes(answer),
-                roundtrip_time,
+                roundtrip_time * _SECONDS_TO_MILLISECONDS,
                 timeout_time,
             )
             self._print_debug(text)
