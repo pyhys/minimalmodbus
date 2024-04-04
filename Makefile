@@ -59,12 +59,15 @@ devdeps:
 		build \
 		coverage \
 		coverage[toml] \
+		docformatter \
 		flake8 \
+		flit \
 		mypy \
 		pip \
 		pycodestyle \
 		pydocstyle \
 		pylint \
+		pyserial \
 		ruff \
 		setuptools \
 		sphinx \
