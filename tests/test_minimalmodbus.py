@@ -1503,6 +1503,20 @@ class TestExtractPayload(ExtendedTestCase):
             )
             self.assertEqual(result, known_result)
 
+    def testIgnoredSlaveAddress(self) -> None:
+        for value in [3, 95, 128, 247, 255]:
+            for (
+                slaveaddress,
+                functioncode,
+                mode,
+                known_result,
+                inputbytes,
+            ) in self.known_values:
+                result = minimalmodbus._extract_payload(
+                    inputbytes, value, mode, functioncode, True
+                )  # Wrong slave address. Check explicitly disabled.
+                self.assertEqual(result, known_result)
+
     def testWrongInputValue(self) -> None:
         self.assertRaises(
             InvalidResponseError,
@@ -1622,6 +1636,16 @@ class TestExtractPayload(ExtendedTestCase):
                 "rtu",
                 2,
             )  # Wrong slave address
+        for value in [3, 95, 128]:
+            self.assertRaises(
+                InvalidResponseError,
+                minimalmodbus._extract_payload,
+                b"\x02\x02123X\xc2",
+                value,
+                "rtu",
+                2,
+                False,
+            )  # Wrong slave address. Check explicitly enabled.
         for value in [128, 256, -1]:
             self.assertRaises(
                 ValueError,

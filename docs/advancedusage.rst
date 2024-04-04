@@ -226,6 +226,22 @@ Add this to :func:`._extract_payload` function, after the argument validity test
             pass
 
 
+Handling instrument address mismatch
+--------------------------------------------------------------------------
+Some commands or instrument access patterns may result in responses whose reported slave
+address differs from the address used to send the command. Examples include sending a
+command to change the device's address or using a "universal address" to communicate
+with a single connected device. Note that you should never use a "universal address" when
+more than one device is connected to the bus.
+
+To ignore the slave address returned by a command, set the "ignoreslaveaddress" parameter
+to True:
+
+    instr = minimalmodbus.Instrument('/dev/ttyUSB0', 1)
+    # change device's address to 23 using register 0x17
+    instr.write_register(0x17, 23, ignoreslaveaddress=True)
+
+
 Install or uninstalling a distribution
 --------------------------------------------------------------------------
 

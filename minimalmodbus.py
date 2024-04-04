@@ -297,7 +297,12 @@ class Instrument:
     #  Methods for talking to the slave #
     # ################################# #
 
-    def read_bit(self, registeraddress: int, functioncode: int = 2) -> int:
+    def read_bit(
+        self,
+        registeraddress: int,
+        functioncode: int = 2,
+        ignoreslaveaddress: bool = False,
+    ) -> int:
         """Read one bit from the slave (instrument).
 
         This is for a bit that has its individual address in the instrument.
@@ -305,6 +310,7 @@ class Instrument:
         Args:
             * registeraddress: The slave register address.
             * functioncode Modbus function code. Can be 1 or 2.
+            * ignoreslaveaddress: Bypass the slave address check.
 
         Returns:
             The bit value 0 or 1.
@@ -320,11 +326,16 @@ class Instrument:
                 registeraddress,
                 number_of_bits=1,
                 payloadformat=_Payloadformat.BIT,
+                ignoreslaveaddress=ignoreslaveaddress,
             )
         )
 
     def write_bit(
-        self, registeraddress: int, value: int, functioncode: int = 5
+        self,
+        registeraddress: int,
+        value: int,
+        functioncode: int = 5,
+        ignoreslaveaddress: bool = False,
     ) -> None:
         """Write one bit to the slave (instrument).
 
@@ -334,6 +345,7 @@ class Instrument:
             * registeraddress: The slave register address.
             * value: 0 or 1, or True or False
             * functioncode: Modbus function code. Can be 5 or 15.
+            * ignoreslaveaddress: Bypass the slave address check.
 
         Raises:
             TypeError, ValueError, ModbusException,
@@ -347,10 +359,15 @@ class Instrument:
             value,
             number_of_bits=1,
             payloadformat=_Payloadformat.BIT,
+            ignoreslaveaddress=ignoreslaveaddress,
         )
 
     def read_bits(
-        self, registeraddress: int, number_of_bits: int, functioncode: int = 2
+        self,
+        registeraddress: int,
+        number_of_bits: int,
+        functioncode: int = 2,
+        ignoreslaveaddress: bool = False,
     ) -> List[int]:
         """Read multiple bits from the slave (instrument).
 
@@ -360,6 +377,7 @@ class Instrument:
             * registeraddress: The slave register start address.
             * number_of_bits: Number of bits to read
             * functioncode: Modbus function code. Can be 1 or 2.
+            * ignoreslaveaddress: Bypass the slave address check.
 
         Returns:
             A list of bit values 0 or 1. The first value in the list is for
@@ -381,12 +399,18 @@ class Instrument:
             registeraddress,
             number_of_bits=number_of_bits,
             payloadformat=_Payloadformat.BITS,
+            ignoreslaveaddress=ignoreslaveaddress,
         )
         # Make sure that we really return a list of integers
         assert isinstance(returnvalue, list)
         return [int(x) for x in returnvalue]
 
-    def write_bits(self, registeraddress: int, values: List[int]) -> None:
+    def write_bits(
+        self,
+        registeraddress: int,
+        values: List[int],
+        ignoreslaveaddress: bool = False,
+    ) -> None:
         """Write multiple bits to the slave (instrument).
 
         This is for bits that have individual addresses in the instrument.
@@ -397,6 +421,7 @@ class Instrument:
             * registeraddress: The slave register start address.
             * values: List of 0 or 1, or True or False. The first
               value in the list is for the bit at the given address.
+            * ignoreslaveaddress: Bypass the slave address check.
 
         Raises:
             TypeError, ValueError, ModbusException,
@@ -420,6 +445,7 @@ class Instrument:
             values,
             number_of_bits=len(values),
             payloadformat=_Payloadformat.BITS,
+            ignoreslaveaddress=ignoreslaveaddress,
         )
 
     def read_register(
@@ -428,6 +454,7 @@ class Instrument:
         number_of_decimals: int = 0,
         functioncode: int = 3,
         signed: bool = False,
+        ignoreslaveaddress: bool = False,
     ) -> Union[int, float]:
         """Read an integer from one 16-bit register in the slave, possibly scaling it.
 
@@ -439,6 +466,7 @@ class Instrument:
             * number_of_decimals: The number of decimals for content conversion.
             * functioncode: Modbus function code. Can be 3 or 4.
             * signed: Whether the data should be interpreted as unsigned or signed.
+            * ignoreslaveaddress: Bypass the slave address check.
 
         .. note:: The parameter number_of_decimals was named numberOfDecimals
                   before MinimalModbus 1.0
@@ -488,6 +516,7 @@ class Instrument:
             number_of_registers=1,
             signed=signed,
             payloadformat=_Payloadformat.REGISTER,
+            ignoreslaveaddress=ignoreslaveaddress,
         )
         if int(returnvalue) == returnvalue:
             return int(returnvalue)
@@ -500,6 +529,7 @@ class Instrument:
         number_of_decimals: int = 0,
         functioncode: int = 16,
         signed: bool = False,
+        ignoreslaveaddress: bool = False,
     ) -> None:
         """Write an integer to one 16-bit register in the slave, possibly scaling it.
 
@@ -513,6 +543,7 @@ class Instrument:
             * number_of_decimals: The number of decimals for content conversion.
             * functioncode: Modbus function code. Can be 6 or 16.
             * signed: Whether the data should be interpreted as unsigned or signed.
+            * ignoreslaveaddress: Bypass the slave address check.
 
         .. note:: The parameter number_of_decimals was named numberOfDecimals
                   before MinimalModbus 1.0
@@ -557,6 +588,7 @@ class Instrument:
             number_of_registers=1,
             signed=signed,
             payloadformat=_Payloadformat.REGISTER,
+            ignoreslaveaddress=ignoreslaveaddress,
         )
 
     def read_long(
@@ -566,6 +598,7 @@ class Instrument:
         signed: bool = False,
         byteorder: int = BYTEORDER_BIG,
         number_of_registers: int = 2,
+        ignoreslaveaddress: bool = False,
     ) -> int:
         """Read a long integer (32 or 64 bits) from the slave.
 
@@ -581,6 +614,7 @@ class Instrument:
               :data:`minimalmodbus.BYTEORDER_BIG`.
             * number_of_registers: The number of registers allocated for the long.
               Can be 2 or 4. (New in version 2.1)
+            * ignoreslaveaddress: Bypass the slave address check.
 
 
         ======================= ============== =============== =====================
@@ -615,6 +649,7 @@ class Instrument:
                 signed=signed,
                 byteorder=byteorder,
                 payloadformat=_Payloadformat.LONG,
+                ignoreslaveaddress=ignoreslaveaddress,
             )
         )
 
@@ -625,6 +660,7 @@ class Instrument:
         signed: bool = False,
         byteorder: int = BYTEORDER_BIG,
         number_of_registers: int = 2,
+        ignoreslaveaddress: bool = False,
     ) -> None:
         """Write a long integer (32 or 64 bits) to the slave.
 
@@ -645,6 +681,7 @@ class Instrument:
               :data:`minimalmodbus.BYTEORDER_BIG`.
             * number_of_registers: The number of registers allocated for the long.
               Can be 2 or 4. (New in version 2.1)
+            * ignoreslaveaddress: Bypass the slave address check.
 
         Raises:
             TypeError, ValueError, ModbusException,
@@ -684,6 +721,7 @@ class Instrument:
             signed=signed,
             byteorder=byteorder,
             payloadformat=_Payloadformat.LONG,
+            ignoreslaveaddress=ignoreslaveaddress,
         )
 
     def read_float(
@@ -692,6 +730,7 @@ class Instrument:
         functioncode: int = 3,
         number_of_registers: int = 2,
         byteorder: int = BYTEORDER_BIG,
+        ignoreslaveaddress: bool = False,
     ) -> float:
         r"""Read a floating point number from the slave.
 
@@ -713,6 +752,7 @@ class Instrument:
             * byteorder: How multi-register data should be interpreted.
               Use the BYTEORDER_xxx constants. Defaults to
               :data:`minimalmodbus.BYTEORDER_BIG`.
+            * ignoreslaveaddress: Bypass the slave address check.
 
         .. note:: The parameter number_of_registers was named numberOfRegisters
                   before MinimalModbus 1.0
@@ -745,6 +785,7 @@ class Instrument:
                 number_of_registers=number_of_registers,
                 byteorder=byteorder,
                 payloadformat=_Payloadformat.FLOAT,
+                ignoreslaveaddress=ignoreslaveaddress,
             )
         )
 
@@ -754,6 +795,7 @@ class Instrument:
         value: Union[int, float],
         number_of_registers: int = 2,
         byteorder: int = BYTEORDER_BIG,
+        ignoreslaveaddress: bool = False,
     ) -> None:
         """Write a floating point number to the slave.
 
@@ -772,6 +814,7 @@ class Instrument:
             * byteorder: How multi-register data should be interpreted.
               Use the BYTEORDER_xxx constants. Defaults to
               :data:`minimalmodbus.BYTEORDER_BIG`.
+            * ignoreslaveaddress: Bypass the slave address check.
 
         .. note:: The parameter number_of_registers was named numberOfRegisters
                   before MinimalModbus 1.0
@@ -794,10 +837,15 @@ class Instrument:
             number_of_registers=number_of_registers,
             byteorder=byteorder,
             payloadformat=_Payloadformat.FLOAT,
+            ignoreslaveaddress=ignoreslaveaddress,
         )
 
     def read_string(
-        self, registeraddress: int, number_of_registers: int = 16, functioncode: int = 3
+        self,
+        registeraddress: int,
+        number_of_registers: int = 16,
+        functioncode: int = 3,
+        ignoreslaveaddress: bool = False,
     ) -> str:
         """Read an ASCII string from the slave.
 
@@ -811,6 +859,7 @@ class Instrument:
             * registeraddress: The slave register start address.
             * number_of_registers: The number of registers allocated for the string.
             * functioncode: Modbus function code. Can be 3 or 4.
+            * ignoreslaveaddress: Bypass the slave address check.
 
         .. note:: The parameter number_of_registers was named numberOfRegisters
                   before MinimalModbus 1.0
@@ -835,11 +884,16 @@ class Instrument:
                 registeraddress,
                 number_of_registers=number_of_registers,
                 payloadformat=_Payloadformat.STRING,
+                ignoreslaveaddress=ignoreslaveaddress,
             )
         )
 
     def write_string(
-        self, registeraddress: int, textstring: str, number_of_registers: int = 16
+        self,
+        registeraddress: int,
+        textstring: str,
+        number_of_registers: int = 16,
+        ignoreslaveaddress: bool = False,
     ) -> None:
         """Write an ASCII string to the slave.
 
@@ -855,6 +909,7 @@ class Instrument:
             * registeraddress: The slave register start address.
             * textstring: The string to store in the slave, must be ASCII.
             * number_of_registers: The number of registers allocated for the string.
+            * ignoreslaveaddress: Bypass the slave address check.
 
         .. note:: The parameter number_of_registers was named numberOfRegisters
                   before MinimalModbus 1.0
@@ -888,10 +943,15 @@ class Instrument:
             textstring,
             number_of_registers=number_of_registers,
             payloadformat=_Payloadformat.STRING,
+            ignoreslaveaddress=ignoreslaveaddress,
         )
 
     def read_registers(
-        self, registeraddress: int, number_of_registers: int, functioncode: int = 3
+        self,
+        registeraddress: int,
+        number_of_registers: int,
+        functioncode: int = 3,
+        ignoreslaveaddress: bool = False,
     ) -> List[int]:
         """Read integers from 16-bit registers in the slave.
 
@@ -902,6 +962,7 @@ class Instrument:
             * registeraddress: The slave register start address.
             * number_of_registers: The number of registers to read, max 125 registers.
             * functioncode: Modbus function code. Can be 3 or 4.
+            * ignoreslaveaddress: Bypass the slave address check.
 
         .. note:: The parameter number_of_registers was named numberOfRegisters
                   before MinimalModbus 1.0
@@ -929,12 +990,18 @@ class Instrument:
             registeraddress,
             number_of_registers=number_of_registers,
             payloadformat=_Payloadformat.REGISTERS,
+            ignoreslaveaddress=ignoreslaveaddress,
         )
         # Make sure that we really return a list of integers
         assert isinstance(returnvalue, list)
         return [int(x) for x in returnvalue]
 
-    def write_registers(self, registeraddress: int, values: List[int]) -> None:
+    def write_registers(
+        self,
+        registeraddress: int,
+        values: List[int],
+        ignoreslaveaddress: bool = False,
+    ) -> None:
         """Write integers to 16-bit registers in the slave.
 
         The slave register can hold integer values in the range 0 to
@@ -950,6 +1017,7 @@ class Instrument:
             * values: The values to store in the slave registers,
               max 123 values. The first value in the list is for the register
               at the given address.
+            * ignoreslaveaddress: Bypass the slave address check.
 
         .. note:: The parameter number_of_registers was named numberOfRegisters
                   before MinimalModbus 1.0
@@ -979,6 +1047,7 @@ class Instrument:
             values,
             number_of_registers=len(values),
             payloadformat=_Payloadformat.REGISTERS,
+            ignoreslaveaddress=ignoreslaveaddress,
         )
 
     # ############### #
@@ -996,6 +1065,7 @@ class Instrument:
         signed: bool = False,
         byteorder: int = BYTEORDER_BIG,
         payloadformat: _Payloadformat = _Payloadformat.REGISTER,
+        ignoreslaveaddress: bool = False,
     ) -> Any:
         """Perform generic command for reading and writing registers and bits.
 
@@ -1013,6 +1083,7 @@ class Instrument:
               Only for a single register or for payloadformat='long'.
             * byteorder: How multi-register data should be interpreted.
             * payloadformat: An _Payloadformat enum
+            * ignoreslaveaddress: Bypass the slave address check
 
         If a value of 77.0 is stored internally in the slave register as 770,
         then use ``number_of_decimals=1`` which will divide the received data
@@ -1273,7 +1344,9 @@ class Instrument:
         )
 
         # Communicate with instrument
-        payload_from_slave = self._perform_command(functioncode, payload_to_slave)
+        payload_from_slave = self._perform_command(
+            functioncode, payload_to_slave, ignoreslaveaddress
+        )
 
         # There is no response for broadcasts
         if self.address == _SLAVEADDRESS_BROADCAST:
@@ -1297,7 +1370,12 @@ class Instrument:
     # Communication implementation details #
     # #################################### #
 
-    def _perform_command(self, functioncode: int, payload_to_slave: bytes) -> bytes:
+    def _perform_command(
+        self,
+        functioncode: int,
+        payload_to_slave: bytes,
+        ignoreslaveaddress: bool = False,
+    ) -> bytes:
         """Perform the command having the *functioncode*.
 
         Args:
@@ -1305,6 +1383,7 @@ class Instrument:
               Can for example be 'Write register' = 16.
             * payload_to_slave: Data to be transmitted to the slave (will be
               embedded in slaveaddress, CRC etc)
+            * ignoreslaveaddress: Bypass the slave address check
 
         Returns:
             The extracted data payload from the slave. It has been
@@ -1357,7 +1436,7 @@ class Instrument:
 
         # Extract payload
         payload_from_slave = _extract_payload(
-            response_bytes, self.address, self.mode, functioncode
+            response_bytes, self.address, self.mode, functioncode, ignoreslaveaddress
         )
         return payload_from_slave
 
@@ -1787,7 +1866,11 @@ def _embed_payload(
 
 
 def _extract_payload(
-    response: bytes, slaveaddress: int, mode: str, functioncode: int
+    response: bytes,
+    slaveaddress: int,
+    mode: str,
+    functioncode: int,
+    ignoreslaveaddress: bool = False,
 ) -> bytes:
     """Extract the payload data part from the slave's response.
 
@@ -1797,6 +1880,7 @@ def _extract_payload(
         * slaveaddress: The adress of the slave. Used here for error checking only.
         * mode: The modbus protocol mode (MODE_RTU or MODE_ASCII)
         * functioncode: Used here for error checking only.
+        * ignoreslaveaddress: Bypass slave address check.
 
     Returns:
         The payload part of the *response*. Conversion from Modbus ASCII
@@ -1903,16 +1987,17 @@ def _extract_payload(
         )
         raise InvalidResponseError(text)
 
-    # Check slave address
-    responseaddress = response[_BYTEPOSITION_FOR_SLAVEADDRESS]
+    if not ignoreslaveaddress:
+        # Check slave address
+        responseaddress = response[_BYTEPOSITION_FOR_SLAVEADDRESS]
 
-    if responseaddress != slaveaddress:
-        raise InvalidResponseError(
-            "Wrong return slave "
-            + "address: {} instead of {}. The response is: {!r}".format(
-                responseaddress, slaveaddress, response
+        if responseaddress != slaveaddress:
+            raise InvalidResponseError(
+                "Wrong return slave "
+                + "address: {} instead of {}. The response is: {!r}".format(
+                    responseaddress, slaveaddress, response
+                )
             )
-        )
 
     # Check if slave indicates error
     _check_response_slaveerrorcode(response)
