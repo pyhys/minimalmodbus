@@ -22,6 +22,7 @@ __url__ = "https://github.com/pyhys/minimalmodbus"
 __version__ = "2.1.1"
 
 import sys
+import threading
 
 if sys.version_info < (3, 8, 0):
     raise ImportError(
@@ -122,6 +123,7 @@ class Instrument:
         mode: str = MODE_RTU,
         close_port_after_each_call: bool = False,
         debug: bool = False,
+        lock: threading.Lock = threading.Lock()
     ) -> None:
         """Initialize instrument and open corresponding serial port."""
         self.address = slaveaddress
@@ -135,7 +137,7 @@ class Instrument:
 
         New in version 2.0: Support for broadcast
         """
-
+        self.lock = lock
         self.mode = mode
         """Slave mode (str), can be :data:`minimalmodbus.MODE_RTU` or
         :data:`minimalmodbus.MODE_ASCII`. Most often set by the constructor (see the
@@ -1350,7 +1352,8 @@ class Instrument:
                     )
 
         # Communicate
-        response_bytes = self._communicate(request_bytes, number_of_bytes_to_read)
+        with self.lock:
+            response_bytes = self._communicate(request_bytes, number_of_bytes_to_read)
 
         if number_of_bytes_to_read == 0:
             return b""
