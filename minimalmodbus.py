@@ -44,6 +44,8 @@ _MAX_NUMBER_OF_REGISTERS_TO_READ = 125
 _MAX_NUMBER_OF_BITS_TO_WRITE = 1968  # 0x7B0
 _MAX_NUMBER_OF_BITS_TO_READ = 2000  # 0x7D0
 _MAX_NUMBER_OF_DECIMALS = 10  # Some instrument might store 0.00000154 Ampere as 154 etc
+_MAX_NUMBER_OF_SGLPREC_FLOATS = 62  # max_registers/2, since each (single-precision) float is 2 registers
+_MAX_NUMBER_OF_DBLPREC_FLOATS = 31  # max_registers/4, since each (double-precision) float is 4 registers
 _MAX_BYTEORDER_VALUE = 3
 _SECONDS_TO_MILLISECONDS = 1000
 _BROADCAST_DELAY: float = 0.2  # seconds
@@ -85,6 +87,7 @@ class _Payloadformat(enum.Enum):
     BIT = enum.auto()
     BITS = enum.auto()
     FLOAT = enum.auto()
+    FLOATS = enum.auto()  # multiple 2-register (single-precision) or 4-register (double-precision) floating point values
     LONG = enum.auto()
     REGISTER = enum.auto()
     REGISTERS = enum.auto()
@@ -796,6 +799,126 @@ class Instrument:
             payloadformat=_Payloadformat.FLOAT,
         )
 
+    def read_floats(
+            self,
+            registeraddress: int,
+            number_of_floats: int,
+            functioncode: int = 3,
+            number_of_registers: int = 2,
+            byteorder: int = BYTEORDER_BIG,
+    ) -> List[float]:
+        r"""Read floating point numbers from the slave.
+
+        Floats are stored in two or more consecutive 16-bit registers in the slave.
+        The encoding is according to the standard IEEE 754.
+
+        There are differences in the byte order used by different manufacturers.
+        A floating point value of 1.0 is encoded (in single precision) as 3f800000
+        (hex). In this implementation the data will be sent as ``'\x3f\x80'``
+        and ``'\x00\x00'`` to two consecutetive registers by default. Make sure to
+        test that it makes sense for your instrument. If not, change the
+        ``byteorder`` argument.
+
+        Args:
+            * registeraddress: The slave register start address.
+            * number_of_floats: The number of floating point values to read.
+            * functioncode: Modbus function code. Can be 3 or 4.
+            * number_of_registers: The number of registers allocated for each float.
+              Can be 2 or 4.
+            * byteorder: How multi-register data should be interpreted.
+              Use the BYTEORDER_xxx constants. Defaults to :data:`minimalmodbus.BYTEORDER_BIG`.
+
+        =============================== ================= =========== =================
+        Type of floating point in slave Size              Registers   Range
+        =============================== ================= =========== =================
+        Single precision (binary32)     32 bits (4 bytes) 2 registers 1.4E-45 to 3.4E38
+        Double precision (binary64)     64 bits (8 bytes) 4 registers 5E-324 to 1.8E308
+        =============================== ================= =========== =================
+
+        Returns:
+            List of the numerical values.
+
+        Raises:
+            TypeError, ValueError, ModbusException,
+            serial.SerialException (inherited from IOError)
+
+        """
+        _check_functioncode(functioncode, [3, 4])
+
+        _check_int(
+            number_of_registers,
+            minvalue=2,
+            maxvalue=4,
+            description="number of registers",
+        )
+
+        _check_int(
+            number_of_floats * number_of_registers,
+            minvalue=1,
+            maxvalue=_MAX_NUMBER_OF_REGISTERS_TO_READ,
+            description="total number registers for floats",
+        )
+
+        return self._generic_command(
+            functioncode,
+            registeraddress,
+            number_of_floats=number_of_floats,
+            number_of_registers=number_of_registers,
+            byteorder=byteorder,
+            payloadformat=_Payloadformat.FLOATS,
+        )
+
+    def write_floats(
+            self,
+            registeraddress: int,
+            values: List[Union[int, float]],
+            number_of_registers: int = 2,
+            byteorder: int = BYTEORDER_BIG,
+    ) -> None:
+        """Write floating point numbers to the slave.
+
+        Floats are stored in two or more consecutive 16-bit registers in the slave.
+
+        Uses Modbus function code 16.
+
+        For discussion on precision, number of registers and on byte order,
+        see :meth:`.read_float`.
+
+        Args:
+            * registeraddress: The slave register start address.
+            * values (float or int): The list of values to store in the slave.
+            * number_of_registers: The number of registers allocated for each float.
+              Can be 2 or 4.
+            * byteorder: How multi-register data should be interpreted.
+              Use the BYTEORDER_xxx constants. Defaults to :data:`minimalmodbus.BYTEORDER_BIG`.
+
+        Raises:
+            TypeError, ValueError, ModbusException,
+            serial.SerialException (inherited from IOError)
+        """
+        _check_numericals(values, description="input values")
+
+        _check_int(
+            number_of_registers,
+            minvalue=2,
+            maxvalue=4,
+            description="number of registers",
+        )
+
+        functioncode = 16
+
+        self._generic_command(
+            functioncode,
+            registeraddress,
+            value=values,
+            number_of_floats=len(values),
+            number_of_registers=number_of_registers,
+            byteorder=byteorder,
+            payloadformat=_Payloadformat.FLOATS,
+        )
+
+        return
+
     def read_string(
         self, registeraddress: int, number_of_registers: int = 16, functioncode: int = 3
     ) -> str:
@@ -989,8 +1112,9 @@ class Instrument:
         self,
         functioncode: int,
         registeraddress: int,
-        value: Union[None, str, int, float, List[int]] = None,
+        value: Union[None, str, int, float, List[Union[int, float]]] = None,
         number_of_decimals: int = 0,
+        number_of_floats: int = 0,
         number_of_registers: int = 0,
         number_of_bits: int = 0,
         signed: bool = False,
@@ -1002,11 +1126,12 @@ class Instrument:
         Args:
             * functioncode: Modbus function code.
             * registeraddress: The register address.
-            * value (numerical or string or None or list of int): The value to store
-              in the register. Depends on payloadformat.
+            * value (numerical or string or None or list of int or list of float): The value(s) to store
+              in the register(s). Depends on payloadformat.
             * number_of_decimals: The number of decimals for content conversion.
               Only for a single register.
-            * number_of_registers: The number of registers to read/write.
+            * number_of_floats: The number of floats to read/write.
+            * number_of_registers: The number of registers to read/write, or the number of registers allocated for a long or a float.
               Only certain values allowed, depends on payloadformat.
             * number_of_bits: The number of bits to read/write.
             * signed: Whether the data should be interpreted as unsigned or signed.
@@ -1037,6 +1162,7 @@ class Instrument:
         ALLOWED_FUNCTIONCODES[_Payloadformat.BITS] = [1, 2, 15]
         ALLOWED_FUNCTIONCODES[_Payloadformat.REGISTER] = [3, 4, 6, 16]
         ALLOWED_FUNCTIONCODES[_Payloadformat.FLOAT] = [3, 4, 16]
+        ALLOWED_FUNCTIONCODES[_Payloadformat.FLOATS] = [3, 4, 16]
         ALLOWED_FUNCTIONCODES[_Payloadformat.STRING] = [3, 4, 16]
         ALLOWED_FUNCTIONCODES[_Payloadformat.LONG] = [3, 4, 16]
         ALLOWED_FUNCTIONCODES[_Payloadformat.REGISTERS] = [3, 4, 16]
@@ -1049,6 +1175,12 @@ class Instrument:
             minvalue=0,
             maxvalue=_MAX_NUMBER_OF_DECIMALS,
             description="number of decimals",
+        )
+        _check_int(
+            number_of_floats,
+            minvalue=0,
+            maxvalue=_MAX_NUMBER_OF_SGLPREC_FLOATS if number_of_registers == 2 else _MAX_NUMBER_OF_DBLPREC_FLOATS,
+            description="number of floats",
         )
         _check_int(
             number_of_registers,
@@ -1114,7 +1246,7 @@ class Instrument:
 
         # Check combinations: byteorder
         if byteorder:
-            if payloadformat not in [_Payloadformat.FLOAT, _Payloadformat.LONG]:
+            if payloadformat not in [_Payloadformat.FLOAT, _Payloadformat.FLOATS,_Payloadformat.LONG]:
                 raise ValueError(
                     'The "byteorder" parameter can not be used for this payload'
                     + " format. Given format: {0!r}.".format(payloadformat)
@@ -1170,7 +1302,7 @@ class Instrument:
             # conversion functions.
 
         # Number of registers for float and long
-        if payloadformat == _Payloadformat.FLOAT and number_of_registers not in [2, 4]:
+        if payloadformat in (_Payloadformat.FLOAT, _Payloadformat.FLOATS) and number_of_registers not in [2, 4]:
             raise ValueError(
                 "The number of registers for float must be 2 or 4. "
                 + "Given {0!r}".format(number_of_registers)
@@ -1265,6 +1397,7 @@ class Instrument:
             registeraddress,
             value,
             number_of_decimals,
+            number_of_floats,
             number_of_registers,
             number_of_bits,
             signed,
@@ -1286,6 +1419,7 @@ class Instrument:
             registeraddress,
             value,
             number_of_decimals,
+            number_of_floats,  # for consistency; not really needed for parsing
             number_of_registers,
             number_of_bits,
             signed,
@@ -1512,7 +1646,7 @@ class Instrument:
                 " Timeout for reading: {:.1f} ms.\n"
             ).format(
                 _describe_bytes(answer),
-                roundtrip_time,
+                roundtrip_time * _SECONDS_TO_MILLISECONDS,
                 timeout_time,
             )
             self._print_debug(text)
@@ -1586,6 +1720,7 @@ def _create_payload(
     registeraddress: int,
     value: Union[None, str, int, float, List[int]],
     number_of_decimals: int,
+    number_of_floats: int,
     number_of_registers: int,
     number_of_bits: int,
     signed: bool,
@@ -1600,18 +1735,23 @@ def _create_payload(
     """
     if functioncode in [1, 2]:
         return _num_to_two_bytes(registeraddress) + _num_to_two_bytes(number_of_bits)
+
     if functioncode in [3, 4]:
-        return _num_to_two_bytes(registeraddress) + _num_to_two_bytes(
-            number_of_registers
-        )
+        if payloadformat == _Payloadformat.FLOATS:
+            return _num_to_two_bytes(registeraddress) + _num_to_two_bytes(number_of_floats * number_of_registers)
+        else:
+            return _num_to_two_bytes(registeraddress) + _num_to_two_bytes(number_of_registers)
+
     if functioncode == 5:
         assert isinstance(value, int)
         return _num_to_two_bytes(registeraddress) + _bit_to_bytes(value)
+
     if functioncode == 6:
         assert isinstance(value, (int, float))
         return _num_to_two_bytes(registeraddress) + _num_to_two_bytes(
             value, number_of_decimals, signed=signed
         )
+
     if functioncode == 15:
         if payloadformat == _Payloadformat.BIT and isinstance(value, int):
             bitlist = [value]
@@ -1629,7 +1769,9 @@ def _create_payload(
             + number_of_bytes_for_bits.to_bytes(1, "big")
             + _bits_to_bytes(bitlist)
         )
+
     if functioncode == 16:
+        registerdata: bytes = b''
         if payloadformat == _Payloadformat.REGISTER:
             assert isinstance(value, (int, float))
             registerdata = _num_to_two_bytes(value, number_of_decimals, signed=signed)
@@ -1642,6 +1784,10 @@ def _create_payload(
         elif payloadformat == _Payloadformat.FLOAT:
             assert isinstance(value, float) or isinstance(value, int)
             registerdata = _float_to_bytes(value, number_of_registers, byteorder)
+        elif payloadformat == _Payloadformat.FLOATS:
+            assert all([isinstance(v, (float, int)) for v in value])
+            for v in value:
+                registerdata += _float_to_bytes(float(v), number_of_registers, byteorder)
         elif payloadformat == _Payloadformat.REGISTERS:
             assert isinstance(value, list)
             registerdata = _valuelist_to_bytes(value, number_of_registers)
@@ -1649,15 +1795,23 @@ def _create_payload(
             raise ValueError(
                 f"Wrong payloadformat '{payloadformat}' for function code 16"
             )
-        assert len(registerdata) == number_of_registers * _NUMBER_OF_BYTES_PER_REGISTER
 
         registerdata_bytecount = len(registerdata)
+
+        if payloadformat == _Payloadformat.FLOATS:
+            registercount = number_of_floats * number_of_registers
+        else:
+            registercount = number_of_registers
+
+        assert registerdata_bytecount == (registercount * _NUMBER_OF_BYTES_PER_REGISTER)
+
         return (
             _num_to_two_bytes(registeraddress)
-            + _num_to_two_bytes(number_of_registers)
+            + _num_to_two_bytes(registercount)
             + registerdata_bytecount.to_bytes(1, "big")
             + registerdata
         )
+
     raise ValueError("Wrong function code: " + str(functioncode))
 
 
@@ -1667,6 +1821,7 @@ def _parse_payload(
     registeraddress: int,
     value: Any,
     number_of_decimals: int,
+    number_of_floats: int,
     number_of_registers: int,
     number_of_bits: int,
     signed: bool,
@@ -1681,6 +1836,7 @@ def _parse_payload(
         * registeraddress:      Register address for error checking
         * value:                Value in request, for error checking
         * number_of_decimals:   Number of decimals
+        * number_of_floats:     Number of floats
         * number_of_registers:  Number of registers
         * number_of_bits:       Number of bits
         * signed:               Signed
@@ -1696,6 +1852,7 @@ def _parse_payload(
         registeraddress,
         value,
         number_of_decimals,
+        number_of_floats,
         number_of_registers,
         number_of_bits,
         signed,
@@ -1712,6 +1869,7 @@ def _parse_payload(
 
     if functioncode in [3, 4]:
         registerdata = payload[_NUMBER_OF_BYTES_BEFORE_REGISTERDATA:]
+
         if payloadformat == _Payloadformat.STRING:
             return _bytes_to_textstring(registerdata, number_of_registers)
 
@@ -1720,6 +1878,10 @@ def _parse_payload(
 
         if payloadformat == _Payloadformat.FLOAT:
             return _bytes_to_float(registerdata, number_of_registers, byteorder)
+
+        if payloadformat == _Payloadformat.FLOATS:
+            n = 2 * number_of_registers
+            return [_bytes_to_float(registerdata[n * i : n * (i + 1)], number_of_registers, byteorder) for i in range(len(registerdata) // n)]
 
         if payloadformat == _Payloadformat.REGISTERS:
             return _bytes_to_valuelist(registerdata, number_of_registers)
@@ -3467,11 +3629,12 @@ def _check_response_payload(
     registeraddress: int,
     value: Any,
     number_of_decimals: int,
+    number_of_floats: int,
     number_of_registers: int,
     number_of_bits: int,
     signed: bool,
     byteorder: int,  # Not used. For same signature as _parse_payload()
-    payloadformat: _Payloadformat,  # Not used. For same signature as _parse_payload()
+    payloadformat: _Payloadformat,
 ) -> None:
     """Check the response payload.
 
@@ -3481,6 +3644,7 @@ def _check_response_payload(
         * registeraddress:      Register address
         * value:                Value in request
         * number_of_decimals:   Number of decimals
+        * number_of_floats:     Number of floats
         * number_of_registers:  Number of registers
         * number_of_bits:       Number of bits
         * signed:               Signed
@@ -3524,7 +3688,8 @@ def _check_response_payload(
     # Response for read registers
     if functioncode in [3, 4]:
         registerdata = payload[_NUMBER_OF_BYTES_BEFORE_REGISTERDATA:]
-        number_of_register_bytes = number_of_registers * _NUMBER_OF_BYTES_PER_REGISTER
+        registercount = (number_of_floats * number_of_registers) if payloadformat == _Payloadformat.FLOATS else number_of_registers
+        number_of_register_bytes = registercount * _NUMBER_OF_BYTES_PER_REGISTER
         if len(registerdata) != number_of_register_bytes:
             raise InvalidResponseError(
                 "The register data length is wrong. "
@@ -3989,6 +4154,34 @@ def _check_numerical(
                     description, inputvalue, maxvalue
                 )
             )
+
+
+def _check_numericals(
+    inputvalues: List[Union[int, float]],
+    minvalue: Union[None, int, float] = None,
+    maxvalue: Union[None, int, float] = None,
+    description: str = "inputvalues (must be an iterable)",
+) -> None:
+    """Check that the given numerical values are valid.
+
+    Args:
+        * inputvalues: The list of value to be checked.
+        * minvalue: Minimum value. Use None to skip this part of the test.
+        * maxvalue: Maximum value. Use None to skip this part of the test.
+        * description: Used in error messages for the checked inputvalue.
+
+    Raises:
+        TypeError, ValueError
+
+    Note: Can not use the function :func:`_check_string`, as it uses this function internally.
+    """
+    try:
+        a = iter(inputvalues)
+    except TypeError:
+        raise ValueError(f'the inputvalues can not be iterated : {inputvalues.__class__.__name__}')
+
+    for v in inputvalues:
+        _check_numerical(v, minvalue, maxvalue, description)
 
 
 def _check_bool(inputvalue: bool, description: str = "inputvalue") -> None:
