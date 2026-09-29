@@ -250,6 +250,8 @@ class Instrument:
 
         self._latest_roundtrip_time: Optional[float] = None
 
+        _latest_read_times[self.serial.port] = time.monotonic()
+
     def __repr__(self) -> str:
         """Give string representation of the :class:`.Instrument` object."""
         template = (
